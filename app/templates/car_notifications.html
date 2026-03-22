@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h2>Уведомления по машине</h2>
+        <a class="button-link" href="{{ url_for('index') }}">На главную</a>
+    </div>
+</section>
+
+<section class="card">
+    <h3>Добавить уведомление</h3>
+
+    <form method="POST" class="form">
+        <label for="service_name">Наименование</label>
+        <input type="text" id="service_name" name="service_name" required>
+
+        <label for="period_value">Периодичность</label>
+        <select id="period_value" name="period_value" required>
+            <option value="">Выбери период</option>
+            <option value="Раз в пол года">Раз в пол года</option>
+            <option value="Раз в год">Раз в год</option>
+        </select>
+
+        <label for="last_service_date">Крайняя замена</label>
+        <input type="date" id="last_service_date" name="last_service_date" required>
+
+        <label for="mileage_at_service">Пробег на замене</label>
+        <input type="number" id="mileage_at_service" name="mileage_at_service" required>
+
+        <label for="brand">Марка</label>
+        <textarea id="brand" name="brand" rows="3" placeholder="Можно вставить много текста"></textarea>
+
+        <label for="status">Статус</label>
+        <select id="status" name="status" required>
+            <option value="">Выбери статус</option>
+            <option value="Скоро">Скоро</option>
+            <option value="В работе">В работе</option>
+        </select>
+
+        <button type="submit">Добавить уведомление</button>
+    </form>
+</section>
+
+<section class="card">
+    <h3>Список уведомлений</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Периодичность</th>
+                    <th>Крайняя замена</th>
+                    <th>Пробег на замене</th>
+                    <th>Марка</th>
+                    <th>Следующая замена</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in notifications %}
+                <tr>
+                    <td>{{ item.service_name }}</td>
+                    <td>{{ item.period_value }}</td>
+                    <td>{{ item.last_service_date }}</td>
+                    <td>{{ item.mileage_at_service }}</td>
+                    <td>{{ item.brand }}</td>
+                    <td>{{ item.next_date }}</td>
+                    <td>{{ item.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

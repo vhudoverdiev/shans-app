@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Управление бюджетом | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h2>Управление бюджетом</h2>
+        <a class="button-link" href="{{ url_for('budget') }}">Назад к бюджету</a>
+    </div>
+</section>
+
+<section class="card small-card">
+    <h3>Текущий баланс</h3>
+    <p class="balance">{{ current_balance }}</p>
+
+    <form method="POST" class="compact-form">
+        <input type="hidden" name="form_type" value="set_balance">
+
+        <div class="form-group">
+            <label for="current_balance">Задать текущий баланс</label>
+            <input
+                type="number"
+                step="0.01"
+                id="current_balance"
+                name="current_balance"
+                placeholder="Введите сумму"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <button type="submit">Сохранить баланс</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h3>Добавить доход или расход</h3>
+
+    <form method="POST" class="horizontal-form">
+        <input type="hidden" name="form_type" value="add_entry">
+
+        <div class="form-group">
+            <label for="month_name">Месяц</label>
+            <select id="month_name" name="month_name" required>
+                <option value="">Выбери месяц</option>
+                {% for month in months %}
+                <option value="{{ month }}">{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="entry_type">Тип</label>
+            <select id="entry_type" name="entry_type" required>
+                <option value="">Выбери тип</option>
+                <option value="Доход">Доход</option>
+                <option value="Расход">Расход</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Категория</label>
+            <select id="category" name="category" required>
+                <option value="">Выбери категорию</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Сумма</label>
+            <input
+                type="number"
+                step="0.01"
+                id="amount"
+                name="amount"
+                placeholder="0.00"
+                required
+            >
+        </div>
+
+        <div class="form-group form-button-group">
+            <label>&nbsp;</label>
+            <button type="submit">Сохранить запись</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h3>Таблица операций</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Месяц</th>
+                    <th>Тип</th>
+                    <th>Категория</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.month_name }}</td>
+                <td>{{ entry.entry_type }}</td>
+                <td>{{ entry.category }}</td>
+                <td>{{ entry.amount }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a class="edit-button" href="{{ url_for('budget_edit', entry_id=entry.id) }}">
+                            Редактировать
+                        </a>
+
+                        <form method="POST" action="{{ url_for('budget_delete', entry_id=entry.id) }}">
+                            <button type="submit" class="delete-button">Удалить</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

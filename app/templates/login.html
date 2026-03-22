@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Вход | Akvilon App{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="card login-card">
+        <h2>Вход в систему</h2>
+
+        <form method="POST" class="form">
+            <label for="username">Логин</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

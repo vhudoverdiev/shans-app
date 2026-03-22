@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Бюджет | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h2>Бюджет ({{ current_month }})</h2>
+
+        <div class="action-buttons">
+            <a class="button-link" href="{{ url_for('budget_manage') }}">Управление</a>
+            <a class="button-link" href="{{ url_for('budget_report') }}">Подробный отчёт</a>
+        </div>
+    </div>
+</section>
+
+<section class="grid summary-grid">
+    <div class="card summary-card">
+        <h4>Доход за месяц</h4>
+        <p class="income">{{ summary.income }}</p>
+    </div>
+
+    <div class="card summary-card">
+        <h4>Расход за месяц</h4>
+        <p class="expense">{{ summary.expense }}</p>
+    </div>
+
+    <div class="card summary-card">
+        <h4>Баланс за месяц</h4>
+        <p class="balance">{{ summary.balance }}</p>
+    </div>
+
+    <div class="card summary-card">
+        <h4>Текущий баланс</h4>
+        <p class="balance">{{ current_balance }}</p>
+    </div>
+</section>
+{% endblock %}

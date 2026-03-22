@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Машина | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h2>Машина</h2>
+        <a class="button-link" href="{{ url_for('car_notifications') }}">Уведомления</a>
+    </div>
+</section>
+
+<section class="grid">
+    <div class="card">
+        <h3>Потрачено на машину</h3>
+        <p class="balance">{{ total_spent }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Последний пробег</h3>
+        <p class="balance">{{ last_mileage }}</p>
+    </div>
+</section>
+
+<section class="car-two-columns">
+    <div class="card">
+        <h3>Планирую сделать</h3>
+
+        <form method="POST" class="form">
+            <input type="hidden" name="form_type" value="planned_service">
+
+            <label for="planned_service_name">Наименование</label>
+            <input type="text" id="planned_service_name" name="service_name" required>
+
+            <label for="planned_cost">Планируемая стоимость</label>
+            <input type="number" step="0.01" id="planned_cost" name="planned_cost" required>
+
+            <label for="priority">Приоритет</label>
+            <select id="priority" name="priority">
+                <option value="Обычный">Обычный</option>
+                <option value="Скоро">Скоро</option>
+                <option value="Важно">Важно</option>
+            </select>
+
+            <label for="planned_note">Комментарий</label>
+            <textarea id="planned_note" name="note" rows="3"></textarea>
+
+            <button type="submit">Добавить в план</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Стоимость</th>
+                        <th>Приоритет</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in planned_services %}
+                    <tr>
+                        <td>{{ item.service_name }}</td>
+                        <td>{{ item.planned_cost }}</td>
+                        <td>{{ item.priority }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Сделано</h3>
+
+        <form method="POST" class="form">
+            <input type="hidden" name="form_type" value="done_service">
+
+            <label for="done_service_name">Наименование</label>
+            <input type="text" id="done_service_name" name="service_name" required>
+
+            <label for="service_cost">Стоимость</label>
+            <input type="number" step="0.01" id="service_cost" name="service_cost" required>
+
+            <label for="mileage">Пробег</label>
+            <input type="number" id="mileage" name="mileage" required>
+
+            <label for="service_date">Дата</label>
+            <input type="date" id="service_date" name="service_date" required>
+
+            <label for="brand">Марка / детали</label>
+            <textarea id="brand" name="brand" rows="2"></textarea>
+
+            <label for="done_note">Комментарий</label>
+            <textarea id="done_note" name="note" rows="3"></textarea>
+
+            <button type="submit">Добавить выполненную работу</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Стоимость</th>
+                        <th>Пробег</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in done_services %}
+                    <tr>
+                        <td>{{ item.service_name }}</td>
+                        <td>{{ item.service_cost }}</td>
+                        <td>{{ item.mileage }}</td>
+                        <td>{{ item.service_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

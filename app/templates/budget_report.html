@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Подробный отчёт | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h2>Подробный отчёт по бюджету</h2>
+        <a class="button-link" href="{{ url_for('budget') }}">Назад к бюджету</a>
+    </div>
+</section>
+
+<section class="card">
+    <form method="GET" class="budget-toolbar">
+        <div class="toolbar-group">
+            <label for="month">Месяц</label>
+            <select id="month" name="month">
+                {% for month in months %}
+                <option value="{{ month }}" {% if selected_month == month %}selected{% endif %}>
+                    {{ month }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <label for="type_filter">Тип</label>
+            <select id="type_filter" name="type_filter">
+                <option value="">Все</option>
+                <option value="Доход" {% if type_filter == "Доход" %}selected{% endif %}>Доход</option>
+                <option value="Расход" {% if type_filter == "Расход" %}selected{% endif %}>Расход</option>
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <label for="category_filter">Категория</label>
+            <select id="category_filter" name="category_filter">
+                <option value="">Все</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>
+                    {{ category }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <label for="sort_by">Сортировка</label>
+            <select id="sort_by" name="sort_by">
+                <option value="newest" {% if sort_by == "newest" %}selected{% endif %}>Сначала новые</option>
+                <option value="month" {% if sort_by == "month" %}selected{% endif %}>По месяцу</option>
+                <option value="income_first" {% if sort_by == "income_first" %}selected{% endif %}>Сначала доходы</option>
+                <option value="expense_first" {% if sort_by == "expense_first" %}selected{% endif %}>Сначала расходы</option>
+                <option value="category" {% if sort_by == "category" %}selected{% endif %}>По категории</option>
+            </select>
+        </div>
+
+        <div class="toolbar-actions">
+            <button type="submit">Применить</button>
+        </div>
+    </form>
+    <div class="report-actions">
+            <a
+                class="button-link"
+                href="{{ url_for('budget_export', month=selected_month, type_filter=type_filter, category_filter=category_filter, sort_by=sort_by) }}"
+            >
+                Скачать Excel
+            </a>
+        </div>
+    <div class="grid summary-grid">
+        <div class="card summary-card">
+            <h4>Доход за месяц</h4>
+            <p class="income">{{ summary.income }}</p>
+        </div>
+
+        <div class="card summary-card">
+            <h4>Расход за месяц</h4>
+            <p class="expense">{{ summary.expense }}</p>
+        </div>
+
+        <div class="card summary-card">
+            <h4>Баланс за месяц</h4>
+            <p class="balance">{{ summary.balance }}</p>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <h3>Подробная таблица</h3>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Месяц</th>
+                    <th>Тип</th>
+                    <th>Категория</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.month_name }}</td>
+                    <td>{{ entry.entry_type }}</td>
+                    <td>{{ entry.category }}</td>
+                    <td>{{ entry.amount }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

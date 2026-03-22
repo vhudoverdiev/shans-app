@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Главная | Шанс{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h2>Добро пожаловать, {{ username }}!</h2>
+    <p>Это твоя личная система управления бюджетом, машиной и уведомлениями.</p>
+</section>
+
+<section class="grid">
+    <div class="card">
+        <h3>Бюджет</h3>
+        <p>Сводка по текущему месяцу, просмотр и управление записями.</p>
+        <a class="button-link" href="{{ url_for('budget') }}">Открыть бюджет</a>
+    </div>
+
+    <div class="card">
+        <h3>Машина</h3>
+        <p>Что уже сделано по машине и что планируется сделать.</p>
+        <a class="button-link" href="{{ url_for('car') }}">Открыть машину</a>
+    </div>
+
+    <div class="card">
+        <h3>Уведомления</h3>
+        <p>Напоминания по замене и обслуживанию машины.</p>
+        <a class="button-link" href="{{ url_for('car_notifications') }}">Открыть уведомления</a>
+    </div>
+</section>
+{% endblock %}
