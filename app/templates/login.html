@@ -1,20 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Вход | Akvilon App{% endblock %}
+{% block title %}Вход | Шанс{% endblock %}
 
 {% block content %}
-<div class="login-wrapper">
-    <div class="card login-card">
-        <h2>Вход в систему</h2>
+<div class="login-page">
+    <div class="login-card">
+        <h1 class="login-title">Вход в систему</h1>
+        </p>
 
-        <form method="POST" class="form">
-            <label for="username">Логин</label>
-            <input type="text" id="username" name="username" required>
+        <form method="POST" class="form-block">
+            <div class="form-group">
+                <label for="username">Логин</label>
+                <input type="text" id="username" name="username" class="form-input" required>
+            </div>
 
-            <label for="password">Пароль</label>
-            <input type="password" id="password" name="password" required>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
 
-            <button type="submit">Войти</button>
+            <button type="submit" class="btn btn-primary btn-wide">
+                Войти
+            </button>
         </form>
     </div>
 </div>

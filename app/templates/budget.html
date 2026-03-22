@@ -3,36 +3,39 @@
 {% block title %}Бюджет | Шанс{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div class="section-header">
-        <h2>Бюджет ({{ current_month }})</h2>
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">Бюджет</span>
+            <span class="page-title-light">{{ current_month }}</span>
+        </h1>
 
-        <div class="action-buttons">
-            <a class="button-link" href="{{ url_for('budget_manage') }}">Управление</a>
-            <a class="button-link" href="{{ url_for('budget_report') }}">Подробный отчёт</a>
+        <div class="page-actions">
+            <a href="{{ url_for('budget_manage') }}" class="btn btn-primary">Управление бюджетом</a>
+            <a href="{{ url_for('budget_report') }}" class="btn btn-secondary">Подробный отчёт</a>
         </div>
     </div>
-</section>
 
-<section class="grid summary-grid">
-    <div class="card summary-card">
-        <h4>Доход за месяц</h4>
-        <p class="income">{{ summary.income }}</p>
-    </div>
+    <div class="stats-grid">
+        <div class="stat-card stat-card-income">
+            <div class="stat-label">Доход</div>
+            <div class="stat-value">{{ summary.income|money }}</div>
+        </div>
 
-    <div class="card summary-card">
-        <h4>Расход за месяц</h4>
-        <p class="expense">{{ summary.expense }}</p>
-    </div>
+        <div class="stat-card stat-card-expense">
+            <div class="stat-label">Расход</div>
+            <div class="stat-value">{{ summary.expense|money }}</div>
+        </div>
 
-    <div class="card summary-card">
-        <h4>Баланс за месяц</h4>
-        <p class="balance">{{ summary.balance }}</p>
-    </div>
+        <div class="stat-card stat-card-balance">
+            <div class="stat-label">Прибыль</div>
+            <div class="stat-value">{{ summary.balance|money }}</div>
+        </div>
 
-    <div class="card summary-card">
-        <h4>Текущий баланс</h4>
-        <p class="balance">{{ current_balance }}</p>
+        <div class="stat-card stat-card-current">
+            <div class="stat-label">Текущий баланс</div>
+            <div class="stat-value">{{ current_balance|money }}</div>
+        </div>
     </div>
-</section>
+</div>
 {% endblock %}

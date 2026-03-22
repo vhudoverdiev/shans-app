@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Фотопроекты | Шанс{% endblock %}
+
+{% block content %}
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">Фотопроекты</span>
+        </h1>
+        <div class="page-actions">
+            <a href="{{ url_for('schedule') }}" class="btn btn-secondary">Назад к графику</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Раздел подготовлен</h2>
+        <p>Здесь позже можно будет добавить карточки фотопроектов, статусы, сроки и заметки.</p>
+    </div>
+</div>
+{% endblock %}

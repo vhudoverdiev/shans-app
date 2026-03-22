@@ -9,11 +9,20 @@ from app.routes import register_routes
 login_manager = LoginManager()
 
 
-def create_app():
+def format_money(value):
     """
-    Создаём и настраиваем Flask-приложение.
+    Форматирует число как деньги:
+    12500 -> 12 500 Р
     """
+    try:
+        number = int(round(float(value)))
+    except (TypeError, ValueError):
+        return "0 Р"
 
+    return f"{number:,}".replace(",", " ") + " Р"
+
+
+def create_app():
     app = Flask(
         __name__,
         template_folder="templates",
@@ -22,7 +31,6 @@ def create_app():
 
     app.config.from_object(Config)
 
-    # 1. Подключаем Flask-Login
     login_manager.init_app(app)
     login_manager.login_view = "login"
     login_manager.login_message = "Сначала войдите в систему."
@@ -31,13 +39,10 @@ def create_app():
     def load_user(user_id):
         return load_user_from_db(user_id)
 
-    # 2. Готовим базу данных
     init_db()
-
-    # 3. Создаём администратора, если его ещё нет
     create_admin_if_not_exists()
-
-    # 4. Регистрируем маршруты
     register_routes(app)
+
+    app.jinja_env.filters["money"] = format_money
 
     return app

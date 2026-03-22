@@ -6,29 +6,43 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <header class="header">
-        <div class="container header-row">
-            <div>
-                <h1 class="logo">Шанс</h1>
-                <p class="subtitle">Личная система управления</p>
+<body class="app-body">
+    {% if current_user.is_authenticated %}
+        <header class="site-header">
+            <div class="site-header-inner">
+                <a href="{{ url_for('index') }}" class="brand">
+                    <span class="brand-badge">Ш</span>
+                    <span class="brand-text">
+                        <span class="brand-title">Шанс</span>
+                        <span class="brand-subtitle">Личная система управления</span>
+                    </span>
+                </a>
+
+                <nav class="top-nav">
+                    <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
+                    <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
+                    <a href="{{ url_for('schedule') }}" class="top-nav-link">График</a>
+                </nav>
+
+                <div class="header-user-block">
+                    <div class="header-user-name">{{ current_user.username }}</div>
+                    <a href="{{ url_for('logout') }}" class="btn btn-danger btn-logout">Выйти</a>
+                </div>
             </div>
+        </header>
+    {% endif %}
 
-            {% if current_user.is_authenticated %}
-            <nav class="nav">
-                <a href="{{ url_for('index') }}">Главная</a>
-                <a href="{{ url_for('logout') }}">Выход</a>
-            </nav>
-            {% endif %}
-        </div>
-    </header>
-
-    <main class="container">
-        {% with messages = get_flashed_messages() %}
+    <main class="page-shell">
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for message in messages %}
-                    <div class="alert">{{ message }}</div>
-                {% endfor %}
+                <div class="flash-stack">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category if category else 'info' }}">
+                            <div class="flash-message-text">{{ message }}</div>
+                            <button type="button" class="flash-close" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 

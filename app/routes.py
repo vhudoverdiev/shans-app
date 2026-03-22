@@ -52,7 +52,7 @@ MONTHS = [
     "Декабрь",
 ]
 
-CATEGORIES = ["Авто", "Еда", "Другое"]
+BASE_CATEGORIES = ["Авто", "Еда", "Другое"]
 
 MONTH_MAP = {
     1: "Январь",
@@ -74,11 +74,42 @@ def _get_current_month_name() -> str:
     return MONTH_MAP[datetime.now().month]
 
 
-def register_routes(app):
+def _resolve_budget_category(form):
     """
-    Регистрирует маршруты приложения.
+    Возвращает итоговую категорию бюджета.
+    Если выбрано 'Другое', берём custom_category.
     """
+    category = form.get("category", "").strip()
+    custom_category = form.get("custom_category", "").strip()
 
+    if category == "Другое":
+        return custom_category.strip()
+
+    return category.strip()
+
+
+def _collect_budget_categories(entries):
+    """
+    Собирает категории для фильтров:
+    сначала базовые, затем все реальные категории из записей.
+    """
+    categories = ["Авто", "Еда"]
+
+    existing = set(categories)
+
+    for entry in entries:
+        category = (entry["category"] if isinstance(entry, dict) else entry["category"]).strip()
+        if category and category not in existing:
+            categories.append(category)
+            existing.add(category)
+
+    if "Другое" not in categories:
+        categories.append("Другое")
+
+    return categories
+
+
+def register_routes(app):
     @app.route("/")
     @login_required
     def index():
@@ -95,7 +126,7 @@ def register_routes(app):
                 login_user(user)
                 return redirect(url_for("index"))
 
-            flash("Неверный логин или пароль.")
+            flash("Неверный логин или пароль.", "danger")
 
         return render_template("login.html")
 
@@ -128,17 +159,21 @@ def register_routes(app):
             if form_type == "add_entry":
                 month_name = request.form.get("month_name", "").strip()
                 entry_type = request.form.get("entry_type", "").strip()
-                category = request.form.get("category", "").strip()
                 amount_raw = request.form.get("amount", "").strip()
+                category = _resolve_budget_category(request.form)
 
-                if not month_name or not entry_type or not category or not amount_raw:
-                    flash("Заполни все обязательные поля.")
+                if not month_name or not entry_type or not amount_raw:
+                    flash("Заполни все обязательные поля.", "warning")
+                    return redirect(url_for("budget_manage"))
+
+                if not category:
+                    flash("Если выбрано 'Другое', укажи свою категорию.", "warning")
                     return redirect(url_for("budget_manage"))
 
                 try:
-                    amount_value = float(amount_raw)
+                    amount_value = int(amount_raw)
                 except ValueError:
-                    flash("Сумма должна быть числом.")
+                    flash("Сумма должна быть целым числом.", "danger")
                     return redirect(url_for("budget_manage"))
 
                 create_budget_entry(
@@ -147,36 +182,56 @@ def register_routes(app):
                     category=category,
                     amount=amount_value,
                 )
-                flash("Запись успешно добавлена.")
+                flash("Запись успешно добавлена.", "success")
                 return redirect(url_for("budget_manage"))
 
             if form_type == "set_balance":
                 balance_raw = request.form.get("current_balance", "").strip()
 
                 if not balance_raw:
-                    flash("Введите текущий баланс.")
+                    flash("Введите текущий баланс.", "warning")
                     return redirect(url_for("budget_manage"))
 
                 try:
-                    balance_value = float(balance_raw)
+                    balance_value = int(balance_raw)
                 except ValueError:
-                    flash("Баланс должен быть числом.")
+                    flash("Баланс должен быть целым числом.", "danger")
                     return redirect(url_for("budget_manage"))
 
                 set_current_balance(balance_value)
-                flash("Текущий баланс обновлён.")
+                flash("Текущий баланс обновлён.", "success")
                 return redirect(url_for("budget_manage"))
 
-            flash("Неизвестный тип формы.")
+            flash("Неизвестный тип формы.", "danger")
             return redirect(url_for("budget_manage"))
 
+        month_filter = request.args.get("month", "").strip()
+        type_filter = request.args.get("type_filter", "").strip()
+        category_filter = request.args.get("category_filter", "").strip()
+        sort_by = request.args.get("sort_by", "newest").strip()
+
+        entries = get_all_budget_entries(
+            month_filter=month_filter,
+            type_filter=type_filter,
+            category_filter=category_filter,
+            sort_by=sort_by,
+        )
+
+        all_entries = get_all_budget_entries(sort_by="newest")
+        categories = _collect_budget_categories(all_entries)
         current_balance = get_current_balance()
 
         return render_template(
             "budget_manage.html",
             months=MONTHS,
-            categories=CATEGORIES,
+            categories=categories,
+            base_categories=BASE_CATEGORIES,
             current_balance=current_balance,
+            entries=entries,
+            month_filter=month_filter,
+            type_filter=type_filter,
+            category_filter=category_filter,
+            sort_by=sort_by,
         )
 
     @app.route("/budget/report")
@@ -187,14 +242,16 @@ def register_routes(app):
         selected_month = request.args.get("month", current_month).strip()
         type_filter = request.args.get("type_filter", "").strip()
         category_filter = request.args.get("category_filter", "").strip()
-        sort_by = request.args.get("sort_by", "newest").strip()
 
         entries = get_all_budget_entries(
             month_filter=selected_month,
             type_filter=type_filter,
             category_filter=category_filter,
-            sort_by=sort_by,
+            sort_by="newest",
         )
+        all_entries = get_all_budget_entries(sort_by="newest")
+        categories = _collect_budget_categories(all_entries)
+
         summary = get_budget_summary(selected_month)
 
         return render_template(
@@ -204,9 +261,8 @@ def register_routes(app):
             selected_month=selected_month,
             type_filter=type_filter,
             category_filter=category_filter,
-            sort_by=sort_by,
             months=MONTHS,
-            categories=CATEGORIES,
+            categories=categories,
         )
 
     @app.route("/budget/edit/<int:entry_id>", methods=["GET", "POST"])
@@ -214,23 +270,30 @@ def register_routes(app):
     def budget_edit(entry_id):
         entry = get_budget_entry_by_id(entry_id)
         if not entry:
-            flash("Запись не найдена.")
-            return redirect(url_for("budget_report"))
+            flash("Запись не найдена.", "danger")
+            return redirect(url_for("budget_manage"))
+
+        all_entries = get_all_budget_entries(sort_by="newest")
+        categories = _collect_budget_categories(all_entries)
 
         if request.method == "POST":
             entry_type = request.form.get("entry_type", "").strip()
             month_name = request.form.get("month_name", "").strip()
-            category = request.form.get("category", "").strip()
             amount_raw = request.form.get("amount", "").strip()
+            category = _resolve_budget_category(request.form)
 
-            if not entry_type or not month_name or not category or not amount_raw:
-                flash("Заполни все обязательные поля.")
+            if not entry_type or not month_name or not amount_raw:
+                flash("Заполни все обязательные поля.", "warning")
+                return redirect(url_for("budget_edit", entry_id=entry_id))
+
+            if not category:
+                flash("Если выбрано 'Другое', укажи свою категорию.", "warning")
                 return redirect(url_for("budget_edit", entry_id=entry_id))
 
             try:
-                amount_value = float(amount_raw)
+                amount_value = int(amount_raw)
             except ValueError:
-                flash("Сумма должна быть числом.")
+                flash("Сумма должна быть целым числом.", "danger")
                 return redirect(url_for("budget_edit", entry_id=entry_id))
 
             update_budget_entry(
@@ -240,22 +303,23 @@ def register_routes(app):
                 category=category,
                 amount=amount_value,
             )
-            flash("Запись успешно обновлена.")
-            return redirect(url_for("budget_report"))
+            flash("Запись успешно обновлена.", "success")
+            return redirect(url_for("budget_manage"))
 
         return render_template(
             "budget_edit.html",
             entry=entry,
             months=MONTHS,
-            categories=CATEGORIES,
+            categories=categories,
+            base_categories=BASE_CATEGORIES,
         )
 
     @app.route("/budget/delete/<int:entry_id>", methods=["POST"])
     @login_required
     def budget_delete(entry_id):
         delete_budget_entry(entry_id)
-        flash("Запись успешно удалена.")
-        return redirect(url_for("budget_report"))
+        flash("Запись успешно удалена.", "success")
+        return redirect(url_for("budget_manage"))
 
     @app.route("/budget/export")
     @login_required
@@ -265,13 +329,12 @@ def register_routes(app):
         selected_month = request.args.get("month", current_month).strip()
         type_filter = request.args.get("type_filter", "").strip()
         category_filter = request.args.get("category_filter", "").strip()
-        sort_by = request.args.get("sort_by", "newest").strip()
 
         entries = get_all_budget_entries(
             month_filter=selected_month,
             type_filter=type_filter,
             category_filter=category_filter,
-            sort_by=sort_by,
+            sort_by="newest",
         )
         summary = get_budget_summary(selected_month)
         current_balance = get_current_balance()
@@ -286,9 +349,24 @@ def register_routes(app):
         return send_file(
             excel_file,
             as_attachment=True,
-            download_name="budget.xlsx",
+            download_name=f"budget_{selected_month}.xlsx",
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    @app.route("/schedule")
+    @login_required
+    def schedule():
+        return render_template("schedule.html")
+
+    @app.route("/photo-projects")
+    @login_required
+    def photo_projects():
+        return render_template("photo_projects.html")
+
+    @app.route("/shootings")
+    @login_required
+    def shootings():
+        return render_template("shootings.html")
 
     @app.route("/car", methods=["GET", "POST"])
     @login_required
@@ -305,14 +383,14 @@ def register_routes(app):
                 note = request.form.get("note", "").strip()
 
                 if not service_name or not service_cost_raw or not mileage_raw or not service_date:
-                    flash("Заполни обязательные поля выполненной работы.")
+                    flash("Заполни обязательные поля выполненной работы.", "warning")
                     return redirect(url_for("car"))
 
                 try:
-                    service_cost = float(service_cost_raw)
+                    service_cost = int(service_cost_raw)
                     mileage = int(mileage_raw)
                 except ValueError:
-                    flash("Стоимость должна быть числом, а пробег — целым числом.")
+                    flash("Стоимость и пробег должны быть целыми числами.", "danger")
                     return redirect(url_for("car"))
 
                 create_car_done_service(
@@ -323,7 +401,7 @@ def register_routes(app):
                     brand=brand,
                     note=note,
                 )
-                flash("Выполненная работа добавлена.")
+                flash("Выполненная работа добавлена.", "success")
                 return redirect(url_for("car"))
 
             if form_type == "planned_service":
@@ -333,13 +411,13 @@ def register_routes(app):
                 note = request.form.get("note", "").strip()
 
                 if not service_name or not planned_cost_raw:
-                    flash("Заполни обязательные поля планируемой работы.")
+                    flash("Заполни обязательные поля планируемой работы.", "warning")
                     return redirect(url_for("car"))
 
                 try:
-                    planned_cost = float(planned_cost_raw)
+                    planned_cost = int(planned_cost_raw)
                 except ValueError:
-                    flash("Планируемая стоимость должна быть числом.")
+                    flash("Планируемая стоимость должна быть целым числом.", "danger")
                     return redirect(url_for("car"))
 
                 create_car_planned_service(
@@ -348,10 +426,10 @@ def register_routes(app):
                     priority=priority or "Обычный",
                     note=note,
                 )
-                flash("Планируемая работа добавлена.")
+                flash("Планируемая работа добавлена.", "success")
                 return redirect(url_for("car"))
 
-            flash("Неизвестный тип формы.")
+            flash("Неизвестный тип формы.", "danger")
             return redirect(url_for("car"))
 
         done_services = get_car_done_services()
@@ -385,13 +463,13 @@ def register_routes(app):
                 or not mileage_at_service_raw
                 or not status
             ):
-                flash("Заполни все обязательные поля уведомления.")
+                flash("Заполни все обязательные поля уведомления.", "warning")
                 return redirect(url_for("car_notifications"))
 
             try:
                 mileage_at_service = int(mileage_at_service_raw)
             except ValueError:
-                flash("Пробег должен быть целым числом.")
+                flash("Пробег должен быть целым числом.", "danger")
                 return redirect(url_for("car_notifications"))
 
             create_car_notification(
@@ -402,7 +480,7 @@ def register_routes(app):
                 brand=brand,
                 status=status,
             )
-            flash("Уведомление добавлено.")
+            flash("Уведомление добавлено.", "success")
             return redirect(url_for("car_notifications"))
 
         notifications = get_car_notifications()

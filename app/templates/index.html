@@ -3,28 +3,60 @@
 {% block title %}Главная | Шанс{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h2>Добро пожаловать, {{ username }}!</h2>
-    <p>Это твоя личная система управления бюджетом, машиной и уведомлениями.</p>
-</section>
-
-<section class="grid">
-    <div class="card">
-        <h3>Бюджет</h3>
-        <p>Сводка по текущему месяцу, просмотр и управление записями.</p>
-        <a class="button-link" href="{{ url_for('budget') }}">Открыть бюджет</a>
+<div class="dashboard-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">Главная</span>
+        </h1>
     </div>
 
-    <div class="card">
-        <h3>Машина</h3>
-        <p>Что уже сделано по машине и что планируется сделать.</p>
-        <a class="button-link" href="{{ url_for('car') }}">Открыть машину</a>
+    <div class="welcome-card">
+        <div class="welcome-name">Добро пожаловать</div>
+        <p class="welcome-label">
+            Выбери нужный раздел ниже для работы
+        </p>
     </div>
 
-    <div class="card">
-        <h3>Уведомления</h3>
-        <p>Напоминания по замене и обслуживанию машины.</p>
-        <a class="button-link" href="{{ url_for('car_notifications') }}">Открыть уведомления</a>
+    <div class="dashboard-grid">
+        <a href="{{ url_for('budget') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">₽</div>
+            <div class="dashboard-card-title">Бюджет</div>
+            <div class="dashboard-card-text">
+                Обзор доходов, расходов и текущего баланса.
+            </div>
+        </a>
+
+        <a href="{{ url_for('car') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🚗</div>
+            <div class="dashboard-card-title">Машина</div>
+            <div class="dashboard-card-text">
+                Volkswagen Polo 2018
+            </div>
+        </a>
+
+        <a href="{{ url_for('photo_projects') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">📷</div>
+            <div class="dashboard-card-title">Фотопроекты</div>
+            <div class="dashboard-card-text">
+                Электронная запись
+            </div>
+        </a>
+
+        <a href="{{ url_for('schedule') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🗓</div>
+            <div class="dashboard-card-title">График</div>
+            <div class="dashboard-card-text">
+                Общее планирование дел
+            </div>
+        </a>
+
+        <a href="{{ url_for('shootings') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🎬</div>
+            <div class="dashboard-card-title">Съёмки</div>
+            <div class="dashboard-card-text">
+                Запись на съёмку
+            </div>
+        </a>
     </div>
-</section>
+</div>
 {% endblock %}

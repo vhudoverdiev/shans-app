@@ -1,54 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %}Редактирование бюджета | Шанс{% endblock %}
+{% block title %}Редактирование | Шанс{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div class="section-header">
-        <h2>Редактирование записи</h2>
-        <a class="button-link" href="{{ url_for('budget') }}">Назад к бюджету</a>
-    </div>
-</section>
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">Редактирование</span>
+        </h1>
 
-<section class="card">
-    <form method="POST" class="form">
-        <label for="entry_type">Доход / Расход</label>
-        <select id="entry_type" name="entry_type" required>
-            <option value="Доход" {% if entry.entry_type == "Доход" %}selected{% endif %}>Доход</option>
-            <option value="Расход" {% if entry.entry_type == "Расход" %}selected{% endif %}>Расход</option>
-        </select>
-
-        <label for="month_name">Месяц</label>
-        <select id="month_name" name="month_name" required>
-            {% for month in months %}
-            <option value="{{ month }}" {% if entry.month_name == month %}selected{% endif %}>
-                {{ month }}
-            </option>
-            {% endfor %}
-        </select>
-
-        <label for="category">Категория</label>
-        <select id="category" name="category" required>
-            {% for category in categories %}
-            <option value="{{ category }}" {% if entry.category == category %}selected{% endif %}>
-                {{ category }}
-            </option>
-            {% endfor %}
-        </select>
-
-        <label for="amount">Сумма</label>
-        <input
-            type="number"
-            step="0.01"
-            id="amount"
-            name="amount"
-            value="{{ entry.amount }}"
-            required
-        >
-
-        <div class="action-buttons">
-            <button type="submit">Сохранить изменения</button>
+        <div class="page-actions">
+            <a href="{{ url_for('budget_manage') }}" class="btn btn-secondary">Назад к управлению</a>
+            <a href="{{ url_for('budget') }}" class="btn btn-secondary">К бюджету</a>
         </div>
-    </form>
-</section>
+    </div>
+
+    <div class="card edit-card">
+        <form method="POST" class="form-block">
+            <div class="form-group">
+                <label for="month_name">Месяц</label>
+                <select id="month_name" name="month_name" required class="form-input">
+                    {% for month in months %}
+                        <option value="{{ month }}" {% if entry.month_name == month %}selected{% endif %}>
+                            {{ month }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="entry_type">Тип</label>
+                <select id="entry_type" name="entry_type" required class="form-input">
+                    <option value="Доход" {% if entry.entry_type == 'Доход' %}selected{% endif %}>Доход</option>
+                    <option value="Расход" {% if entry.entry_type == 'Расход' %}selected{% endif %}>Расход</option>
+                </select>
+            </div>
+
+            {% set standard_categories = ['Авто', 'Еда', 'Другое'] %}
+            {% set is_custom_category = entry.category not in ['Авто', 'Еда'] %}
+
+            <div class="form-group">
+                <label for="category">Категория</label>
+                <select id="category" name="category" required class="form-input" onchange="toggleEditCustomCategoryField()">
+                    <option value="Авто" {% if entry.category == 'Авто' %}selected{% endif %}>Авто</option>
+                    <option value="Еда" {% if entry.category == 'Еда' %}selected{% endif %}>Еда</option>
+                    <option value="Другое" {% if is_custom_category %}selected{% endif %}>Другое</option>
+                </select>
+            </div>
+
+            <div
+                class="form-group"
+                id="edit-custom-category-group"
+                {% if is_custom_category %}style="display: flex;"{% else %}style="display: none;"{% endif %}
+            >
+                <label for="custom_category">Своя категория</label>
+                <input
+                    type="text"
+                    id="custom_category"
+                    name="custom_category"
+                    class="form-input"
+                    placeholder="Например: Подарки, Одежда, Лекарства"
+                    value="{% if is_custom_category %}{{ entry.category }}{% endif %}"
+                    {% if is_custom_category %}required{% endif %}
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Сумма, Р</label>
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    step="1"
+                    value="{{ entry.amount|int }}"
+                    required
+                    class="form-input"
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-wide">
+                Сохранить изменения
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleEditCustomCategoryField() {
+        const categorySelect = document.getElementById("category");
+        const customGroup = document.getElementById("edit-custom-category-group");
+        const customInput = document.getElementById("custom_category");
+
+        if (categorySelect.value === "Другое") {
+            customGroup.style.display = "flex";
+            customInput.required = true;
+        } else {
+            customGroup.style.display = "none";
+            customInput.required = false;
+            customInput.value = "";
+        }
+    }
+</script>
 {% endblock %}

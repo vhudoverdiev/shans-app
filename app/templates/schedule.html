@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}График | Шанс{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">График</span>
+            <span class="page-title-light">планирование</span>
+        </h1>
+    </div>
+
+    <div class="dashboard-grid">
+        <a href="{{ url_for('photo_projects') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">📷</div>
+            <div class="dashboard-card-title">Фотопроекты</div>
+            <div class="dashboard-card-text">
+                Раздел для будущего списка проектов, идей и этапов подготовки.
+            </div>
+        </a>
+
+        <a href="{{ url_for('shootings') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🎬</div>
+            <div class="dashboard-card-title">Съёмки</div>
+            <div class="dashboard-card-text">
+                Раздел для будущего календаря съёмок, задач и клиентов.
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
