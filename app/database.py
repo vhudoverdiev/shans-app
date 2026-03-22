@@ -1,25 +1,47 @@
 import sqlite3
+
 from config import Config
 
 
 def get_connection():
     """
-    Создаёт подключение к SQLite.
+    Создаёт подключение к SQLite и включает доступ к колонкам по имени.
     """
     conn = sqlite3.connect(Config.DATABASE_NAME)
     conn.row_factory = sqlite3.Row
     return conn
 
 
+def _get_table_columns(cursor, table_name):
+    """
+    Возвращает список колонок таблицы.
+    """
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    return [column["name"] for column in cursor.fetchall()]
+
+
+def _add_column_if_not_exists(cursor, table_name, column_name, column_definition):
+    """
+    Добавляет колонку в таблицу, только если её ещё нет.
+    """
+    columns = _get_table_columns(cursor, table_name)
+    if column_name not in columns:
+        cursor.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
+        )
+
+
 def init_db():
     """
-    Создаёт таблицы проекта.
-    Если таблица budget_entries уже существует, но в ней нет колонки month_name,
-    то колонка будет добавлена.
+    Создаёт таблицы приложения и выполняет мягкие миграции
+    для уже существующей базы.
     """
     conn = get_connection()
     cursor = conn.cursor()
 
+    # =========================================================
+    # USERS
+    # =========================================================
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,11 +50,15 @@ def init_db():
         )
     """)
 
+    # =========================================================
+    # BUDGET ENTRIES
+    # =========================================================
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS budget_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             entry_type TEXT NOT NULL,
             month_name TEXT,
+            year_value INTEGER NOT NULL DEFAULT 2026,
             category TEXT NOT NULL,
             amount REAL NOT NULL,
             entry_date TEXT,
@@ -41,6 +67,47 @@ def init_db():
         )
     """)
 
+    # Мягкие миграции для старой таблицы budget_entries
+    _add_column_if_not_exists(cursor, "budget_entries", "month_name", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "budget_entries",
+        "year_value",
+        "INTEGER NOT NULL DEFAULT 2026",
+    )
+    _add_column_if_not_exists(cursor, "budget_entries", "entry_date", "TEXT")
+    _add_column_if_not_exists(cursor, "budget_entries", "comment", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "budget_entries",
+        "created_at",
+        "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    )
+
+    # =========================================================
+    # BUDGET SETTINGS
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS budget_settings (
+            id INTEGER PRIMARY KEY,
+            current_balance REAL NOT NULL DEFAULT 0
+        )
+    """)
+
+    # Гарантируем одну основную строку настроек
+    existing_settings = cursor.execute(
+        "SELECT id FROM budget_settings WHERE id = 1"
+    ).fetchone()
+
+    if not existing_settings:
+        cursor.execute("""
+            INSERT INTO budget_settings (id, current_balance)
+            VALUES (1, 0)
+        """)
+
+    # =========================================================
+    # CAR DONE SERVICES
+    # =========================================================
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS car_done_services (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,6 +121,18 @@ def init_db():
         )
     """)
 
+    _add_column_if_not_exists(cursor, "car_done_services", "brand", "TEXT")
+    _add_column_if_not_exists(cursor, "car_done_services", "note", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_done_services",
+        "created_at",
+        "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    )
+
+    # =========================================================
+    # CAR PLANNED SERVICES
+    # =========================================================
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS car_planned_services (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,6 +144,23 @@ def init_db():
         )
     """)
 
+    _add_column_if_not_exists(
+        cursor,
+        "car_planned_services",
+        "priority",
+        "TEXT DEFAULT 'Обычный'",
+    )
+    _add_column_if_not_exists(cursor, "car_planned_services", "note", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_planned_services",
+        "created_at",
+        "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    )
+
+    # =========================================================
+    # CAR NOTIFICATIONS
+    # =========================================================
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS car_notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,12 +173,20 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
-    cursor.execute("PRAGMA table_info(budget_entries)")
-    columns = [column["name"] for column in cursor.fetchall()]
 
-    if "month_name" not in columns:
-        cursor.execute("ALTER TABLE budget_entries ADD COLUMN month_name TEXT")
+    _add_column_if_not_exists(cursor, "car_notifications", "brand", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_notifications",
+        "status",
+        "TEXT NOT NULL DEFAULT 'Скоро'",
+    )
+    _add_column_if_not_exists(
+        cursor,
+        "car_notifications",
+        "created_at",
+        "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    )
 
     conn.commit()
     conn.close()
