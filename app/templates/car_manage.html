@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Управление машинами | Шанс{% endblock %}
+
+{% block content %}
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">Управление</span>
+            <span class="page-title-light">машины</span>
+        </h1>
+
+        <div class="page-actions">
+            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад к машинам</a>
+        </div>
+    </div>
+
+    <div class="budget-manage-grid">
+        <div class="card">
+            <h2 class="section-title">Добавить выполненную работу</h2>
+
+            <form method="POST" class="form-block">
+                <input type="hidden" name="form_type" value="done_service">
+
+                <div class="form-group">
+                    <label for="done_service_name">Наименование</label>
+                    <input
+                        type="text"
+                        id="done_service_name"
+                        name="service_name"
+                        class="form-input"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="done_service_cost">Стоимость</label>
+                    <input
+                        type="number"
+                        id="done_service_cost"
+                        name="service_cost"
+                        class="form-input"
+                        step="1"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="done_mileage">Пробег</label>
+                    <input
+                        type="number"
+                        id="done_mileage"
+                        name="mileage"
+                        class="form-input"
+                        step="1"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="done_service_date">Дата</label>
+                    <input
+                        type="month"
+                        id="done_service_date"
+                        name="service_date"
+                        class="form-input"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="done_detail_description">Описание детали</label>
+                    <input
+                        type="text"
+                        id="done_detail_description"
+                        name="detail_description"
+                        class="form-input"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="done_work_kind">Тип работы</label>
+                    <select
+                        id="done_work_kind"
+                        name="work_kind"
+                        class="form-input"
+                        onchange="togglePeriodFields(this, 'done-period-group', 'done_period_type')"
+                    >
+                        <option value="Разовая">Разовая</option>
+                        <option value="Периодическая">Периодическая</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="done-period-group" style="display: none;">
+                    <label for="done_period_type">Периодичность</label>
+                    <select
+                        id="done_period_type"
+                        name="period_type"
+                        class="form-input"
+                    >
+                        <option value="">Выбери период</option>
+                        <option value="Раз в год">Раз в год</option>
+                        <option value="Раз в пол года">Раз в пол года</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Статус</label>
+                    <div class="status-preview-row">
+                        <span class="status-pill status-pill-done">Выполнено</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-wide">Сохранить</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Добавить планируемую работу</h2>
+
+            <form method="POST" class="form-block">
+                <input type="hidden" name="form_type" value="planned_service">
+
+                <div class="form-group">
+                    <label for="planned_service_name">Наименование</label>
+                    <input
+                        type="text"
+                        id="planned_service_name"
+                        name="service_name"
+                        class="form-input"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="planned_cost">Стоимость</label>
+                    <input
+                        type="number"
+                        id="planned_cost"
+                        name="planned_cost"
+                        class="form-input"
+                        step="1"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="planned_mileage">Пробег</label>
+                    <input
+                        type="number"
+                        id="planned_mileage"
+                        name="mileage"
+                        class="form-input"
+                        step="1"
+                        min="0"
+                        value="0"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="planned_detail_description">Описание детали</label>
+                    <input
+                        type="text"
+                        id="planned_detail_description"
+                        name="detail_description"
+                        class="form-input"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="planned_work_kind">Тип работы</label>
+                    <select
+                        id="planned_work_kind"
+                        name="work_kind"
+                        class="form-input"
+                        onchange="togglePeriodFields(this, 'planned-period-group', 'planned_period_type')"
+                    >
+                        <option value="Разовая">Разовая</option>
+                        <option value="Периодическая">Периодическая</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="planned-period-group" style="display: none;">
+                    <label for="planned_period_type">Периодичность</label>
+                    <select
+                        id="planned_period_type"
+                        name="period_type"
+                        class="form-input"
+                    >
+                        <option value="">Выбери период</option>
+                        <option value="Раз в год">Раз в год</option>
+                        <option value="Раз в пол года">Раз в пол года</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Статус</label>
+                    <div class="status-preview-row">
+                        <span class="status-pill status-pill-work">В работе</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-wide">Сохранить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePeriodFields(selectElement, targetId, periodSelectId) {
+        const target = document.getElementById(targetId);
+        const periodSelect = document.getElementById(periodSelectId);
+
+        if (selectElement.value === "Периодическая") {
+            target.style.display = "flex";
+            periodSelect.required = true;
+        } else {
+            target.style.display = "none";
+            periodSelect.required = false;
+            periodSelect.value = "";
+        }
+    }
+</script>
+{% endblock %}

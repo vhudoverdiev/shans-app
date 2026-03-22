@@ -51,6 +51,19 @@ def init_db():
     """)
 
     # =========================================================
+    # BUDGET BALANCE HISTORY
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS budget_balance_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            month_name TEXT NOT NULL,
+            year_value INTEGER NOT NULL DEFAULT 2026,
+            balance_value REAL NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # =========================================================
     # BUDGET ENTRIES
     # =========================================================
     cursor.execute("""
@@ -67,7 +80,6 @@ def init_db():
         )
     """)
 
-    # Мягкие миграции для старой таблицы budget_entries
     _add_column_if_not_exists(cursor, "budget_entries", "month_name", "TEXT")
     _add_column_if_not_exists(
         cursor,
@@ -94,7 +106,6 @@ def init_db():
         )
     """)
 
-    # Гарантируем одну основную строку настроек
     existing_settings = cursor.execute(
         "SELECT id FROM budget_settings WHERE id = 1"
     ).fetchone()
@@ -115,14 +126,28 @@ def init_db():
             service_cost REAL NOT NULL DEFAULT 0,
             mileage INTEGER NOT NULL DEFAULT 0,
             service_date TEXT NOT NULL,
-            brand TEXT,
-            note TEXT,
+            detail_description TEXT,
+            work_kind TEXT NOT NULL DEFAULT 'Разовая',
+            period_type TEXT,
+            status TEXT NOT NULL DEFAULT 'Выполнено',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
-    _add_column_if_not_exists(cursor, "car_done_services", "brand", "TEXT")
-    _add_column_if_not_exists(cursor, "car_done_services", "note", "TEXT")
+    _add_column_if_not_exists(cursor, "car_done_services", "detail_description", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_done_services",
+        "work_kind",
+        "TEXT NOT NULL DEFAULT 'Разовая'",
+    )
+    _add_column_if_not_exists(cursor, "car_done_services", "period_type", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_done_services",
+        "status",
+        "TEXT NOT NULL DEFAULT 'Выполнено'",
+    )
     _add_column_if_not_exists(
         cursor,
         "car_done_services",
@@ -138,8 +163,11 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             service_name TEXT NOT NULL,
             planned_cost REAL NOT NULL DEFAULT 0,
-            priority TEXT DEFAULT 'Обычный',
-            note TEXT,
+            mileage INTEGER NOT NULL DEFAULT 0,
+            detail_description TEXT,
+            work_kind TEXT NOT NULL DEFAULT 'Разовая',
+            period_type TEXT,
+            status TEXT NOT NULL DEFAULT 'В работе',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -147,10 +175,23 @@ def init_db():
     _add_column_if_not_exists(
         cursor,
         "car_planned_services",
-        "priority",
-        "TEXT DEFAULT 'Обычный'",
+        "mileage",
+        "INTEGER NOT NULL DEFAULT 0",
     )
-    _add_column_if_not_exists(cursor, "car_planned_services", "note", "TEXT")
+    _add_column_if_not_exists(cursor, "car_planned_services", "detail_description", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_planned_services",
+        "work_kind",
+        "TEXT NOT NULL DEFAULT 'Разовая'",
+    )
+    _add_column_if_not_exists(cursor, "car_planned_services", "period_type", "TEXT")
+    _add_column_if_not_exists(
+        cursor,
+        "car_planned_services",
+        "status",
+        "TEXT NOT NULL DEFAULT 'В работе'",
+    )
     _add_column_if_not_exists(
         cursor,
         "car_planned_services",

@@ -18,21 +18,33 @@ from flask_login import (
 from app.auth import verify_user
 from app.models import (
     create_budget_entry,
-    create_car_done_service,
     create_car_notification,
+    create_car_done_service,
     create_car_planned_service,
     delete_budget_entry,
+    delete_car_done_service,
+    delete_car_planned_service,
     get_all_budget_entries,
+    get_balance_for_month,
+    get_balance_history,
     get_budget_entry_by_id,
     get_budget_summary,
+    get_car_done_service_by_id,
     get_car_done_services,
     get_car_last_mileage,
     get_car_notifications,
+    get_car_planned_service_by_id,
     get_car_planned_services,
     get_car_total_spent,
     get_current_balance,
+    get_periodic_services_for_notifications,
+    move_done_to_planned,
+    move_planned_to_done,
+    save_balance_history,
     set_current_balance,
     update_budget_entry,
+    update_car_done_service,
+    update_car_planned_service,
 )
 from app.utils import build_budget_excel
 
@@ -94,11 +106,10 @@ def _collect_budget_categories(entries):
     сначала базовые, затем все реальные категории из записей.
     """
     categories = ["Авто", "Еда"]
-
     existing = set(categories)
 
     for entry in entries:
-        category = (entry["category"] if isinstance(entry, dict) else entry["category"]).strip()
+        category = entry["category"].strip()
         if category and category not in existing:
             categories.append(category)
             existing.add(category)
@@ -136,18 +147,35 @@ def register_routes(app):
         logout_user()
         return redirect(url_for("login"))
 
+    # =========================================================
+    # BUDGET
+    # =========================================================
+
     @app.route("/budget")
     @login_required
     def budget():
         current_month = _get_current_month_name()
         summary = get_budget_summary(current_month)
-        current_balance = get_current_balance()
+
+        current_balance = get_balance_for_month(current_month)
+        if current_balance is None:
+            current_balance = get_current_balance()
 
         return render_template(
             "budget.html",
             current_month=current_month,
             summary=summary,
             current_balance=current_balance,
+        )
+
+    @app.route("/budget/balance")
+    @login_required
+    def budget_balance():
+        history = get_balance_history()
+
+        return render_template(
+            "budget_balance.html",
+            history=history,
         )
 
     @app.route("/budget/manage", methods=["GET", "POST"])
@@ -176,6 +204,10 @@ def register_routes(app):
                     flash("Сумма должна быть целым числом.", "danger")
                     return redirect(url_for("budget_manage"))
 
+                if amount_value < 0:
+                    flash("Сумма не может быть отрицательной.", "warning")
+                    return redirect(url_for("budget_manage"))
+
                 create_budget_entry(
                     entry_type=entry_type,
                     month_name=month_name,
@@ -198,12 +230,17 @@ def register_routes(app):
                     flash("Баланс должен быть целым числом.", "danger")
                     return redirect(url_for("budget_manage"))
 
+                if balance_value < 0:
+                    flash("Баланс не может быть отрицательным.", "warning")
+                    return redirect(url_for("budget_manage"))
+
+                current_month = _get_current_month_name()
+
                 set_current_balance(balance_value)
+                save_balance_history(current_month, balance_value)
+
                 flash("Текущий баланс обновлён.", "success")
                 return redirect(url_for("budget_manage"))
-
-            flash("Неизвестный тип формы.", "danger")
-            return redirect(url_for("budget_manage"))
 
         month_filter = request.args.get("month", "").strip()
         type_filter = request.args.get("type_filter", "").strip()
@@ -219,7 +256,11 @@ def register_routes(app):
 
         all_entries = get_all_budget_entries(sort_by="newest")
         categories = _collect_budget_categories(all_entries)
-        current_balance = get_current_balance()
+
+        current_month = _get_current_month_name()
+        current_balance = get_balance_for_month(current_month)
+        if current_balance is None:
+            current_balance = get_current_balance()
 
         return render_template(
             "budget_manage.html",
@@ -296,6 +337,10 @@ def register_routes(app):
                 flash("Сумма должна быть целым числом.", "danger")
                 return redirect(url_for("budget_edit", entry_id=entry_id))
 
+            if amount_value < 0:
+                flash("Сумма не может быть отрицательной.", "warning")
+                return redirect(url_for("budget_edit", entry_id=entry_id))
+
             update_budget_entry(
                 entry_id=entry_id,
                 entry_type=entry_type,
@@ -337,7 +382,10 @@ def register_routes(app):
             sort_by="newest",
         )
         summary = get_budget_summary(selected_month)
-        current_balance = get_current_balance()
+
+        current_balance = get_balance_for_month(selected_month)
+        if current_balance is None:
+            current_balance = get_current_balance()
 
         excel_file = build_budget_excel(
             entries=entries,
@@ -352,6 +400,10 @@ def register_routes(app):
             download_name=f"budget_{selected_month}.xlsx",
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    # =========================================================
+    # OTHER SECTIONS
+    # =========================================================
 
     @app.route("/schedule")
     @login_required
@@ -368,72 +420,15 @@ def register_routes(app):
     def shootings():
         return render_template("shootings.html")
 
-    @app.route("/car", methods=["GET", "POST"])
+    # =========================================================
+    # CAR
+    # =========================================================
+
+    @app.route("/car")
     @login_required
     def car():
-        if request.method == "POST":
-            form_type = request.form.get("form_type", "").strip()
-
-            if form_type == "done_service":
-                service_name = request.form.get("service_name", "").strip()
-                service_cost_raw = request.form.get("service_cost", "").strip()
-                mileage_raw = request.form.get("mileage", "").strip()
-                service_date = request.form.get("service_date", "").strip()
-                brand = request.form.get("brand", "").strip()
-                note = request.form.get("note", "").strip()
-
-                if not service_name or not service_cost_raw or not mileage_raw or not service_date:
-                    flash("Заполни обязательные поля выполненной работы.", "warning")
-                    return redirect(url_for("car"))
-
-                try:
-                    service_cost = int(service_cost_raw)
-                    mileage = int(mileage_raw)
-                except ValueError:
-                    flash("Стоимость и пробег должны быть целыми числами.", "danger")
-                    return redirect(url_for("car"))
-
-                create_car_done_service(
-                    service_name=service_name,
-                    service_cost=service_cost,
-                    mileage=mileage,
-                    service_date=service_date,
-                    brand=brand,
-                    note=note,
-                )
-                flash("Выполненная работа добавлена.", "success")
-                return redirect(url_for("car"))
-
-            if form_type == "planned_service":
-                service_name = request.form.get("service_name", "").strip()
-                planned_cost_raw = request.form.get("planned_cost", "").strip()
-                priority = request.form.get("priority", "").strip()
-                note = request.form.get("note", "").strip()
-
-                if not service_name or not planned_cost_raw:
-                    flash("Заполни обязательные поля планируемой работы.", "warning")
-                    return redirect(url_for("car"))
-
-                try:
-                    planned_cost = int(planned_cost_raw)
-                except ValueError:
-                    flash("Планируемая стоимость должна быть целым числом.", "danger")
-                    return redirect(url_for("car"))
-
-                create_car_planned_service(
-                    service_name=service_name,
-                    planned_cost=planned_cost,
-                    priority=priority or "Обычный",
-                    note=note,
-                )
-                flash("Планируемая работа добавлена.", "success")
-                return redirect(url_for("car"))
-
-            flash("Неизвестный тип формы.", "danger")
-            return redirect(url_for("car"))
-
-        done_services = get_car_done_services()
         planned_services = get_car_planned_services()
+        done_services = get_car_done_services()
         total_spent = get_car_total_spent()
         last_mileage = get_car_last_mileage()
 
@@ -445,90 +440,334 @@ def register_routes(app):
             last_mileage=last_mileage,
         )
 
+    @app.route("/car/manage", methods=["GET", "POST"])
+    @login_required
+    def car_manage():
+        if request.method == "POST":
+            form_type = request.form.get("form_type", "").strip()
+
+            if form_type == "done_service":
+                service_name = request.form.get("service_name", "").strip()
+                service_cost_raw = request.form.get("service_cost", "").strip()
+                mileage_raw = request.form.get("mileage", "").strip()
+                service_date = request.form.get("service_date", "").strip()
+                detail_description = request.form.get("detail_description", "").strip()
+                work_kind = request.form.get("work_kind", "Разовая").strip()
+                period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
+
+                if not service_name or not service_cost_raw or not mileage_raw or not service_date:
+                    flash("Заполни обязательные поля выполненной работы.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                try:
+                    service_cost = int(service_cost_raw)
+                    mileage = int(mileage_raw)
+                except ValueError:
+                    flash("Стоимость и пробег должны быть целыми числами.", "danger")
+                    return redirect(url_for("car_manage"))
+
+                if service_cost < 0 or mileage < 0:
+                    flash("Стоимость и пробег не могут быть отрицательными.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                if work_kind == "Периодическая" and not period_type:
+                    flash("Для периодической работы выбери периодичность.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                create_car_done_service(
+                    service_name=service_name,
+                    service_cost=service_cost,
+                    mileage=mileage,
+                    service_date=service_date,
+                    detail_description=detail_description,
+                    work_kind=work_kind,
+                    period_type=period_type,
+                )
+                flash("Выполненная работа добавлена.", "success")
+                return redirect(url_for("car_manage"))
+
+            if form_type == "planned_service":
+                service_name = request.form.get("service_name", "").strip()
+                planned_cost_raw = request.form.get("planned_cost", "").strip()
+                mileage_raw = request.form.get("mileage", "").strip()
+                detail_description = request.form.get("detail_description", "").strip()
+                work_kind = request.form.get("work_kind", "Разовая").strip()
+                period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
+
+                if not service_name or not planned_cost_raw:
+                    flash("Заполни обязательные поля планируемой работы.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                try:
+                    planned_cost = int(planned_cost_raw)
+                    mileage = int(mileage_raw) if mileage_raw else 0
+                except ValueError:
+                    flash("Стоимость и пробег должны быть целыми числами.", "danger")
+                    return redirect(url_for("car_manage"))
+
+                if planned_cost < 0 or mileage < 0:
+                    flash("Стоимость и пробег не могут быть отрицательными.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                if work_kind == "Периодическая" and not period_type:
+                    flash("Для периодической работы выбери периодичность.", "warning")
+                    return redirect(url_for("car_manage"))
+
+                create_car_planned_service(
+                    service_name=service_name,
+                    planned_cost=planned_cost,
+                    mileage=mileage,
+                    detail_description=detail_description,
+                    work_kind=work_kind,
+                    period_type=period_type,
+                )
+                flash("Планируемая работа добавлена.", "success")
+                return redirect(url_for("car_manage"))
+
+        return render_template("car_manage.html")
+
+    @app.route("/car/done/edit/<int:service_id>", methods=["GET", "POST"])
+    @login_required
+    def car_done_edit(service_id):
+        item = get_car_done_service_by_id(service_id)
+        if not item:
+            flash("Запись не найдена.", "danger")
+            return redirect(url_for("car"))
+
+        if request.method == "POST":
+            service_name = request.form.get("service_name", "").strip()
+            service_cost_raw = request.form.get("service_cost", "").strip()
+            mileage_raw = request.form.get("mileage", "").strip()
+            service_date = request.form.get("service_date", "").strip()
+            detail_description = request.form.get("detail_description", "").strip()
+            work_kind = request.form.get("work_kind", "Разовая").strip()
+            period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
+            status = request.form.get("status", "Выполнено").strip()
+
+            if not service_name or not service_cost_raw or not mileage_raw or not service_date:
+                flash("Заполни обязательные поля.", "warning")
+                return redirect(url_for("car_done_edit", service_id=service_id))
+
+            try:
+                service_cost = int(service_cost_raw)
+                mileage = int(mileage_raw)
+            except ValueError:
+                flash("Стоимость и пробег должны быть целыми числами.", "danger")
+                return redirect(url_for("car_done_edit", service_id=service_id))
+
+            if service_cost < 0 or mileage < 0:
+                flash("Стоимость и пробег не могут быть отрицательными.", "warning")
+                return redirect(url_for("car_done_edit", service_id=service_id))
+
+            if work_kind == "Периодическая" and not period_type:
+                flash("Для периодической работы выбери периодичность.", "warning")
+                return redirect(url_for("car_done_edit", service_id=service_id))
+
+            if status == "В работе":
+                move_done_to_planned(service_id)
+                planned_item = get_car_planned_services()[0] if get_car_planned_services() else None
+
+                if planned_item:
+                    from app.database import get_connection
+                    conn = get_connection()
+                    conn.execute("""
+                        UPDATE car_planned_services
+                        SET service_name = ?,
+                            planned_cost = ?,
+                            mileage = ?,
+                            detail_description = ?,
+                            work_kind = ?,
+                            period_type = ?,
+                            status = ?
+                        WHERE id = ?
+                    """, (
+                        service_name,
+                        service_cost,
+                        mileage,
+                        detail_description,
+                        work_kind,
+                        period_type,
+                        "В работе",
+                        planned_item["id"],
+                    ))
+                    conn.commit()
+                    conn.close()
+
+                flash("Работа перенесена в планируемые.", "success")
+                return redirect(url_for("car"))
+
+            update_car_done_service(
+                service_id=service_id,
+                service_name=service_name,
+                service_cost=service_cost,
+                mileage=mileage,
+                service_date=service_date,
+                detail_description=detail_description,
+                work_kind=work_kind,
+                period_type=period_type,
+                status="Выполнено",
+            )
+            flash("Выполненная работа обновлена.", "success")
+            return redirect(url_for("car"))
+
+        return render_template("car_done_edit.html", item=item)
+
+    @app.route("/car/planned/edit/<int:service_id>", methods=["GET", "POST"])
+    @login_required
+    def car_planned_edit(service_id):
+        item = get_car_planned_service_by_id(service_id)
+        if not item:
+            flash("Запись не найдена.", "danger")
+            return redirect(url_for("car"))
+
+        if request.method == "POST":
+            service_name = request.form.get("service_name", "").strip()
+            planned_cost_raw = request.form.get("planned_cost", "").strip()
+            mileage_raw = request.form.get("mileage", "").strip()
+            detail_description = request.form.get("detail_description", "").strip()
+            work_kind = request.form.get("work_kind", "Разовая").strip()
+            period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
+            status = request.form.get("status", "В работе").strip()
+
+            if not service_name or not planned_cost_raw:
+                flash("Заполни обязательные поля.", "warning")
+                return redirect(url_for("car_planned_edit", service_id=service_id))
+
+            try:
+                planned_cost = int(planned_cost_raw)
+                mileage = int(mileage_raw) if mileage_raw else 0
+            except ValueError:
+                flash("Стоимость и пробег должны быть целыми числами.", "danger")
+                return redirect(url_for("car_planned_edit", service_id=service_id))
+
+            if planned_cost < 0 or mileage < 0:
+                flash("Стоимость и пробег не могут быть отрицательными.", "warning")
+                return redirect(url_for("car_planned_edit", service_id=service_id))
+
+            if work_kind == "Периодическая" and not period_type:
+                flash("Для периодической работы выбери периодичность.", "warning")
+                return redirect(url_for("car_planned_edit", service_id=service_id))
+
+            if status == "Выполнено":
+                service_date = request.form.get("service_date", "").strip()
+                if not service_date:
+                    flash("Для выполненной работы укажи дату.", "warning")
+                    return redirect(url_for("car_planned_edit", service_id=service_id))
+
+                move_planned_to_done(service_id, service_date)
+                done_item = get_car_done_services()[0] if get_car_done_services() else None
+
+                if done_item:
+                    from app.database import get_connection
+                    conn = get_connection()
+                    conn.execute("""
+                        UPDATE car_done_services
+                        SET service_name = ?,
+                            service_cost = ?,
+                            mileage = ?,
+                            service_date = ?,
+                            detail_description = ?,
+                            work_kind = ?,
+                            period_type = ?,
+                            status = ?
+                        WHERE id = ?
+                    """, (
+                        service_name,
+                        planned_cost,
+                        mileage,
+                        service_date,
+                        detail_description,
+                        work_kind,
+                        period_type,
+                        "Выполнено",
+                        done_item["id"],
+                    ))
+                    conn.commit()
+                    conn.close()
+
+                flash("Работа перенесена в выполненные.", "success")
+                return redirect(url_for("car"))
+
+            update_car_planned_service(
+                service_id=service_id,
+                service_name=service_name,
+                planned_cost=planned_cost,
+                mileage=mileage,
+                detail_description=detail_description,
+                work_kind=work_kind,
+                period_type=period_type,
+                status="В работе",
+            )
+            flash("Планируемая работа обновлена.", "success")
+            return redirect(url_for("car"))
+
+        return render_template("car_planned_edit.html", item=item)
+
+    @app.route("/car/done/delete/<int:service_id>", methods=["POST"])
+    @login_required
+    def car_done_delete(service_id):
+        delete_car_done_service(service_id)
+        flash("Выполненная работа удалена.", "success")
+        return redirect(url_for("car"))
+
+    @app.route("/car/planned/delete/<int:service_id>", methods=["POST"])
+    @login_required
+    def car_planned_delete(service_id):
+        delete_car_planned_service(service_id)
+        flash("Планируемая работа удалена.", "success")
+        return redirect(url_for("car"))
+
     @app.route("/car/notifications", methods=["GET", "POST"])
     @login_required
     def car_notifications():
-        if request.method == "POST":
-            service_name = request.form.get("service_name", "").strip()
-            period_value = request.form.get("period_value", "").strip()
-            last_service_date = request.form.get("last_service_date", "").strip()
-            mileage_at_service_raw = request.form.get("mileage_at_service", "").strip()
-            brand = request.form.get("brand", "").strip()
-            status = request.form.get("status", "").strip()
+        periodic_planned, periodic_done = get_periodic_services_for_notifications()
 
-            if (
-                not service_name
-                or not period_value
-                or not last_service_date
-                or not mileage_at_service_raw
-                or not status
-            ):
-                flash("Заполни все обязательные поля уведомления.", "warning")
-                return redirect(url_for("car_notifications"))
+        notifications = []
 
-            try:
-                mileage_at_service = int(mileage_at_service_raw)
-            except ValueError:
-                flash("Пробег должен быть целым числом.", "danger")
-                return redirect(url_for("car_notifications"))
+        for item in periodic_planned:
+            notifications.append({
+                "title": item["service_name"],
+                "status": item["status"],
+                "period_type": item["period_type"],
+                "mileage": item["mileage"],
+                "detail_description": item["detail_description"],
+                "source_type": "Планируемые",
+                "service_date": item["service_date"],
+            })
 
-            create_car_notification(
-                service_name=service_name,
-                period_value=period_value,
-                last_service_date=last_service_date,
-                mileage_at_service=mileage_at_service,
-                brand=brand,
-                status=status,
-            )
-            flash("Уведомление добавлено.", "success")
-            return redirect(url_for("car_notifications"))
-
-        notifications = get_car_notifications()
-        prepared_notifications = []
-
-        for item in notifications:
+        for item in periodic_done:
             next_date = ""
+            service_date = item["service_date"]
 
             try:
-                base_date = datetime.strptime(item["last_service_date"], "%Y-%m-%d")
-
-                if item["period_value"] == "Раз в пол года":
+                base_date = datetime.strptime(service_date, "%Y-%m")
+                if item["period_type"] == "Раз в пол года":
                     month = base_date.month + 6
                     year = base_date.year
-                    day = base_date.day
-
-                    if month > 12:
+                    while month > 12:
                         month -= 12
                         year += 1
-
-                    next_date = f"{year:04d}-{month:02d}-{day:02d}"
-
-                elif item["period_value"] == "Раз в год":
-                    next_date = (
-                        f"{base_date.year + 1:04d}-"
-                        f"{base_date.month:02d}-"
-                        f"{base_date.day:02d}"
-                    )
-                else:
-                    next_date = "Не задано"
-
+                    next_date = f"{year:04d}-{month:02d}"
+                elif item["period_type"] == "Раз в год":
+                    next_date = f"{base_date.year + 1:04d}-{base_date.month:02d}"
             except Exception:
-                next_date = "Ошибка даты"
+                next_date = ""
 
-            prepared_notifications.append(
-                {
-                    "id": item["id"],
-                    "service_name": item["service_name"],
-                    "period_value": item["period_value"],
-                    "last_service_date": item["last_service_date"],
-                    "mileage_at_service": item["mileage_at_service"],
-                    "brand": item["brand"],
-                    "status": item["status"],
-                    "next_date": next_date,
-                }
-            )
+            notifications.append({
+                "title": item["service_name"],
+                "status": item["status"],
+                "period_type": item["period_type"],
+                "mileage": item["mileage"],
+                "detail_description": item["detail_description"],
+                "source_type": "Выполненные",
+                "service_date": item["service_date"],
+                "next_date": next_date,
+            })
+
+        legacy_notifications = get_car_notifications()
 
         return render_template(
             "car_notifications.html",
-            notifications=prepared_notifications,
+            notifications=notifications,
+            legacy_notifications=legacy_notifications,
         )

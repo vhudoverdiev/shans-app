@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Баланс | Шанс{% endblock %}
+
+{% block content %}
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">История баланса</span>
+        </h1>
+
+        <div class="page-actions">
+            <a href="{{ url_for('budget') }}" class="btn btn-secondary">Назад к бюджету</a>
+            <a href="{{ url_for('budget_manage') }}" class="btn btn-primary">Управление бюджетом</a>
+        </div>
+    </div>
+
+    {% if history %}
+        <div class="balance-grid">
+            {% for item in history %}
+                <div class="balance-month-card">
+                    <div class="balance-month-name">{{ item.month_name }}</div>
+                    <div class="balance-month-value">{{ item.balance_value|money }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="empty-state">История баланса пока не заполнена.</div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

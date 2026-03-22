@@ -1,142 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Volkswagen Polo 2018 | Шанс{% endblock %}
+{% block title %}Машины | Шанс{% endblock %}
 
 {% block content %}
 <div class="budget-page">
     <div class="page-header">
         <h1 class="page-title">
-            <span class="page-title-strong">Volkswagen Polo 2018</span>
+            <span class="page-title-strong">Машины</span>
         </h1>
 
         <div class="page-actions">
-            <a href="{{ url_for('car_notifications') }}" class="btn btn-primary">Уведомления</a>
+            <a href="{{ url_for('car_manage') }}" class="btn btn-primary">Управление</a>
+            <a href="{{ url_for('car_notifications') }}" class="btn btn-secondary">Уведомления</a>
         </div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card stat-card-current">
+        <div class="stat-card stat-card-expense">
             <div class="stat-label">Общие затраты</div>
             <div class="stat-value">{{ total_spent|money }}</div>
         </div>
 
         <div class="stat-card stat-card-balance">
-            <div class="stat-label">Последний пробег</div>
+            <div class="stat-label">Пробег</div>
             <div class="stat-value">{{ last_mileage }}</div>
         </div>
-    </div>
-
-    <div class="budget-manage-grid">
-        <div class="card">
-            <h2 class="section-title">Добавить выполненную работу</h2>
-
-            <form method="POST" class="form-block">
-                <input type="hidden" name="form_type" value="done_service">
-
-                <div class="form-group">
-                    <label for="service_name">Название работы</label>
-                    <input type="text" id="service_name" name="service_name" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="service_cost">Стоимость, Р</label>
-                    <input type="number" id="service_cost" name="service_cost" step="1" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="mileage">Пробег</label>
-                    <input type="number" id="mileage" name="mileage" step="1" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="service_date">Дата</label>
-                    <input type="date" id="service_date" name="service_date" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="brand">Марка</label>
-                    <input type="text" id="brand" name="brand" class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="note">Комментарий</label>
-                    <input type="text" id="note" name="note" class="form-input">
-                </div>
-
-                <button type="submit" class="btn btn-success btn-wide">Сохранить</button>
-            </form>
-        </div>
-
-        <div class="card">
-            <h2 class="section-title">Добавить планируемую работу</h2>
-
-            <form method="POST" class="form-block">
-                <input type="hidden" name="form_type" value="planned_service">
-
-                <div class="form-group">
-                    <label for="planned_service_name">Название работы</label>
-                    <input type="text" id="planned_service_name" name="service_name" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="planned_cost">Планируемая стоимость, Р</label>
-                    <input type="number" id="planned_cost" name="planned_cost" step="1" required class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label for="priority">Приоритет</label>
-                    <select id="priority" name="priority" class="form-input">
-                        <option value="Обычный">Обычный</option>
-                        <option value="Высокий">Высокий</option>
-                        <option value="Низкий">Низкий</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="planned_note">Комментарий</label>
-                    <input type="text" id="planned_note" name="note" class="form-input">
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-wide">Сохранить</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="card table-card">
-        <div class="table-header">
-            <h2 class="section-title">Выполненные работы</h2>
-        </div>
-
-        {% if done_services %}
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Работа</th>
-                            <th>Стоимость</th>
-                            <th>Пробег</th>
-                            <th>Дата</th>
-                            <th>Марка</th>
-                            <th>Комментарий</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in done_services %}
-                            <tr>
-                                <td>{{ item.service_name }}</td>
-                                <td>{{ item.service_cost|money }}</td>
-                                <td>{{ item.mileage }}</td>
-                                <td>{{ item.service_date }}</td>
-                                <td>{{ item.brand }}</td>
-                                <td>{{ item.note }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="empty-state">Пока нет выполненных работ.</div>
-        {% endif %}
     </div>
 
     <div class="card table-card">
@@ -149,10 +37,14 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Работа</th>
+                            <th>Наименование</th>
                             <th>Стоимость</th>
-                            <th>Приоритет</th>
-                            <th>Комментарий</th>
+                            <th>Пробег</th>
+                            <th>Описание детали</th>
+                            <th>Тип работы</th>
+                            <th>Периодичность</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,8 +52,27 @@
                             <tr>
                                 <td>{{ item.service_name }}</td>
                                 <td>{{ item.planned_cost|money }}</td>
-                                <td>{{ item.priority }}</td>
-                                <td>{{ item.note }}</td>
+                                <td>{{ item.mileage }}</td>
+                                <td>{{ item.detail_description or "—" }}</td>
+                                <td>{{ item.work_kind or "Разовая" }}</td>
+                                <td>{{ item.period_type or "—" }}</td>
+                                <td>
+                                    <span class="status-pill status-pill-work">
+                                        {{ item.status or "В работе" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="{{ url_for('car_planned_edit', service_id=item.id) }}" class="btn btn-small btn-secondary">
+                                            Редактировать
+                                        </a>
+                                        <form method="POST" action="{{ url_for('car_planned_delete', service_id=item.id) }}" class="inline-form">
+                                            <button type="submit" class="btn btn-small btn-danger">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -169,6 +80,64 @@
             </div>
         {% else %}
             <div class="empty-state">Пока нет планируемых работ.</div>
+        {% endif %}
+    </div>
+
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Выполненные работы</h2>
+        </div>
+
+        {% if done_services %}
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Стоимость</th>
+                            <th>Пробег</th>
+                            <th>Дата</th>
+                            <th>Описание детали</th>
+                            <th>Тип работы</th>
+                            <th>Периодичность</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in done_services %}
+                            <tr>
+                                <td>{{ item.service_name }}</td>
+                                <td>{{ item.service_cost|money }}</td>
+                                <td>{{ item.mileage }}</td>
+                                <td>{{ item.service_date }}</td>
+                                <td>{{ item.detail_description or "—" }}</td>
+                                <td>{{ item.work_kind or "Разовая" }}</td>
+                                <td>{{ item.period_type or "—" }}</td>
+                                <td>
+                                    <span class="status-pill status-pill-done">
+                                        {{ item.status or "Выполнено" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="{{ url_for('car_done_edit', service_id=item.id) }}" class="btn btn-small btn-secondary">
+                                            Редактировать
+                                        </a>
+                                        <form method="POST" action="{{ url_for('car_done_delete', service_id=item.id) }}" class="inline-form">
+                                            <button type="submit" class="btn btn-small btn-danger">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">Пока нет выполненных работ.</div>
         {% endif %}
     </div>
 </div>

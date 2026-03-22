@@ -32,9 +32,9 @@ a {
 }
 
 .site-header-inner {
-    max-width: 1320px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 14px 28px 14px 40px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -687,5 +687,319 @@ a {
 
     .top-nav {
         width: 100%;
+    }
+}
+.budget-manage-grid-top {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 300px;
+    align-items: start;
+}
+@media (max-width: 800px) {
+    .budget-manage-grid-top {
+        grid-template-columns: 1fr;
+    }
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pill-done {
+    background: rgba(22, 163, 74, 0.14);
+    color: #166534;
+}
+
+.status-pill-work {
+    background: rgba(245, 158, 11, 0.16);
+    color: #92400e;
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pill-done {
+    background: rgba(22, 163, 74, 0.14);
+    color: #166534;
+}
+
+.status-pill-work {
+    background: rgba(245, 158, 11, 0.16);
+    color: #92400e;
+}
+/* =========================
+   MOBILE ADAPTATION
+========================= */
+
+@media (max-width: 1024px) {
+    .site-header-inner {
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .top-nav {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .header-user-block {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .two-column-grid,
+    .budget-manage-grid,
+    .budget-manage-grid-top {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-shell {
+        padding: 14px 10px 24px;
+    }
+
+    .site-header {
+        position: static;
+    }
+
+    .site-header-inner {
+        padding: 12px 10px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .brand {
+        justify-content: flex-start;
+    }
+
+    .top-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .top-nav-link {
+        text-align: center;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .header-user-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .header-user-name {
+        font-size: 13px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .page-title-light {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+
+    .page-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .btn,
+    .btn-wide,
+    .btn-compact {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    .card,
+    .welcome-card,
+    .dashboard-card,
+    .balance-month-card,
+    .notification-card {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .welcome-name {
+        font-size: 26px;
+    }
+
+    .welcome-text,
+    .welcome-label {
+        font-size: 14px;
+    }
+
+    .dashboard-grid,
+    .stats-grid,
+    .balance-grid,
+    .notification-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dashboard-card-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+
+    .dashboard-card-title {
+        font-size: 18px;
+    }
+
+    .dashboard-card-text {
+        font-size: 13px;
+    }
+
+    .stat-value,
+    .big-balance,
+    .balance-month-value {
+        font-size: 24px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 14px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+
+    .form-input,
+    .form-input-compact {
+        width: 100%;
+        max-width: 100%;
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .table-card {
+        padding: 14px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+        min-width: 640px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .table-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-actions .btn,
+    .table-actions .btn-small {
+        width: 100%;
+    }
+
+    .status-switch {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .status-switch form {
+        width: 100%;
+    }
+
+    .status-btn {
+        width: 100%;
+    }
+
+    .flash-message {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-badge {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 12px;
+    }
+
+    .brand-title {
+        font-size: 18px;
+    }
+
+    .brand-subtitle {
+        font-size: 11px;
+    }
+
+    .top-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .header-user-block {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .welcome-name {
+        font-size: 22px;
+    }
+
+    .stat-value,
+    .big-balance,
+    .balance-month-value {
+        font-size: 22px;
+    }
+
+    .dashboard-card,
+    .card,
+    .welcome-card {
+        padding: 14px;
+    }
+
+    .btn {
+        font-size: 13px;
     }
 }

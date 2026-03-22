@@ -72,13 +72,14 @@
                     id="amount"
                     name="amount"
                     step="1"
+                    min="0"
                     value="{{ entry.amount|int }}"
                     required
                     class="form-input"
                 >
             </div>
 
-            <button type="submit" class="btn btn-primary btn-wide">
+            <button type="submit" class="btn btn-primary btn-wide" id="budget-edit-submit-btn">
                 Сохранить изменения
             </button>
         </form>
@@ -100,5 +101,20 @@
             customInput.value = "";
         }
     }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const submitButton = document.getElementById("budget-edit-submit-btn");
+
+        if (!form || !submitButton) {
+            return;
+        }
+
+        form.addEventListener("submit", function () {
+            submitButton.disabled = true;
+            submitButton.textContent = "Сохранение...";
+        });
+    });
 </script>
 {% endblock %}

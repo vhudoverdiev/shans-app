@@ -3,12 +3,20 @@ from datetime import datetime
 from app.database import get_connection
 
 
+# =========================================================
+# COMMON
+# =========================================================
+
 def get_current_year():
     """
     Возвращает текущий год.
     """
     return datetime.now().year
 
+
+# =========================================================
+# USERS
+# =========================================================
 
 def get_user_by_username(username):
     conn = get_connection()
@@ -30,6 +38,10 @@ def get_user_by_id(user_id):
     return user
 
 
+# =========================================================
+# BUDGET
+# =========================================================
+
 def create_budget_entry(entry_type, month_name, category, amount):
     """
     Создаёт новую запись бюджета.
@@ -39,14 +51,25 @@ def create_budget_entry(entry_type, month_name, category, amount):
 
     conn = get_connection()
     conn.execute("""
-        INSERT INTO budget_entries (entry_type, month_name, year_value, category, amount)
+        INSERT INTO budget_entries (
+            entry_type,
+            month_name,
+            year_value,
+            category,
+            amount
+        )
         VALUES (?, ?, ?, ?, ?)
     """, (entry_type, month_name, year_value, category, amount))
     conn.commit()
     conn.close()
 
 
-def get_all_budget_entries(month_filter="", type_filter="", category_filter="", sort_by="newest"):
+def get_all_budget_entries(
+    month_filter="",
+    type_filter="",
+    category_filter="",
+    sort_by="newest",
+):
     """
     Возвращает список записей бюджета за текущий год.
     """
@@ -72,34 +95,34 @@ def get_all_budget_entries(month_filter="", type_filter="", category_filter="", 
     if sort_by == "month":
         query += """
             ORDER BY
-            CASE month_name
-                WHEN 'Январь' THEN 1
-                WHEN 'Февраль' THEN 2
-                WHEN 'Март' THEN 3
-                WHEN 'Апрель' THEN 4
-                WHEN 'Май' THEN 5
-                WHEN 'Июнь' THEN 6
-                WHEN 'Июль' THEN 7
-                WHEN 'Август' THEN 8
-                WHEN 'Сентябрь' THEN 9
-                WHEN 'Октябрь' THEN 10
-                WHEN 'Ноябрь' THEN 11
-                WHEN 'Декабрь' THEN 12
-                ELSE 99
-            END ASC,
-            id DESC
+                CASE month_name
+                    WHEN 'Январь' THEN 1
+                    WHEN 'Февраль' THEN 2
+                    WHEN 'Март' THEN 3
+                    WHEN 'Апрель' THEN 4
+                    WHEN 'Май' THEN 5
+                    WHEN 'Июнь' THEN 6
+                    WHEN 'Июль' THEN 7
+                    WHEN 'Август' THEN 8
+                    WHEN 'Сентябрь' THEN 9
+                    WHEN 'Октябрь' THEN 10
+                    WHEN 'Ноябрь' THEN 11
+                    WHEN 'Декабрь' THEN 12
+                    ELSE 99
+                END ASC,
+                id DESC
         """
     elif sort_by == "income_first":
         query += """
             ORDER BY
-            CASE WHEN entry_type = 'Доход' THEN 0 ELSE 1 END,
-            id DESC
+                CASE WHEN entry_type = 'Доход' THEN 0 ELSE 1 END,
+                id DESC
         """
     elif sort_by == "expense_first":
         query += """
             ORDER BY
-            CASE WHEN entry_type = 'Расход' THEN 0 ELSE 1 END,
-            id DESC
+                CASE WHEN entry_type = 'Расход' THEN 0 ELSE 1 END,
+                id DESC
         """
     elif sort_by == "category":
         query += " ORDER BY category ASC, id DESC"
@@ -142,7 +165,7 @@ def get_budget_summary(month_name):
         "income": income,
         "expense": expense,
         "balance": balance,
-        "year_value": current_year
+        "year_value": current_year,
     }
 
 
@@ -176,7 +199,11 @@ def update_budget_entry(entry_id, entry_type, month_name, category, amount):
     conn = get_connection()
     conn.execute("""
         UPDATE budget_entries
-        SET entry_type = ?, month_name = ?, year_value = ?, category = ?, amount = ?
+        SET entry_type = ?,
+            month_name = ?,
+            year_value = ?,
+            category = ?,
+            amount = ?
         WHERE id = ?
     """, (entry_type, month_name, current_year, category, amount, entry_id))
     conn.commit()
@@ -185,46 +212,210 @@ def update_budget_entry(entry_id, entry_type, month_name, category, amount):
 
 def get_current_balance():
     conn = get_connection()
-    row = conn.execute("SELECT current_balance FROM budget_settings LIMIT 1").fetchone()
+    row = conn.execute(
+        "SELECT current_balance FROM budget_settings WHERE id = 1"
+    ).fetchone()
     conn.close()
     return row["current_balance"] if row else 0
 
 
 def set_current_balance(value):
     conn = get_connection()
-    conn.execute("UPDATE budget_settings SET current_balance = ? WHERE id = 1", (value,))
+    conn.execute(
+        "UPDATE budget_settings SET current_balance = ? WHERE id = 1",
+        (value,)
+    )
     conn.commit()
     conn.close()
-    
-def create_car_done_service(service_name, service_cost, mileage, service_date, brand, note):
+
+
+# =========================================================
+# BUDGET BALANCE HISTORY
+# =========================================================
+
+def save_balance_history(month_name, balance_value, year_value=None):
+    """
+    Сохраняет одно последнее значение баланса на месяц.
+    Если запись за месяц уже есть — обновляет её.
+    """
+    if year_value is None:
+        year_value = get_current_year()
+
+    conn = get_connection()
+
+    existing = conn.execute("""
+        SELECT id
+        FROM budget_balance_history
+        WHERE month_name = ? AND year_value = ?
+    """, (month_name, year_value)).fetchone()
+
+    if existing:
+        conn.execute("""
+            UPDATE budget_balance_history
+            SET balance_value = ?,
+                created_at = CURRENT_TIMESTAMP
+            WHERE month_name = ? AND year_value = ?
+        """, (balance_value, month_name, year_value))
+    else:
+        conn.execute("""
+            INSERT INTO budget_balance_history (
+                month_name,
+                year_value,
+                balance_value
+            )
+            VALUES (?, ?, ?)
+        """, (month_name, year_value, balance_value))
+
+    conn.commit()
+    conn.close()
+
+
+def get_balance_history(year_value=None):
+    """
+    Возвращает историю баланса по месяцам за год.
+    """
+    if year_value is None:
+        year_value = get_current_year()
+
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT month_name, year_value, balance_value
+        FROM budget_balance_history
+        WHERE year_value = ?
+        ORDER BY
+            CASE month_name
+                WHEN 'Январь' THEN 1
+                WHEN 'Февраль' THEN 2
+                WHEN 'Март' THEN 3
+                WHEN 'Апрель' THEN 4
+                WHEN 'Май' THEN 5
+                WHEN 'Июнь' THEN 6
+                WHEN 'Июль' THEN 7
+                WHEN 'Август' THEN 8
+                WHEN 'Сентябрь' THEN 9
+                WHEN 'Октябрь' THEN 10
+                WHEN 'Ноябрь' THEN 11
+                WHEN 'Декабрь' THEN 12
+                ELSE 99
+            END
+    """, (year_value,)).fetchall()
+    conn.close()
+    return rows
+
+
+def get_balance_for_month(month_name, year_value=None):
+    """
+    Возвращает баланс за конкретный месяц.
+    """
+    if year_value is None:
+        year_value = get_current_year()
+
+    conn = get_connection()
+    row = conn.execute("""
+        SELECT balance_value
+        FROM budget_balance_history
+        WHERE month_name = ? AND year_value = ?
+        LIMIT 1
+    """, (month_name, year_value)).fetchone()
+    conn.close()
+
+    if row:
+        return row["balance_value"]
+
+    return None
+
+
+# =========================================================
+# CAR - CREATE
+# =========================================================
+
+def create_car_done_service(
+    service_name,
+    service_cost,
+    mileage,
+    service_date,
+    detail_description,
+    work_kind,
+    period_type,
+):
+    """
+    Создаёт выполненную работу.
+    По умолчанию статус всегда 'Выполнено'.
+    """
     conn = get_connection()
     conn.execute("""
         INSERT INTO car_done_services (
-            service_name, service_cost, mileage, service_date, brand, note
+            service_name,
+            service_cost,
+            mileage,
+            service_date,
+            detail_description,
+            work_kind,
+            period_type,
+            status
         )
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (service_name, service_cost, mileage, service_date, brand, note))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        service_name,
+        service_cost,
+        mileage,
+        service_date,
+        detail_description,
+        work_kind,
+        period_type,
+        "Выполнено",
+    ))
     conn.commit()
     conn.close()
 
 
-def create_car_planned_service(service_name, planned_cost, priority, note):
+def create_car_planned_service(
+    service_name,
+    planned_cost,
+    mileage,
+    detail_description,
+    work_kind,
+    period_type,
+):
+    """
+    Создаёт планируемую работу.
+    По умолчанию статус всегда 'В работе'.
+    """
     conn = get_connection()
     conn.execute("""
         INSERT INTO car_planned_services (
-            service_name, planned_cost, priority, note
+            service_name,
+            planned_cost,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status
         )
-        VALUES (?, ?, ?, ?)
-    """, (service_name, planned_cost, priority, note))
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        service_name,
+        planned_cost,
+        mileage,
+        detail_description,
+        work_kind,
+        period_type,
+        "В работе",
+    ))
     conn.commit()
     conn.close()
 
+
+# =========================================================
+# CAR - GET
+# =========================================================
 
 def get_car_done_services():
     conn = get_connection()
     rows = conn.execute("""
-        SELECT * FROM car_done_services
-        ORDER BY service_date DESC, id DESC
+        SELECT *
+        FROM car_done_services
+        ORDER BY mileage DESC, id DESC
     """).fetchall()
     conn.close()
     return rows
@@ -233,14 +424,38 @@ def get_car_done_services():
 def get_car_planned_services():
     conn = get_connection()
     rows = conn.execute("""
-        SELECT * FROM car_planned_services
+        SELECT *
+        FROM car_planned_services
         ORDER BY id DESC
     """).fetchall()
     conn.close()
     return rows
 
 
+def get_car_done_service_by_id(service_id):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM car_done_services WHERE id = ?",
+        (service_id,)
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_car_planned_service_by_id(service_id):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM car_planned_services WHERE id = ?",
+        (service_id,)
+    ).fetchone()
+    conn.close()
+    return row
+
+
 def get_car_total_spent():
+    """
+    Общие затраты считаем только по выполненным работам.
+    """
     conn = get_connection()
     total = conn.execute("""
         SELECT COALESCE(SUM(service_cost), 0) AS total
@@ -251,23 +466,322 @@ def get_car_total_spent():
 
 
 def get_car_last_mileage():
+    """
+    Возвращает самый большой и самый последний пробег
+    из выполненных работ.
+    """
     conn = get_connection()
     row = conn.execute("""
         SELECT mileage
         FROM car_done_services
-        ORDER BY service_date DESC, id DESC
+        ORDER BY mileage DESC, id DESC
         LIMIT 1
     """).fetchone()
     conn.close()
-    return row["mileage"] if row else 0    
-def create_car_notification(service_name, period_value, last_service_date, mileage_at_service, brand, status):
+    return row["mileage"] if row else 0
+
+
+# =========================================================
+# CAR - UPDATE
+# =========================================================
+
+def update_car_done_service(
+    service_id,
+    service_name,
+    service_cost,
+    mileage,
+    service_date,
+    detail_description,
+    work_kind,
+    period_type,
+    status,
+):
+    conn = get_connection()
+    conn.execute("""
+        UPDATE car_done_services
+        SET service_name = ?,
+            service_cost = ?,
+            mileage = ?,
+            service_date = ?,
+            detail_description = ?,
+            work_kind = ?,
+            period_type = ?,
+            status = ?
+        WHERE id = ?
+    """, (
+        service_name,
+        service_cost,
+        mileage,
+        service_date,
+        detail_description,
+        work_kind,
+        period_type,
+        status,
+        service_id,
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_car_planned_service(
+    service_id,
+    service_name,
+    planned_cost,
+    mileage,
+    detail_description,
+    work_kind,
+    period_type,
+    status,
+):
+    conn = get_connection()
+    conn.execute("""
+        UPDATE car_planned_services
+        SET service_name = ?,
+            planned_cost = ?,
+            mileage = ?,
+            detail_description = ?,
+            work_kind = ?,
+            period_type = ?,
+            status = ?
+        WHERE id = ?
+    """, (
+        service_name,
+        planned_cost,
+        mileage,
+        detail_description,
+        work_kind,
+        period_type,
+        status,
+        service_id,
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_car_done_service_status(service_id, status):
+    conn = get_connection()
+    conn.execute("""
+        UPDATE car_done_services
+        SET status = ?
+        WHERE id = ?
+    """, (status, service_id))
+    conn.commit()
+    conn.close()
+
+
+def update_car_planned_service_status(service_id, status):
+    conn = get_connection()
+    conn.execute("""
+        UPDATE car_planned_services
+        SET status = ?
+        WHERE id = ?
+    """, (status, service_id))
+    conn.commit()
+    conn.close()
+
+
+# =========================================================
+# CAR - DELETE
+# =========================================================
+
+def delete_car_done_service(service_id):
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM car_done_services WHERE id = ?",
+        (service_id,)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_car_planned_service(service_id):
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM car_planned_services WHERE id = ?",
+        (service_id,)
+    )
+    conn.commit()
+    conn.close()
+
+
+# =========================================================
+# CAR - MOVE BETWEEN SECTIONS
+# =========================================================
+
+def move_planned_to_done(service_id, service_date):
+    """
+    Переносит работу из планируемых в выполненные.
+    """
+    conn = get_connection()
+
+    item = conn.execute("""
+        SELECT *
+        FROM car_planned_services
+        WHERE id = ?
+    """, (service_id,)).fetchone()
+
+    if not item:
+        conn.close()
+        return
+
+    conn.execute("""
+        INSERT INTO car_done_services (
+            service_name,
+            service_cost,
+            mileage,
+            service_date,
+            detail_description,
+            work_kind,
+            period_type,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        item["service_name"],
+        item["planned_cost"],
+        item["mileage"],
+        service_date,
+        item["detail_description"],
+        item["work_kind"],
+        item["period_type"],
+        "Выполнено",
+    ))
+
+    conn.execute(
+        "DELETE FROM car_planned_services WHERE id = ?",
+        (service_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def move_done_to_planned(service_id):
+    """
+    Переносит работу из выполненных в планируемые.
+    """
+    conn = get_connection()
+
+    item = conn.execute("""
+        SELECT *
+        FROM car_done_services
+        WHERE id = ?
+    """, (service_id,)).fetchone()
+
+    if not item:
+        conn.close()
+        return
+
+    conn.execute("""
+        INSERT INTO car_planned_services (
+            service_name,
+            planned_cost,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        item["service_name"],
+        item["service_cost"],
+        item["mileage"],
+        item["detail_description"],
+        item["work_kind"],
+        item["period_type"],
+        "В работе",
+    ))
+
+    conn.execute(
+        "DELETE FROM car_done_services WHERE id = ?",
+        (service_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+# =========================================================
+# CAR - PERIODIC WORKS / NOTIFICATIONS
+# =========================================================
+
+def get_periodic_services_for_notifications():
+    """
+    Возвращает периодические работы из обеих таблиц.
+    Можно использовать для вкладки уведомлений.
+    """
+    conn = get_connection()
+
+    planned = conn.execute("""
+        SELECT
+            id,
+            service_name,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status,
+            NULL AS service_date,
+            'planned' AS source_type
+        FROM car_planned_services
+        WHERE work_kind = 'Периодическая'
+    """).fetchall()
+
+    done = conn.execute("""
+        SELECT
+            id,
+            service_name,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status,
+            service_date,
+            'done' AS source_type
+        FROM car_done_services
+        WHERE work_kind = 'Периодическая'
+    """).fetchall()
+
+    conn.close()
+    return planned, done
+
+
+# =========================================================
+# LEGACY CAR NOTIFICATIONS
+# =========================================================
+
+def create_car_notification(
+    service_name,
+    period_value,
+    last_service_date,
+    mileage_at_service,
+    brand,
+    status,
+):
+    """
+    Старый отдельный механизм уведомлений.
+    Оставлен для совместимости с текущими маршрутами.
+    """
     conn = get_connection()
     conn.execute("""
         INSERT INTO car_notifications (
-            service_name, period_value, last_service_date, mileage_at_service, brand, status
+            service_name,
+            period_value,
+            last_service_date,
+            mileage_at_service,
+            brand,
+            status
         )
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (service_name, period_value, last_service_date, mileage_at_service, brand, status))
+    """, (
+        service_name,
+        period_value,
+        last_service_date,
+        mileage_at_service,
+        brand,
+        status,
+    ))
     conn.commit()
     conn.close()
 
@@ -275,7 +789,8 @@ def create_car_notification(service_name, period_value, last_service_date, milea
 def get_car_notifications():
     conn = get_connection()
     rows = conn.execute("""
-        SELECT * FROM car_notifications
+        SELECT *
+        FROM car_notifications
         ORDER BY id DESC
     """).fetchall()
     conn.close()

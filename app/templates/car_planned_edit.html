@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать планируемую работу | Шанс{% endblock %}
+
+{% block content %}
+<div class="budget-page">
+    <div class="page-header">
+        <h1 class="page-title"><span class="page-title-strong">Редактирование планируемой работы</span></h1>
+        <div class="page-actions">
+            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+    <div class="card edit-card">
+        <form method="POST" class="form-block">
+            <div class="form-group">
+                <label for="service_name">Наименование</label>
+                <input type="text" id="service_name" name="service_name" value="{{ item.service_name }}" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="planned_cost">Стоимость</label>
+                <input type="number" id="planned_cost" name="planned_cost" value="{{ item.planned_cost|int }}" class="form-input" step="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Статус</label>
+                <select id="status" name="status" class="form-input">
+                    <option value="Выполнен" {% if item.status == 'Выполнен' %}selected{% endif %}>Выполнен</option>
+                    <option value="В работе" {% if item.status == 'В работе' %}selected{% endif %}>В работе</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-wide">Сохранить изменения</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

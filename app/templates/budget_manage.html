@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Управление | Шанс{% endblock %}
+{% block title %}Управление бюджетом | Шанс{% endblock %}
 
 {% block content %}
 <div class="budget-page">
     <div class="page-header">
         <h1 class="page-title">
-            <span class="page-title-strong">Управление</span>
+            <span class="page-title-strong">Управление бюджетом</span>
         </h1>
 
         <div class="page-actions">
@@ -15,34 +15,35 @@
         </div>
     </div>
 
-    <div class="budget-manage-grid">
-        <div class="card">
+    <div class="budget-manage-grid budget-manage-grid-top">
+        <div class="card balance-card-compact">
             <h2 class="section-title">Текущий баланс</h2>
             <div class="big-balance">{{ current_balance|money }}</div>
 
-            <form method="POST" class="form-block">
+            <form method="POST" class="form-block form-block-compact">
                 <input type="hidden" name="form_type" value="set_balance">
 
                 <div class="form-group">
-                    <label for="current_balance">Задать</label>
+                    <label for="current_balance">Задать текущий баланс</label>
                     <input
                         type="number"
                         id="current_balance"
                         name="current_balance"
                         step="1"
+                        min="0"
                         required
                         class="form-input form-input-compact"
                     >
                 </div>
 
-                <button type="submit" class="btn btn-success btn-wide">
+                <button type="submit" class="btn btn-success btn-compact">
                     Сохранить
                 </button>
             </form>
         </div>
 
-        <div class="card">
-            <h2 class="section-title">Добавить</h2>
+        <div class="card operation-card">
+            <h2 class="section-title">Добавить операцию</h2>
 
             <form method="POST" class="form-block">
                 <input type="hidden" name="form_type" value="add_entry">
@@ -60,7 +61,7 @@
                 <div class="form-group">
                     <label for="entry_type">Тип</label>
                     <select id="entry_type" name="entry_type" required class="form-input">
-                        <option value="">Выберите тип</option>
+                        <option value="">Выбери тип</option>
                         <option value="Доход">Доход</option>
                         <option value="Расход">Расход</option>
                     </select>
@@ -69,7 +70,7 @@
                 <div class="form-group">
                     <label for="category">Категория</label>
                     <select id="category" name="category" required class="form-input" onchange="toggleCustomCategoryField()">
-                        <option value="">Выберите категорию</option>
+                        <option value="">Выбери категорию</option>
                         {% for category in base_categories %}
                             <option value="{{ category }}">{{ category }}</option>
                         {% endfor %}
@@ -83,24 +84,25 @@
                         id="custom_category"
                         name="custom_category"
                         class="form-input"
-                        placeholder="Например: Непредвиденные расходы, долг и т.д"
+                        placeholder="Например: Подарки, Одежда, Лекарства"
                     >
                 </div>
 
                 <div class="form-group">
-                    <label for="amount">Сумма, Р</label>
+                    <label for="amount">Сумма</label>
                     <input
                         type="number"
                         id="amount"
                         name="amount"
                         step="1"
+                        min="0"
                         required
                         class="form-input"
                     >
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-wide">
-                    Сохранить
+                    Добавить
                 </button>
             </form>
         </div>
@@ -137,6 +139,17 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label for="sort_by">Сортировка</label>
+                <select id="sort_by" name="sort_by" class="form-input">
+                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Сначала новые</option>
+                    <option value="month" {% if sort_by == 'month' %}selected{% endif %}>По месяцу</option>
+                    <option value="income_first" {% if sort_by == 'income_first' %}selected{% endif %}>Сначала доходы</option>
+                    <option value="expense_first" {% if sort_by == 'expense_first' %}selected{% endif %}>Сначала расходы</option>
+                    <option value="category" {% if sort_by == 'category' %}selected{% endif %}>По категории</option>
+                </select>
+            </div>
+
             <div class="filter-actions">
                 <button type="submit" class="btn btn-primary">Применить</button>
             </div>
@@ -145,7 +158,7 @@
 
     <div class="card table-card">
         <div class="table-header">
-            <h2 class="section-title">Все операции</h2>
+            <h2 class="section-title">Таблица операций</h2>
         </div>
 
         {% if entries %}
@@ -176,11 +189,8 @@
                                         <a href="{{ url_for('budget_edit', entry_id=entry.id) }}" class="btn btn-small btn-secondary">
                                             Редактировать
                                         </a>
-
                                         <form method="POST" action="{{ url_for('budget_delete', entry_id=entry.id) }}" class="inline-form">
-                                            <button type="submit" class="btn btn-small btn-danger">
-                                                Удалить
-                                            </button>
+                                            <button type="submit" class="btn btn-small btn-danger">Удалить</button>
                                         </form>
                                     </div>
                                 </td>
@@ -190,7 +200,7 @@
                 </table>
             </div>
         {% else %}
-            <div class="empty-state">Пока нет записей</div>
+            <div class="empty-state">Пока нет записей бюджета.</div>
         {% endif %}
     </div>
 </div>
