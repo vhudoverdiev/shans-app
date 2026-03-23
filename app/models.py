@@ -371,17 +371,17 @@ def create_car_done_service(
 
 def create_car_planned_service(
     service_name,
-    planned_cost,
-    mileage,
     detail_description,
     work_kind,
     period_type,
 ):
     """
     Создаёт планируемую работу.
-    По умолчанию статус всегда 'В работе'.
+    Стоимость и пробег для планируемых работ больше не нужны.
     """
+
     conn = get_connection()
+
     conn.execute("""
         INSERT INTO car_planned_services (
             service_name,
@@ -395,13 +395,14 @@ def create_car_planned_service(
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         service_name,
-        planned_cost,
-        mileage,
+        0,
+        0,
         detail_description,
         work_kind,
         period_type,
         "В работе",
     ))
+
     conn.commit()
     conn.close()
 
@@ -610,8 +611,10 @@ def delete_car_planned_service(service_id):
 
 def move_planned_to_done(service_id, service_date):
     """
-    Переносит работу из планируемых в выполненные.
+    Переносит работу из планируемых в выполненные
+    и возвращает id новой записи.
     """
+
     conn = get_connection()
 
     item = conn.execute("""
@@ -622,9 +625,9 @@ def move_planned_to_done(service_id, service_date):
 
     if not item:
         conn.close()
-        return
+        return None
 
-    conn.execute("""
+    cursor = conn.execute("""
         INSERT INTO car_done_services (
             service_name,
             service_cost,
@@ -638,14 +641,16 @@ def move_planned_to_done(service_id, service_date):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         item["service_name"],
-        item["planned_cost"],
-        item["mileage"],
+        0,
+        0,
         service_date,
         item["detail_description"],
         item["work_kind"],
         item["period_type"],
         "Выполнено",
     ))
+
+    done_service_id = cursor.lastrowid
 
     conn.execute(
         "DELETE FROM car_planned_services WHERE id = ?",
@@ -655,56 +660,40 @@ def move_planned_to_done(service_id, service_date):
     conn.commit()
     conn.close()
 
-
-def move_done_to_planned(service_id):
-    """
-    Переносит работу из выполненных в планируемые.
-    """
-    conn = get_connection()
-
-    item = conn.execute("""
-        SELECT *
-        FROM car_done_services
-        WHERE id = ?
-    """, (service_id,)).fetchone()
-
-    if not item:
-        conn.close()
-        return
-
-    conn.execute("""
-        INSERT INTO car_planned_services (
-            service_name,
-            planned_cost,
-            mileage,
-            detail_description,
-            work_kind,
-            period_type,
-            status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        item["service_name"],
-        item["service_cost"],
-        item["mileage"],
-        item["detail_description"],
-        item["work_kind"],
-        item["period_type"],
-        "В работе",
-    ))
-
-    conn.execute(
-        "DELETE FROM car_done_services WHERE id = ?",
-        (service_id,)
-    )
-
-    conn.commit()
-    conn.close()
-
+    return done_service_id
 
 # =========================================================
 # CAR - PERIODIC WORKS / NOTIFICATIONS
 # =========================================================
+def hide_car_notification(notification_key):
+    conn = get_connection()
+    conn.execute("""
+        INSERT OR IGNORE INTO car_notification_hidden (notification_key, created_at)
+        VALUES (?, ?)
+    """, (notification_key, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    conn.commit()
+    conn.close()
+
+
+def is_car_notification_hidden(notification_key):
+    conn = get_connection()
+    item = conn.execute("""
+        SELECT id
+        FROM car_notification_hidden
+        WHERE notification_key = ?
+    """, (notification_key,)).fetchone()
+    conn.close()
+    return item is not None
+
+
+def get_hidden_notification_keys():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT notification_key
+        FROM car_notification_hidden
+    """).fetchall()
+    conn.close()
+    return {row["notification_key"] for row in rows}
 
 def get_periodic_services_for_notifications():
     """

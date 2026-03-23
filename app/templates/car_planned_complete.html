@@ -15,7 +15,7 @@
     </div>
 
     <div class="card edit-card">
-        <form method="POST" class="form-block" id="plannedEditForm">
+        <form method="POST" class="form-block">
             <div class="form-group">
                 <label for="service_name">Наименование</label>
                 <input
@@ -25,33 +25,6 @@
                     value="{{ item.service_name }}"
                     class="form-input"
                     required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="planned_cost">Стоимость</label>
-                <input
-                    type="number"
-                    id="planned_cost"
-                    name="planned_cost"
-                    value="{{ item.planned_cost|int }}"
-                    class="form-input"
-                    step="1"
-                    min="0"
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="mileage">Пробег</label>
-                <input
-                    type="number"
-                    id="mileage"
-                    name="mileage"
-                    value="{{ item.mileage or 0 }}"
-                    class="form-input"
-                    step="1"
-                    min="0"
                 >
             </div>
 
@@ -90,28 +63,6 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="status">Статус</label>
-                <select id="status" name="status" class="form-input">
-                    <option value="В работе" {% if (item.status or 'В работе') == 'В работе' %}selected{% endif %}>
-                        В работе
-                    </option>
-                    <option value="Выполнено">
-                        Выполнено
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-group" id="serviceDateGroup">
-                <label for="service_date">Дата выполнения</label>
-                <input
-                    type="month"
-                    id="service_date"
-                    name="service_date"
-                    class="form-input"
-                >
-            </div>
-
             <button type="submit" class="btn btn-primary btn-wide">
                 Сохранить изменения
             </button>
@@ -125,10 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const periodTypeGroup = document.getElementById("periodTypeGroup");
     const periodType = document.getElementById("period_type");
 
-    const status = document.getElementById("status");
-    const serviceDateGroup = document.getElementById("serviceDateGroup");
-    const serviceDate = document.getElementById("service_date");
-
     function togglePeriodType() {
         const isPeriodic = workKind.value === "Периодическая";
         periodTypeGroup.style.display = isPeriodic ? "block" : "none";
@@ -138,20 +85,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function toggleServiceDate() {
-        const isDone = status.value === "Выполнено";
-        serviceDateGroup.style.display = isDone ? "block" : "none";
-
-        if (!isDone) {
-            serviceDate.value = "";
-        }
-    }
-
     workKind.addEventListener("change", togglePeriodType);
-    status.addEventListener("change", toggleServiceDate);
-
     togglePeriodType();
-    toggleServiceDate();
 });
 </script>
 {% endblock %}

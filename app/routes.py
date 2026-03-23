@@ -18,7 +18,6 @@ from flask_login import (
 from app.auth import verify_user
 from app.models import (
     create_budget_entry,
-    create_car_notification,
     create_car_done_service,
     create_car_planned_service,
     delete_budget_entry,
@@ -32,13 +31,11 @@ from app.models import (
     get_car_done_service_by_id,
     get_car_done_services,
     get_car_last_mileage,
-    get_car_notifications,
     get_car_planned_service_by_id,
     get_car_planned_services,
     get_car_total_spent,
     get_current_balance,
     get_periodic_services_for_notifications,
-    move_done_to_planned,
     move_planned_to_done,
     save_balance_history,
     set_current_balance,
@@ -84,6 +81,89 @@ MONTH_MAP = {
 
 def _get_current_month_name() -> str:
     return MONTH_MAP[datetime.now().month]
+
+
+def _get_period_months(period_type: str) -> int:
+    if period_type == "Раз в пол года":
+        return 6
+    if period_type == "Раз в год":
+        return 12
+    return 0
+
+
+def _add_months(base_date: datetime, months: int) -> datetime:
+    month_index = base_date.month - 1 + months
+    year = base_date.year + month_index // 12
+    month = month_index % 12 + 1
+    return datetime(year, month, 1)
+
+
+def _build_car_notifications():
+    periodic_planned, periodic_done = get_periodic_services_for_notifications()
+
+    notifications = []
+    today = datetime.now().replace(day=1)
+
+    month_names = {
+        1: "январь",
+        2: "февраль",
+        3: "март",
+        4: "апрель",
+        5: "май",
+        6: "июнь",
+        7: "июль",
+        8: "август",
+        9: "сентябрь",
+        10: "октябрь",
+        11: "ноябрь",
+        12: "декабрь",
+    }
+
+    for item in periodic_planned:
+        notifications.append({
+            "title": item["service_name"],
+            "status": "Скоро",
+            "period_type": item["period_type"],
+            "detail_description": item["detail_description"] or "—",
+            "last_service_date": "—",
+        })
+
+    for item in periodic_done:
+        period_months = _get_period_months(item["period_type"])
+
+        if not period_months or not item["service_date"]:
+            continue
+
+        try:
+            last_date = datetime.strptime(item["service_date"], "%Y-%m")
+        except ValueError:
+            continue
+
+        next_service_date = _add_months(last_date, period_months)
+        status = "Нужна замена" if today >= next_service_date else "Скоро"
+        last_service_date_text = f"{month_names[last_date.month]} {last_date.year}"
+
+        notifications.append({
+            "title": item["service_name"],
+            "status": status,
+            "period_type": item["period_type"],
+            "detail_description": item["detail_description"] or "—",
+            "last_service_date": last_service_date_text,
+        })
+
+    status_priority = {
+        "Нужна замена": 0,
+        "Скоро": 1,
+    }
+
+    notifications.sort(
+        key=lambda item: (
+            status_priority.get(item["status"], 9),
+            item["title"].lower(),
+        )
+    )
+
+    return notifications
 
 
 def _resolve_budget_category(form):
@@ -488,25 +568,12 @@ def register_routes(app):
 
             if form_type == "planned_service":
                 service_name = request.form.get("service_name", "").strip()
-                planned_cost_raw = request.form.get("planned_cost", "").strip()
-                mileage_raw = request.form.get("mileage", "").strip()
                 detail_description = request.form.get("detail_description", "").strip()
                 work_kind = request.form.get("work_kind", "Разовая").strip()
                 period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
 
-                if not service_name or not planned_cost_raw:
+                if not service_name:
                     flash("Заполни обязательные поля планируемой работы.", "warning")
-                    return redirect(url_for("car_manage"))
-
-                try:
-                    planned_cost = int(planned_cost_raw)
-                    mileage = int(mileage_raw) if mileage_raw else 0
-                except ValueError:
-                    flash("Стоимость и пробег должны быть целыми числами.", "danger")
-                    return redirect(url_for("car_manage"))
-
-                if planned_cost < 0 or mileage < 0:
-                    flash("Стоимость и пробег не могут быть отрицательными.", "warning")
                     return redirect(url_for("car_manage"))
 
                 if work_kind == "Периодическая" and not period_type:
@@ -515,8 +582,6 @@ def register_routes(app):
 
                 create_car_planned_service(
                     service_name=service_name,
-                    planned_cost=planned_cost,
-                    mileage=mileage,
                     detail_description=detail_description,
                     work_kind=work_kind,
                     period_type=period_type,
@@ -542,7 +607,6 @@ def register_routes(app):
             detail_description = request.form.get("detail_description", "").strip()
             work_kind = request.form.get("work_kind", "Разовая").strip()
             period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
-            status = request.form.get("status", "Выполнено").strip()
 
             if not service_name or not service_cost_raw or not mileage_raw or not service_date:
                 flash("Заполни обязательные поля.", "warning")
@@ -563,39 +627,6 @@ def register_routes(app):
                 flash("Для периодической работы выбери периодичность.", "warning")
                 return redirect(url_for("car_done_edit", service_id=service_id))
 
-            if status == "В работе":
-                move_done_to_planned(service_id)
-                planned_item = get_car_planned_services()[0] if get_car_planned_services() else None
-
-                if planned_item:
-                    from app.database import get_connection
-                    conn = get_connection()
-                    conn.execute("""
-                        UPDATE car_planned_services
-                        SET service_name = ?,
-                            planned_cost = ?,
-                            mileage = ?,
-                            detail_description = ?,
-                            work_kind = ?,
-                            period_type = ?,
-                            status = ?
-                        WHERE id = ?
-                    """, (
-                        service_name,
-                        service_cost,
-                        mileage,
-                        detail_description,
-                        work_kind,
-                        period_type,
-                        "В работе",
-                        planned_item["id"],
-                    ))
-                    conn.commit()
-                    conn.close()
-
-                flash("Работа перенесена в планируемые.", "success")
-                return redirect(url_for("car"))
-
             update_car_done_service(
                 service_id=service_id,
                 service_name=service_name,
@@ -612,6 +643,68 @@ def register_routes(app):
 
         return render_template("car_done_edit.html", item=item)
 
+    @app.route("/car/planned/complete/<int:service_id>", methods=["GET", "POST"])
+    @login_required
+    def car_planned_complete(service_id):
+        item = get_car_planned_service_by_id(service_id)
+
+        if not item:
+            flash("Планируемая работа не найдена.", "warning")
+            return redirect(url_for("car"))
+
+        if request.method == "POST":
+            service_date = request.form.get("service_date", "").strip()
+            service_cost_raw = request.form.get("service_cost", "").strip()
+            mileage_raw = request.form.get("mileage", "").strip()
+            detail_description = request.form.get("detail_description", "").strip()
+            work_kind = request.form.get("work_kind", "").strip()
+            period_type = request.form.get("period_type", "").strip()
+
+            if not service_date:
+                flash("Укажи дату выполнения.", "warning")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
+
+            try:
+                service_cost = int(service_cost_raw)
+                mileage = int(mileage_raw)
+            except ValueError:
+                flash("Стоимость и пробег должны быть целыми числами.", "danger")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
+
+            if service_cost < 0 or mileage < 0:
+                flash("Стоимость и пробег не могут быть отрицательными.", "warning")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
+
+            if work_kind == "Периодическая" and not period_type:
+                flash("Для периодической работы выбери периодичность.", "warning")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
+
+            if work_kind != "Периодическая":
+                period_type = ""
+
+            done_service_id = move_planned_to_done(service_id, service_date)
+
+            if not done_service_id:
+                flash("Не удалось перенести запись.", "danger")
+                return redirect(url_for("car"))
+
+            update_car_done_service(
+                service_id=done_service_id,
+                service_name=item["service_name"],
+                service_cost=service_cost,
+                mileage=mileage,
+                service_date=service_date,
+                detail_description=detail_description,
+                work_kind=work_kind,
+                period_type=period_type,
+                status="Выполнено",
+            )
+
+            flash("Работа перенесена в выполненные.", "success")
+            return redirect(url_for("car"))
+
+        return render_template("car_planned_complete.html", item=item)
+
     @app.route("/car/planned/edit/<int:service_id>", methods=["GET", "POST"])
     @login_required
     def car_planned_edit(service_id):
@@ -622,77 +715,23 @@ def register_routes(app):
 
         if request.method == "POST":
             service_name = request.form.get("service_name", "").strip()
-            planned_cost_raw = request.form.get("planned_cost", "").strip()
-            mileage_raw = request.form.get("mileage", "").strip()
             detail_description = request.form.get("detail_description", "").strip()
             work_kind = request.form.get("work_kind", "Разовая").strip()
             period_type = request.form.get("period_type", "").strip() if work_kind == "Периодическая" else ""
-            status = request.form.get("status", "В работе").strip()
 
-            if not service_name or not planned_cost_raw:
+            if not service_name:
                 flash("Заполни обязательные поля.", "warning")
-                return redirect(url_for("car_planned_edit", service_id=service_id))
-
-            try:
-                planned_cost = int(planned_cost_raw)
-                mileage = int(mileage_raw) if mileage_raw else 0
-            except ValueError:
-                flash("Стоимость и пробег должны быть целыми числами.", "danger")
-                return redirect(url_for("car_planned_edit", service_id=service_id))
-
-            if planned_cost < 0 or mileage < 0:
-                flash("Стоимость и пробег не могут быть отрицательными.", "warning")
                 return redirect(url_for("car_planned_edit", service_id=service_id))
 
             if work_kind == "Периодическая" and not period_type:
                 flash("Для периодической работы выбери периодичность.", "warning")
                 return redirect(url_for("car_planned_edit", service_id=service_id))
 
-            if status == "Выполнено":
-                service_date = request.form.get("service_date", "").strip()
-                if not service_date:
-                    flash("Для выполненной работы укажи дату.", "warning")
-                    return redirect(url_for("car_planned_edit", service_id=service_id))
-
-                move_planned_to_done(service_id, service_date)
-                done_item = get_car_done_services()[0] if get_car_done_services() else None
-
-                if done_item:
-                    from app.database import get_connection
-                    conn = get_connection()
-                    conn.execute("""
-                        UPDATE car_done_services
-                        SET service_name = ?,
-                            service_cost = ?,
-                            mileage = ?,
-                            service_date = ?,
-                            detail_description = ?,
-                            work_kind = ?,
-                            period_type = ?,
-                            status = ?
-                        WHERE id = ?
-                    """, (
-                        service_name,
-                        planned_cost,
-                        mileage,
-                        service_date,
-                        detail_description,
-                        work_kind,
-                        period_type,
-                        "Выполнено",
-                        done_item["id"],
-                    ))
-                    conn.commit()
-                    conn.close()
-
-                flash("Работа перенесена в выполненные.", "success")
-                return redirect(url_for("car"))
-
             update_car_planned_service(
                 service_id=service_id,
                 service_name=service_name,
-                planned_cost=planned_cost,
-                mileage=mileage,
+                planned_cost=0,
+                mileage=0,
                 detail_description=detail_description,
                 work_kind=work_kind,
                 period_type=period_type,
@@ -717,57 +756,21 @@ def register_routes(app):
         flash("Планируемая работа удалена.", "success")
         return redirect(url_for("car"))
 
-    @app.route("/car/notifications", methods=["GET", "POST"])
+    @app.route("/car/notifications")
     @login_required
     def car_notifications():
-        periodic_planned, periodic_done = get_periodic_services_for_notifications()
+        notifications = _build_car_notifications()
 
-        notifications = []
-
-        for item in periodic_planned:
-            notifications.append({
-                "title": item["service_name"],
-                "status": item["status"],
-                "period_type": item["period_type"],
-                "mileage": item["mileage"],
-                "detail_description": item["detail_description"],
-                "source_type": "Планируемые",
-                "service_date": item["service_date"],
-            })
-
-        for item in periodic_done:
-            next_date = ""
-            service_date = item["service_date"]
-
-            try:
-                base_date = datetime.strptime(service_date, "%Y-%m")
-                if item["period_type"] == "Раз в пол года":
-                    month = base_date.month + 6
-                    year = base_date.year
-                    while month > 12:
-                        month -= 12
-                        year += 1
-                    next_date = f"{year:04d}-{month:02d}"
-                elif item["period_type"] == "Раз в год":
-                    next_date = f"{base_date.year + 1:04d}-{base_date.month:02d}"
-            except Exception:
-                next_date = ""
-
-            notifications.append({
-                "title": item["service_name"],
-                "status": item["status"],
-                "period_type": item["period_type"],
-                "mileage": item["mileage"],
-                "detail_description": item["detail_description"],
-                "source_type": "Выполненные",
-                "service_date": item["service_date"],
-                "next_date": next_date,
-            })
-
-        legacy_notifications = get_car_notifications()
+        need_replacement_count = sum(
+            1 for item in notifications if item["status"] == "Нужна замена"
+        )
+        soon_count = sum(
+            1 for item in notifications if item["status"] == "Скоро"
+        )
 
         return render_template(
             "car_notifications.html",
             notifications=notifications,
-            legacy_notifications=legacy_notifications,
+            need_replacement_count=need_replacement_count,
+            soon_count=soon_count,
         )

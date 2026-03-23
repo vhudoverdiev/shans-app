@@ -49,6 +49,13 @@ def init_db():
             password_hash TEXT NOT NULL
         )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS car_notification_hidden (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        notification_key TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL
+    )
+    """)
 
     # =========================================================
     # BUDGET BALANCE HISTORY

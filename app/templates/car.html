@@ -27,19 +27,24 @@
         </div>
     </div>
 
-    <div class="card table-card">
-        <div class="table-header">
-            <h2 class="section-title">Планируемые работы</h2>
-        </div>
+<div class="table-header table-header-with-controls">
+    <h2 class="section-title">Планируемые работы</h2>
+
+    <form method="GET" class="table-sort-form">
+        <input type="hidden" name="done_sort" value="{{ done_sort }}">
+        <select name="planned_sort" class="form-input form-input-small" onchange="this.form.submit()">
+            <option value="default" {% if planned_sort == 'default' %}selected{% endif %}>Сортировка</option>
+            <option value="name_asc" {% if planned_sort == 'name_asc' %}selected{% endif %}>По наименованию</option>
+        </select>
+    </form>
+</div>
 
         {% if planned_services %}
             <div class="table-wrapper">
-                <table class="data-table">
+                <table class="data-table data-table-car">
                     <thead>
                         <tr>
                             <th>Наименование</th>
-                            <th>Стоимость</th>
-                            <th>Пробег</th>
                             <th>Описание детали</th>
                             <th>Тип работы</th>
                             <th>Периодичность</th>
@@ -51,23 +56,23 @@
                         {% for item in planned_services %}
                             <tr>
                                 <td>{{ item.service_name }}</td>
-                                <td>{{ item.planned_cost|money }}</td>
-                                <td>{{ item.mileage }}</td>
                                 <td>{{ item.detail_description or "—" }}</td>
                                 <td>{{ item.work_kind or "Разовая" }}</td>
                                 <td>{{ item.period_type or "—" }}</td>
                                 <td>
-                                    <span class="status-pill status-pill-work">
+                                    <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                    class="status-pill status-pill-work status-pill-link">
                                         {{ item.status or "В работе" }}
-                                    </span>
+                                    </a>
                                 </td>
                                 <td>
-                                    <div class="table-actions">
-                                        <a href="{{ url_for('car_planned_edit', service_id=item.id) }}" class="btn btn-small btn-secondary">
+                                    <div class="table-actions table-actions-fixed">
+                                        <a href="{{ url_for('car_planned_edit', service_id=item.id) }}" class="btn btn-small btn-secondary btn-fixed-action">
                                             Редактировать
                                         </a>
+
                                         <form method="POST" action="{{ url_for('car_planned_delete', service_id=item.id) }}" class="inline-form">
-                                            <button type="submit" class="btn btn-small btn-danger">
+                                            <button type="submit" class="btn btn-small btn-danger btn-fixed-action">
                                                 Удалить
                                             </button>
                                         </form>
@@ -83,14 +88,21 @@
         {% endif %}
     </div>
 
-    <div class="card table-card">
-        <div class="table-header">
-            <h2 class="section-title">Выполненные работы</h2>
-        </div>
+    <div class="table-header table-header-with-controls">
+    <h2 class="section-title">Выполненные работы</h2>
+
+    <form method="GET" class="table-sort-form">
+        <input type="hidden" name="planned_sort" value="{{ planned_sort }}">
+        <select name="done_sort" class="form-input form-input-small" onchange="this.form.submit()">
+            <option value="default" {% if done_sort == 'default' %}selected{% endif %}>Сортировка</option>
+            <option value="name_asc" {% if done_sort == 'name_asc' %}selected{% endif %}>По наименованию</option>
+        </select>
+    </form>
+</div>
 
         {% if done_services %}
             <div class="table-wrapper">
-                <table class="data-table">
+                <table class="data-table data-table-car">
                     <thead>
                         <tr>
                             <th>Наименование</th>
