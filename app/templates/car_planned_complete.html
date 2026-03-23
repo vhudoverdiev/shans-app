@@ -1,92 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}Редактировать планируемую работу | Шанс{% endblock %}
+{% block title %}Завершить работу | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
+<section class="car-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Редактирование планируемой работы</span>
-        </h1>
+        <div>
+            <h1 class="page-title">Завершить работу</h1>
+        </div>
 
         <div class="page-actions">
-            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад</a>
+            <a href="{{ url_for('car', tab='planned') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
 
-    <div class="card edit-card">
-        <form method="POST" class="form-block">
-            <div class="form-group">
-                <label for="service_name">Наименование</label>
-                <input
-                    type="text"
-                    id="service_name"
-                    name="service_name"
-                    value="{{ item.service_name }}"
-                    class="form-input"
-                    required
-                >
+    <div class="card edit-card car-form-card">
+        <div class="car-complete-top">
+            <div class="car-complete-title">{{ service.service_name or "Работа" }}</div>
+
+            <div class="status-change-row">
+                <span class="status-pill status-pill-work">{{ service.status or "В работе" }}</span>
+                <span class="status-arrow">→</span>
+                <span class="status-pill status-pill-done">Выполнено</span>
             </div>
 
-            <div class="form-group">
-                <label for="detail_description">Описание детали</label>
-                <textarea
-                    id="detail_description"
-                    name="detail_description"
-                    class="form-input form-textarea"
-                    rows="4"
-                >{{ item.detail_description or "" }}</textarea>
+            <div class="car-form-head-text">
+                После сохранения работа будет перенесена в выполненные
+            </div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label>Периодичность</label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        value="{{ service.period_type or 'Нет' }}"
+                        disabled
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="service_date">Дата выполнения</label>
+                    <input
+                        type="month"
+                        id="service_date"
+                        name="service_date"
+                        class="form-input"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="mileage">Пробег</label>
+                    <input
+                        type="number"
+                        id="mileage"
+                        name="mileage"
+                        class="form-input"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="cost">Стоимость</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="cost"
+                        name="cost"
+                        class="form-input"
+                    >
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label>Описание</label>
+                    <textarea
+                        class="form-input car-textarea"
+                        rows="4"
+                        disabled
+                    >{{ service.detail_description or '' }}</textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="work_kind">Тип работы</label>
-                <select id="work_kind" name="work_kind" class="form-input">
-                    <option value="Разовая" {% if (item.work_kind or 'Разовая') == 'Разовая' %}selected{% endif %}>
-                        Разовая
-                    </option>
-                    <option value="Периодическая" {% if item.work_kind == 'Периодическая' %}selected{% endif %}>
-                        Периодическая
-                    </option>
-                </select>
+            <div class="car-form-actions">
+                <button type="submit" class="btn btn-success">Перевести в выполненные</button>
+                <a href="{{ url_for('car', tab='planned') }}" class="btn btn-secondary">Отмена</a>
             </div>
-
-            <div class="form-group" id="periodTypeGroup">
-                <label for="period_type">Периодичность</label>
-                <select id="period_type" name="period_type" class="form-input">
-                    <option value="">Выбери периодичность</option>
-                    <option value="Раз в пол года" {% if item.period_type == 'Раз в пол года' %}selected{% endif %}>
-                        Раз в пол года
-                    </option>
-                    <option value="Раз в год" {% if item.period_type == 'Раз в год' %}selected{% endif %}>
-                        Раз в год
-                    </option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-wide">
-                Сохранить изменения
-            </button>
         </form>
     </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const workKind = document.getElementById("work_kind");
-    const periodTypeGroup = document.getElementById("periodTypeGroup");
-    const periodType = document.getElementById("period_type");
-
-    function togglePeriodType() {
-        const isPeriodic = workKind.value === "Периодическая";
-        periodTypeGroup.style.display = isPeriodic ? "block" : "none";
-
-        if (!isPeriodic) {
-            periodType.value = "";
-        }
-    }
-
-    workKind.addEventListener("change", togglePeriodType);
-    togglePeriodType();
-});
-</script>
+</section>
 {% endblock %}

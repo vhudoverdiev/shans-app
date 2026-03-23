@@ -3,155 +3,83 @@
 {% block title %}Редактировать планируемую работу | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
+<section class="car-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Редактирование планируемой работы</span>
-        </h1>
+        <div>
+            <h1 class="page-title">Редактировать планируемую работу</h1>
+        </div>
 
         <div class="page-actions">
-            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад</a>
+            <a href="{{ url_for('car', tab='planned') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
 
-    <div class="card edit-card">
-        <form method="POST" class="form-block" id="plannedEditForm">
-            <div class="form-group">
-                <label for="service_name">Наименование</label>
-                <input
-                    type="text"
-                    id="service_name"
-                    name="service_name"
-                    value="{{ item.service_name }}"
-                    class="form-input"
-                    required
-                >
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Изменение данных</div>
+            <div class="car-form-head-text">Статус здесь менять нельзя</div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label for="service_name">Наименование</label>
+                    <input
+                        type="text"
+                        id="service_name"
+                        name="service_name"
+                        class="form-input"
+                        value="{{ service.service_name or '' }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="period_type">Периодичность</label>
+                    <select id="period_type" name="period_type" class="form-input">
+                        <option value="" {% if not service.period_type %}selected{% endif %}>Нет</option>
+                        <option value="6 мес" {% if service.period_type == '6 мес' %}selected{% endif %}>6 мес</option>
+                        <option value="12 мес" {% if service.period_type == '12 мес' %}selected{% endif %}>12 мес</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="work_kind">Вид работы</label>
+                    <input
+                        type="text"
+                        id="work_kind"
+                        name="work_kind"
+                        class="form-input"
+                        value="{{ service.work_kind or '' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Статус</label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        value="{{ service.status or 'Планируется' }}"
+                        disabled
+                    >
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label for="detail_description">Описание</label>
+                    <textarea
+                        id="detail_description"
+                        name="detail_description"
+                        class="form-input car-textarea"
+                        rows="5"
+                    >{{ service.detail_description or '' }}</textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="planned_cost">Стоимость</label>
-                <input
-                    type="number"
-                    id="planned_cost"
-                    name="planned_cost"
-                    value="{{ item.planned_cost|int }}"
-                    class="form-input"
-                    step="1"
-                    min="0"
-                    required
-                >
+            <div class="car-form-actions">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('car', tab='planned') }}" class="btn btn-secondary">Отмена</a>
             </div>
-
-            <div class="form-group">
-                <label for="mileage">Пробег</label>
-                <input
-                    type="number"
-                    id="mileage"
-                    name="mileage"
-                    value="{{ item.mileage or 0 }}"
-                    class="form-input"
-                    step="1"
-                    min="0"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="detail_description">Описание детали</label>
-                <textarea
-                    id="detail_description"
-                    name="detail_description"
-                    class="form-input form-textarea"
-                    rows="4"
-                >{{ item.detail_description or "" }}</textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="work_kind">Тип работы</label>
-                <select id="work_kind" name="work_kind" class="form-input">
-                    <option value="Разовая" {% if (item.work_kind or 'Разовая') == 'Разовая' %}selected{% endif %}>
-                        Разовая
-                    </option>
-                    <option value="Периодическая" {% if item.work_kind == 'Периодическая' %}selected{% endif %}>
-                        Периодическая
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-group" id="periodTypeGroup">
-                <label for="period_type">Периодичность</label>
-                <select id="period_type" name="period_type" class="form-input">
-                    <option value="">Выбери периодичность</option>
-                    <option value="Раз в пол года" {% if item.period_type == 'Раз в пол года' %}selected{% endif %}>
-                        Раз в пол года
-                    </option>
-                    <option value="Раз в год" {% if item.period_type == 'Раз в год' %}selected{% endif %}>
-                        Раз в год
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="status">Статус</label>
-                <select id="status" name="status" class="form-input">
-                    <option value="В работе" {% if (item.status or 'В работе') == 'В работе' %}selected{% endif %}>
-                        В работе
-                    </option>
-                    <option value="Выполнено">
-                        Выполнено
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-group" id="serviceDateGroup">
-                <label for="service_date">Дата выполнения</label>
-                <input
-                    type="month"
-                    id="service_date"
-                    name="service_date"
-                    class="form-input"
-                >
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-wide">
-                Сохранить изменения
-            </button>
         </form>
     </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const workKind = document.getElementById("work_kind");
-    const periodTypeGroup = document.getElementById("periodTypeGroup");
-    const periodType = document.getElementById("period_type");
-
-    const status = document.getElementById("status");
-    const serviceDateGroup = document.getElementById("serviceDateGroup");
-    const serviceDate = document.getElementById("service_date");
-
-    function togglePeriodType() {
-        const isPeriodic = workKind.value === "Периодическая";
-        periodTypeGroup.style.display = isPeriodic ? "block" : "none";
-
-        if (!isPeriodic) {
-            periodType.value = "";
-        }
-    }
-
-    function toggleServiceDate() {
-        const isDone = status.value === "Выполнено";
-        serviceDateGroup.style.display = isDone ? "block" : "none";
-
-        if (!isDone) {
-            serviceDate.value = "";
-        }
-    }
-
-    workKind.addEventListener("change", togglePeriodType);
-    status.addEventListener("change", toggleServiceDate);
-
-    togglePeriodType();
-    toggleServiceDate();
-});
-</script>
+</section>
 {% endblock %}

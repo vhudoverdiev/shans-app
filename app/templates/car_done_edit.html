@@ -3,51 +3,117 @@
 {% block title %}Редактировать выполненную работу | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
+<section class="car-page">
     <div class="page-header">
-        <h1 class="page-title"><span class="page-title-strong">Редактирование выполненной работы</span></h1>
+        <div>
+            <h1 class="page-title">Редактировать выполненную работу</h1>
+        </div>
+
         <div class="page-actions">
-            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад</a>
+            <a href="{{ url_for('car', tab='done') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
 
-    <div class="card edit-card">
-        <form method="POST" class="form-block">
-            <div class="form-group">
-                <label for="service_name">Наименование</label>
-                <input type="text" id="service_name" name="service_name" value="{{ item.service_name }}" class="form-input" required>
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Изменение данных</div>
+            <div class="car-form-head-text">Выполненную работу можно только редактировать</div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label for="service_name">Наименование</label>
+                    <input
+                        type="text"
+                        id="service_name"
+                        name="service_name"
+                        class="form-input"
+                        value="{{ service.service_name or '' }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="period_type">Периодичность</label>
+                    <select id="period_type" name="period_type" class="form-input">
+                        <option value="" {% if not service.period_type %}selected{% endif %}>Нет</option>
+                        <option value="6 мес" {% if service.period_type == '6 мес' %}selected{% endif %}>6 мес</option>
+                        <option value="12 мес" {% if service.period_type == '12 мес' %}selected{% endif %}>12 мес</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="service_date">Дата выполнения</label>
+                    <input
+                        type="month"
+                        id="service_date"
+                        name="service_date"
+                        class="form-input"
+                        value="{{ service.service_date or '' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Статус</label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        value="Выполнено"
+                        disabled
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="mileage">Пробег</label>
+                    <input
+                        type="number"
+                        id="mileage"
+                        name="mileage"
+                        class="form-input"
+                        value="{{ service.mileage or '' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="cost">Стоимость</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="cost"
+                        name="cost"
+                        class="form-input"
+                        value="{{ service.service_cost or '' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="work_kind">Вид работы</label>
+                    <input
+                        type="text"
+                        id="work_kind"
+                        name="work_kind"
+                        class="form-input"
+                        value="{{ service.work_kind or '' }}"
+                    >
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label for="detail_description">Описание</label>
+                    <textarea
+                        id="detail_description"
+                        name="detail_description"
+                        class="form-input car-textarea"
+                        rows="5"
+                    >{{ service.detail_description or '' }}</textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="service_cost">Стоимость</label>
-                <input type="number" id="service_cost" name="service_cost" value="{{ item.service_cost|int }}" class="form-input" step="1" required>
+            <div class="car-form-actions">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('car', tab='done') }}" class="btn btn-secondary">Отмена</a>
             </div>
-
-            <div class="form-group">
-                <label for="mileage">Пробег</label>
-                <input type="number" id="mileage" name="mileage" value="{{ item.mileage }}" class="form-input" step="1" required>
-            </div>
-
-            <div class="form-group">
-                <label for="service_date">Дата</label>
-                <input type="month" id="service_date" name="service_date" value="{{ item.service_date }}" class="form-input" required>
-            </div>
-
-            <div class="form-group">
-                <label for="detail_description">Описание детали</label>
-                <input type="text" id="detail_description" name="detail_description" value="{{ item.detail_description }}" class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label for="status">Статус</label>
-                <select id="status" name="status" class="form-input">
-                    <option value="Выполнен" {% if item.status == 'Выполнен' %}selected{% endif %}>Выполнен</option>
-                    <option value="В работе" {% if item.status == 'В работе' %}selected{% endif %}>В работе</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-wide">Сохранить изменения</button>
         </form>
     </div>
-</div>
+</section>
 {% endblock %}

@@ -375,13 +375,7 @@ def create_car_planned_service(
     work_kind,
     period_type,
 ):
-    """
-    Создаёт планируемую работу.
-    Стоимость и пробег для планируемых работ больше не нужны.
-    """
-
     conn = get_connection()
-
     conn.execute("""
         INSERT INTO car_planned_services (
             service_name,
@@ -400,35 +394,119 @@ def create_car_planned_service(
         detail_description,
         work_kind,
         period_type,
-        "В работе",
+        "Планируется",
     ))
-
     conn.commit()
     conn.close()
+
+def delete_archived_car_notification(notification_key):
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM car_notification_archive WHERE notification_key = ?",
+        (notification_key,)
+    )
+    conn.commit()
+    conn.close()
+    
+def create_car_planned_service_from_notification(
+    service_name,
+    detail_description,
+    work_kind,
+    period_type,
+):
+    """
+    Создаёт планируемую работу из уведомления.
+    Если такая активная работа уже есть, новую запись не создаём.
+    """
+    conn = get_connection()
+
+    existing = conn.execute(
+        """
+        SELECT id
+        FROM car_planned_services
+        WHERE service_name = ?
+          AND COALESCE(detail_description, '') = ?
+          AND COALESCE(work_kind, 'Разовая') = ?
+          AND COALESCE(period_type, '') = ?
+          AND status = 'В работе'
+        LIMIT 1
+        """,
+        (
+            service_name,
+            detail_description or "",
+            work_kind or "Разовая",
+            period_type or "",
+        ),
+    ).fetchone()
+
+    if existing:
+        conn.close()
+        return False
+
+    conn.execute(
+        """
+        INSERT INTO car_planned_services (
+            service_name,
+            planned_cost,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            service_name,
+            0,
+            0,
+            detail_description,
+            work_kind,
+            period_type,
+            'В работе',
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True
 
 
 # =========================================================
 # CAR - GET
 # =========================================================
 
-def get_car_done_services():
+def get_car_done_services(sort_by="default"):
     conn = get_connection()
-    rows = conn.execute("""
+
+    query = """
         SELECT *
         FROM car_done_services
-        ORDER BY mileage DESC, id DESC
-    """).fetchall()
+    """
+
+    if sort_by == "name_asc":
+        query += " ORDER BY service_name COLLATE NOCASE ASC, id DESC"
+    else:
+        query += " ORDER BY mileage DESC, id DESC"
+
+    rows = conn.execute(query).fetchall()
     conn.close()
     return rows
 
 
-def get_car_planned_services():
+def get_car_planned_services(sort_by="default"):
     conn = get_connection()
-    rows = conn.execute("""
+
+    query = """
         SELECT *
         FROM car_planned_services
-        ORDER BY id DESC
-    """).fetchall()
+    """
+
+    if sort_by == "name_asc":
+        query += " ORDER BY service_name COLLATE NOCASE ASC, id DESC"
+    else:
+        query += " ORDER BY id DESC"
+
+    rows = conn.execute(query).fetchall()
     conn.close()
     return rows
 
@@ -665,12 +743,85 @@ def move_planned_to_done(service_id, service_date):
 # =========================================================
 # CAR - PERIODIC WORKS / NOTIFICATIONS
 # =========================================================
+def init_car_notification_archive():
+    conn = get_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS car_notification_archive (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_key TEXT NOT NULL UNIQUE,
+            title TEXT,
+            status TEXT,
+            period_type TEXT,
+            detail_description TEXT,
+            last_service_date_text TEXT,
+            work_kind TEXT,
+            archived_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+    
+def archive_car_notification(
+    notification_key,
+    title="",
+    status="",
+    period_type="",
+    detail_description="",
+    last_service_date_text="",
+    work_kind=""
+):
+    conn = get_connection()
+    conn.execute("""
+        INSERT OR REPLACE INTO car_notification_archive (
+            notification_key,
+            title,
+            status,
+            period_type,
+            detail_description,
+            last_service_date_text,
+            work_kind,
+            archived_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    """, (
+        notification_key,
+        title,
+        status,
+        period_type,
+        detail_description,
+        last_service_date_text,
+        work_kind,
+    ))
+    conn.commit()
+    conn.close()
+    
+def get_archived_car_notifications():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT *
+        FROM car_notification_archive
+        ORDER BY archived_at DESC
+    """).fetchall()
+    conn.close()
+    return rows  
+  
+def init_car_hidden_notifications_table():
+    conn = get_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS car_hidden_notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_key TEXT NOT NULL UNIQUE
+        )
+    """)
+    conn.commit()
+    conn.close()   
+     
 def hide_car_notification(notification_key):
     conn = get_connection()
     conn.execute("""
-        INSERT OR IGNORE INTO car_notification_hidden (notification_key, created_at)
-        VALUES (?, ?)
-    """, (notification_key, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        INSERT OR IGNORE INTO car_hidden_notifications (notification_key)
+        VALUES (?)
+    """, (notification_key,))
     conn.commit()
     conn.close()
 
@@ -690,32 +841,13 @@ def get_hidden_notification_keys():
     conn = get_connection()
     rows = conn.execute("""
         SELECT notification_key
-        FROM car_notification_hidden
+        FROM car_hidden_notifications
     """).fetchall()
     conn.close()
-    return {row["notification_key"] for row in rows}
+    return [row["notification_key"] for row in rows]
 
 def get_periodic_services_for_notifications():
-    """
-    Возвращает периодические работы из обеих таблиц.
-    Можно использовать для вкладки уведомлений.
-    """
     conn = get_connection()
-
-    planned = conn.execute("""
-        SELECT
-            id,
-            service_name,
-            mileage,
-            detail_description,
-            work_kind,
-            period_type,
-            status,
-            NULL AS service_date,
-            'planned' AS source_type
-        FROM car_planned_services
-        WHERE work_kind = 'Периодическая'
-    """).fetchall()
 
     done = conn.execute("""
         SELECT
@@ -729,11 +861,11 @@ def get_periodic_services_for_notifications():
             service_date,
             'done' AS source_type
         FROM car_done_services
-        WHERE work_kind = 'Периодическая'
+        WHERE period_type IN ('6 мес', '12 мес')
     """).fetchall()
 
     conn.close()
-    return planned, done
+    return [], done
 
 
 # =========================================================

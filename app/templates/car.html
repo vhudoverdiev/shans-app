@@ -3,154 +3,193 @@
 {% block title %}Машины | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
+<section class="car-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Машины</span>
-        </h1>
+        <div>
+            <h1 class="page-title">Volkswagen Polo 2018</h1>
+        </div>
 
         <div class="page-actions">
-            <a href="{{ url_for('car_manage') }}" class="btn btn-primary">Управление</a>
             <a href="{{ url_for('car_notifications') }}" class="btn btn-secondary">Уведомления</a>
+            <a href="{{ url_for('car_manage') }}" class="btn btn-primary">Добавить работу</a>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card stat-card-expense">
-            <div class="stat-label">Общие затраты</div>
-            <div class="stat-value">{{ total_spent|money }}</div>
-        </div>
-
-        <div class="stat-card stat-card-balance">
+    <div class="stats-grid car-stats-grid">
+        <div class="stat-card">
             <div class="stat-label">Пробег</div>
-            <div class="stat-value">{{ last_mileage }}</div>
+            <div class="stat-value">
+                {% if max_mileage %}
+                    {{ max_mileage }} км
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Потрачено</div>
+            <div class="stat-value">
+                {{ "%.0f"|format(total_cost) }} ₽
+            </div>
         </div>
     </div>
 
-<div class="table-header table-header-with-controls">
-    <h2 class="section-title">Планируемые работы</h2>
+    <div class="card table-card">
+        <div class="car-tab-bar">
+            <a href="{{ url_for('car', tab='planned') }}"
+               class="car-tab-link {% if active_tab == 'planned' %}car-tab-link-active{% endif %}">
+                Планируемые
+                <span class="car-tab-count">{{ planned_count }}</span>
+            </a>
 
-    <form method="GET" class="table-sort-form">
-        <input type="hidden" name="done_sort" value="{{ done_sort }}">
-        <select name="planned_sort" class="form-input form-input-small" onchange="this.form.submit()">
-            <option value="default" {% if planned_sort == 'default' %}selected{% endif %}>Сортировка</option>
-            <option value="name_asc" {% if planned_sort == 'name_asc' %}selected{% endif %}>По наименованию</option>
-        </select>
-    </form>
-</div>
+            <a href="{{ url_for('car', tab='done') }}"
+               class="car-tab-link {% if active_tab == 'done' %}car-tab-link-active{% endif %}">
+                Выполненные
+                <span class="car-tab-count">{{ done_count }}</span>
+            </a>
+        </div>
 
-        {% if planned_services %}
-            <div class="table-wrapper">
-                <table class="data-table data-table-car">
-                    <thead>
-                        <tr>
-                            <th>Наименование</th>
-                            <th>Описание детали</th>
-                            <th>Тип работы</th>
-                            <th>Периодичность</th>
-                            <th>Статус</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in planned_services %}
-                            <tr>
-                                <td>{{ item.service_name }}</td>
-                                <td>{{ item.detail_description or "—" }}</td>
-                                <td>{{ item.work_kind or "Разовая" }}</td>
-                                <td>{{ item.period_type or "—" }}</td>
-                                <td>
-                                    <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                    class="status-pill status-pill-work status-pill-link">
-                                        {{ item.status or "В работе" }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <div class="table-actions table-actions-fixed">
-                                        <a href="{{ url_for('car_planned_edit', service_id=item.id) }}" class="btn btn-small btn-secondary btn-fixed-action">
-                                            Редактировать
-                                        </a>
-
-                                        <form method="POST" action="{{ url_for('car_planned_delete', service_id=item.id) }}" class="inline-form">
-                                            <button type="submit" class="btn btn-small btn-danger btn-fixed-action">
-                                                Удалить
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        {% if active_tab == 'done' %}
+            <div class="table-header">
+                <h2 class="section-title">Выполненные работы</h2>
             </div>
+
+            {% if done_services %}
+                <div class="table-wrapper">
+                    <table class="data-table data-table-car">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th>Описание</th>
+                                <th>Периодичность</th>
+                                <th>Дата</th>
+                                <th>Пробег</th>
+                                <th>Стоимость</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in done_services %}
+                                <tr>
+                                    <td>{{ item.service_name or "—" }}</td>
+                                    <td>{{ item.detail_description or "—" }}</td>
+                                    <td>{{ item.period_type or "—" }}</td>
+                                    <td>{{ item.service_date_display or "—" }}</td>
+                                    <td>{{ item.mileage or "—" }}</td>
+                                    <td>{{ item.cost or "—" }}</td>
+                                    <td>
+                                        <span class="status-pill status-pill-done">
+                                            {{ item.status or "Выполнено" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions-icon">
+                                            <a href="{{ url_for('car_done_edit', service_id=item.id) }}"
+                                               class="icon-action-btn icon-edit"
+                                               title="Редактировать">
+                                                ✏
+                                            </a>
+
+                                            <form method="post"
+                                                  action="{{ url_for('car_done_delete', service_id=item.id) }}"
+                                                  class="inline-form"
+                                                  onsubmit="return confirm('Удалить эту выполненную работу?');">
+                                                <button type="submit"
+                                                        class="icon-action-btn icon-delete"
+                                                        title="Удалить">
+                                                    🗑
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    Выполненных работ пока нет.
+                </div>
+            {% endif %}
+
         {% else %}
-            <div class="empty-state">Пока нет планируемых работ.</div>
+            <div class="table-header">
+                <h2 class="section-title">Планируемые работы</h2>
+            </div>
+
+            {% if planned_services %}
+                <div class="table-wrapper">
+                    <table class="data-table data-table-car">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th>Описание</th>
+                                <th>Периодичность</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in planned_services %}
+                                <tr>
+                                    <td>{{ item.service_name or "—" }}</td>
+                                    <td>{{ item.detail_description or "—" }}</td>
+                                    <td>{{ item.period_type or "—" }}</td>
+                                    <td>
+                                        {% if item.status == 'В работе' %}
+                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                               class="status-pill status-pill-work status-pill-link"
+                                               title="Перевести в выполненные">
+                                                {{ item.status }}
+                                            </a>
+                                        {% else %}
+                                            <span class="status-pill status-pill-work">
+                                                {{ item.status or "Планируется" }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="table-actions-icon">
+                                            <a href="{{ url_for('car_planned_edit', service_id=item.id) }}"
+                                               class="icon-action-btn icon-edit"
+                                               title="Редактировать">
+                                                ✏
+                                            </a>
+
+                                            {% if item.status == 'В работе' %}
+                                                <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                                   class="icon-action-btn icon-complete"
+                                                   title="Завершить">
+                                                    ✓
+                                                </a>
+                                            {% endif %}
+
+                                            <form method="post"
+                                                  action="{{ url_for('car_planned_delete', service_id=item.id) }}"
+                                                  class="inline-form"
+                                                  onsubmit="return confirm('Удалить эту планируемую работу?');">
+                                                <button type="submit"
+                                                        class="icon-action-btn icon-delete"
+                                                        title="Удалить">
+                                                    🗑
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    Планируемых работ пока нет.
+                </div>
+            {% endif %}
         {% endif %}
     </div>
-
-    <div class="table-header table-header-with-controls">
-    <h2 class="section-title">Выполненные работы</h2>
-
-    <form method="GET" class="table-sort-form">
-        <input type="hidden" name="planned_sort" value="{{ planned_sort }}">
-        <select name="done_sort" class="form-input form-input-small" onchange="this.form.submit()">
-            <option value="default" {% if done_sort == 'default' %}selected{% endif %}>Сортировка</option>
-            <option value="name_asc" {% if done_sort == 'name_asc' %}selected{% endif %}>По наименованию</option>
-        </select>
-    </form>
-</div>
-
-        {% if done_services %}
-            <div class="table-wrapper">
-                <table class="data-table data-table-car">
-                    <thead>
-                        <tr>
-                            <th>Наименование</th>
-                            <th>Стоимость</th>
-                            <th>Пробег</th>
-                            <th>Дата</th>
-                            <th>Описание детали</th>
-                            <th>Тип работы</th>
-                            <th>Периодичность</th>
-                            <th>Статус</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in done_services %}
-                            <tr>
-                                <td>{{ item.service_name }}</td>
-                                <td>{{ item.service_cost|money }}</td>
-                                <td>{{ item.mileage }}</td>
-                                <td>{{ item.service_date }}</td>
-                                <td>{{ item.detail_description or "—" }}</td>
-                                <td>{{ item.work_kind or "Разовая" }}</td>
-                                <td>{{ item.period_type or "—" }}</td>
-                                <td>
-                                    <span class="status-pill status-pill-done">
-                                        {{ item.status or "Выполнено" }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="table-actions">
-                                        <a href="{{ url_for('car_done_edit', service_id=item.id) }}" class="btn btn-small btn-secondary">
-                                            Редактировать
-                                        </a>
-                                        <form method="POST" action="{{ url_for('car_done_delete', service_id=item.id) }}" class="inline-form">
-                                            <button type="submit" class="btn btn-small btn-danger">
-                                                Удалить
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="empty-state">Пока нет выполненных работ.</div>
-        {% endif %}
-    </div>
-</div>
+</section>
 {% endblock %}
