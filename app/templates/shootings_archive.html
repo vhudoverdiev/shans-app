@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shooting-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">Съёмки</span>
+                <span class="page-title-light">архив</span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="car-tab-bar">
+        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
+            <span>Новая съёмка</span>
+        </a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
+            <span>Ближайшие</span>
+        </a>
+        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
+            <span>Архив</span>
+        </a>
+    </div>
+
+    <div class="content-card">
+        <div class="table-toolbar">
+            <div class="table-toolbar-title">
+                <h2>Архив съёмок</h2>
+            </div>
+            <div class="table-toolbar-actions">
+                <span class="car-status-chip">Прошедшие съёмки</span>
+            </div>
+        </div>
+
+        {% if shootings %}
+            <div class="table-responsive">
+                <table class="car-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Название</th>
+                            <th>Клиент</th>
+                            <th>Часы</th>
+                            <th>Стоимость</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shooting in shootings %}
+                            <tr class="shooting-clickable-row" onclick="window.location='{{ url_for('shooting_detail', shooting_id=shooting.id) }}'">
+                                <td>{{ shooting.shooting_date }}</td>
+                                <td>{{ shooting.shooting_time or '—' }}</td>
+                                <td>{{ shooting.project_name }}</td>
+                                <td>{{ shooting.client_name }}</td>
+                                <td>{{ shooting.duration_hours }}</td>
+                                <td>{{ shooting.price }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state-card">
+                <h3>Архив пуст</h3>
+                <p>Прошедшие съёмки будут автоматически появляться здесь.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

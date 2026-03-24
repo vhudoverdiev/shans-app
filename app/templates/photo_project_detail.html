@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} | Шанс{% endblock %}
+
+{% block content %}
+<div class="planner-page">
+    <div class="page-header planner-header">
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">{{ project.title }}</span>
+            </h1>
+            <p class="planner-subtitle">{{ project.idea }}</p>
+        </div>
+        <div class="page-actions planner-actions">
+            <a href="{{ url_for('photo_projects') }}" class="btn btn-secondary">Все фотопроекты</a>
+            <a href="{{ url_for('edit_photo_project', project_id=project.id) }}" class="btn btn-secondary">Редактировать</a>
+            <form method="post" action="{{ url_for('delete_photo_project', project_id=project.id) }}" onsubmit="return confirm('Удалить фотопроект вместе со всеми записями?');">
+                <button type="submit" class="btn btn-danger">Удалить</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="planner-shell">
+        <section class="planner-main">
+            <div class="card project-detail-card {{ project.accent_class }}">
+                <div class="project-detail-topline">
+                    <span class="status-badge {{ project_status_class(project.project_status) }}">{{ project.project_status }}</span>
+                    <span class="status-badge badge-outline">{{ project.bookings_count }} записей</span>
+                </div>
+                <div class="project-detail-description">{{ project.description or 'Описание проекта пока не заполнено.' }}</div>
+            </div>
+
+            <div class="card">
+                <div class="section-title-row">
+                    <h2 class="section-title">Записи на фотопроект</h2>
+                </div>
+                <div class="table-shell">
+                    <table class="clean-table booking-table">
+                        <thead>
+                            <tr>
+                                <th>Клиент</th>
+                                <th>Контакты</th>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th>Статус</th>
+                                <th>Комментарий</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.client_name }}</td>
+                                <td>{{ booking.client_contact }}</td>
+                                <td>{{ booking.booking_date }}</td>
+                                <td>{{ booking.booking_time or '—' }}</td>
+                                <td><span class="status-badge badge-outline">{{ booking.status }}</span></td>
+                                <td>{{ booking.comment or '—' }}</td>
+                                <td class="table-actions-cell">
+                                    <a class="btn btn-secondary btn-small" href="{{ url_for('edit_photo_project_booking', booking_id=booking.id) }}">Изменить</a>
+                                    <form method="post" action="{{ url_for('delete_photo_project_booking', booking_id=booking.id) }}" onsubmit="return confirm('Удалить запись?');">
+                                        <button class="btn btn-danger btn-small" type="submit">Удалить</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="empty-table-row">Записей пока нет.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <aside class="planner-sidebar">
+            <div class="card planner-form-card">
+                <div class="section-title-row">
+                    <h2 class="section-title">Добавить запись</h2>
+                </div>
+                <form method="post" action="{{ url_for('create_photo_project_booking', project_id=project.id) }}" class="stack-form">
+                    <label class="form-field">
+                        <span>Имя / имя клиента</span>
+                        <input type="text" name="client_name" required>
+                    </label>
+                    <label class="form-field">
+                        <span>Контакты</span>
+                        <input type="text" name="client_contact" required placeholder="Телефон, Telegram, Instagram">
+                    </label>
+                    <div class="form-row-2">
+                        <label class="form-field">
+                            <span>Дата</span>
+                            <input type="date" name="booking_date" required>
+                        </label>
+                        <label class="form-field">
+                            <span>Время</span>
+                            <input type="time" name="booking_time">
+                        </label>
+                    </div>
+                    <label class="form-field">
+                        <span>Статус</span>
+                        <select name="status">
+                            {% for status in booking_statuses %}
+                            <option value="{{ status }}">{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="form-field">
+                        <span>Комментарий</span>
+                        <textarea name="comment" rows="4" placeholder="Подробности по записи"></textarea>
+                    </label>
+                    <button class="btn btn-primary" type="submit">Добавить запись</button>
+                </form>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

@@ -2651,3 +2651,853 @@ a {
         min-width: 980px;
     }
 }
+
+/* =========================
+   SHOOTINGS IN CAR STYLE
+========================= */
+
+.shooting-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.shooting-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.shooting-summary-card {
+    min-height: 150px;
+}
+
+.shooting-clickable-row {
+    cursor: pointer;
+}
+
+.shooting-money-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.shooting-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.shooting-money-box {
+    margin-top: 6px;
+    margin-bottom: 18px;
+    padding: 20px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    color: #ffffff;
+}
+
+.shooting-money-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.shooting-money-value {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.nearest-shooting-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+@media (max-width: 768px) {
+    .shooting-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* =========================
+   SHOOTINGS POLISH
+========================= */
+
+.shooting-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.shooting-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.shooting-summary-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+.shooting-summary-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2ff;
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.shooting-soft-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #64748b;
+}
+
+.shooting-link-hint {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3730a3;
+}
+
+.shooting-clickable-row {
+    cursor: pointer;
+}
+
+.shooting-clickable-row:hover {
+    background: #f8fafc;
+}
+
+.shooting-money-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+}
+
+.shooting-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.shooting-money-box {
+    margin-top: 6px;
+    margin-bottom: 18px;
+    padding: 22px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    color: #ffffff;
+}
+
+.shooting-money-label {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.shooting-money-value {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 6px;
+}
+
+.shooting-money-subtext {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.nearest-shooting-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+@media (max-width: 768px) {
+    .shooting-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .shooting-money-value {
+        font-size: 28px;
+    }
+}
+/* =========================
+   SHOOTINGS FINAL POLISH
+========================= */
+
+.shooting-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.shooting-page-narrow {
+    max-width: 860px;
+}
+
+.shooting-page-detail {
+    max-width: 980px;
+}
+
+.shooting-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.shooting-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    text-decoration: none;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    font-weight: 700;
+    transition: 0.15s ease;
+}
+
+.shooting-nav-link:hover {
+    transform: translateY(-1px);
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.shooting-nav-link-active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.20);
+}
+
+.shooting-nav-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.shooting-nav-link:not(.shooting-nav-link-active) .shooting-nav-count {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.shooting-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.shooting-summary-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shooting-summary-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2ff;
+    font-size: 22px;
+}
+
+.shooting-soft-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #64748b;
+}
+
+.shooting-link-hint {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3730a3;
+}
+
+.shooting-clickable-row {
+    cursor: pointer;
+}
+
+.shooting-clickable-row:hover {
+    background: #f8fafc;
+}
+
+.shooting-money-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+}
+
+.shooting-form-card-compact {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.shooting-form-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.shooting-form-head-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.shooting-form-head-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.shooting-form-head-text {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.shooting-form-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.shooting-form-full {
+    grid-column: 1 / -1;
+}
+
+.shooting-textarea-compact {
+    min-height: 110px;
+    height: auto;
+    padding: 14px;
+    resize: vertical;
+}
+
+.shooting-actions-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.shooting-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.shooting-detail-main-card {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.shooting-detail-top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.shooting-detail-badge {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.shooting-detail-client {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.shooting-detail-grid-beauty {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.shooting-info-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.shooting-info-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+}
+
+.shooting-info-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.shooting-money-box {
+    margin-bottom: 18px;
+    padding: 22px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    color: #ffffff;
+}
+
+.shooting-money-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.shooting-money-value {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 6px;
+}
+
+.shooting-money-subtext {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.shooting-note-box {
+    margin-bottom: 18px;
+    padding: 18px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.shooting-note-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.shooting-note-text {
+    font-size: 15px;
+    line-height: 1.65;
+    color: #1e293b;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+    .shooting-nav {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .shooting-form-grid-compact,
+    .shooting-detail-grid-beauty {
+        grid-template-columns: 1fr;
+    }
+
+    .shooting-actions-row .primary-btn,
+    .shooting-actions-row .secondary-btn,
+    .shooting-actions-row .danger-btn,
+    .shooting-actions-row .btn {
+        width: 100%;
+    }
+
+    .shooting-detail-client {
+        font-size: 24px;
+    }
+
+    .shooting-money-value {
+        font-size: 28px;
+    }
+}
+/* =========================
+   SHOOTINGS FINAL TWEAK
+========================= */
+
+.shooting-summary-grid-compact {
+    grid-template-columns: 220px 1fr;
+    align-items: stretch;
+}
+
+.shooting-summary-card-tight {
+    min-height: 0;
+    padding: 18px;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.shooting-summary-card-tight .balance-month-value {
+    font-size: 34px;
+    line-height: 1;
+}
+
+.shooting-summary-card-tight .notification-title {
+    font-size: 26px;
+    margin: 2px 0 0 0;
+}
+
+.shooting-summary-card-tight .notification-meta-value {
+    font-size: 16px;
+}
+
+.shooting-mini-meta {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.shooting-link-hint {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3730a3;
+}
+
+.shooting-nav {
+    margin-bottom: 16px;
+}
+
+.shooting-nav-link {
+    min-height: 44px;
+}
+
+.shooting-money-pill {
+    min-width: 78px;
+}
+
+@media (max-width: 900px) {
+    .shooting-summary-grid-compact {
+        grid-template-columns: 1fr;
+    }
+}
+/* =========================
+   SHOOTINGS TOP ROW FIX
+========================= */
+
+.shooting-top-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: stretch;
+}
+
+.shooting-count-card,
+.shooting-nearest-card {
+    margin-bottom: 0;
+    min-height: 0;
+}
+
+.shooting-count-card {
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.shooting-nearest-card {
+    padding: 18px 18px 16px;
+}
+
+.shooting-top-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.shooting-count-value {
+    font-size: 48px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.shooting-nearest-title {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.shooting-nearest-client {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.shooting-nearest-meta {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.shooting-nearest-empty {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.shooting-link-hint {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3730a3;
+}
+
+@media (max-width: 900px) {
+    .shooting-top-row {
+        grid-template-columns: 1fr;
+    }
+
+    .shooting-count-value {
+        font-size: 38px;
+    }
+}
+/* =========================
+   SHOOTINGS PREMIUM TOP
+========================= */
+
+.shooting-top-row {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+    align-items: stretch;
+}
+
+.shooting-premium-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    padding: 22px 22px 20px;
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.shooting-premium-card::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 72%);
+    pointer-events: none;
+}
+
+.shooting-premium-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    opacity: 0.9;
+}
+
+.shooting-count-card-premium {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 156px;
+}
+
+.shooting-nearest-card-premium {
+    min-height: 156px;
+}
+
+.shooting-premium-label {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+}
+
+.shooting-count-value-premium {
+    position: relative;
+    z-index: 1;
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.shooting-premium-subtext {
+    position: relative;
+    z-index: 1;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.shooting-nearest-title-premium {
+    position: relative;
+    z-index: 1;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.shooting-nearest-client-premium {
+    position: relative;
+    z-index: 1;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.shooting-nearest-meta-premium {
+    position: relative;
+    z-index: 1;
+    font-size: 15px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.shooting-link-hint-premium {
+    position: relative;
+    z-index: 1;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #3730a3;
+    letter-spacing: 0.01em;
+}
+
+.shooting-nearest-empty-premium {
+    position: relative;
+    z-index: 1;
+    font-size: 15px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.nearest-shooting-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.nearest-shooting-link:hover .shooting-nearest-title-premium,
+.nearest-shooting-link:hover .shooting-link-hint-premium {
+    opacity: 0.92;
+}
+
+@media (max-width: 900px) {
+    .shooting-top-row {
+        grid-template-columns: 1fr;
+    }
+
+    .shooting-count-card-premium,
+    .shooting-nearest-card-premium {
+        min-height: 0;
+    }
+
+    .shooting-count-value-premium {
+        font-size: 46px;
+    }
+
+    .shooting-nearest-title-premium {
+        font-size: 20px;
+    }
+}

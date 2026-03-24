@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import date, datetime
 from app.database import get_connection
 
 
@@ -916,3 +915,264 @@ def get_car_notifications():
     """).fetchall()
     conn.close()
     return rows
+
+# =========================================================
+# SHOOTINGS
+# =========================================================
+
+def _format_date_display(date_string):
+    if not date_string:
+        return ""
+
+    months = {
+        "01": "января",
+        "02": "февраля",
+        "03": "марта",
+        "04": "апреля",
+        "05": "мая",
+        "06": "июня",
+        "07": "июля",
+        "08": "августа",
+        "09": "сентября",
+        "10": "октября",
+        "11": "ноября",
+        "12": "декабря",
+    }
+
+    try:
+        parsed = datetime.strptime(date_string, "%Y-%m-%d")
+        day = parsed.day
+        month = months[parsed.strftime("%m")]
+        year = parsed.year
+        return f"{day} {month} {year}"
+    except ValueError:
+        return date_string
+
+def _format_money(value):
+    value = float(value or 0)
+    if value.is_integer():
+        return int(value)
+    return value
+
+
+def _prepare_shooting(row):
+    if not row:
+        return None
+
+    shooting = dict(row)
+
+    price = float(shooting.get("price") or 0)
+    prepayment = float(shooting.get("prepayment") or 0)
+    remaining_payment = max(price - prepayment, 0)
+    duration_hours = float(shooting.get("duration_hours") or 0)
+
+    shooting["price"] = _format_money(price)
+    shooting["prepayment"] = _format_money(prepayment)
+    shooting["remaining_payment"] = _format_money(remaining_payment)
+
+    if duration_hours.is_integer():
+        shooting["duration_hours"] = int(duration_hours)
+    else:
+        shooting["duration_hours"] = duration_hours
+
+    shooting["price_display"] = _format_money(price)
+    shooting["prepayment_display"] = _format_money(prepayment)
+    shooting["remaining_display"] = _format_money(remaining_payment)
+
+    shooting["shooting_date_display"] = _format_date_display(
+        shooting.get("shooting_date")
+    )
+
+    is_paid_to_budget = shooting.get("is_paid_to_budget", 0)
+    shooting["is_paid_to_budget"] = int(is_paid_to_budget or 0)
+
+    return shooting
+
+def create_shooting(
+    project_name,
+    client_name,
+    shooting_date,
+    shooting_time,
+    duration_hours,
+    phone,
+    price,
+    prepayment,
+    notes,
+):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO shootings (
+            project_name,
+            client_name,
+            shooting_date,
+            shooting_time,
+            duration_hours,
+            phone,
+            price,
+            prepayment,
+            notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        project_name,
+        client_name,
+        shooting_date,
+        shooting_time,
+        duration_hours,
+        phone,
+        price,
+        prepayment,
+        notes,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def get_upcoming_shootings():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    today = date.today().isoformat()
+
+    cursor.execute("""
+        SELECT *
+        FROM shootings
+        WHERE shooting_date >= ?
+        ORDER BY shooting_date ASC, shooting_time ASC
+    """, (today,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [_prepare_shooting(row) for row in rows]
+
+
+def get_archived_shootings():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    today = date.today().isoformat()
+
+    cursor.execute("""
+        SELECT *
+        FROM shootings
+        WHERE shooting_date < ?
+        ORDER BY shooting_date DESC, shooting_time DESC
+    """, (today,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [_prepare_shooting(row) for row in rows]
+
+
+def get_nearest_shooting():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    today = date.today().isoformat()
+
+    cursor.execute("""
+        SELECT *
+        FROM shootings
+        WHERE shooting_date >= ?
+        ORDER BY shooting_date ASC, shooting_time ASC
+        LIMIT 1
+    """, (today,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return _prepare_shooting(row)
+
+
+def get_shootings_count():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    today = date.today().isoformat()
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM shootings
+        WHERE shooting_date >= ?
+    """, (today,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return row["total"] if row else 0
+
+
+def get_shooting_by_id(shooting_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM shootings
+        WHERE id = ?
+    """, (shooting_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return _prepare_shooting(row)
+
+
+def update_shooting(
+    shooting_id,
+    project_name,
+    client_name,
+    shooting_date,
+    shooting_time,
+    duration_hours,
+    phone,
+    price,
+    prepayment,
+    notes,
+):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE shootings
+        SET
+            project_name = ?,
+            client_name = ?,
+            shooting_date = ?,
+            shooting_time = ?,
+            duration_hours = ?,
+            phone = ?,
+            price = ?,
+            prepayment = ?,
+            notes = ?
+        WHERE id = ?
+    """, (
+        project_name,
+        client_name,
+        shooting_date,
+        shooting_time,
+        duration_hours,
+        phone,
+        price,
+        prepayment,
+        notes,
+        shooting_id,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def delete_shooting(shooting_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM shootings WHERE id = ?", (shooting_id,))
+
+    conn.commit()
+    conn.close()

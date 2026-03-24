@@ -3,19 +3,152 @@
 {% block title %}Съёмки | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
+<section class="shooting-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Съёмки</span>
-        </h1>
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">Съёмки</span>
+                <span class="page-title-light">ближайшие записи и быстрая регистрация</span>
+            </h1>
+        </div>
         <div class="page-actions">
             <a href="{{ url_for('schedule') }}" class="btn btn-secondary">Назад к графику</a>
         </div>
     </div>
 
-    <div class="card">
-        <h2 class="section-title">Раздел подготовлен</h2>
-        <p>Здесь позже можно будет добавить календарь съёмок, клиентов, адреса и статус подготовки.</p>
+    <div class="stats-grid">
+        <div class="stat-card stat-card-balance">
+            <div class="stat-label">Ближайших съёмок</div>
+            <div class="stat-value">{{ upcoming_count }}</div>
+        </div>
+        <div class="stat-card stat-card-current">
+            <div class="stat-label">Сегодня</div>
+            <div class="stat-value">{{ today }}</div>
+        </div>
     </div>
-</div>
+
+    <div class="budget-manage-grid shooting-manage-grid">
+        <section class="content-card">
+            <div class="table-toolbar">
+                <div class="table-toolbar-title">
+                    <h2>Добавить съёмку</h2>
+                </div>
+            </div>
+
+            <form method="post" class="form-block">
+                <div class="form-group">
+                    <label for="client_name">Клиент</label>
+                    <input id="client_name" name="client_name" type="text" class="form-input" value="{{ form_data.client_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="project_name">Название съёмки / проекта</label>
+                    <input id="project_name" name="project_name" type="text" class="form-input" value="{{ form_data.project_name }}" placeholder="Например: семейная съёмка в студии">
+                </div>
+
+                <div class="shooting-two-columns">
+                    <div class="form-group">
+                        <label for="shooting_date">Дата</label>
+                        <input id="shooting_date" name="shooting_date" type="date" class="form-input" value="{{ form_data.shooting_date }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shooting_time">Время</label>
+                        <input id="shooting_time" name="shooting_time" type="time" class="form-input" value="{{ form_data.shooting_time }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Локация</label>
+                    <input id="location" name="location" type="text" class="form-input" value="{{ form_data.location }}" placeholder="Студия, улица, адрес клиента">
+                </div>
+
+                <div class="shooting-two-columns">
+                    <div class="form-group">
+                        <label for="package_name">Пакет / тариф</label>
+                        <input id="package_name" name="package_name" type="text" class="form-input" value="{{ form_data.package_name }}" placeholder="Мини, Стандарт, Premium">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Статус</label>
+                        <select id="status" name="status" class="form-input">
+                            {% for status in status_options %}
+                                <option value="{{ status }}" {% if form_data.status == status %}selected{% endif %}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="shooting-two-columns">
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" name="phone" type="text" class="form-input" value="{{ form_data.phone }}" placeholder="+7 ...">
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Стоимость</label>
+                        <input id="price" name="price" type="number" step="0.01" min="0" class="form-input" value="{{ form_data.price }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prepayment">Предоплата</label>
+                    <input id="prepayment" name="prepayment" type="number" step="0.01" min="0" class="form-input" value="{{ form_data.prepayment }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Заметки</label>
+                    <textarea id="notes" name="notes" class="form-textarea" placeholder="Что взять, пожелания клиента, референсы, важные договорённости">{{ form_data.notes }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Сохранить съёмку</button>
+            </form>
+        </section>
+
+        <section class="content-card">
+            <div class="table-toolbar">
+                <div class="table-toolbar-title">
+                    <h2>Ближайшие съёмки</h2>
+                </div>
+            </div>
+
+            {% if shootings %}
+                <div class="table-responsive">
+                    <table class="car-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th>Клиент</th>
+                                <th>Проект</th>
+                                <th>Локация</th>
+                                <th>Статус</th>
+                                <th>Подробнее</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in shootings %}
+                                <tr>
+                                    <td>{{ item.shooting_date_display }}</td>
+                                    <td>{{ item.shooting_time_display }}</td>
+                                    <td>{{ item.client_name }}</td>
+                                    <td>{{ item.project_name or '—' }}</td>
+                                    <td>{{ item.location or '—' }}</td>
+                                    <td>
+                                        <span class="car-status-chip">{{ item.status }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('shooting_detail', shooting_id=item.id) }}" class="btn btn-secondary">Открыть</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state-card">
+                    <h3>Пока нет ближайших съёмок</h3>
+                    <p>Добавь первую запись слева.</p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</section>
 {% endblock %}

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from flask import (
     flash,
@@ -17,13 +17,19 @@ from flask_login import (
 
 from app.auth import verify_user
 from app.models import (
+    archive_car_notification,
     create_budget_entry,
     create_car_done_service,
     create_car_planned_service,
+    create_car_planned_service_from_notification,
+    create_shooting,
+    delete_archived_car_notification,
     delete_budget_entry,
     delete_car_done_service,
     delete_car_planned_service,
+    delete_shooting,
     get_all_budget_entries,
+    get_archived_car_notifications,
     get_balance_for_month,
     get_balance_history,
     get_budget_entry_by_id,
@@ -35,7 +41,10 @@ from app.models import (
     get_car_planned_services,
     get_car_total_spent,
     get_current_balance,
+    get_hidden_notification_keys,
     get_periodic_services_for_notifications,
+    get_shooting_by_id,
+    get_upcoming_shootings,
     hide_car_notification,
     is_car_notification_hidden,
     move_planned_to_done,
@@ -44,13 +53,20 @@ from app.models import (
     update_budget_entry,
     update_car_done_service,
     update_car_planned_service,
-    create_car_planned_service_from_notification,
-    create_car_planned_service,
-    hide_car_notification,
-    get_hidden_notification_keys,
-    archive_car_notification,
-    get_archived_car_notifications,
-    delete_archived_car_notification,
+    update_shooting,
+    create_shooting,
+    delete_shooting,
+    get_shooting_by_id,
+    get_upcoming_shootings,
+    update_shooting,
+    create_shooting,
+    delete_shooting,
+    get_archived_shootings,
+    get_nearest_shooting,
+    get_shooting_by_id,
+    get_shootings_count,
+    get_upcoming_shootings,
+    update_shooting,
 )
 from app.utils import build_budget_excel
 
@@ -198,6 +214,92 @@ def _build_car_notifications():
 
     return notifications
 
+
+
+
+
+def _format_shooting_date(date_value: str) -> str:
+    if not date_value:
+        return "—"
+
+    try:
+        return datetime.strptime(date_value, "%Y-%m-%d").strftime("%d.%m.%Y")
+    except ValueError:
+        return date_value
+
+
+def _format_shooting_time(time_value: str) -> str:
+    return time_value if time_value else "Без времени"
+
+
+def _prepare_shooting_row(row):
+    shooting = dict(row)
+    shooting["shooting_date_display"] = _format_shooting_date(shooting.get("shooting_date", ""))
+    shooting["shooting_time_display"] = _format_shooting_time(shooting.get("shooting_time", ""))
+
+    try:
+        price_value = float(shooting.get("price") or 0)
+    except (TypeError, ValueError):
+        price_value = 0
+
+    try:
+        prepayment_value = float(shooting.get("prepayment") or 0)
+    except (TypeError, ValueError):
+        prepayment_value = 0
+
+    shooting["price"] = price_value
+    shooting["prepayment"] = prepayment_value
+    shooting["remaining_payment"] = max(price_value - prepayment_value, 0)
+
+    return shooting
+
+
+def _get_shooting_form_data(form):
+    return {
+        "client_name": form.get("client_name", "").strip(),
+        "project_name": form.get("project_name", "").strip(),
+        "shooting_date": form.get("shooting_date", "").strip(),
+        "shooting_time": form.get("shooting_time", "").strip(),
+        "location": form.get("location", "").strip(),
+        "package_name": form.get("package_name", "").strip(),
+        "status": form.get("status", "Запланирована").strip() or "Запланирована",
+        "phone": form.get("phone", "").strip(),
+        "price": form.get("price", "0").strip(),
+        "prepayment": form.get("prepayment", "0").strip(),
+        "notes": form.get("notes", "").strip(),
+    }
+
+
+def _validate_shooting_form(data):
+    errors = []
+
+    if not data["client_name"]:
+        errors.append("Укажи имя клиента.")
+
+    if not data["shooting_date"]:
+        errors.append("Укажи дату съёмки.")
+    else:
+        try:
+            datetime.strptime(data["shooting_date"], "%Y-%m-%d")
+        except ValueError:
+            errors.append("Дата съёмки указана в неверном формате.")
+
+    if data["shooting_time"]:
+        try:
+            datetime.strptime(data["shooting_time"], "%H:%M")
+        except ValueError:
+            errors.append("Время съёмки указано в неверном формате.")
+
+    if data["status"] not in SHOOTING_STATUSES:
+        errors.append("Выбран неизвестный статус съёмки.")
+
+    for field_name, field_label in (("price", "Стоимость"), ("prepayment", "Предоплата")):
+        try:
+            float(data[field_name] or 0)
+        except ValueError:
+            errors.append(f"Поле '{field_label}' должно быть числом.")
+
+    return errors
 
 def _resolve_budget_category(form):
     """
@@ -531,7 +633,180 @@ def register_routes(app):
     @app.route("/shootings")
     @login_required
     def shootings():
-        return render_template("shootings.html")
+        return redirect(url_for("shootings_upcoming"))
+
+
+    @app.route("/shootings/add", methods=["GET", "POST"])
+    @login_required
+    def shootings_add():
+        form_data = {
+            "project_name": "",
+            "client_name": "",
+            "shooting_date": "",
+            "shooting_time": "",
+            "duration_hours": "1",
+            "phone": "",
+            "price": "",
+            "prepayment": "",
+            "notes": "",
+        }
+
+        if request.method == "POST":
+            project_name = request.form.get("project_name", "").strip()
+            client_name = request.form.get("client_name", "").strip()
+            shooting_date = request.form.get("shooting_date", "").strip()
+            shooting_time = request.form.get("shooting_time", "").strip()
+            duration_hours = request.form.get("duration_hours", "1").strip()
+            phone = request.form.get("phone", "").strip()
+            price = request.form.get("price", "0").strip()
+            prepayment = request.form.get("prepayment", "0").strip()
+            notes = request.form.get("notes", "").strip()
+
+            form_data = {
+                "project_name": project_name,
+                "client_name": client_name,
+                "shooting_date": shooting_date,
+                "shooting_time": shooting_time,
+                "duration_hours": duration_hours,
+                "phone": phone,
+                "price": price,
+                "prepayment": prepayment,
+                "notes": notes,
+            }
+
+            if not project_name or not client_name or not shooting_date:
+                flash("Заполните обязательные поля: проект, клиент и дата.", "danger")
+                return render_template("shootings_add.html", form_data=form_data, active_tab="add")
+
+            try:
+                duration_hours = float(duration_hours) if duration_hours else 1
+                price = float(price) if price else 0
+                prepayment = float(prepayment) if prepayment else 0
+            except ValueError:
+                flash("Часы, стоимость и предоплата должны быть числами.", "danger")
+                return render_template("shootings_add.html", form_data=form_data, active_tab="add")
+
+            create_shooting(
+                project_name=project_name,
+                client_name=client_name,
+                shooting_date=shooting_date,
+                shooting_time=shooting_time,
+                duration_hours=duration_hours,
+                phone=phone,
+                price=price,
+                prepayment=prepayment,
+                notes=notes,
+            )
+
+            flash("Съёмка успешно добавлена.", "success")
+            return redirect(url_for("shootings_upcoming"))
+
+        return render_template("shootings_add.html", form_data=form_data, active_tab="add")
+
+
+    @app.route("/shootings/upcoming")
+    @login_required
+    def shootings_upcoming():
+        shootings = get_upcoming_shootings()
+        shootings_count = get_shootings_count()
+        nearest_shooting = get_nearest_shooting()
+
+        return render_template(
+            "shootings_upcoming.html",
+            shootings=shootings,
+            shootings_count=shootings_count,
+            nearest_shooting=nearest_shooting,
+            active_tab="upcoming",
+        )
+
+
+    @app.route("/shootings/archive")
+    @login_required
+    def shootings_archive():
+        shootings = get_archived_shootings()
+
+        return render_template(
+            "shootings_archive.html",
+            shootings=shootings,
+            active_tab="archive",
+        )
+
+
+    @app.route("/shootings/<int:shooting_id>")
+    @login_required
+    def shooting_detail(shooting_id):
+        shooting = get_shooting_by_id(shooting_id)
+
+        if not shooting:
+            flash("Съёмка не найдена.", "danger")
+            return redirect(url_for("shootings_upcoming"))
+
+        return render_template("shooting_detail.html", shooting=shooting)
+
+
+    @app.route("/shootings/<int:shooting_id>/edit", methods=["GET", "POST"])
+    @login_required
+    def shooting_edit(shooting_id):
+        shooting = get_shooting_by_id(shooting_id)
+
+        if not shooting:
+            flash("Съёмка не найдена.", "danger")
+            return redirect(url_for("shootings_upcoming"))
+
+        if request.method == "POST":
+            project_name = request.form.get("project_name", "").strip()
+            client_name = request.form.get("client_name", "").strip()
+            shooting_date = request.form.get("shooting_date", "").strip()
+            shooting_time = request.form.get("shooting_time", "").strip()
+            duration_hours = request.form.get("duration_hours", "1").strip()
+            phone = request.form.get("phone", "").strip()
+            price = request.form.get("price", "0").strip()
+            prepayment = request.form.get("prepayment", "0").strip()
+            notes = request.form.get("notes", "").strip()
+
+            if not project_name or not client_name or not shooting_date:
+                flash("Заполните обязательные поля: проект, клиент и дата.", "danger")
+                return redirect(url_for("shooting_edit", shooting_id=shooting_id))
+
+            try:
+                duration_hours = float(duration_hours) if duration_hours else 1
+                price = float(price) if price else 0
+                prepayment = float(prepayment) if prepayment else 0
+            except ValueError:
+                flash("Часы, стоимость и предоплата должны быть числами.", "danger")
+                return redirect(url_for("shooting_edit", shooting_id=shooting_id))
+
+            update_shooting(
+                shooting_id=shooting_id,
+                project_name=project_name,
+                client_name=client_name,
+                shooting_date=shooting_date,
+                shooting_time=shooting_time,
+                duration_hours=duration_hours,
+                phone=phone,
+                price=price,
+                prepayment=prepayment,
+                notes=notes,
+            )
+
+            flash("Съёмка обновлена.", "success")
+            return redirect(url_for("shooting_detail", shooting_id=shooting_id))
+
+        return render_template("shooting_edit.html", shooting=shooting)
+
+
+    @app.route("/shootings/<int:shooting_id>/delete", methods=["POST"])
+    @login_required
+    def shooting_delete(shooting_id):
+        shooting = get_shooting_by_id(shooting_id)
+
+        if not shooting:
+            flash("Съёмка не найдена.", "danger")
+            return redirect(url_for("shootings_upcoming"))
+
+        delete_shooting(shooting_id)
+        flash("Съёмка удалена.", "success")
+        return redirect(url_for("shootings_upcoming"))
 
     # =========================================================
     # CAR

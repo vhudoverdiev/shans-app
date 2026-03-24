@@ -1,3 +1,20 @@
+import os
+import sqlite3
+
+from config import Config
+
+
+def get_connection():
+    """
+    Создаёт подключение к SQLite и включает доступ к колонкам по имени.
+    """
+    database_path = os.path.abspath(Config.DATABASE_NAME)
+    print("ФАКТИЧЕСКИЙ ПУТЬ К БАЗЕ:", database_path)
+
+    conn = sqlite3.connect(database_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 import sqlite3
 
 from config import Config
@@ -38,7 +55,34 @@ def init_db():
     """
     conn = get_connection()
     cursor = conn.cursor()
-
+    # =========================================================
+    # SHOOTINGS
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS shootings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_name TEXT NOT NULL,
+            client_name TEXT NOT NULL,
+            shooting_date TEXT NOT NULL,
+            shooting_time TEXT,
+            duration_hours REAL NOT NULL DEFAULT 1,
+            phone TEXT,
+            price REAL NOT NULL DEFAULT 0,
+            prepayment REAL NOT NULL DEFAULT 0,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    _add_column_if_not_exists(cursor, "shootings", "shooting_time", "TEXT")
+    _add_column_if_not_exists(cursor, "shootings", "location", "TEXT")
+    _add_column_if_not_exists(cursor, "shootings", "package_name", "TEXT")
+    _add_column_if_not_exists(cursor, "shootings", "status", "TEXT NOT NULL DEFAULT 'Запланирована'")
+    _add_column_if_not_exists(cursor, "shootings", "phone", "TEXT")
+    _add_column_if_not_exists(cursor, "shootings", "price", "REAL NOT NULL DEFAULT 0")
+    _add_column_if_not_exists(cursor, "shootings", "prepayment", "REAL NOT NULL DEFAULT 0")
+    _add_column_if_not_exists(cursor, "shootings", "notes", "TEXT")
+    _add_column_if_not_exists(cursor, "shootings", "duration_hours", "REAL NOT NULL DEFAULT 1")
+    _add_column_if_not_exists(cursor, "shootings", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     # =========================================================
     # USERS
     # =========================================================

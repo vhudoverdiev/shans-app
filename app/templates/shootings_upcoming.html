@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shooting-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">Съёмки</span>
+                <span class="page-title-light">забронированные</span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="car-tab-bar">
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
+            <span>Забронированные</span>
+            <span class="car-status-chip">{{ shootings_count }}</span>
+        </a>
+        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
+            <span>Добавить съёмку</span>
+        </a>
+        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
+            <span>Архив</span>
+        </a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card stat-card-balance">
+            <div class="stat-label">Количество съёмок</div>
+            <div class="stat-value">{{ shootings_count }}</div>
+        </div>
+
+        <div class="stat-card stat-card-current">
+            <div class="stat-label">Ближайшая съёмка</div>
+            {% if nearest_shooting %}
+                <div class="stat-value" style="font-size: 24px;">{{ nearest_shooting.project_name }}</div>
+                <div class="stat-note">{{ nearest_shooting.client_name }} · {{ nearest_shooting.shooting_date_display }}{% if nearest_shooting.shooting_time %} · {{ nearest_shooting.shooting_time }}{% endif %}</div>
+            {% else %}
+                <div class="stat-value" style="font-size: 24px;">—</div>
+                <div class="stat-note">Нет запланированных съёмок</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="table-toolbar">
+            <div class="table-toolbar-title">
+                <h2>Забронированные съёмки</h2>
+            </div>
+            <div class="table-toolbar-actions">
+                <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="car-table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Время</th>
+                        <th>Наименование</th>
+                        <th>Клиент</th>
+                        <th>Часы</th>
+                        <th>Стоимость</th>
+                        <th>Остаток</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if shootings %}
+                        {% for s in shootings %}
+                            <tr class="shooting-clickable-row" onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'">
+                                <td>{{ s.shooting_date_display }}</td>
+                                <td>{{ s.shooting_time or '-' }}</td>
+                                <td>{{ s.project_name }}</td>
+                                <td>{{ s.client_name }}</td>
+                                <td>{{ s.hours or '-' }}</td>
+                                <td>{{ s.price }} Р</td>
+                                <td><span class="car-status-chip">{{ s.remaining_payment }} Р</span></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state-card">
+                                    <h3>Пока нет съёмок</h3>
+                                    <p>Добавь первую съёмку, чтобы начать работу.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

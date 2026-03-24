@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="shooting-page shooting-page-detail">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">{{ shooting.project_name }}</span>
+                <span class="page-title-light">подробности</span>
+            </h1>
+        </div>
+
+        <div class="page-header-actions">
+            <a href="{{ url_for('shooting_edit', shooting_id=shooting.id) }}" class="btn btn-primary">Редактировать</a>
+            <a href="{{ url_for('shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card stat-card-balance">
+            <div class="stat-label">Клиент</div>
+            <div class="stat-value" style="font-size: 24px;">{{ shooting.client_name }}</div>
+        </div>
+        <div class="stat-card stat-card-current">
+            <div class="stat-label">Остаток к оплате</div>
+            <div class="stat-value" style="font-size: 24px;">{{ shooting.remaining_payment }} ₽</div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="table-toolbar">
+            <div class="table-toolbar-title">
+                <h2>Информация по съёмке</h2>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="car-table">
+                <tbody>
+                    <tr>
+                        <th>Дата</th>
+                        <td>{{ shooting.shooting_date_display }}</td>
+                        <th>Время</th>
+                        <td>{{ shooting.shooting_time or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Количество часов</th>
+                        <td>{{ shooting.duration_hours }}</td>
+                        <th>Телефон</th>
+                        <td>{{ shooting.phone or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Стоимость</th>
+                        <td>{{ shooting.price }} ₽</td>
+                        <th>Предоплата</th>
+                        <td>{{ shooting.prepayment }} ₽</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state-card" style="margin-top: 20px; text-align: left;">
+            <h3>Дополнительная информация</h3>
+            <p>{{ shooting.notes or 'Заметок пока нет.' }}</p>
+        </div>
+
+        <div class="shooting-actions-row" style="margin-top: 20px;">
+            <a href="{{ url_for('shooting_edit', shooting_id=shooting.id) }}" class="btn btn-primary">Редактировать</a>
+            <form method="POST" action="{{ url_for('shooting_delete', shooting_id=shooting.id) }}" class="inline-form" onsubmit="return confirm('Удалить эту съёмку?');">
+                <button type="submit" class="btn btn-danger">Удалить</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

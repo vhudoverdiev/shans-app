@@ -6,30 +6,31 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css') }}">
 </head>
 <body class="app-body">
     {% if current_user.is_authenticated %}
-        <header class="site-header">
-            <div class="site-header-inner">
-                <a href="{{ url_for('index') }}" class="brand">
-                    <span class="brand-badge">Ш</span>
-                    <span class="brand-text">
-                        <span class="brand-title">Шанс</span>
-                        <span class="brand-subtitle">Личная система управления</span>
-                    </span>
-                </a>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a href="{{ url_for('index') }}" class="brand">
+                <span class="brand-badge">Ш</span>
+                <span class="brand-text">
+                    <span class="brand-title">Шанс</span>
+                    <span class="brand-subtitle">Личная система управления</span>
+                </span>
+            </a>
 
-                <nav class="top-nav">
-                    <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
-                    <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
-                    <a href="{{ url_for('schedule') }}" class="top-nav-link">График</a>
-                </nav>
+            <nav class="top-nav">
+                <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
+                <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
+                <a href="{{ url_for('schedule') }}" class="top-nav-link">График</a>
+            </nav>
 
-                <div class="header-user-block">
-                    <a href="{{ url_for('logout') }}" class="btn btn-danger btn-logout">Выйти</a>
-                </div>
+            <div class="header-user-block">
+                <a href="{{ url_for('logout') }}" class="btn btn-danger btn-logout">Выйти</a>
             </div>
-        </header>
+        </div>
+    </header>
     {% endif %}
 
     <main class="page-shell">

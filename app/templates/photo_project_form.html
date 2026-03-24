@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{% if project %}Редактировать фотопроект{% else %}Создать фотопроект{% endif %} | Шанс{% endblock %}
+
+{% block content %}
+<div class="planner-page narrow-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="page-title-strong">{% if project %}Редактировать фотопроект{% else %}Создать фотопроект{% endif %}</span>
+        </h1>
+        <div class="page-actions">
+            <a href="{{ url_for('photo_projects') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+    <div class="card planner-form-card">
+        <form method="post" class="stack-form">
+            <label class="form-field">
+                <span>Название</span>
+                <input type="text" name="title" required value="{{ project.title if project else '' }}" placeholder="Например, Весенний портрет">
+            </label>
+            <label class="form-field">
+                <span>Идея</span>
+                <input type="text" name="idea" required value="{{ project.idea if project else '' }}" placeholder="Главная идея проекта">
+            </label>
+            <label class="form-field">
+                <span>Описание</span>
+                <textarea name="description" rows="5" placeholder="Подробно опиши концепцию, стиль, настроение, подготовку">{{ project.description if project else '' }}</textarea>
+            </label>
+            <div class="form-row-2">
+                <label class="form-field">
+                    <span>Статус</span>
+                    <select name="project_status">
+                        {% for status in project_statuses %}
+                        <option value="{{ status }}" {% if project and project.project_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="form-field">
+                    <span>Цвет карточки</span>
+                    <select name="accent_class">
+                        {% for option in accent_options %}
+                        <option value="{{ option.value }}" {% if project and project.accent_class == option.value %}selected{% elif not project and option.value == 'accent-violet' %}selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <button class="btn btn-primary" type="submit">{% if project %}Сохранить проект{% else %}Создать проект{% endif %}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

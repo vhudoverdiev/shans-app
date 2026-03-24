@@ -1,21 +1,45 @@
 {% extends "base.html" %}
-
 {% block title %}Фотопроекты | Шанс{% endblock %}
 
 {% block content %}
-<div class="budget-page">
-    <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Фотопроекты</span>
-        </h1>
-        <div class="page-actions">
-            <a href="{{ url_for('schedule') }}" class="btn btn-secondary">Назад к графику</a>
+<div class="planner-page">
+    <div class="page-header planner-header">
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">Фотопроекты</span>
+                <span class="page-title-light">идеи и записи</span>
+            </h1>
+            <p class="planner-subtitle">Красивые карточки проектов с быстрым переходом к записям.</p>
+        </div>
+        <div class="page-actions planner-actions">
+            <a href="{{ url_for('schedule') }}" class="btn btn-secondary">К графику</a>
+            <a href="{{ url_for('create_photo_project') }}" class="btn btn-primary">Создать фотопроект</a>
         </div>
     </div>
 
-    <div class="card">
-        <h2 class="section-title">Раздел подготовлен</h2>
-        <p>Здесь позже можно будет добавить карточки фотопроектов, статусы, сроки и заметки.</p>
+    {% if projects %}
+    <div class="project-grid">
+        {% for project in projects %}
+        <a href="{{ url_for('photo_project_detail', project_id=project.id) }}" class="project-card {{ project.accent_class }}">
+            <div class="project-card-head">
+                <span class="status-badge {{ project_status_class(project.project_status) }}">{{ project.project_status }}</span>
+                <span class="project-booking-counter">{{ project.bookings_count }} записей</span>
+            </div>
+            <div class="project-card-title">{{ project.title }}</div>
+            <div class="project-card-idea">{{ project.idea }}</div>
+            <p class="project-card-description">{{ project.description or 'Описание пока не добавлено.' }}</p>
+            <div class="project-card-footer">Открыть проект →</div>
+        </a>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="card empty-state-card">
+        <h2 class="section-title">Пока нет фотопроектов</h2>
+        <p>Создай первый проект и начни собирать по нему записи клиентов.</p>
+        <div class="page-actions">
+            <a href="{{ url_for('create_photo_project') }}" class="btn btn-primary">Создать первый проект</a>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
