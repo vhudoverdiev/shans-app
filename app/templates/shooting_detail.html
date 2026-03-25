@@ -28,22 +28,38 @@
         </div>
     </div>
 
-    <div class="card table-card">
+    <div class="card table-card shooting-detail-card">
         <div class="table-header">
             <h2 class="section-title">Информация по съёмке</h2>
         </div>
 
-        <div class="table-wrapper">
-            <table class="data-table data-table-car">
-                <tbody>
-                    <tr><th>Время</th><td>{{ shooting.shooting_time or '—' }}</td></tr>
-                    <tr><th>Количество часов</th><td>{{ shooting.duration_hours }}</td></tr>
-                    <tr><th>Телефон</th><td>{{ shooting.phone or '—' }}</td></tr>
-                    <tr><th>Стоимость</th><td>{{ shooting.price }} ₽</td></tr>
-                    <tr><th>Предоплата</th><td>{{ shooting.prepayment }} ₽</td></tr>
-                    <tr><th>Дополнительная информация</th><td>{{ shooting.notes or 'Заметок пока нет.' }}</td></tr>
-                </tbody>
-            </table>
+        <div class="shooting-detail-grid">
+            <div class="shooting-detail-item">
+                <div class="shooting-detail-label">Время</div>
+                <div class="shooting-detail-value">{{ shooting.shooting_time or '—' }}</div>
+            </div>
+            <div class="shooting-detail-item">
+                <div class="shooting-detail-label">Количество часов</div>
+                <div class="shooting-detail-value">{{ shooting.duration_hours }}</div>
+            </div>
+            <div class="shooting-detail-item">
+                <div class="shooting-detail-label">Телефон</div>
+                <div class="shooting-detail-value">{{ shooting.phone or '—' }}</div>
+            </div>
+            <div class="shooting-detail-item">
+                <div class="shooting-detail-label">Стоимость</div>
+                <div class="shooting-detail-value">{{ shooting.price }} ₽</div>
+            </div>
+            {% if not shooting.is_archive %}
+            <div class="shooting-detail-item">
+                <div class="shooting-detail-label">Предоплата</div>
+                <div class="shooting-detail-value">{{ shooting.prepayment }} ₽</div>
+            </div>
+            {% endif %}
+            <div class="shooting-detail-item shooting-detail-item-full">
+                <div class="shooting-detail-label">Дополнительная информация</div>
+                <div class="shooting-detail-notes">{{ shooting.notes or 'Заметок пока нет.' }}</div>
+            </div>
         </div>
 
         <div class="car-form-actions">
