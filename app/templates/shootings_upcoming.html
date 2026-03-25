@@ -1,91 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="shooting-page">
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">Съёмки</span>
-                <span class="page-title-light">забронированные</span>
-            </h1>
+            <h1 class="page-title">Съёмки</h1>
         </div>
     </div>
 
     <div class="car-tab-bar">
         <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
-            <span>Забронированные</span>
-            <span class="car-status-chip">{{ shootings_count }}</span>
+            Забронированные
+            <span class="car-tab-count">{{ shootings_count }}</span>
         </a>
-        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
-            <span>Добавить съёмку</span>
-        </a>
-        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
-            <span>Архив</span>
-        </a>
+        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
+        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 
-    <div class="stats-grid shooting-stats-grid">
-        <div class="stat-card stat-card-balance">
+    <div class="stats-grid car-stats-grid">
+        <div class="stat-card">
             <div class="stat-label">Количество съёмок</div>
             <div class="stat-value">{{ shootings_count }}</div>
         </div>
-
-        <a href="{% if nearest_shooting %}{{ url_for('shooting_detail', shooting_id=nearest_shooting.id) }}{% else %}#{% endif %}"
-           class="stat-card stat-card-current shooting-hover-card {% if not nearest_shooting %}shooting-hover-card-empty{% endif %}">
+        <div class="stat-card">
             <div class="stat-label">Ближайшая съёмка</div>
-            {% if nearest_shooting %}
-                <div class="stat-value shooting-hover-card-title">{{ nearest_shooting.project_name }}</div>
-                <div class="stat-note">{{ nearest_shooting.client_name }} · {{ nearest_shooting.shooting_date_display }}{% if nearest_shooting.shooting_time %} · {{ nearest_shooting.shooting_time }}{% endif %}</div>
-
-                <div class="shooting-hover-card-panel">
-                    <div class="shooting-hover-card-grid">
-                        <div>
-                            <span class="shooting-hover-label">Часы</span>
-                            <strong>{{ nearest_shooting.duration_hours }}</strong>
-                        </div>
-                        <div>
-                            <span class="shooting-hover-label">Стоимость</span>
-                            <strong>{{ nearest_shooting.price }} ₽</strong>
-                        </div>
-                        <div>
-                            <span class="shooting-hover-label">Предоплата</span>
-                            <strong>{{ nearest_shooting.prepayment }} ₽</strong>
-                        </div>
-                        <div>
-                            <span class="shooting-hover-label">Остаток</span>
-                            <strong>{{ nearest_shooting.remaining_payment }} ₽</strong>
-                        </div>
-                    </div>
-                    {% if nearest_shooting.notes %}
-                    <div class="shooting-hover-note">{{ nearest_shooting.notes }}</div>
-                    {% endif %}
-                    <div class="shooting-hover-link">Открыть съёмку →</div>
-                </div>
-            {% else %}
-                <div class="stat-value shooting-hover-card-title">—</div>
-                <div class="stat-note">Нет запланированных съёмок</div>
-            {% endif %}
-        </a>
+            <div class="stat-value">{{ nearest_shooting.shooting_date_display if nearest_shooting else '—' }}</div>
+        </div>
     </div>
 
-    <div class="content-card shooting-table-card">
-        <div class="table-toolbar shooting-table-toolbar">
-            <div class="table-toolbar-title">
-                <h2>Забронированные съёмки</h2>
-                <p class="shooting-section-subtitle">Все актуальные брони в аккуратной и читаемой таблице.</p>
-            </div>
-            <div class="table-toolbar-actions">
-                <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
-            </div>
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Забронированные съёмки</h2>
+            <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
         </div>
 
-        <div class="table-responsive shooting-table-shell">
-            <table class="car-table shooting-table-premium">
+        {% if shootings %}
+        <div class="table-wrapper">
+            <table class="data-table data-table-car">
                 <thead>
                     <tr>
                         <th>Дата</th>
                         <th>Время</th>
-                        <th>Наименование</th>
+                        <th>Название</th>
                         <th>Клиент</th>
                         <th>Часы</th>
                         <th>Стоимость</th>
@@ -93,35 +49,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if shootings %}
-                        {% for s in shootings %}
-                            <tr class="shooting-clickable-row shooting-table-row" onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'">
-                                <td>
-                                    <div class="shooting-table-primary">{{ s.shooting_date_display }}</div>
-                                </td>
-                                <td>{{ s.shooting_time or '—' }}</td>
-                                <td>
-                                    <div class="shooting-table-primary">{{ s.project_name }}</div>
-                                </td>
-                                <td>{{ s.client_name }}</td>
-                                <td>{{ s.duration_hours or '-' }}</td>
-                                <td>{{ s.price }} ₽</td>
-                                <td><span class="car-status-chip shooting-money-chip">{{ s.remaining_payment }} ₽</span></td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="7">
-                                <div class="empty-state-card">
-                                    <h3>Пока нет съёмок</h3>
-                                    <p>Добавь первую съёмку, чтобы начать работу.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endif %}
+                    {% for s in shootings %}
+                    <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'" style="cursor:pointer;">
+                        <td>{{ s.shooting_date_display }}</td>
+                        <td>{{ s.shooting_time or '—' }}</td>
+                        <td>{{ s.project_name }}</td>
+                        <td>{{ s.client_name }}</td>
+                        <td>{{ s.duration_hours or '-' }}</td>
+                        <td>{{ s.price }} ₽</td>
+                        <td><span class="status-pill">{{ s.remaining_payment }} ₽</span></td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="empty-state">Пока нет съёмок. Добавь первую съёмку.</div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
