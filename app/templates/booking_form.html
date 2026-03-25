@@ -2,50 +2,59 @@
 {% block title %}Редактировать запись | Шанс{% endblock %}
 
 {% block content %}
-<div class="planner-page narrow-page">
+<section class="booking-edit-page same-style-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Редактировать запись</span>
-        </h1>
+        <div>
+            <h1 class="page-title">
+                <span class="page-title-strong">Редактировать запись</span>
+                <span class="page-title-light">клиент и время</span>
+            </h1>
+        </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" href="{{ url_for('photo_project_detail', project_id=booking.project_id) }}">Назад</a>
+            <a class="btn btn-secondary" href="{{ url_for('planner.photo_project_detail', project_id=booking.project_id) }}">Назад к проекту</a>
         </div>
     </div>
 
-    <div class="card planner-form-card">
-        <form method="post" class="stack-form">
-            <label class="form-field">
-                <span>Клиент</span>
-                <input type="text" name="client_name" required value="{{ booking.client_name }}">
-            </label>
-            <label class="form-field">
-                <span>Контакты</span>
-                <input type="text" name="client_contact" required value="{{ booking.client_contact }}">
-            </label>
-            <div class="form-row-2">
-                <label class="form-field">
-                    <span>Дата</span>
-                    <input type="date" name="booking_date" required value="{{ booking.booking_date }}">
-                </label>
-                <label class="form-field">
-                    <span>Время</span>
-                    <input type="time" name="booking_time" value="{{ booking.booking_time or '' }}">
-                </label>
+    <div class="card table-card planner-form-shell planner-form-shell-narrow">
+        <form method="post" class="planner-form planner-form-clean">
+            <div class="planner-form-grid">
+                <div class="form-group">
+                    <label>Имя клиента</label>
+                    <input class="form-input" type="text" name="client_name" required value="{{ booking.client_name }}">
+                </div>
+                <div class="form-group">
+                    <label>Контакты</label>
+                    <input class="form-input" type="text" name="client_contact" required value="{{ booking.client_contact }}">
+                </div>
             </div>
-            <label class="form-field">
-                <span>Статус</span>
-                <select name="status">
+
+            <div class="planner-form-grid">
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input class="form-input" type="date" name="booking_date" required value="{{ booking.booking_date }}">
+                </div>
+                <div class="form-group">
+                    <label>Время</label>
+                    <input class="form-input" type="time" name="booking_time" value="{{ booking.booking_time or '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Статус</label>
+                <select class="form-input" name="status">
                     {% for status in booking_statuses %}
                     <option value="{{ status }}" {% if booking.status == status %}selected{% endif %}>{{ status }}</option>
                     {% endfor %}
                 </select>
-            </label>
-            <label class="form-field">
-                <span>Комментарий</span>
-                <textarea name="comment" rows="5">{{ booking.comment or '' }}</textarea>
-            </label>
-            <button class="btn btn-primary" type="submit">Сохранить изменения</button>
+            </div>
+
+            <div class="form-group">
+                <label>Комментарий</label>
+                <textarea class="form-input" name="comment" rows="4">{{ booking.comment or '' }}</textarea>
+            </div>
+
+            <button class="btn btn-primary btn-wide" type="submit">Сохранить запись</button>
         </form>
     </div>
-</div>
+</section>
 {% endblock %}

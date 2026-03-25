@@ -2,40 +2,40 @@
 {% block title %}Редактировать задачу | Шанс{% endblock %}
 
 {% block content %}
-<div class="planner-page narrow-page">
+<div class="planner-page narrow-page same-style-page">
     <div class="page-header">
         <h1 class="page-title">
             <span class="page-title-strong">Редактировать задачу</span>
         </h1>
         <div class="page-actions">
-            <a class="btn btn-secondary" href="{{ url_for('schedule', view='day', date=task.task_date) }}">Назад</a>
+            <a class="btn btn-secondary" href="{{ url_for('planner.schedule', view='day', date=task.task_date) }}">Назад</a>
         </div>
     </div>
 
-    <div class="card planner-form-card">
-        <form method="post" class="stack-form">
+    <div class="card planner-form-card planner-form-shell planner-form-shell-narrow">
+        <form method="post" class="stack-form planner-form-clean planner-form-schedule">
             <label class="form-field">
                 <span>Название</span>
-                <input type="text" name="title" required value="{{ task.title }}">
+                <input class="form-input" type="text" name="title" required value="{{ task.title }}">
             </label>
             <label class="form-field">
                 <span>Дата</span>
-                <input type="date" name="task_date" required value="{{ task.task_date }}">
+                <input class="form-input" type="date" name="task_date" required value="{{ task.task_date }}">
             </label>
-            <div class="form-row-2">
+            <div class="form-row-2 planner-form-grid">
                 <label class="form-field">
                     <span>Начало</span>
-                    <input type="time" name="start_time" value="{{ task.start_time or '' }}">
+                    <input class="form-input" type="time" name="start_time" value="{{ task.start_time or '' }}">
                 </label>
                 <label class="form-field">
                     <span>Конец</span>
-                    <input type="time" name="end_time" value="{{ task.end_time or '' }}">
+                    <input class="form-input" type="time" name="end_time" value="{{ task.end_time or '' }}">
                 </label>
             </div>
-            <div class="form-row-2">
+            <div class="form-row-2 planner-form-grid">
                 <label class="form-field">
                     <span>Тип</span>
-                    <select name="task_type">
+                    <select class="form-input" name="task_type">
                         {% for item in task_types %}
                         <option value="{{ item }}" {% if task.task_type == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
@@ -43,7 +43,7 @@
                 </label>
                 <label class="form-field">
                     <span>Статус</span>
-                    <select name="status">
+                    <select class="form-input" name="status">
                         <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
                         <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
                         <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
@@ -52,7 +52,7 @@
             </div>
             <label class="form-field">
                 <span>Привязать к фотопроекту</span>
-                <select name="project_id">
+                <select class="form-input" name="project_id">
                     <option value="">Без привязки</option>
                     {% for project in projects %}
                     <option value="{{ project.id }}" {% if task.project_id == project.id %}selected{% endif %}>{{ project.title }}</option>
@@ -61,7 +61,7 @@
             </label>
             <label class="form-field">
                 <span>Описание</span>
-                <textarea name="description" rows="5">{{ task.description or '' }}</textarea>
+                <textarea class="form-input" name="description" rows="5">{{ task.description or '' }}</textarea>
             </label>
             <button class="btn btn-primary" type="submit">Сохранить изменения</button>
         </form>

@@ -6,7 +6,7 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='planner.css') }}">
 </head>
 <body class="app-body">
     {% if current_user.is_authenticated %}
@@ -23,7 +23,7 @@
             <nav class="top-nav">
                 <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
                 <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
-                <a href="{{ url_for('schedule') }}" class="top-nav-link">График</a>
+                <a href="{{ url_for('planner.schedule') }}" class="top-nav-link">График</a>
             </nav>
 
             <div class="header-user-block">
@@ -35,16 +35,16 @@
 
     <main class="page-shell">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-stack">
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category if category else 'info' }}">
-                            <div class="flash-message-text">{{ message }}</div>
-                            <button type="button" class="flash-close" onclick="this.parentElement.remove()">×</button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% if messages %}
+        <div class="flash-stack">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category if category else 'info' }}">
+                <div class="flash-message-text">{{ message }}</div>
+                <button type="button" class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}

@@ -69,6 +69,7 @@ from app.models import (
     update_shooting,
 )
 from app.utils import build_budget_excel
+from app.planner import delete_task_for_shooting, upsert_task_for_shooting
 
 
 MONTHS = [
@@ -620,16 +621,6 @@ def register_routes(app):
     # OTHER SECTIONS
     # =========================================================
 
-    @app.route("/schedule")
-    @login_required
-    def schedule():
-        return render_template("schedule.html")
-
-    @app.route("/photo-projects")
-    @login_required
-    def photo_projects():
-        return render_template("photo_projects.html")
-
     @app.route("/shootings")
     @login_required
     def shootings():
@@ -686,7 +677,7 @@ def register_routes(app):
                 flash("Часы, стоимость и предоплата должны быть числами.", "danger")
                 return render_template("shootings_add.html", form_data=form_data, active_tab="add")
 
-            create_shooting(
+            shooting_id = create_shooting(
                 project_name=project_name,
                 client_name=client_name,
                 shooting_date=shooting_date,
@@ -698,7 +689,21 @@ def register_routes(app):
                 notes=notes,
             )
 
-            flash("Съёмка успешно добавлена.", "success")
+            if shooting_id:
+                upsert_task_for_shooting(
+                    shooting_id=shooting_id,
+                    project_name=project_name,
+                    client_name=client_name,
+                    shooting_date=shooting_date,
+                    shooting_time=shooting_time,
+                    duration_hours=duration_hours,
+                    phone=phone,
+                    price=price,
+                    prepayment=prepayment,
+                    notes=notes,
+                )
+
+            flash("Съёмка успешно добавлена и появилась в графике.", "success")
             return redirect(url_for("shootings_upcoming"))
 
         return render_template("shootings_add.html", form_data=form_data, active_tab="add")
@@ -789,7 +794,20 @@ def register_routes(app):
                 notes=notes,
             )
 
-            flash("Съёмка обновлена.", "success")
+            upsert_task_for_shooting(
+                shooting_id=shooting_id,
+                project_name=project_name,
+                client_name=client_name,
+                shooting_date=shooting_date,
+                shooting_time=shooting_time,
+                duration_hours=duration_hours,
+                phone=phone,
+                price=price,
+                prepayment=prepayment,
+                notes=notes,
+            )
+
+            flash("Съёмка обновлена и синхронизирована с графиком.", "success")
             return redirect(url_for("shooting_detail", shooting_id=shooting_id))
 
         return render_template("shooting_edit.html", shooting=shooting)
@@ -804,8 +822,9 @@ def register_routes(app):
             flash("Съёмка не найдена.", "danger")
             return redirect(url_for("shootings_upcoming"))
 
+        delete_task_for_shooting(shooting_id)
         delete_shooting(shooting_id)
-        flash("Съёмка удалена.", "success")
+        flash("Съёмка удалена из раздела съёмок и из графика.", "success")
         return redirect(url_for("shootings_upcoming"))
 
     # =========================================================

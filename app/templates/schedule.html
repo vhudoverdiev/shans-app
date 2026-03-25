@@ -2,113 +2,117 @@
 {% block title %}График | Шанс{% endblock %}
 
 {% block content %}
-<div class="planner-page">
-    <div class="page-header planner-header">
+<section class="planner-page same-style-page">
+    <div class="page-header">
         <div>
             <h1 class="page-title">
                 <span class="page-title-strong">График</span>
-                <span class="page-title-light">день, неделя, месяц</span>
+                <span class="page-title-light">день и месяц</span>
             </h1>
-            <p class="planner-subtitle">Удобное планирование задач и съёмок по датам.</p>
+            <p class="planner-page-subtitle">Календарь стал чище: без недельного режима, с аккуратными статусами и более понятными карточками задач.</p>
         </div>
-        <div class="page-actions planner-actions">
-            <a class="btn btn-secondary" href="{{ url_for('photo_projects') }}">Фотопроекты</a>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Фотопроекты</a>
         </div>
     </div>
 
-    <div class="planner-shell">
-        <section class="planner-main">
-            <div class="planner-toolbar card">
-                <div class="planner-nav-row">
-                    <div class="planner-nav-group">
-                        <a class="btn btn-secondary btn-small" href="{{ url_for('schedule', view=current_view, date=prev_date) }}">←</a>
-                        <a class="btn btn-secondary btn-small" href="{{ url_for('schedule', view=current_view, date=next_date) }}">→</a>
-                        <a class="btn btn-secondary btn-small" href="{{ url_for('schedule', view=current_view) }}">Сегодня</a>
+    <div class="stats-grid planner-stats-grid planner-stats-grid-spaced">
+        <div class="stat-card">
+            <div class="stat-label">Всего за месяц</div>
+            <div class="stat-value">{{ month_stats.total }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Выполнено</div>
+            <div class="stat-value">{{ month_stats.done }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Активно</div>
+            <div class="stat-value">{{ month_stats.planned }}</div>
+        </div>
+    </div>
+
+    <div class="planner-layout">
+        <div class="planner-main-col">
+            <div class="card table-card planner-toolbar-card">
+                <div class="planner-toolbar">
+                    <div class="page-actions">
+                        <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">← Назад</a>
+                        <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">Вперёд →</a>
+                        <a class="btn btn-primary btn-compact" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
                     </div>
-                    <div class="planner-range-title">
+
+                    <div class="planner-toolbar-title">
                         {% if current_view == 'month' %}
                             {{ month_title }}
-                        {% elif current_view == 'week' %}
-                            {{ week_label }}
                         {% else %}
                             {{ selected_date_label }}
                         {% endif %}
                     </div>
-                    <div class="planner-view-switcher">
-                        <a class="planner-view-pill {% if current_view == 'day' %}is-active{% endif %}" href="{{ url_for('schedule', view='day', date=selected_date.isoformat()) }}">День</a>
-                        <a class="planner-view-pill {% if current_view == 'week' %}is-active{% endif %}" href="{{ url_for('schedule', view='week', date=selected_date.isoformat()) }}">Неделя</a>
-                        <a class="planner-view-pill {% if current_view == 'month' %}is-active{% endif %}" href="{{ url_for('schedule', view='month', date=selected_date.isoformat()) }}">Месяц</a>
+
+                    <div class="planner-view-switch">
+                        <a href="{{ url_for('planner.schedule', view='day', date=selected_date.isoformat()) }}" class="planner-view-link {% if current_view == 'day' %}planner-view-link-active{% endif %}">День</a>
+                        <a href="{{ url_for('planner.schedule', view='month', date=selected_date.isoformat()) }}" class="planner-view-link {% if current_view == 'month' %}planner-view-link-active{% endif %}">Месяц</a>
                     </div>
                 </div>
             </div>
 
             {% if current_view == 'month' %}
-            <div class="calendar-grid calendar-grid-month card">
-                <div class="calendar-weekday">Пн</div>
-                <div class="calendar-weekday">Вт</div>
-                <div class="calendar-weekday">Ср</div>
-                <div class="calendar-weekday">Чт</div>
-                <div class="calendar-weekday">Пт</div>
-                <div class="calendar-weekday">Сб</div>
-                <div class="calendar-weekday">Вс</div>
+            <div class="card table-card">
+                <div class="table-header">
+                    <h2 class="section-title">Календарь на месяц</h2>
+                </div>
 
-                {% for cell in month_cells %}
-                <a href="{{ url_for('schedule', view='day', date=cell.date_key) }}" class="calendar-cell {% if not cell.is_current_month %}is-muted{% endif %} {% if cell.is_today %}is-today{% endif %} {% if cell.is_selected %}is-selected{% endif %}">
-                    <div class="calendar-cell-head">
-                        <span>{{ cell.date.day }}</span>
-                        {% if cell.tasks %}<span class="calendar-counter">{{ cell.tasks|length }}</span>{% endif %}
-                    </div>
-                    <div class="calendar-task-stack">
-                        {% for task in cell.tasks[:3] %}
-                        <div class="calendar-task-pill {{ status_badge_class(task.status) }}">
-                            {% if task.start_time %}<span>{{ task.start_time }}</span>{% endif %}
-                            <span>{{ task.title }}</span>
+                <div class="planner-month-grid planner-weekdays">
+                    <div>Пн</div>
+                    <div>Вт</div>
+                    <div>Ср</div>
+                    <div>Чт</div>
+                    <div>Пт</div>
+                    <div>Сб</div>
+                    <div>Вс</div>
+                </div>
+
+                <div class="planner-month-grid">
+                    {% for cell in month_cells %}
+                    <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %}">
+                        <div class="planner-day-card-head">
+                            <strong>{{ cell.date.day }}</strong>
+                            {% if cell.tasks %}
+                            <span class="planner-day-count">{{ cell.tasks|length }}</span>
+                            {% endif %}
                         </div>
-                        {% endfor %}
-                        {% if cell.tasks|length > 3 %}
-                        <div class="calendar-more">+ ещё {{ cell.tasks|length - 3 }}</div>
-                        {% endif %}
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            {% elif current_view == 'week' %}
-            <div class="week-grid">
-                {% for day in week_days %}
-                <a href="{{ url_for('schedule', view='day', date=day.date_key) }}" class="week-column card {% if day.is_today %}is-today{% endif %} {% if day.is_selected %}is-selected{% endif %}">
-                    <div class="week-column-head">
-                        <div class="week-day-name">{{ ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][loop.index0] }}</div>
-                        <div class="week-day-date">{{ day.date.strftime('%d.%m') }}</div>
-                    </div>
-                    <div class="week-task-stack">
-                        {% for task in day.tasks %}
-                        <div class="week-task-card">
-                            <div class="week-task-time">{{ task.start_time or 'Без времени' }}</div>
-                            <div class="week-task-title">{{ task.title }}</div>
+
+                        <div class="planner-day-summary">
+                            {% if cell.tasks %}
+                            <span>Задач: {{ cell.tasks|length }}</span>
+                            {% else %}
+                            <span>Свободно</span>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <div class="empty-note">Свободно</div>
-                        {% endfor %}
-                    </div>
-                </a>
-                {% endfor %}
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
             {% else %}
-            <div class="day-timeline card">
-                <div class="section-title-row">
+            <div class="card table-card">
+                <div class="table-header">
                     <h2 class="section-title">Задачи на {{ selected_date_label }}</h2>
                 </div>
-                <div class="task-list">
+
+                {% if day_tasks %}
+                <div class="planner-task-list planner-task-list-fancy">
                     {% for task in day_tasks %}
-                    <div class="task-card-row">
-                        <div class="task-card-main">
-                            <div class="task-card-topline">
-                                <div class="task-title-wrap">
-                                    <h3 class="task-title">{{ task.title }}</h3>
-                                    <span class="status-badge {{ status_badge_class(task.status) }}">{{ status_label(task.status) }}</span>
-                                    <span class="status-badge badge-outline">{{ task.task_type }}</span>
+                    <div class="planner-task-row planner-task-row-fancy">
+                        <div class="planner-task-main">
+                            <div class="planner-task-top">
+                                <div>
+                                    <div class="planner-task-title">{{ task.title }}</div>
+                                    <div class="planner-task-badges">
+                                        <span class="planner-status-chip planner-status-chip-{{ task.status }}">{{ status_label(task.status) }}</span>
+                                        <span class="planner-type-chip">{{ task.task_type }}</span>
+                                    </div>
                                 </div>
-                                <div class="task-time-chip">
+                                <div class="planner-task-time planner-task-time-fancy">
                                     {% if task.start_time and task.end_time %}
                                         {{ task.start_time }} — {{ task.end_time }}
                                     {% elif task.start_time %}
@@ -118,106 +122,109 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            {% if task.project_title %}
-                            <div class="task-related">Фотопроект: {{ task.project_title }}</div>
+
+                            {% if task.project_title and task.task_type != 'Фотопроект' %}
+                            <div class="planner-task-meta">Фотопроект: {{ task.project_title }}</div>
                             {% endif %}
+
+                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
+                            <div class="planner-task-meta">
+                                <a href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
+                            </div>
+                            {% endif %}
+
                             {% if task.description %}
-                            <p class="task-description">{{ task.description }}</p>
+                            <div class="planner-task-description">{{ task.description }}</div>
                             {% endif %}
                         </div>
-                        <div class="task-card-actions">
-                            <form method="post" action="{{ url_for('toggle_schedule_task', task_id=task.id) }}">
-                                <button class="btn btn-secondary btn-small" type="submit">Готово</button>
+
+                        <div class="planner-task-actions planner-task-actions-fancy">
+                            <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}">
+                                <button class="btn btn-secondary btn-compact" type="submit">Готово</button>
                             </form>
-                            <a class="btn btn-secondary btn-small" href="{{ url_for('edit_schedule_task', task_id=task.id) }}">Изменить</a>
-                            <form method="post" action="{{ url_for('delete_schedule_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу?');">
-                                <button class="btn btn-danger btn-small" type="submit">Удалить</button>
+                            <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.edit_schedule_task', task_id=task.id) }}">Изменить</a>
+                            <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу?');">
+                                <button class="btn btn-secondary btn-compact" type="submit">Удалить</button>
                             </form>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="empty-state-inline">На этот день задач пока нет.</div>
                     {% endfor %}
                 </div>
+                {% else %}
+                <div class="empty-state">На этот день задач пока нет.</div>
+                {% endif %}
             </div>
             {% endif %}
-        </section>
+        </div>
 
-        <aside class="planner-sidebar">
-            <div class="card stat-card-grid">
-                <div class="mini-stat-card">
-                    <div class="mini-stat-label">Всего за месяц</div>
-                    <div class="mini-stat-value">{{ month_stats.total }}</div>
-                </div>
-                <div class="mini-stat-card">
-                    <div class="mini-stat-label">Выполнено</div>
-                    <div class="mini-stat-value">{{ month_stats.done }}</div>
-                </div>
-                <div class="mini-stat-card">
-                    <div class="mini-stat-label">Активно</div>
-                    <div class="mini-stat-value">{{ month_stats.planned }}</div>
-                </div>
-            </div>
-
-            <div class="card planner-form-card">
-                <div class="section-title-row">
+        <aside class="planner-side-col">
+            <div class="card table-card planner-form-shell">
+                <div class="table-header">
                     <h2 class="section-title">Добавить задачу</h2>
                 </div>
-                <form method="post" action="{{ url_for('create_schedule_task') }}" class="stack-form">
+
+                <form method="post" action="{{ url_for('planner.create_schedule_task') }}" class="planner-form planner-form-clean planner-form-schedule">
                     <input type="hidden" name="return_view" value="{{ current_view }}">
-                    <label class="form-field">
-                        <span>Название</span>
-                        <input type="text" name="title" required placeholder="Например, съёмка, монтаж, созвон">
-                    </label>
-                    <label class="form-field">
-                        <span>Дата</span>
-                        <input type="date" name="task_date" required value="{{ selected_date.isoformat() }}">
-                    </label>
-                    <div class="form-row-2">
-                        <label class="form-field">
-                            <span>Начало</span>
-                            <input type="time" name="start_time">
-                        </label>
-                        <label class="form-field">
-                            <span>Конец</span>
-                            <input type="time" name="end_time">
-                        </label>
+
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input class="form-input" type="text" name="title" required placeholder="Например, съёмка, монтаж, созвон">
                     </div>
-                    <div class="form-row-2">
-                        <label class="form-field">
-                            <span>Тип</span>
-                            <select name="task_type">
+
+                    <div class="form-group">
+                        <label>Дата</label>
+                        <input class="form-input" type="date" name="task_date" required value="{{ selected_date.isoformat() }}">
+                    </div>
+
+                    <div class="planner-form-grid">
+                        <div class="form-group">
+                            <label>Начало</label>
+                            <input class="form-input" type="time" name="start_time">
+                        </div>
+                        <div class="form-group">
+                            <label>Конец</label>
+                            <input class="form-input" type="time" name="end_time">
+                        </div>
+                    </div>
+
+                    <div class="planner-form-grid">
+                        <div class="form-group">
+                            <label>Тип</label>
+                            <select class="form-input" name="task_type">
                                 {% for item in task_types %}
                                 <option value="{{ item }}">{{ item }}</option>
                                 {% endfor %}
                             </select>
-                        </label>
-                        <label class="form-field">
-                            <span>Статус</span>
-                            <select name="status">
+                        </div>
+                        <div class="form-group">
+                            <label>Статус</label>
+                            <select class="form-input" name="status">
                                 <option value="planned">Запланировано</option>
                                 <option value="done">Выполнено</option>
                                 <option value="cancelled">Отменено</option>
                             </select>
-                        </label>
+                        </div>
                     </div>
-                    <label class="form-field">
-                        <span>Привязать к фотопроекту</span>
-                        <select name="project_id">
+
+                    <div class="form-group">
+                        <label>Привязать к фотопроекту</label>
+                        <select class="form-input" name="project_id">
                             <option value="">Без привязки</option>
                             {% for project in projects %}
                             <option value="{{ project.id }}">{{ project.title }}</option>
                             {% endfor %}
                         </select>
-                    </label>
-                    <label class="form-field">
-                        <span>Описание</span>
-                        <textarea name="description" rows="4" placeholder="Короткие заметки по задаче"></textarea>
-                    </label>
-                    <button class="btn btn-primary" type="submit">Сохранить задачу</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea class="form-input" name="description" rows="4" placeholder="Короткие заметки по задаче"></textarea>
+                    </div>
+
+                    <button class="btn btn-primary btn-wide" type="submit">Сохранить задачу</button>
                 </form>
             </div>
         </aside>
     </div>
-</div>
+</section>
 {% endblock %}

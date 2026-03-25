@@ -1028,7 +1028,9 @@ def create_shooting(
     ))
 
     conn.commit()
+    shooting_id = cursor.lastrowid
     conn.close()
+    return shooting_id
 
 
 def get_upcoming_shootings():

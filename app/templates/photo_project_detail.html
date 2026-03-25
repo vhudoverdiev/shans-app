@@ -2,39 +2,51 @@
 {% block title %}{{ project.title }} | Шанс{% endblock %}
 
 {% block content %}
-<div class="planner-page">
-    <div class="page-header planner-header">
+<section class="photo-project-detail-page same-style-page">
+    <div class="page-header">
         <div>
             <h1 class="page-title">
                 <span class="page-title-strong">{{ project.title }}</span>
+                <span class="page-title-light">фотопроект</span>
             </h1>
-            <p class="planner-subtitle">{{ project.idea }}</p>
+            <p class="planner-page-subtitle">{{ project.idea }}</p>
         </div>
-        <div class="page-actions planner-actions">
-            <a href="{{ url_for('photo_projects') }}" class="btn btn-secondary">Все фотопроекты</a>
-            <a href="{{ url_for('edit_photo_project', project_id=project.id) }}" class="btn btn-secondary">Редактировать</a>
-            <form method="post" action="{{ url_for('delete_photo_project', project_id=project.id) }}" onsubmit="return confirm('Удалить фотопроект вместе со всеми записями?');">
-                <button type="submit" class="btn btn-danger">Удалить</button>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Все проекты</a>
+            <a class="btn btn-secondary" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}">Редактировать</a>
+            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" onsubmit="return confirm('Удалить фотопроект и все записи?');">
+                <button class="btn btn-secondary btn-icon-delete" type="submit" aria-label="Удалить фотопроект">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zm-1 6h2v9H8V9zm6 0h2v9h-2V9zM6 9h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9z" fill="currentColor"/></svg>
+                    <span>Удалить</span>
+                </button>
             </form>
         </div>
     </div>
 
-    <div class="planner-shell">
-        <section class="planner-main">
-            <div class="card project-detail-card {{ project.accent_class }}">
-                <div class="project-detail-topline">
-                    <span class="status-badge {{ project_status_class(project.project_status) }}">{{ project.project_status }}</span>
-                    <span class="status-badge badge-outline">{{ project.bookings_count }} записей</span>
+    <div class="planner-layout">
+        <div class="planner-main-col">
+            <div class="card table-card project-hero-card">
+                <div class="project-hero-grid">
+                    <div class="project-hero-main">
+                        <div class="project-detail-badges">
+                            <span class="status-pill {{ project_status_class(project.effective_status) }}">{{ project.effective_status }}</span>
+                            <span class="status-pill">{{ project.bookings_count }} записей</span>
+                            <span class="status-pill">{{ project.project_date or 'Дата не указана' }}</span>
+                        </div>
+                        <div class="project-detail-description">{{ project.description or 'Описание проекта пока не заполнено.' }}</div>
+                    </div>
                 </div>
-                <div class="project-detail-description">{{ project.description or 'Описание проекта пока не заполнено.' }}</div>
             </div>
 
-            <div class="card">
-                <div class="section-title-row">
+            <div class="card table-card project-bookings-card">
+                <div class="table-header table-header-spaced">
                     <h2 class="section-title">Записи на фотопроект</h2>
+                    <div class="planner-table-note">Таблица стала компактнее и аккуратнее для ежедневной работы.</div>
                 </div>
-                <div class="table-shell">
-                    <table class="clean-table booking-table">
+
+                {% if bookings %}
+                <div class="table-wrapper table-wrapper-premium">
+                    <table class="data-table data-table-premium">
                         <thead>
                             <tr>
                                 <th>Клиент</th>
@@ -43,7 +55,7 @@
                                 <th>Время</th>
                                 <th>Статус</th>
                                 <th>Комментарий</th>
-                                <th></th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,66 +65,74 @@
                                 <td>{{ booking.client_contact }}</td>
                                 <td>{{ booking.booking_date }}</td>
                                 <td>{{ booking.booking_time or '—' }}</td>
-                                <td><span class="status-badge badge-outline">{{ booking.status }}</span></td>
+                                <td><span class="status-pill">{{ booking.status }}</span></td>
                                 <td>{{ booking.comment or '—' }}</td>
-                                <td class="table-actions-cell">
-                                    <a class="btn btn-secondary btn-small" href="{{ url_for('edit_photo_project_booking', booking_id=booking.id) }}">Изменить</a>
-                                    <form method="post" action="{{ url_for('delete_photo_project_booking', booking_id=booking.id) }}" onsubmit="return confirm('Удалить запись?');">
-                                        <button class="btn btn-danger btn-small" type="submit">Удалить</button>
-                                    </form>
+                                <td>
+                                    <div class="planner-table-actions">
+                                        <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}" title="Редактировать">✏</a>
+                                        <form method="post" action="{{ url_for('planner.delete_photo_project_booking', booking_id=booking.id) }}" class="inline-form" onsubmit="return confirm('Удалить запись?');">
+                                            <button type="submit" class="icon-action-btn icon-delete" title="Удалить"></button>
+                                        </form>
+                                    </div>
                                 </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="7" class="empty-table-row">Записей пока нет.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% else %}
+                <div class="empty-state">Записей пока нет. Добавь первую запись в правом блоке.</div>
+                {% endif %}
             </div>
-        </section>
+        </div>
 
-        <aside class="planner-sidebar">
-            <div class="card planner-form-card">
-                <div class="section-title-row">
+        <aside class="planner-side-col">
+            <div class="card table-card planner-form-shell">
+                <div class="table-header">
                     <h2 class="section-title">Добавить запись</h2>
                 </div>
-                <form method="post" action="{{ url_for('create_photo_project_booking', project_id=project.id) }}" class="stack-form">
-                    <label class="form-field">
-                        <span>Имя / имя клиента</span>
-                        <input type="text" name="client_name" required>
-                    </label>
-                    <label class="form-field">
-                        <span>Контакты</span>
-                        <input type="text" name="client_contact" required placeholder="Телефон, Telegram, Instagram">
-                    </label>
-                    <div class="form-row-2">
-                        <label class="form-field">
-                            <span>Дата</span>
-                            <input type="date" name="booking_date" required>
-                        </label>
-                        <label class="form-field">
-                            <span>Время</span>
-                            <input type="time" name="booking_time">
-                        </label>
+
+                <form method="post" action="{{ url_for('planner.create_photo_project_booking', project_id=project.id) }}" class="planner-form planner-form-clean">
+                    <div class="planner-form-grid">
+                        <div class="form-group">
+                            <label>Имя клиента</label>
+                            <input class="form-input" type="text" name="client_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Контакты</label>
+                            <input class="form-input" type="text" name="client_contact" required>
+                        </div>
                     </div>
-                    <label class="form-field">
-                        <span>Статус</span>
-                        <select name="status">
+
+                    <div class="planner-form-grid">
+                        <div class="form-group">
+                            <label>Дата</label>
+                            <input class="form-input" type="date" name="booking_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Время</label>
+                            <input class="form-input" type="time" name="booking_time">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Статус</label>
+                        <select class="form-input" name="status">
                             {% for status in booking_statuses %}
                             <option value="{{ status }}">{{ status }}</option>
                             {% endfor %}
                         </select>
-                    </label>
-                    <label class="form-field">
-                        <span>Комментарий</span>
-                        <textarea name="comment" rows="4" placeholder="Подробности по записи"></textarea>
-                    </label>
-                    <button class="btn btn-primary" type="submit">Добавить запись</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Комментарий</label>
+                        <textarea class="form-input" name="comment" rows="4"></textarea>
+                    </div>
+
+                    <button class="btn btn-primary btn-wide" type="submit">Добавить запись</button>
                 </form>
             </div>
         </aside>
     </div>
-</div>
+</section>
 {% endblock %}

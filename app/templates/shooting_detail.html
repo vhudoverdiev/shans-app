@@ -12,59 +12,75 @@
 
         <div class="page-header-actions">
             <a href="{{ url_for('shooting_edit', shooting_id=shooting.id) }}" class="btn btn-primary">Редактировать</a>
-            <a href="{{ url_for('shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
+            <a href="{{ url_for('shootings_archive' if shooting.is_archive else 'shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid shooting-detail-top-grid">
         <div class="stat-card stat-card-balance">
             <div class="stat-label">Клиент</div>
-            <div class="stat-value" style="font-size: 24px;">{{ shooting.client_name }}</div>
+            <div class="stat-value shooting-detail-top-value">{{ shooting.client_name }}</div>
         </div>
-        <div class="stat-card stat-card-current">
-            <div class="stat-label">Остаток к оплате</div>
-            <div class="stat-value" style="font-size: 24px;">{{ shooting.remaining_payment }} ₽</div>
+        <div class="stat-card stat-card-current {% if shooting.is_archive %}shooting-archive-stat{% endif %}">
+            <div class="stat-label">{% if shooting.is_archive %}Статус{% else %}Остаток к оплате{% endif %}</div>
+            <div class="stat-value shooting-detail-top-value">
+                {% if shooting.is_archive %}
+                    В архиве
+                {% else %}
+                    {{ shooting.remaining_payment }} ₽
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <div class="content-card">
-        <div class="table-toolbar">
+    <div class="content-card shooting-detail-card">
+        <div class="table-toolbar shooting-table-toolbar">
             <div class="table-toolbar-title">
                 <h2>Информация по съёмке</h2>
+                <p class="shooting-section-subtitle">Основные данные собраны в удобных карточках без перегруженной таблицы.</p>
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="car-table">
-                <tbody>
-                    <tr>
-                        <th>Дата</th>
-                        <td>{{ shooting.shooting_date_display }}</td>
-                        <th>Время</th>
-                        <td>{{ shooting.shooting_time or '—' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Количество часов</th>
-                        <td>{{ shooting.duration_hours }}</td>
-                        <th>Телефон</th>
-                        <td>{{ shooting.phone or '—' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Стоимость</th>
-                        <td>{{ shooting.price }} ₽</td>
-                        <th>Предоплата</th>
-                        <td>{{ shooting.prepayment }} ₽</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="shooting-detail-grid">
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Дата</div>
+                <div class="shooting-info-value">{{ shooting.shooting_date_display }}</div>
+            </div>
+
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Время</div>
+                <div class="shooting-info-value">{{ shooting.shooting_time or '—' }}</div>
+            </div>
+
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Количество часов</div>
+                <div class="shooting-info-value">{{ shooting.duration_hours }}</div>
+            </div>
+
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Телефон</div>
+                <div class="shooting-info-value">{{ shooting.phone or '—' }}</div>
+            </div>
+
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Стоимость</div>
+                <div class="shooting-info-value">{{ shooting.price }} ₽</div>
+            </div>
+
+            {% if not shooting.is_archive %}
+            <div class="shooting-info-card">
+                <div class="shooting-info-label">Предоплата</div>
+                <div class="shooting-info-value">{{ shooting.prepayment }} ₽</div>
+            </div>
+            {% endif %}
         </div>
 
-        <div class="empty-state-card" style="margin-top: 20px; text-align: left;">
-            <h3>Дополнительная информация</h3>
-            <p>{{ shooting.notes or 'Заметок пока нет.' }}</p>
+        <div class="shooting-notes-card">
+            <div class="shooting-info-label">Дополнительная информация</div>
+            <div class="shooting-notes-text">{{ shooting.notes or 'Заметок пока нет.' }}</div>
         </div>
 
-        <div class="shooting-actions-row" style="margin-top: 20px;">
+        <div class="shooting-actions-row shooting-detail-actions-row">
             <a href="{{ url_for('shooting_edit', shooting_id=shooting.id) }}" class="btn btn-primary">Редактировать</a>
             <form method="POST" action="{{ url_for('shooting_delete', shooting_id=shooting.id) }}" class="inline-form" onsubmit="return confirm('Удалить эту съёмку?');">
                 <button type="submit" class="btn btn-danger">Удалить</button>
