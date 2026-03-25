@@ -3463,6 +3463,22 @@ a {
     opacity: 0.92;
 }
 
+.nearest-shooting-link-animated .shooting-premium-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: nearestShootingPulse 1.9s ease-in-out infinite;
+}
+
+.nearest-shooting-link-animated:hover .shooting-premium-card {
+    animation-play-state: paused;
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.20);
+}
+
+@keyframes nearestShootingPulse {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
 @media (max-width: 900px) {
     .shooting-top-row {
         grid-template-columns: 1fr;
