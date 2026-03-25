@@ -1,42 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="shooting-page">
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">Съёмки</span>
-                <span class="page-title-light">архив</span>
-            </h1>
+            <h1 class="page-title">Съёмки</h1>
         </div>
     </div>
 
     <div class="car-tab-bar">
-        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
-            <span>Новая съёмка</span>
-        </a>
-        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
-            <span>Ближайшие</span>
-        </a>
-        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
-            <span>Архив</span>
-        </a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Ближайшие</a>
+        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Новая съёмка</a>
+        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 
-    <div class="content-card shooting-table-card archive-table-card">
-        <div class="table-toolbar shooting-table-toolbar">
-            <div class="table-toolbar-title">
-                <h2>Архив съёмок</h2>
-                <p class="shooting-section-subtitle">Завершённые съёмки собраны отдельно, чтобы история была под рукой.</p>
-            </div>
-            <div class="table-toolbar-actions">
-                <span class="archive-title-badge">Прошедшие съёмки</span>
-            </div>
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Архив съёмок</h2>
         </div>
 
         {% if shootings %}
-            <div class="table-responsive shooting-table-shell">
-                <table class="car-table shooting-table-premium shooting-table-archive">
+            <div class="table-wrapper">
+                <table class="data-table data-table-car">
                     <thead>
                         <tr>
                             <th>Дата</th>
@@ -49,10 +34,10 @@
                     </thead>
                     <tbody>
                         {% for shooting in shootings %}
-                            <tr class="shooting-clickable-row shooting-table-row" onclick="window.location='{{ url_for('shooting_detail', shooting_id=shooting.id) }}'">
-                                <td><div class="shooting-table-primary">{{ shooting.shooting_date_display }}</div></td>
+                            <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=shooting.id) }}'" style="cursor:pointer;">
+                                <td>{{ shooting.shooting_date_display }}</td>
                                 <td>{{ shooting.shooting_time or '—' }}</td>
-                                <td><div class="shooting-table-primary">{{ shooting.project_name }}</div></td>
+                                <td>{{ shooting.project_name }}</td>
                                 <td>{{ shooting.client_name }}</td>
                                 <td>{{ shooting.duration_hours }}</td>
                                 <td>{{ shooting.price }} ₽</td>
@@ -62,10 +47,7 @@
                 </table>
             </div>
         {% else %}
-            <div class="empty-state-card">
-                <h3>Архив пуст</h3>
-                <p>Прошедшие съёмки будут автоматически появляться здесь.</p>
-            </div>
+            <div class="empty-state">Архив пока пуст.</div>
         {% endif %}
     </div>
 </section>

@@ -2,22 +2,24 @@
 {% block title %}{% if project %}Редактировать фотопроект{% else %}Создать фотопроект{% endif %} | Шанс{% endblock %}
 
 {% block content %}
-<section class="photo-project-form-page same-style-page">
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">{% if project %}Редактировать фотопроект{% else %}Создать фотопроект{% endif %}</span>
-                <span class="page-title-light">карточка проекта</span>
-            </h1>
+            <h1 class="page-title">{% if project %}Редактировать фотопроект{% else %}Создать фотопроект{% endif %}</h1>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{% if project %}{{ url_for('planner.photo_project_detail', project_id=project.id) }}{% else %}{{ url_for('planner.photo_projects') }}{% endif %}">Назад</a>
         </div>
     </div>
 
-    <div class="card table-card planner-form-shell planner-form-shell-narrow">
-        <form method="post" class="planner-form planner-form-clean">
-            <div class="planner-form-grid">
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Карточка проекта</div>
+            <div class="car-form-head-text">Заполни основные поля фотопроекта.</div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
                 <div class="form-group">
                     <label>Название проекта</label>
                     <input class="form-input" type="text" name="title" value="{{ project.title if project else '' }}" required>
@@ -26,19 +28,17 @@
                     <label>Дата фотопроекта</label>
                     <input class="form-input" type="date" name="project_date" value="{{ project.project_date if project else '' }}">
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label>Идея</label>
-                <input class="form-input" type="text" name="idea" value="{{ project.idea if project else '' }}" required>
-            </div>
+                <div class="form-group car-form-full">
+                    <label>Идея</label>
+                    <input class="form-input" type="text" name="idea" value="{{ project.idea if project else '' }}" required>
+                </div>
 
-            <div class="form-group">
-                <label>Описание</label>
-                <textarea class="form-input" name="description" rows="6">{{ project.description if project else '' }}</textarea>
-            </div>
+                <div class="form-group car-form-full">
+                    <label>Описание</label>
+                    <textarea class="form-input car-textarea" name="description" rows="6">{{ project.description if project else '' }}</textarea>
+                </div>
 
-            <div class="planner-form-grid">
                 <div class="form-group">
                     <label>Статус</label>
                     <select class="form-input" name="project_status">
@@ -58,7 +58,10 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary btn-wide" type="submit">{% if project %}Сохранить изменения{% else %}Создать фотопроект{% endif %}</button>
+            <div class="car-form-actions">
+                <button class="btn btn-primary" type="submit">{% if project %}Сохранить изменения{% else %}Создать фотопроект{% endif %}</button>
+                <a class="btn btn-secondary" href="{% if project %}{{ url_for('planner.photo_project_detail', project_id=project.id) }}{% else %}{{ url_for('planner.photo_projects') }}{% endif %}">Отмена</a>
+            </div>
         </form>
     </div>
 </section>

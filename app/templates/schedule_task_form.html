@@ -2,69 +2,80 @@
 {% block title %}Редактировать задачу | Шанс{% endblock %}
 
 {% block content %}
-<div class="planner-page narrow-page same-style-page">
+<section class="car-page">
     <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-strong">Редактировать задачу</span>
-        </h1>
+        <div>
+            <h1 class="page-title">Редактировать задачу</h1>
+        </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.schedule', view='day', date=task.task_date) }}">Назад</a>
         </div>
     </div>
 
-    <div class="card planner-form-card planner-form-shell planner-form-shell-narrow">
-        <form method="post" class="stack-form planner-form-clean planner-form-schedule">
-            <label class="form-field">
-                <span>Название</span>
-                <input class="form-input" type="text" name="title" required value="{{ task.title }}">
-            </label>
-            <label class="form-field">
-                <span>Дата</span>
-                <input class="form-input" type="date" name="task_date" required value="{{ task.task_date }}">
-            </label>
-            <div class="form-row-2 planner-form-grid">
-                <label class="form-field">
-                    <span>Начало</span>
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Карточка задачи</div>
+            <div class="car-form-head-text">Измени параметры задачи и сохрани изменения.</div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input class="form-input" type="text" name="title" required value="{{ task.title }}">
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input class="form-input" type="date" name="task_date" required value="{{ task.task_date }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Начало</label>
                     <input class="form-input" type="time" name="start_time" value="{{ task.start_time or '' }}">
-                </label>
-                <label class="form-field">
-                    <span>Конец</span>
+                </div>
+                <div class="form-group">
+                    <label>Конец</label>
                     <input class="form-input" type="time" name="end_time" value="{{ task.end_time or '' }}">
-                </label>
-            </div>
-            <div class="form-row-2 planner-form-grid">
-                <label class="form-field">
-                    <span>Тип</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Тип</label>
                     <select class="form-input" name="task_type">
                         {% for item in task_types %}
                         <option value="{{ item }}" {% if task.task_type == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
-                </label>
-                <label class="form-field">
-                    <span>Статус</span>
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
                     <select class="form-input" name="status">
                         <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
                         <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
                         <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
                     </select>
-                </label>
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label>Привязать к фотопроекту</label>
+                    <select class="form-input" name="project_id">
+                        <option value="">Без привязки</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}" {% if task.project_id == project.id %}selected{% endif %}>{{ project.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label>Описание</label>
+                    <textarea class="form-input car-textarea" name="description" rows="5">{{ task.description or '' }}</textarea>
+                </div>
             </div>
-            <label class="form-field">
-                <span>Привязать к фотопроекту</span>
-                <select class="form-input" name="project_id">
-                    <option value="">Без привязки</option>
-                    {% for project in projects %}
-                    <option value="{{ project.id }}" {% if task.project_id == project.id %}selected{% endif %}>{{ project.title }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="form-field">
-                <span>Описание</span>
-                <textarea class="form-input" name="description" rows="5">{{ task.description or '' }}</textarea>
-            </label>
-            <button class="btn btn-primary" type="submit">Сохранить изменения</button>
+
+            <div class="car-form-actions">
+                <button class="btn btn-primary" type="submit">Сохранить изменения</button>
+                <a class="btn btn-secondary" href="{{ url_for('planner.schedule', view='day', date=task.task_date) }}">Отмена</a>
+            </div>
         </form>
     </div>
-</div>
+</section>
 {% endblock %}
