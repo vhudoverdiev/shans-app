@@ -982,6 +982,8 @@ def _prepare_shooting(row):
     shooting["shooting_date_display"] = _format_date_display(
         shooting.get("shooting_date")
     )
+    shooting_date = shooting.get("shooting_date")
+    shooting["is_archive"] = bool(shooting_date and shooting_date < date.today().isoformat())
 
     is_paid_to_budget = shooting.get("is_paid_to_budget", 0)
     shooting["is_paid_to_budget"] = int(is_paid_to_budget or 0)

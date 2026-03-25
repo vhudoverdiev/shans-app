@@ -49,7 +49,7 @@
 
                 <div class="form-group">
                     <label for="phone">Телефон</label>
-                    <input id="phone" name="phone" type="text" class="form-input" value="{{ form_data.phone }}">
+                    <input id="phone" name="phone" type="tel" class="form-input" value="{{ form_data.phone }}" inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
                 </div>
 
                 <div class="form-group">
