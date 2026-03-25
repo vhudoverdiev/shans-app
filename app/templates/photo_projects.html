@@ -53,7 +53,7 @@
                                 <tr>
                                     <td>{{ project.title }}</td>
                                     <td>{{ project.idea }}</td>
-                                    <td>{{ project.project_date or '—' }}</td>
+                                    <td>{{ project.project_date_display }}</td>
                                     <td>
                                         <span class="status-pill {{ project_status_class(project.effective_status) }}">
                                             {{ project.effective_status }}
@@ -103,7 +103,7 @@
                                 <tr>
                                     <td>{{ project.title }}</td>
                                     <td>{{ project.idea }}</td>
-                                    <td>{{ project.project_date or '—' }}</td>
+                                    <td>{{ project.project_date_display }}</td>
                                     <td>
                                         <span class="status-pill {{ project_status_class(project.effective_status) }}">
                                             {{ project.effective_status }}

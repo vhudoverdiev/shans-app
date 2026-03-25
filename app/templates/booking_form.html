@@ -26,7 +26,7 @@
                 </div>
                 <div class="form-group">
                     <label>Контакты</label>
-                    <input class="form-input" type="text" name="client_contact" required value="{{ booking.client_contact }}">
+                    <input class="form-input" type="tel" name="client_contact" required value="{{ booking.client_contact }}" inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
                 </div>
 
                 <div class="form-group">
