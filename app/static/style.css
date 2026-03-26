@@ -3481,3 +3481,79 @@ a {
         font-size: 20px;
     }
 }
+
+/* =========================
+   SHOOTINGS UX POLISH
+========================= */
+.nearest-shooting-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+.nearest-shooting-card-active {
+    border: 1px solid #dbeafe;
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.16);
+    animation: nearestShootPulse 2s ease-in-out infinite;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nearest-shooting-card-active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.24);
+}
+
+@keyframes nearestShootPulse {
+    0%,
+    100% {
+        box-shadow: 0 16px 32px rgba(37, 99, 235, 0.16);
+    }
+    50% {
+        box-shadow: 0 20px 42px rgba(37, 99, 235, 0.28);
+    }
+}
+
+.shooting-detail-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.shooting-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.shooting-detail-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #ffffff;
+}
+
+.shooting-detail-item-full {
+    grid-column: 1 / -1;
+}
+
+.shooting-detail-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.shooting-detail-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.shooting-detail-notes {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #334155;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+    .shooting-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
