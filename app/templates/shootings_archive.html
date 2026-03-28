@@ -17,6 +17,12 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Архив съёмок</h2>
+            <div class="table-actions">
+                <a href="{{ url_for('shootings_export', scope='archive') }}" class="btn btn-success">Скачать Excel</a>
+            </div>
+        </div>
+
+        {% if shootings %}
             <div class="table-actions bulk-table-actions">
                 <form method="post" action="{{ url_for('shootings_archive_delete_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
@@ -25,11 +31,7 @@
                 <form method="post" action="{{ url_for('shootings_archive_delete_all') }}" class="inline-form bulk-delete-all-form">
                     <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
                 </form>
-                <a href="{{ url_for('shootings_export', scope='archive') }}" class="btn btn-success">Скачать Excel</a>
             </div>
-        </div>
-
-        {% if shootings %}
             <div class="table-wrapper bulk-table">
                 <table class="data-table data-table-car">
                     <thead>
