@@ -17,6 +17,7 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Архив съёмок</h2>
+            <a href="{{ url_for('shootings_export', scope='archive') }}" class="btn btn-success">Скачать Excel</a>
         </div>
 
         {% if shootings %}
@@ -47,7 +48,7 @@
                 </table>
             </div>
         {% else %}
-            <div class="empty-state">Архив пока пуст.</div>
+            <div class="empty-state empty-state-centered">Записей пока нет.</div>
         {% endif %}
     </div>
 </section>
