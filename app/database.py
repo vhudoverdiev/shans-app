@@ -1,23 +1,30 @@
-import os
 import sqlite3
 
 from config import Config
 
 
-def get_connection():
+class DictRow(dict):
     """
-    Создаёт подключение к SQLite и включает доступ к колонкам по имени.
+    Словарь-обёртка строки SQLite:
+    - поддерживает доступ по имени колонки (row["name"])
+    - поддерживает доступ по индексу (row[0], row[1], ...)
+    - имеет стандартный dict.get(...)
     """
-    database_path = os.path.abspath(Config.DATABASE_NAME)
-    print("ФАКТИЧЕСКИЙ ПУТЬ К БАЗЕ:", database_path)
 
-    conn = sqlite3.connect(database_path)
-    conn.row_factory = sqlite3.Row
-    return conn
+    def __init__(self, data, values):
+        super().__init__(data)
+        self._values = values
 
-import sqlite3
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return super().__getitem__(key)
 
-from config import Config
+
+def _dict_row_factory(cursor, row):
+    columns = [column[0] for column in cursor.description]
+    data = {column: row[index] for index, column in enumerate(columns)}
+    return DictRow(data, row)
 
 
 def get_connection():
@@ -25,7 +32,7 @@ def get_connection():
     Создаёт подключение к SQLite и включает доступ к колонкам по имени.
     """
     conn = sqlite3.connect(Config.DATABASE_NAME)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = _dict_row_factory
     return conn
 
 
