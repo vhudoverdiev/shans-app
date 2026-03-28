@@ -22,10 +22,14 @@
             <div class="stat-label">Количество съёмок</div>
             <div class="stat-value">{{ shootings_count }}</div>
         </div>
-        <div class="stat-card">
+        <a
+            href="{% if nearest_shooting %}{{ url_for('shooting_detail', shooting_id=nearest_shooting.id) }}{% else %}#{% endif %}"
+            class="stat-card nearest-shooting-card {% if nearest_shooting %}nearest-shooting-card-active{% endif %}"
+            {% if not nearest_shooting %}aria-disabled="true"{% endif %}
+        >
             <div class="stat-label">Ближайшая съёмка</div>
             <div class="stat-value">{{ nearest_shooting.shooting_date_display if nearest_shooting else '—' }}</div>
-        </div>
+        </a>
     </div>
 
     <div class="card table-card">

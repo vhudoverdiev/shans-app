@@ -18,36 +18,38 @@
 
     <div class="stats-grid car-stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Статус</div>
-            <div class="stat-value">
-                <span class="status-pill {{ project_status_class(project.effective_status) }}">{{ project.effective_status }}</span>
-            </div>
+            <div class="stat-label">Город</div>
+            <div class="stat-value">{{ project.city }}</div>
         </div>
 
         <div class="stat-card">
             <div class="stat-label">Дата проекта</div>
-            <div class="stat-value">{{ project.project_date or '—' }}</div>
+            <div class="stat-value">{{ project.project_date_display }}</div>
         </div>
 
         <div class="stat-card">
-            <div class="stat-label">Записей</div>
-            <div class="stat-value">{{ project.bookings_count }}</div>
+            <div class="stat-label">Время</div>
+            <div class="stat-value">{{ project.time_range_display }}</div>
         </div>
     </div>
 
     <div class="card table-card">
         <div class="table-header">
-            <h2 class="section-title">Описание и идея</h2>
+            <h2 class="section-title">Адрес проведения</h2>
         </div>
-        <div>
-            <strong>{{ project.idea }}</strong>
-        </div>
-        <p>{{ project.description or 'Описание проекта пока не заполнено.' }}</p>
+        <p>{{ project.address or 'Адрес не указан.' }}</p>
     </div>
 
+    <div class="car-tab-bar">
+        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'add' %}car-tab-link-active{% endif %}">Записи</a>
+        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}" class="car-tab-link {% if view_mode == 'add' %}car-tab-link-active{% endif %}">Добавить запись</a>
+    </div>
+
+    {% if view_mode != 'add' %}
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Записи на фотопроект</h2>
+            <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
         </div>
 
         {% if bookings %}
@@ -57,10 +59,12 @@
                     <tr>
                         <th>Клиент</th>
                         <th>Контакты</th>
-                        <th>Дата</th>
                         <th>Время</th>
-                        <th>Статус</th>
-                        <th>Комментарий</th>
+                        <th>Длительность</th>
+                        <th>Начало макияжа</th>
+                        <th>Стоимость</th>
+                        <th>Предоплата</th>
+                        <th>Остаток к оплате</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -69,10 +73,12 @@
                     <tr>
                         <td>{{ booking.client_name }}</td>
                         <td>{{ booking.client_contact }}</td>
-                        <td>{{ booking.booking_date }}</td>
                         <td>{{ booking.booking_time or '—' }}</td>
-                        <td><span class="status-pill">{{ booking.status }}</span></td>
-                        <td>{{ booking.comment or '—' }}</td>
+                        <td>{{ booking.duration_minutes }} мин</td>
+                        <td>{{ booking.makeup_start_time or '—' }}</td>
+                        <td>{{ booking.price }} ₽</td>
+                        <td>{{ booking.prepayment }} ₽</td>
+                        <td><span class="status-pill">{{ booking.remaining_payment }} ₽</span></td>
                         <td>
                             <div class="table-actions-icon">
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}" title="Редактировать">✏</a>
@@ -90,7 +96,9 @@
         <div class="empty-state">Записей пока нет.</div>
         {% endif %}
     </div>
+    {% endif %}
 
+    {% if view_mode == 'add' %}
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
             <div class="car-form-head-title">Добавить запись</div>
@@ -105,30 +113,39 @@
                 </div>
                 <div class="form-group">
                     <label>Контакты</label>
-                    <input class="form-input" type="text" name="client_contact" required>
+                    <input class="form-input" type="tel" name="client_contact" required inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
                 </div>
 
-                <div class="form-group">
-                    <label>Дата</label>
-                    <input class="form-input" type="date" name="booking_date" required>
-                </div>
                 <div class="form-group">
                     <label>Время</label>
-                    <input class="form-input" type="time" name="booking_time">
+                    <input class="form-input" type="time" name="booking_time" required>
                 </div>
-
                 <div class="form-group">
-                    <label>Статус</label>
-                    <select class="form-input" name="status">
-                        {% for status in booking_statuses %}
-                        <option value="{{ status }}">{{ status }}</option>
-                        {% endfor %}
+                    <label>Длительность</label>
+                    <select class="form-input" name="duration_minutes" id="duration_minutes">
+                        <option value="15">15 минут</option>
+                        <option value="30">30 минут</option>
                     </select>
                 </div>
 
-                <div class="form-group car-form-full">
-                    <label>Комментарий</label>
-                    <textarea class="form-input car-textarea" name="comment" rows="4"></textarea>
+                <div class="form-group">
+                    <label>Стоимость</label>
+                    <input class="form-input" type="number" min="0" step="1" name="price" id="booking_price" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Предоплата</label>
+                    <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Остаток к оплате</label>
+                    <input class="form-input" type="text" id="booking_remaining" value="0 ₽" readonly>
+                </div>
+
+                <div class="form-group" id="makeup_start_group" style="display:none;">
+                    <label>Начало макияжа</label>
+                    <input class="form-input" type="time" name="makeup_start_time" id="makeup_start_time">
                 </div>
             </div>
 
@@ -137,5 +154,39 @@
             </div>
         </form>
     </div>
+    {% endif %}
 </section>
+
+<script>
+    (function () {
+        const durationField = document.getElementById("duration_minutes");
+        const makeupGroup = document.getElementById("makeup_start_group");
+        const makeupField = document.getElementById("makeup_start_time");
+        const priceField = document.getElementById("booking_price");
+        const prepaymentField = document.getElementById("booking_prepayment");
+        const remainingField = document.getElementById("booking_remaining");
+
+        if (!durationField || !priceField || !prepaymentField || !remainingField) return;
+
+        function toggleMakeup() {
+            const isThirty = durationField.value === "30";
+            makeupGroup.style.display = isThirty ? "block" : "none";
+            makeupField.required = isThirty;
+            if (!isThirty) makeupField.value = "";
+        }
+
+        function updateRemaining() {
+            const price = Number(priceField.value || 0);
+            const prepayment = Number(prepaymentField.value || 0);
+            const remaining = Math.max(price - prepayment, 0);
+            remainingField.value = `${remaining} ₽`;
+        }
+
+        durationField.addEventListener("change", toggleMakeup);
+        priceField.addEventListener("input", updateRemaining);
+        prepaymentField.addEventListener("input", updateRemaining);
+        toggleMakeup();
+        updateRemaining();
+    })();
+</script>
 {% endblock %}
