@@ -202,15 +202,6 @@
 
 <script>
     (function () {
-        const bookingRows = document.querySelectorAll(".js-booking-row");
-        bookingRows.forEach((row) => {
-            row.addEventListener("click", (event) => {
-                if (event.target.closest("form, button, a, input, label")) return;
-                const href = row.dataset.href;
-                if (href) window.location.href = href;
-            });
-        });
-
         const durationField = document.getElementById("duration_minutes");
         const makeupGroup = document.getElementById("makeup_start_group");
         const makeupField = document.getElementById("makeup_start_time");

@@ -893,6 +893,10 @@ def register_routes(app):
     @login_required
     def budget_delete_all():
         entries = get_all_budget_entries()
+        if not entries:
+            flash("В таблице бюджета нет записей для удаления.", "warning")
+            return redirect(url_for("budget_manage"))
+
         for entry in entries:
             delete_budget_entry(entry["id"])
         flash("Все записи бюджета удалены.", "success")
@@ -1596,7 +1600,12 @@ def register_routes(app):
     @app.route("/car/done/delete-all", methods=["POST"])
     @login_required
     def car_done_delete_all():
-        for item in get_car_done_services():
+        items = get_car_done_services()
+        if not items:
+            flash("Нет выполненных работ для удаления.", "warning")
+            return redirect(url_for("car", tab="done"))
+
+        for item in items:
             delete_car_done_service(item["id"])
         flash("Все выполненные работы удалены.", "success")
         return redirect(url_for("car", tab="done"))
@@ -1617,7 +1626,12 @@ def register_routes(app):
     @app.route("/car/planned/delete-all", methods=["POST"])
     @login_required
     def car_planned_delete_all():
-        for item in get_car_planned_services():
+        items = get_car_planned_services()
+        if not items:
+            flash("Нет планируемых работ для удаления.", "warning")
+            return redirect(url_for("car", tab="planned"))
+
+        for item in items:
             delete_car_planned_service(item["id"])
         flash("Все планируемые работы удалены.", "success")
         return redirect(url_for("car", tab="planned"))
@@ -1741,15 +1755,24 @@ def register_routes(app):
         notifications = _build_car_notifications()
         if active_filter == "archive":
             filtered = [item for item in notifications if item["status"] == "Архив"]
+            if not filtered:
+                flash("На этой вкладке нет уведомлений для удаления.", "warning")
+                return redirect(url_for("car_notifications", filter=active_filter))
             for item in filtered:
                 delete_archived_car_notification(item["notification_key"])
         elif active_filter == "soon":
             filtered = [item for item in notifications if item["status"] == "Скоро"]
+            if not filtered:
+                flash("На этой вкладке нет уведомлений для удаления.", "warning")
+                return redirect(url_for("car_notifications", filter=active_filter))
             for item in filtered:
                 hide_car_notification(item["notification_key"])
         else:
             filtered = [item for item in notifications if item["status"] == "Нужна замена"]
             active_filter = "need"
+            if not filtered:
+                flash("На этой вкладке нет уведомлений для удаления.", "warning")
+                return redirect(url_for("car_notifications", filter=active_filter))
             for item in filtered:
                 hide_car_notification(item["notification_key"])
 

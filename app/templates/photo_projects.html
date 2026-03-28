@@ -128,16 +128,4 @@
         {% endif %}
     </div>
 </section>
-<script>
-    (function () {
-        const rows = document.querySelectorAll(".js-project-row");
-        rows.forEach((row) => {
-            row.addEventListener("click", (event) => {
-                if (event.target.closest("form, button, a, input, label")) return;
-                const href = row.dataset.href;
-                if (href) window.location.href = href;
-            });
-        });
-    })();
-</script>
 {% endblock %}
