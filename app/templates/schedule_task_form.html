@@ -48,19 +48,7 @@
 
                 <div class="form-group">
                     <label>Статус</label>
-                    {% if task %}
-                        {% if task.range_end_date %}
-                            <input class="form-input" type="text" value="Запланировано" disabled>
-                        {% else %}
-                            <select class="form-input" name="status">
-                                <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
-                                <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
-                                <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
-                            </select>
-                        {% endif %}
-                    {% else %}
-                        <input class="form-input" type="text" value="Запланировано" disabled>
-                    {% endif %}
+                    <input class="form-input" type="text" value="{% if task %}{% if task.range_end_date and task.status == 'planned' %}Протяжённая{% elif task.status == 'done' %}Выполнено{% elif task.status == 'cancelled' %}Отменено{% else %}Запланировано{% endif %}{% else %}Запланировано{% endif %}" disabled>
                 </div>
 
                 <div class="form-group">
