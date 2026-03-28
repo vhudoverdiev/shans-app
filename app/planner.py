@@ -15,8 +15,7 @@ planner_bp = Blueprint("planner", __name__)
 
 TASK_TYPES = ["Личное", "Съёмка", "Фотопроект", "Встреча", "Другое"]
 TASK_STATUSES = ["planned", "done", "cancelled"]
-PROJECT_STATUSES = ["Идея", "Подготовка", "Набор", "В работе", "Завершён", "В архиве"]
-BOOKING_STATUSES = ["Новая", "Подтверждена", "Перенос", "Завершена", "Отмена"]
+PROJECT_CITIES = ["Архангельск", "Северодвинск"]
 
 
 def init_planner_db():
@@ -54,6 +53,10 @@ def init_planner_db():
             idea TEXT NOT NULL,
             description TEXT,
             project_date TEXT,
+            city TEXT,
+            address TEXT,
+            start_time TEXT,
+            end_time TEXT,
             project_status TEXT NOT NULL DEFAULT 'Идея',
             accent_class TEXT NOT NULL DEFAULT 'accent-violet',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -64,6 +67,14 @@ def init_planner_db():
     project_columns = {row[1] for row in cursor.execute("PRAGMA table_info(photo_projects)").fetchall()}
     if "project_date" not in project_columns:
         cursor.execute("ALTER TABLE photo_projects ADD COLUMN project_date TEXT")
+    if "city" not in project_columns:
+        cursor.execute("ALTER TABLE photo_projects ADD COLUMN city TEXT")
+    if "address" not in project_columns:
+        cursor.execute("ALTER TABLE photo_projects ADD COLUMN address TEXT")
+    if "start_time" not in project_columns:
+        cursor.execute("ALTER TABLE photo_projects ADD COLUMN start_time TEXT")
+    if "end_time" not in project_columns:
+        cursor.execute("ALTER TABLE photo_projects ADD COLUMN end_time TEXT")
 
     cursor.execute(
         """
@@ -74,12 +85,25 @@ def init_planner_db():
             client_contact TEXT NOT NULL,
             booking_date TEXT NOT NULL,
             booking_time TEXT,
+            duration_minutes INTEGER DEFAULT 15,
+            makeup_start_time TEXT,
+            price REAL DEFAULT 0,
+            prepayment REAL DEFAULT 0,
             comment TEXT,
             status TEXT NOT NULL DEFAULT 'Новая',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """
     )
+    booking_columns = {row[1] for row in cursor.execute("PRAGMA table_info(photo_project_bookings)").fetchall()}
+    if "duration_minutes" not in booking_columns:
+        cursor.execute("ALTER TABLE photo_project_bookings ADD COLUMN duration_minutes INTEGER DEFAULT 15")
+    if "makeup_start_time" not in booking_columns:
+        cursor.execute("ALTER TABLE photo_project_bookings ADD COLUMN makeup_start_time TEXT")
+    if "price" not in booking_columns:
+        cursor.execute("ALTER TABLE photo_project_bookings ADD COLUMN price REAL DEFAULT 0")
+    if "prepayment" not in booking_columns:
+        cursor.execute("ALTER TABLE photo_project_bookings ADD COLUMN prepayment REAL DEFAULT 0")
 
     conn.commit()
     conn.close()
@@ -181,13 +205,84 @@ def _serialize_project_row(project):
     project_data["effective_status"] = _project_effective_status(project)
     project_data["is_archived"] = project_data["effective_status"] == "В архиве"
     project_data["project_date_display"] = _format_full_date_ru(project_data.get("project_date"))
+
+    project_data["city"] = project_data.get("city") or project_data.get("idea") or "—"
+    project_data["address"] = project_data.get("address") or project_data.get("description") or "—"
+    start_time = project_data.get("start_time") or ""
+    end_time = project_data.get("end_time") or ""
+    project_data["time_range_display"] = f"{start_time} — {end_time}" if start_time and end_time else "—"
+
     return project_data
 
 
 def _serialize_booking_row(booking):
     booking_data = dict(booking)
     booking_data["booking_date_display"] = _format_full_date_ru(booking_data.get("booking_date"))
+
+    duration = int(booking_data.get("duration_minutes") or 15)
+    price = float(booking_data.get("price") or 0)
+    prepayment = float(booking_data.get("prepayment") or 0)
+    booking_data["duration_minutes"] = duration
+    booking_data["price"] = int(price) if price.is_integer() else price
+    booking_data["prepayment"] = int(prepayment) if prepayment.is_integer() else prepayment
+    remaining = max(price - prepayment, 0)
+    booking_data["remaining_payment"] = int(remaining) if remaining.is_integer() else remaining
     return booking_data
+
+
+def _time_to_minutes(value: str) -> Optional[int]:
+    if not value:
+        return None
+    try:
+        parsed = datetime.strptime(value, "%H:%M")
+    except ValueError:
+        return None
+    return parsed.hour * 60 + parsed.minute
+
+
+def _minutes_to_time(total_minutes: int) -> str:
+    return f"{total_minutes // 60:02d}:{total_minutes % 60:02d}"
+
+
+def _build_available_slots(project, bookings):
+    start_minutes = _time_to_minutes(project.get("start_time"))
+    end_minutes = _time_to_minutes(project.get("end_time"))
+    if start_minutes is None or end_minutes is None or end_minutes <= start_minutes:
+        return {"15": [], "30": []}
+
+    intervals = []
+    for booking in bookings:
+        booking_start = _time_to_minutes(booking.get("booking_time"))
+        duration = int(booking.get("duration_minutes") or 15)
+        if booking_start is None:
+            continue
+        intervals.append((booking_start, booking_start + duration))
+
+    def has_overlap(start, end):
+        for interval_start, interval_end in intervals:
+            if start < interval_end and end > interval_start:
+                return True
+        return False
+
+    slots_15 = []
+    slots_30 = []
+    current = start_minutes
+    while current < end_minutes:
+        end_15 = current + 15
+        end_30 = current + 30
+        time_label = _minutes_to_time(current)
+        if end_15 <= end_minutes and not has_overlap(current, end_15):
+            slots_15.append(time_label)
+        if end_30 <= end_minutes and not has_overlap(current, end_30):
+            slots_30.append(time_label)
+        current += 15
+
+    return {"15": slots_15, "30": slots_30}
+
+
+
+    return booking_data
+
 
 
 def create_task(
@@ -377,15 +472,15 @@ def toggle_task_status(task_id: int):
     conn.close()
 
 
-def create_project(title: str, idea: str, description: str, project_date: str, project_status: str, accent_class: str):
+def create_project(title: str, city: str, address: str, project_date: str, start_time: str, end_time: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO photo_projects (title, idea, description, project_date, project_status, accent_class)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO photo_projects (title, idea, description, project_date, city, address, start_time, end_time, project_status, accent_class)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Идея', 'accent-violet')
         """,
-        (title.strip(), idea.strip(), description.strip(), project_date or None, project_status, accent_class),
+        (title.strip(), city.strip(), address.strip(), project_date or None, city.strip(), address.strip(), start_time or None, end_time or None),
     )
     conn.commit()
     project_id = cursor.lastrowid
@@ -393,15 +488,15 @@ def create_project(title: str, idea: str, description: str, project_date: str, p
     return project_id
 
 
-def update_project(project_id: int, title: str, idea: str, description: str, project_date: str, project_status: str, accent_class: str):
+def update_project(project_id: int, title: str, city: str, address: str, project_date: str, start_time: str, end_time: str):
     conn = get_connection()
     conn.execute(
         """
         UPDATE photo_projects
-        SET title = ?, idea = ?, description = ?, project_date = ?, project_status = ?, accent_class = ?
+        SET title = ?, idea = ?, description = ?, project_date = ?, city = ?, address = ?, start_time = ?, end_time = ?
         WHERE id = ?
         """,
-        (title.strip(), idea.strip(), description.strip(), project_date or None, project_status, accent_class, project_id),
+        (title.strip(), city.strip(), address.strip(), project_date or None, city.strip(), address.strip(), start_time or None, end_time or None, project_id),
     )
     conn.commit()
     conn.close()
@@ -454,16 +549,26 @@ def get_project(project_id: int):
     return row
 
 
-def create_booking(project_id: int, client_name: str, client_contact: str, booking_date: str, booking_time: str, comment: str, status: str):
+def create_booking(
+    project_id: int,
+    client_name: str,
+    client_contact: str,
+    booking_date: str,
+    booking_time: str,
+    duration_minutes: int,
+    makeup_start_time: str,
+    price: float,
+    prepayment: float,
+):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
         INSERT INTO photo_project_bookings (
-            project_id, client_name, client_contact, booking_date, booking_time, comment, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            project_id, client_name, client_contact, booking_date, booking_time, duration_minutes, makeup_start_time, price, prepayment, comment, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', 'Новая')
         """,
-        (project_id, client_name.strip(), client_contact.strip(), booking_date, booking_time or None, comment.strip(), status),
+        (project_id, client_name.strip(), client_contact.strip(), booking_date, booking_time or None, duration_minutes, makeup_start_time or None, price, prepayment),
     )
     conn.commit()
     booking_id = cursor.lastrowid
@@ -471,15 +576,25 @@ def create_booking(project_id: int, client_name: str, client_contact: str, booki
     return booking_id
 
 
-def update_booking(booking_id: int, client_name: str, client_contact: str, booking_date: str, booking_time: str, comment: str, status: str):
+def update_booking(
+    booking_id: int,
+    client_name: str,
+    client_contact: str,
+    booking_date: str,
+    booking_time: str,
+    duration_minutes: int,
+    makeup_start_time: str,
+    price: float,
+    prepayment: float,
+):
     conn = get_connection()
     conn.execute(
         """
         UPDATE photo_project_bookings
-        SET client_name = ?, client_contact = ?, booking_date = ?, booking_time = ?, comment = ?, status = ?
+        SET client_name = ?, client_contact = ?, booking_date = ?, booking_time = ?, duration_minutes = ?, makeup_start_time = ?, price = ?, prepayment = ?
         WHERE id = ?
         """,
-        (client_name.strip(), client_contact.strip(), booking_date, booking_time or None, comment.strip(), status, booking_id),
+        (client_name.strip(), client_contact.strip(), booking_date, booking_time or None, duration_minutes, makeup_start_time or None, price, prepayment, booking_id),
     )
     conn.commit()
     conn.close()
@@ -747,21 +862,27 @@ def photo_projects():
 def create_photo_project():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
-        idea = request.form.get("idea", "").strip()
-        description = request.form.get("description", "")
+        city = request.form.get("city", "").strip()
+        address = request.form.get("address", "").strip()
         project_date = request.form.get("project_date", "").strip()
-        project_status = request.form.get("project_status", "Идея")
-        accent_class = request.form.get("accent_class", "accent-violet")
+        start_time = request.form.get("start_time", "").strip()
+        end_time = request.form.get("end_time", "").strip()
 
-        if not title or not idea:
-            flash("Для фотопроекта нужны название и идея.", "error")
+        if not title or not city or not address or not project_date or not start_time or not end_time:
+            flash("Заполни название, город, адрес, дату и время фотопроекта.", "error")
+            return redirect(url_for("planner.create_photo_project"))
+        if city not in PROJECT_CITIES:
+            flash("Выбери город из списка.", "error")
+            return redirect(url_for("planner.create_photo_project"))
+        if (_time_to_minutes(start_time) is None or _time_to_minutes(end_time) is None or _time_to_minutes(start_time) >= _time_to_minutes(end_time)):
+            flash("Проверь время проекта: 'от' должно быть раньше 'до'.", "error")
             return redirect(url_for("planner.create_photo_project"))
 
-        project_id = create_project(title, idea, description, project_date, project_status, accent_class)
+        project_id = create_project(title, city, address, project_date, start_time, end_time)
         flash("Фотопроект создан.", "success")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
-    return render_template("photo_project_form.html", project=None, project_statuses=PROJECT_STATUSES, accent_options=_accent_options())
+    return render_template("photo_project_form.html", project=None, cities=PROJECT_CITIES)
 
 
 @planner_bp.route("/photo-projects/<int:project_id>")
@@ -772,12 +893,16 @@ def photo_project_detail(project_id: int):
         flash("Фотопроект не найден.", "error")
         return redirect(url_for("planner.photo_projects"))
     bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
+
+    view_mode = request.args.get("view", "bookings")
+    available_slots = _build_available_slots(dict(project), bookings)
+
     return render_template(
         "photo_project_detail.html",
         project=_serialize_project_row(project),
         bookings=bookings,
-        booking_statuses=BOOKING_STATUSES,
-        project_status_class=_project_status_class,
+        view_mode=view_mode,
+        available_slots=available_slots,
     )
 
 
@@ -791,25 +916,30 @@ def edit_photo_project(project_id: int):
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
-        idea = request.form.get("idea", "").strip()
-        description = request.form.get("description", "")
+        city = request.form.get("city", "").strip()
+        address = request.form.get("address", "").strip()
         project_date = request.form.get("project_date", "").strip()
-        project_status = request.form.get("project_status", "Идея")
-        accent_class = request.form.get("accent_class", "accent-violet")
+        start_time = request.form.get("start_time", "").strip()
+        end_time = request.form.get("end_time", "").strip()
 
-        if not title or not idea:
-            flash("Для фотопроекта нужны название и идея.", "error")
+        if not title or not city or not address or not project_date or not start_time or not end_time:
+            flash("Заполни название, город, адрес, дату и время фотопроекта.", "error")
+            return redirect(url_for("planner.edit_photo_project", project_id=project_id))
+        if city not in PROJECT_CITIES:
+            flash("Выбери город из списка.", "error")
+            return redirect(url_for("planner.edit_photo_project", project_id=project_id))
+        if (_time_to_minutes(start_time) is None or _time_to_minutes(end_time) is None or _time_to_minutes(start_time) >= _time_to_minutes(end_time)):
+            flash("Проверь время проекта: 'от' должно быть раньше 'до'.", "error")
             return redirect(url_for("planner.edit_photo_project", project_id=project_id))
 
-        update_project(project_id, title, idea, description, project_date, project_status, accent_class)
+        update_project(project_id, title, city, address, project_date, start_time, end_time)
         flash("Фотопроект обновлён.", "success")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
     return render_template(
         "photo_project_form.html",
         project=_serialize_project_row(project),
-        project_statuses=PROJECT_STATUSES,
-        accent_options=_accent_options(),
+        cities=PROJECT_CITIES,
     )
 
 
@@ -835,19 +965,51 @@ def create_photo_project_booking(project_id: int):
 
     client_name = request.form.get("client_name", "").strip()
     client_contact = request.form.get("client_contact", "").strip()
-    booking_date = request.form.get("booking_date", "").strip()
-    booking_time = request.form.get("booking_time", "")
-    comment = request.form.get("comment", "")
-    status = request.form.get("status", "Новая")
+    booking_time = request.form.get("booking_time", "").strip()
+    duration_minutes_raw = request.form.get("duration_minutes", "15").strip()
+    makeup_start_time = request.form.get("makeup_start_time", "").strip()
+    price_raw = request.form.get("price", "0").strip()
+    prepayment_raw = request.form.get("prepayment", "0").strip()
+    booking_date = project["project_date"] or ""
 
-    if not client_name or not client_contact or not booking_date:
-        flash("Для записи нужны клиент, контакт и дата.", "error")
+    if not client_name or not client_contact or not booking_time or not booking_date:
+        flash("Для записи нужны имя, контакт и время.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if not _is_valid_phone_number(client_contact):
+        flash("Контакт должен содержать только номер телефона.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if duration_minutes_raw not in {"15", "30"}:
+        flash("Выбери длительность 15 или 30 минут.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    duration_minutes = int(duration_minutes_raw)
+    available_slots = _build_available_slots(dict(project), [_serialize_booking_row(item) for item in get_bookings_for_project(project_id)])
+    if booking_time not in available_slots[duration_minutes_raw]:
+        flash("Это время уже занято или вне диапазона фотопроекта.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if duration_minutes == 30 and not makeup_start_time:
+        flash("Для записи на 30 минут укажи время начала макияжа.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    try:
+        price = float(price_raw or 0)
+        prepayment = float(prepayment_raw or 0)
+    except ValueError:
+        flash("Стоимость и предоплата должны быть числами.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id))
     if not _is_valid_phone_number(client_contact):
         flash("Контакт должен содержать только номер телефона.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
-    booking_id = create_booking(project_id, client_name, client_contact, booking_date, booking_time, comment, status)
+    booking_id = create_booking(
+        project_id,
+        client_name,
+        client_contact,
+        booking_date,
+        booking_time,
+        duration_minutes,
+        makeup_start_time if duration_minutes == 30 else "",
+        price,
+        prepayment,
+    )
     upsert_task_for_booking(booking_id)
     flash("Запись добавлена и автоматически попала в график.", "success")
     return redirect(url_for("planner.photo_project_detail", project_id=project_id))
@@ -864,24 +1026,58 @@ def edit_photo_project_booking(booking_id: int):
     if request.method == "POST":
         client_name = request.form.get("client_name", "").strip()
         client_contact = request.form.get("client_contact", "").strip()
-        booking_date = request.form.get("booking_date", "").strip()
-        booking_time = request.form.get("booking_time", "")
-        comment = request.form.get("comment", "")
-        status = request.form.get("status", "Новая")
+        booking_date = booking["booking_date"]
+        booking_time = request.form.get("booking_time", "").strip()
+        duration_minutes_raw = request.form.get("duration_minutes", "15").strip()
+        makeup_start_time = request.form.get("makeup_start_time", "").strip()
+        price_raw = request.form.get("price", "0").strip()
+        prepayment_raw = request.form.get("prepayment", "0").strip()
 
-        if not client_name or not client_contact or not booking_date:
-            flash("Для записи нужны клиент, контакт и дата.", "error")
+        if not client_name or not client_contact or not booking_date or not booking_time:
+            flash("Для записи нужны имя, контакт и время.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if not _is_valid_phone_number(client_contact):
+            flash("Контакт должен содержать только номер телефона.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if duration_minutes_raw not in {"15", "30"}:
+            flash("Выбери длительность 15 или 30 минут.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        duration_minutes = int(duration_minutes_raw)
+        project = get_project(booking["project_id"])
+        sibling_bookings = [_serialize_booking_row(item) for item in get_bookings_for_project(booking["project_id"]) if item["id"] != booking_id]
+        available_slots = _build_available_slots(dict(project), sibling_bookings)
+        if booking_time not in available_slots[duration_minutes_raw]:
+            flash("Это время уже занято или вне диапазона фотопроекта.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if duration_minutes == 30 and not makeup_start_time:
+            flash("Для записи на 30 минут укажи время начала макияжа.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        try:
+            price = float(price_raw or 0)
+            prepayment = float(prepayment_raw or 0)
+        except ValueError:
+            flash("Стоимость и предоплата должны быть числами.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
         if not _is_valid_phone_number(client_contact):
             flash("Контакт должен содержать только номер телефона.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
 
-        update_booking(booking_id, client_name, client_contact, booking_date, booking_time, comment, status)
+        update_booking(
+            booking_id,
+            client_name,
+            client_contact,
+            booking_date,
+            booking_time,
+            duration_minutes,
+            makeup_start_time if duration_minutes == 30 else "",
+            price,
+            prepayment,
+        )
         upsert_task_for_booking(booking_id)
         flash("Запись обновлена.", "success")
         return redirect(url_for("planner.photo_project_detail", project_id=booking["project_id"]))
 
-    return render_template("booking_form.html", booking=booking, booking_statuses=BOOKING_STATUSES)
+    return render_template("booking_form.html", booking=_serialize_booking_row(booking))
 
 
 @planner_bp.route("/photo-projects/bookings/<int:booking_id>/delete", methods=["POST"])

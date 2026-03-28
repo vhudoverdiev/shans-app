@@ -41,9 +41,9 @@
                         <thead>
                             <tr>
                                 <th>Название</th>
-                                <th>Идея</th>
+                                <th>Город</th>
                                 <th>Дата</th>
-                                <th>Статус</th>
+                                <th>Время</th>
                                 <th>Записей</th>
                                 <th>Действия</th>
                             </tr>
@@ -52,6 +52,11 @@
                             {% for project in archived_projects %}
                                 <tr>
                                     <td>{{ project.title }}</td>
+
+                                    <td>{{ project.city }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>{{ project.time_range_display }}</td>
+
                                     <td>{{ project.idea }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>
@@ -59,14 +64,13 @@
                                             {{ project.effective_status }}
                                         </span>
                                     </td>
+
                                     <td>{{ project.bookings_count }}</td>
                                     <td>
                                         <div class="table-actions-icon">
-                                            <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}"
-                                               class="icon-action-btn icon-edit"
-                                               title="Открыть">
-                                                →
-                                            </a>
+                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
+                                                <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -91,17 +95,22 @@
                         <thead>
                             <tr>
                                 <th>Название</th>
-                                <th>Идея</th>
+                                <th>Город</th>
                                 <th>Дата</th>
-                                <th>Статус</th>
+                                <th>Время</th>
                                 <th>Записей</th>
                                 <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for project in projects %}
-                                <tr>
+                                <tr onclick="window.location='{{ url_for('planner.photo_project_detail', project_id=project.id) }}'" style="cursor:pointer;">
                                     <td>{{ project.title }}</td>
+
+                                    <td>{{ project.city }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>{{ project.time_range_display }}</td>
+
                                     <td>{{ project.idea }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>
@@ -109,15 +118,12 @@
                                             {{ project.effective_status }}
                                         </span>
                                     </td>
+
                                     <td>{{ project.bookings_count }}</td>
                                     <td>
-                                        <div class="table-actions-icon">
-                                            <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}"
-                                               class="icon-action-btn icon-edit"
-                                               title="Открыть">
-                                                →
-                                            </a>
-                                        </div>
+                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
+                                            <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
+                                        </form>
                                     </td>
                                 </tr>
                             {% endfor %}
