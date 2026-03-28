@@ -46,14 +46,16 @@
                     <input class="form-input" type="date" name="range_end_date" value="{{ task.range_end_date if task and task.range_end_date else (initial_date if not task else task.task_date) }}">
                 </div>
 
+                {% if task %}
                 <div class="form-group">
                     <label>Тип</label>
                     <select class="form-input" name="task_type">
                         {% for item in task_types %}
-                        <option value="{{ item }}" {% if (task and task.task_type == item) or (not task and item == 'Личное') %}selected{% endif %}>{{ item }}</option>
+                        <option value="{{ item }}" {% if task.task_type == item %}selected{% endif %}>{{ item }}</option>
                         {% endfor %}
                     </select>
                 </div>
+                {% endif %}
                 <div class="form-group">
                     <label>Статус</label>
                     {% if task %}
@@ -75,6 +77,7 @@
                     </select>
                 </div>
 
+                {% if task %}
                 <div class="form-group car-form-full">
                     <label>Привязать к фотопроекту</label>
                     <select class="form-input" name="project_id">
@@ -84,6 +87,7 @@
                         {% endfor %}
                     </select>
                 </div>
+                {% endif %}
 
             </div>
 
