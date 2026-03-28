@@ -22,6 +22,13 @@
             {% if not task %}
             <input type="hidden" name="return_view" value="day">
             {% endif %}
+            {% if not task %}
+            <div class="car-tab-bar planner-form-mode-tabs">
+                <button class="car-tab-link car-tab-link-active planner-mode-tab" type="button" data-mode="single">Обычная</button>
+                <button class="car-tab-link planner-mode-tab" type="button" data-mode="range">Протяжённая</button>
+            </div>
+            <input type="hidden" name="task_form_mode" id="task_form_mode" value="single">
+            {% endif %}
             <div class="car-form-grid">
                 <div class="form-group">
                     <label>Название</label>
@@ -33,12 +40,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Начало</label>
+                    <label>Время</label>
                     <input class="form-input" type="time" name="start_time" value="{{ task.start_time if task else '' }}">
                 </div>
-                <div class="form-group">
-                    <label>Конец</label>
-                    <input class="form-input" type="time" name="end_time" value="{{ task.end_time if task else '' }}">
+                <div class="form-group planner-range-field" {% if task %}style="display:none"{% endif %}>
+                    <label>Дата окончания</label>
+                    <input class="form-input" type="date" name="range_end_date" value="{{ task.range_end_date if task else initial_date }}">
                 </div>
 
                 <div class="form-group">
@@ -51,10 +58,22 @@
                 </div>
                 <div class="form-group">
                     <label>Статус</label>
-                    <select class="form-input" name="status">
-                        <option value="planned" {% if (task and task.status == 'planned') or not task %}selected{% endif %}>Запланировано</option>
-                        <option value="done" {% if task and task.status == 'done' %}selected{% endif %}>Выполнено</option>
-                        <option value="cancelled" {% if task and task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
+                    {% if task %}
+                        <select class="form-input" name="status">
+                            <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
+                            <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
+                            <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
+                        </select>
+                    {% else %}
+                        <input class="form-input" type="text" value="Запланировано" disabled>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Важность</label>
+                    <select class="form-input" name="is_important">
+                        <option value="no" {% if not task or not task.is_important %}selected{% endif %}>Нет</option>
+                        <option value="yes" {% if task and task.is_important %}selected{% endif %}>Да</option>
                     </select>
                 </div>
 
@@ -68,10 +87,6 @@
                     </select>
                 </div>
 
-                <div class="form-group car-form-full">
-                    <label>Описание</label>
-                    <textarea class="form-input car-textarea" name="description" rows="5">{{ task.description if task else '' }}</textarea>
-                </div>
             </div>
 
             <div class="car-form-actions">
@@ -81,4 +96,28 @@
         </form>
     </div>
 </section>
+{% if not task %}
+<script>
+    (function () {
+        const tabs = document.querySelectorAll('.planner-mode-tab');
+        const modeInput = document.getElementById('task_form_mode');
+        const rangeField = document.querySelector('.planner-range-field');
+        if (!tabs.length || !modeInput || !rangeField) return;
+
+        function applyMode(mode) {
+            modeInput.value = mode;
+            tabs.forEach((tab) => {
+                tab.classList.toggle('car-tab-link-active', tab.dataset.mode === mode);
+            });
+            rangeField.style.display = mode === 'range' ? '' : 'none';
+        }
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', function () {
+                applyMode(tab.dataset.mode);
+            });
+        });
+    })();
+</script>
+{% endif %}
 {% endblock %}

@@ -32,6 +32,8 @@ def init_planner_db():
             task_date TEXT NOT NULL,
             start_time TEXT,
             end_time TEXT,
+            is_important INTEGER NOT NULL DEFAULT 0,
+            range_end_date TEXT,
             task_type TEXT NOT NULL DEFAULT 'Личное',
             status TEXT NOT NULL DEFAULT 'planned',
             project_id INTEGER,
@@ -45,6 +47,10 @@ def init_planner_db():
     existing_columns = {row[1] for row in cursor.execute("PRAGMA table_info(schedule_tasks)").fetchall()}
     if "shooting_id" not in existing_columns:
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN shooting_id INTEGER")
+    if "is_important" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN is_important INTEGER NOT NULL DEFAULT 0")
+    if "range_end_date" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN range_end_date TEXT")
 
     cursor.execute(
         """
@@ -332,6 +338,8 @@ def create_task(
     description: str = "",
     start_time: str = "",
     end_time: str = "",
+    is_important: int = 0,
+    range_end_date: str = "",
     task_type: str = "Личное",
     status: str = "planned",
     project_id: Optional[int] = None,
@@ -342,9 +350,9 @@ def create_task(
     conn.execute(
         """
         INSERT INTO schedule_tasks (
-            title, description, task_date, start_time, end_time,
+            title, description, task_date, start_time, end_time, is_important, range_end_date,
             task_type, status, project_id, booking_id, shooting_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title.strip(),
@@ -352,6 +360,8 @@ def create_task(
             task_date,
             start_time or None,
             end_time or None,
+            1 if is_important else 0,
+            range_end_date or None,
             task_type,
             status,
             project_id,
@@ -370,6 +380,8 @@ def update_task(
     description: str = "",
     start_time: str = "",
     end_time: str = "",
+    is_important: int = 0,
+    range_end_date: str = "",
     task_type: str = "Личное",
     status: str = "planned",
     project_id: Optional[int] = None,
@@ -379,7 +391,7 @@ def update_task(
         """
         UPDATE schedule_tasks
         SET title = ?, description = ?, task_date = ?, start_time = ?,
-            end_time = ?, task_type = ?, status = ?, project_id = ?
+            end_time = ?, is_important = ?, range_end_date = ?, task_type = ?, status = ?, project_id = ?
         WHERE id = ?
         """,
         (
@@ -388,6 +400,8 @@ def update_task(
             task_date,
             start_time or None,
             end_time or None,
+            1 if is_important else 0,
+            range_end_date or None,
             task_type,
             status,
             project_id,
@@ -452,7 +466,7 @@ def upsert_task_for_shooting(
     prepayment=None,
     notes: str = "",
 ):
-    title = f"Съёмка: {project_name}"
+    title = project_name
 
     description_parts = [f"Клиент: {client_name}"]
     if phone:
@@ -506,7 +520,9 @@ def toggle_task_status(task_id: int):
     task = get_task(task_id)
     if not task:
         return
-    new_status = "done" if task["status"] != "done" else "planned"
+    if task["status"] == "done":
+        return
+    new_status = "done"
     conn = get_connection()
     conn.execute("UPDATE schedule_tasks SET status = ? WHERE id = ?", (new_status, task_id))
     conn.commit()
@@ -731,7 +747,7 @@ def _next_date(selected_date: date, current_view: str) -> date:
 
 def build_schedule_context(selected_date: date, current_view: str):
     if current_view not in {"day", "month"}:
-        current_view = "month"
+        current_view = "day"
 
     week_start = selected_date - timedelta(days=selected_date.weekday())
     week_end = week_start + timedelta(days=6)
@@ -766,6 +782,8 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "has_photo_or_shooting": any(
                     item["task_type"] in {"Фотопроект", "Съёмка"} for item in tasks_by_date.get(day_key, [])
                 ),
+                "has_important": any(item["is_important"] for item in tasks_by_date.get(day_key, [])),
+                "is_past": current_day < date.today(),
             }
         )
         current_day += timedelta(days=1)
@@ -802,7 +820,7 @@ def build_schedule_context(selected_date: date, current_view: str):
 @planner_bp.route("/planner.schedule")
 @login_required
 def schedule():
-    current_view = request.args.get("view", "month")
+    current_view = request.args.get("view", "day")
     selected_date = _parse_date(request.args.get("date"), default=date.today())
     context = build_schedule_context(selected_date, current_view)
     return render_template("schedule.html", **context)
@@ -826,9 +844,11 @@ def create_schedule_task():
     task_date = request.form.get("task_date", "").strip()
     description = request.form.get("description", "")
     start_time = request.form.get("start_time", "")
-    end_time = request.form.get("end_time", "")
+    task_form_mode = request.form.get("task_form_mode", "single")
+    range_end_date = request.form.get("range_end_date", "").strip()
     task_type = request.form.get("task_type", "Личное")
-    status = request.form.get("status", "planned")
+    status = "planned"
+    is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
     project_id_raw = request.form.get("project_id", "").strip()
     project_id = int(project_id_raw) if project_id_raw.isdigit() else None
 
@@ -836,7 +856,43 @@ def create_schedule_task():
         flash("Для задачи нужны название и дата.", "error")
         return redirect(url_for("planner.schedule", date=task_date or date.today().isoformat()))
 
-    create_task(title, task_date, description, start_time, end_time, task_type, status, project_id)
+    if task_form_mode == "range":
+        range_start_date = _parse_date(task_date)
+        range_finish_date = _parse_date(range_end_date, default=range_start_date)
+        if range_finish_date < range_start_date:
+            flash("Конечная дата не может быть раньше начальной.", "error")
+            return redirect(url_for("planner.create_schedule_task", date=task_date or date.today().isoformat()))
+        current_date = range_start_date
+        created_count = 0
+        while current_date <= range_finish_date:
+            create_task(
+                title,
+                current_date.isoformat(),
+                description,
+                start_time,
+                "",
+                task_type,
+                status,
+                project_id,
+                is_important=is_important,
+                range_end_date=range_finish_date.isoformat(),
+            )
+            created_count += 1
+            current_date += timedelta(days=1)
+        flash(f"Добавлена протяжённая задача ({created_count} дн.).", "success")
+        return redirect(url_for("planner.schedule", date=task_date, view="day"))
+
+    create_task(
+        title,
+        task_date,
+        description,
+        start_time,
+        "",
+        task_type,
+        status,
+        project_id,
+        is_important=is_important,
+    )
     flash("Задача добавлена в график.", "success")
     return redirect(url_for("planner.schedule", date=task_date, view=request.form.get("return_view", "month")))
 
@@ -854,9 +910,10 @@ def edit_schedule_task(task_id: int):
         task_date = request.form.get("task_date", "").strip()
         description = request.form.get("description", "")
         start_time = request.form.get("start_time", "")
-        end_time = request.form.get("end_time", "")
+        range_end_date = request.form.get("range_end_date", "").strip()
         task_type = request.form.get("task_type", "Личное")
         status = request.form.get("status", "planned")
+        is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
         project_id_raw = request.form.get("project_id", "").strip()
         project_id = int(project_id_raw) if project_id_raw.isdigit() else None
 
@@ -864,7 +921,19 @@ def edit_schedule_task(task_id: int):
             flash("Для задачи нужны название и дата.", "error")
             return redirect(url_for("planner.edit_schedule_task", task_id=task_id))
 
-        update_task(task_id, title, task_date, description, start_time, end_time, task_type, status, project_id)
+        update_task(
+            task_id,
+            title,
+            task_date,
+            description,
+            start_time,
+            "",
+            task_type,
+            status,
+            project_id,
+            is_important=is_important,
+            range_end_date=range_end_date,
+        )
         flash("Задача обновлена.", "success")
         return redirect(url_for("planner.schedule", date=task_date, view="day"))
 
@@ -933,6 +1002,24 @@ def toggle_schedule_task(task_id: int):
         return redirect(url_for("planner.schedule"))
     toggle_task_status(task_id)
     flash("Статус задачи обновлён.", "success")
+    return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
+
+
+@planner_bp.route("/planner.schedule/task/<int:task_id>/move-next-day", methods=["POST"])
+@login_required
+def move_schedule_task_next_day(task_id: int):
+    task = get_task(task_id)
+    if not task:
+        flash("Задача не найдена.", "error")
+        return redirect(url_for("planner.schedule"))
+
+    current_date = _parse_date(task["task_date"])
+    next_day = (current_date + timedelta(days=1)).isoformat()
+    conn = get_connection()
+    conn.execute("UPDATE schedule_tasks SET task_date = ? WHERE id = ?", (next_day, task_id))
+    conn.commit()
+    conn.close()
+    flash("Задача перенесена на следующий день.", "success")
     return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
 
 
