@@ -85,6 +85,17 @@
                 });
             });
 
+            document.querySelectorAll(".table-card").forEach(function (card) {
+                const bulkActions = card.querySelector(".bulk-table-actions");
+                if (!bulkActions) return;
+
+                const hasDataRows = card.querySelectorAll(".bulk-row-checkbox").length > 0;
+                if (!hasDataRows) {
+                    card.classList.add("bulk-selection-hidden");
+                    bulkActions.classList.add("bulk-actions-hidden");
+                }
+            });
+
             document.querySelectorAll(".bulk-table").forEach(function (wrapper) {
                 const scope = wrapper.closest(".table-card") || wrapper.parentElement || wrapper;
                 const selectedForm = scope.querySelector(".bulk-delete-selected-form");
