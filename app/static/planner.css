@@ -582,6 +582,10 @@
     opacity:.42;
 }
 
+.planner-day-card-past .planner-day-date{
+    opacity:.5;
+}
+
 .planner-shooting-open-btn{
     border-color:#eab308;
     color:#92400e;
