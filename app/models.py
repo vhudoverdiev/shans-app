@@ -682,6 +682,78 @@ def delete_car_planned_service(service_id):
     conn.close()
 
 
+def replace_car_services(done_services, planned_services):
+    """
+    Полностью заменяет данные в разделах выполненных и планируемых работ.
+    Используется для массового импорта из Excel.
+    """
+    conn = get_connection()
+
+    conn.execute("DELETE FROM car_done_services")
+    conn.execute("DELETE FROM car_planned_services")
+
+    if done_services:
+        conn.executemany(
+            """
+            INSERT INTO car_done_services (
+                service_name,
+                service_cost,
+                mileage,
+                service_date,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("service_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("service_date", ""),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Выполнено"),
+                )
+                for item in done_services
+            ],
+        )
+
+    if planned_services:
+        conn.executemany(
+            """
+            INSERT INTO car_planned_services (
+                service_name,
+                planned_cost,
+                mileage,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("planned_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Планируется"),
+                )
+                for item in planned_services
+            ],
+        )
+
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # CAR - MOVE BETWEEN SECTIONS
 # =========================================================
