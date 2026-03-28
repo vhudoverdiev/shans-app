@@ -70,7 +70,7 @@
                 </thead>
                 <tbody>
                     {% for s in shootings %}
-                    <tr data-href="{{ url_for('shooting_detail', shooting_id=s.id) }}">
+                    <tr class="js-shooting-row" data-href="{{ url_for('shooting_detail', shooting_id=s.id) }}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ s.id }}" aria-label="Выбрать запись"></td>
                         <td>{{ s.shooting_date_display }}</td>
                         <td>{{ s.shooting_time or '—' }}</td>

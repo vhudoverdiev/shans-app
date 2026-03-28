@@ -18,7 +18,7 @@
         </div>
 
         {% if shootings %}
-            <div class="table-actions bulk-table-actions">
+            <div class="table-actions bulk-table-actions shootings-archive-actions">
                 <form method="post" action="{{ url_for('shootings_archive_delete_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
                     <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
@@ -43,7 +43,7 @@
                     </thead>
                     <tbody>
                         {% for shooting in shootings %}
-                            <tr data-href="{{ url_for('shooting_detail', shooting_id=shooting.id) }}">
+                            <tr class="js-shooting-row" data-href="{{ url_for('shooting_detail', shooting_id=shooting.id) }}">
                                 <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ shooting.id }}" aria-label="Выбрать запись"></td>
                                 <td>{{ shooting.shooting_date_display }}</td>
                                 <td>{{ shooting.shooting_time or '—' }}</td>

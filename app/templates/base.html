@@ -261,7 +261,7 @@
 
                     const tableCard = row.closest(".table-card");
                     const bulkActions = tableCard ? tableCard.querySelector(".bulk-table-actions") : null;
-                    if (bulkActions && bulkActions.classList.contains("bulk-actions-hidden")) {
+                    if (bulkActions && !bulkActions.classList.contains("bulk-actions-hidden")) {
                         event.preventDefault();
                         return;
                     }
