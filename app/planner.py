@@ -6,10 +6,11 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 import re
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
 from flask_login import login_required
 
 from app.database import get_connection
+from app.utils import build_photo_project_excel
 
 planner_bp = Blueprint("planner", __name__)
 
@@ -931,6 +932,27 @@ def photo_project_detail(project_id: int):
         bookings=bookings,
         view_mode=view_mode,
         available_slots=available_slots,
+    )
+
+
+@planner_bp.route("/photo-projects/<int:project_id>/export")
+@login_required
+def photo_project_export(project_id: int):
+    project = get_project(project_id)
+    if not project:
+        flash("Фотопроект не найден.", "error")
+        return redirect(url_for("planner.photo_projects"))
+
+    serialized_project = _serialize_project_row(project)
+    bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
+    excel_file = build_photo_project_excel(serialized_project, bookings)
+    project_slug = (serialized_project.get("title") or f"project_{project_id}").replace(" ", "_")
+
+    return send_file(
+        excel_file,
+        as_attachment=True,
+        download_name=f"{project_slug}_bookings.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 

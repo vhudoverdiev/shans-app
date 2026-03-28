@@ -220,3 +220,126 @@ def build_shootings_excel(shootings, report_title):
     wb.save(output)
     output.seek(0)
     return output
+
+
+def build_photo_project_excel(project, bookings):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Фотопроект"
+
+    title_fill = PatternFill("solid", fgColor="166534")
+    section_fill = PatternFill("solid", fgColor="DCFCE7")
+    header_fill = PatternFill("solid", fgColor="BBF7D0")
+    odd_row_fill = PatternFill("solid", fgColor="F0FDF4")
+    even_row_fill = PatternFill("solid", fgColor="FFFFFF")
+
+    white_bold_font = Font(color="FFFFFF", bold=True, size=14)
+    bold_font = Font(bold=True)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin = Side(style="thin", color="D1D5DB")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    ws.merge_cells("A1:K1")
+    ws["A1"] = f"Фотопроект: {project.get('title') or 'Без названия'}"
+    ws["A1"].fill = title_fill
+    ws["A1"].font = white_bold_font
+    ws["A1"].alignment = center
+
+    ws.merge_cells("A3:K3")
+    ws["A3"] = (
+        f"Город: {project.get('city') or '—'} | "
+        f"Дата: {project.get('project_date_display') or project.get('project_date') or '—'} | "
+        f"Время: {project.get('time_range_display') or '—'}"
+    )
+    ws["A3"].fill = section_fill
+    ws["A3"].font = bold_font
+    ws["A3"].alignment = left
+
+    ws.merge_cells("A4:K4")
+    ws["A4"] = f"Адрес: {project.get('address') or '—'}"
+    ws["A4"].fill = section_fill
+    ws["A4"].font = bold_font
+    ws["A4"].alignment = left
+
+    ws.merge_cells("A5:K5")
+    ws["A5"] = f"Всего записей: {len(bookings)}"
+    ws["A5"].fill = section_fill
+    ws["A5"].font = bold_font
+    ws["A5"].alignment = left
+
+    headers = [
+        "Клиент",
+        "Контакты",
+        "Дата",
+        "Время",
+        "Длительность",
+        "Начало макияжа",
+        "Стоимость",
+        "Предоплата",
+        "Остаток",
+        "Статус",
+        "Комментарий",
+    ]
+
+    headers_row = 7
+    for col_index, header in enumerate(headers, start=1):
+        cell = ws.cell(row=headers_row, column=col_index)
+        cell.value = header
+        cell.font = bold_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+
+    data_row = headers_row + 1
+    for index, booking in enumerate(bookings):
+        price = int(round(float(booking.get("price") or 0)))
+        prepayment = int(round(float(booking.get("prepayment") or 0)))
+        remaining_payment = max(price - prepayment, 0)
+        row_fill = odd_row_fill if index % 2 == 0 else even_row_fill
+
+        values = [
+            booking.get("client_name") or "—",
+            booking.get("client_contact") or "—",
+            booking.get("booking_date_display") or booking.get("booking_date") or "—",
+            booking.get("booking_time") or "—",
+            f"{booking.get('duration_minutes') or 15} мин",
+            booking.get("makeup_start_time") or "—",
+            price,
+            prepayment,
+            remaining_payment,
+            booking.get("status") or "—",
+            booking.get("comment") or "—",
+        ]
+
+        for col_index, value in enumerate(values, start=1):
+            cell = ws.cell(row=data_row, column=col_index, value=value)
+            cell.border = border
+            cell.alignment = center if col_index in {4, 5, 6, 10} else left
+            cell.fill = row_fill
+            if col_index in {7, 8, 9}:
+                cell.number_format = '# ##0 "Р"'
+        data_row += 1
+
+    column_widths = {
+        1: 22,
+        2: 24,
+        3: 16,
+        4: 10,
+        5: 14,
+        6: 16,
+        7: 14,
+        8: 14,
+        9: 14,
+        10: 14,
+        11: 28,
+    }
+    for col_index, width in column_widths.items():
+        ws.column_dimensions[get_column_letter(col_index)].width = width
+
+    ws.freeze_panes = "A8"
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
