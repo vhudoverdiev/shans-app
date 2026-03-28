@@ -156,6 +156,17 @@
                     }
                 }
 
+                function toggleBulkActionsBySelection() {
+                    if (!hasBulkControls || !bulkActions || !selectionMode || !hasDataRows) return;
+                    const checked = checkboxes.filter(function (item) { return item.checked; }).length;
+                    if (checked === 0) {
+                        bulkActions.classList.add("bulk-actions-hidden");
+                        actionsVisible = false;
+                        return;
+                    }
+                    showBulkActions();
+                }
+
                 function hideEverything() {
                     resetSelection();
                     setSelectionMode(false);
@@ -163,16 +174,16 @@
 
                 if (selectAll) {
                     selectAll.addEventListener("change", function () {
-                        showBulkActions();
                         checkboxes.forEach(function (item) { item.checked = selectAll.checked; });
                         syncState();
+                        toggleBulkActionsBySelection();
                     });
                 }
 
                 checkboxes.forEach(function (item) {
                     item.addEventListener("change", function () {
-                        showBulkActions();
                         syncState();
+                        toggleBulkActionsBySelection();
                     });
                 });
 

@@ -10,18 +10,6 @@
         </div>
 
         <div class="page-actions">
-            <form action="{{ url_for('car_import_excel') }}"
-                  method="post"
-                  enctype="multipart/form-data"
-                  class="inline-form">
-                <label for="car-excel-file" class="btn btn-secondary">Загрузить Excel</label>
-                <input id="car-excel-file"
-                       type="file"
-                       name="excel_file"
-                       accept=".xlsx,.xlsm"
-                       style="display:none"
-                       onchange="this.form.submit()">
-            </form>
             <a href="{{ url_for('car_notifications') }}" class="btn btn-secondary">Переодические ТО</a>
             <a href="{{ url_for('car_manage') }}" class="btn btn-primary">Добавить работу</a>
         </div>
