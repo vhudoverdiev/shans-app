@@ -280,11 +280,25 @@ def _build_available_slots(project, bookings):
     return {"15": slots_15, "30": slots_30}
 
 
+def _is_booking_time_available(project, bookings, booking_time: str, duration_minutes: int) -> bool:
+    booking_start = _time_to_minutes(booking_time)
+    project_start = _time_to_minutes(project.get("start_time"))
+    project_end = _time_to_minutes(project.get("end_time"))
+    if booking_start is None or project_start is None or project_end is None:
+        return False
+    booking_end = booking_start + duration_minutes
+    if booking_start < project_start or booking_end > project_end:
+        return False
 
-    return booking_data
-
-
-
+    for existing_booking in bookings:
+        existing_start = _time_to_minutes(existing_booking.get("booking_time"))
+        existing_duration = int(existing_booking.get("duration_minutes") or 15)
+        if existing_start is None:
+            continue
+        existing_end = existing_start + existing_duration
+        if booking_start < existing_end and booking_end > existing_start:
+            return False
+    return True
 def create_task(
     title: str,
     task_date: str,
@@ -981,8 +995,8 @@ def create_photo_project_booking(project_id: int):
         flash("Выбери длительность 15 или 30 минут.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
     duration_minutes = int(duration_minutes_raw)
-    available_slots = _build_available_slots(dict(project), [_serialize_booking_row(item) for item in get_bookings_for_project(project_id)])
-    if booking_time not in available_slots[duration_minutes_raw]:
+    sibling_bookings = [_serialize_booking_row(item) for item in get_bookings_for_project(project_id)]
+    if not _is_booking_time_available(dict(project), sibling_bookings, booking_time, duration_minutes):
         flash("Это время уже занято или вне диапазона фотопроекта.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
     if duration_minutes == 30 and not makeup_start_time:
@@ -1041,8 +1055,7 @@ def edit_photo_project_booking(booking_id: int):
         duration_minutes = int(duration_minutes_raw)
         project = get_project(booking["project_id"])
         sibling_bookings = [_serialize_booking_row(item) for item in get_bookings_for_project(booking["project_id"]) if item["id"] != booking_id]
-        available_slots = _build_available_slots(dict(project), sibling_bookings)
-        if booking_time not in available_slots[duration_minutes_raw]:
+        if not _is_booking_time_available(dict(project), sibling_bookings, booking_time, duration_minutes):
             flash("Это время уже занято или вне диапазона фотопроекта.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
         if duration_minutes == 30 and not makeup_start_time:

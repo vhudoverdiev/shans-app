@@ -49,6 +49,7 @@
                         </thead>
                         <tbody>
                             {% for project in archived_projects %}
+                                <tr class="js-project-row" data-href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}">
                                 <tr>
                                     <td>
                                         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
@@ -59,7 +60,7 @@
                                     <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
                                         <div class="table-actions-icon">
-                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
+                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                                 <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
                                             </form>
                                         </div>
@@ -95,7 +96,7 @@
                         </thead>
                         <tbody>
                             {% for project in projects %}
-                                <tr>
+                                <tr class="js-project-row" data-href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}">
                                     <td>
                                         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
                                     </td>
@@ -105,6 +106,7 @@
                                     <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
                                         <div class="table-actions-icon">
+                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
                                                 <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
                                             </form>
@@ -123,4 +125,16 @@
         {% endif %}
     </div>
 </section>
+<script>
+    (function () {
+        const rows = document.querySelectorAll(".js-project-row");
+        rows.forEach((row) => {
+            row.addEventListener("click", (event) => {
+                if (event.target.closest("form, button, a")) return;
+                const href = row.dataset.href;
+                if (href) window.location.href = href;
+            });
+        });
+    })();
+</script>
 {% endblock %}

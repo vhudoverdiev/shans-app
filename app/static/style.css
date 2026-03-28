@@ -3567,6 +3567,10 @@ a {
     background: #f8fafc;
 }
 
+.js-project-row {
+    cursor: pointer;
+}
+
 .booking-meta-time {
     color: #64748b;
     font-size: 12px;
@@ -3598,6 +3602,8 @@ a {
 }
 
 .remaining-payment-preview-complete {
+    border-color: #c7d2fe;
+    background: linear-gradient(145deg, #eef2ff, #f8fafc);
     border-color: #bbf7d0;
     background: linear-gradient(145deg, #ecfdf3, #f8fafc);
 }
