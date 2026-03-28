@@ -70,13 +70,23 @@
         {% else %}
             <div class="table-header">
                 <h2 class="section-title">Активные фотопроекты</h2>
+                <div class="table-actions bulk-table-actions">
+                    <form method="post" action="{{ url_for('planner.delete_photo_projects_selected') }}" class="inline-form bulk-delete-selected-form">
+                        <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                        <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                    </form>
+                    <form method="post" action="{{ url_for('planner.delete_photo_projects_all') }}" class="inline-form bulk-delete-all-form">
+                        <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                    </form>
+                </div>
             </div>
 
             {% if projects %}
-                <div class="table-wrapper">
+                <div class="table-wrapper bulk-table">
                     <table class="data-table data-table-car data-table-photo-projects">
                         <thead>
                             <tr>
+                                <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                                 <th>Название</th>
                                 <th>Город</th>
                                 <th>Дата</th>
@@ -88,6 +98,7 @@
                         <tbody>
                             {% for project in projects %}
                                 <tr class="js-project-row" data-href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}">
+                                    <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ project.id }}" aria-label="Выбрать запись"></td>
                                     <td>
                                         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
                                     </td>
@@ -122,7 +133,9 @@
         const rows = document.querySelectorAll(".js-project-row");
         rows.forEach((row) => {
             row.addEventListener("click", (event) => {
-                if (event.target.closest("form, button, a")) return;
+                if (event.target.closest("form, button, a, input, label")) return;
+                const scope = row.closest(".table-card");
+                if (scope && scope.classList.contains("bulk-actions-collapsed")) return;
                 const href = row.dataset.href;
                 if (href) window.location.href = href;
             });

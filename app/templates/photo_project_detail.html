@@ -49,14 +49,26 @@
         <div class="table-header">
             <h2 class="section-title">Записи на фотопроект</h2>
             {% if not project.is_archived %}
-            <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
+            <div class="table-actions">
+                <form method="post" action="{{ url_for('planner.delete_photo_project_bookings_selected', project_id=project.id) }}" class="inline-form bulk-delete-selected-form">
+                    <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                    <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                </form>
+                <form method="post" action="{{ url_for('planner.delete_photo_project_bookings_all', project_id=project.id) }}" class="inline-form bulk-delete-all-form">
+                    <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                </form>
+                <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
+            </div>
             {% endif %}
         </div>
 
-        <div class="table-wrapper">
+        <div class="table-wrapper bulk-table">
             <table class="data-table data-table-car data-table-photo-bookings">
                 <thead>
                     <tr>
+                        {% if not project.is_archived %}
+                        <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
+                        {% endif %}
                         <th>Клиент</th>
                         <th>Контакты</th>
                         <th>Дата и время</th>
@@ -70,6 +82,9 @@
                 <tbody>
                     {% for booking in bookings %}
                     <tr class="js-booking-row" data-href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}">
+                        {% if not project.is_archived %}
+                        <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ booking.id }}" aria-label="Выбрать запись"></td>
+                        {% endif %}
                         <td>
                             <a class="status-pill-link" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Открыть запись">{{ booking.client_name }}</a>
                         </td>
@@ -93,7 +108,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="{{ 6 if not project.is_archived else 5 }}">
+                        <td colspan="{{ 7 if not project.is_archived else 5 }}">
                             <div class="empty-state">Записей пока нет.</div>
                         </td>
                     </tr>
@@ -190,7 +205,9 @@
         const bookingRows = document.querySelectorAll(".js-booking-row");
         bookingRows.forEach((row) => {
             row.addEventListener("click", (event) => {
-                if (event.target.closest("form, button, a")) return;
+                if (event.target.closest("form, button, a, input, label")) return;
+                const scope = row.closest(".table-card");
+                if (scope && scope.classList.contains("bulk-actions-collapsed")) return;
                 const href = row.dataset.href;
                 if (href) window.location.href = href;
             });

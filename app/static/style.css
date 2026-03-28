@@ -242,6 +242,23 @@ a {
     min-height: 40px;
 }
 
+.header-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    color: #334155;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.header-icon-link:hover {
+    background: #eef2ff;
+    color: #1d4ed8;
+}
+
 /* =========================
    FLASH
 ========================= */
@@ -584,6 +601,32 @@ a {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.bulk-table-actions {
+    justify-content: flex-end;
+}
+
+.bulk-delete-selected-form,
+.bulk-delete-all-form {
+    display: none;
+}
+
+.table-card.bulk-actions-visible .bulk-delete-selected-form,
+.table-card.bulk-actions-visible .bulk-delete-all-form {
+    display: inline-flex;
+}
+
+.bulk-col {
+    width: 46px;
+    min-width: 46px;
+    text-align: center !important;
+}
+
+.bulk-col input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 .inline-form {
@@ -3730,6 +3773,56 @@ a {
 
 .import-center-form {
     margin-top: 14px;
+}
+
+.import-file-input {
+    display: none;
+}
+
+.import-file-picker {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.import-file-picker-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid #bfdbfe;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #eff6ff, #f8fafc);
+    cursor: pointer;
+}
+
+.import-file-picker-label:hover {
+    border-color: #93c5fd;
+}
+
+.import-file-picker-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.import-file-picker-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    gap: 2px;
+}
+
+.import-file-picker-text small {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.import-file-name {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .import-mode-switch {

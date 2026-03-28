@@ -158,6 +158,11 @@
         color: #64748b;
         margin-bottom: 4px;
     }
+
+    .data-table td.bulk-col::before,
+    .data-table th.bulk-col::before {
+        content: none;
+    }
 }
 
 @media (max-width: 420px) {

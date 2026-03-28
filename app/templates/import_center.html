@@ -49,10 +49,20 @@
 
                 <div class="form-group">
                     <label for="excel_file">Excel-файл</label>
+                    <div class="import-file-picker">
+                        <label for="excel_file" class="import-file-picker-label">
+                            <span class="import-file-picker-icon">📄</span>
+                            <span class="import-file-picker-text">
+                                <strong>Выберите файл</strong>
+                                <small>.xlsx или .xlsm</small>
+                            </span>
+                        </label>
+                        <span class="import-file-name" id="excel-file-name">Файл не выбран</span>
+                    </div>
                     <input id="excel_file"
                            type="file"
                            name="excel_file"
-                           class="form-input"
+                           class="import-file-input"
                            accept=".xlsx,.xlsm"
                            required>
                 </div>
@@ -87,7 +97,7 @@
                            required>
                 </div>
 
-                <button type="submit" class="btn btn-success">Загрузить данные</button>
+                <button type="submit" class="btn btn-primary">Загрузить данные</button>
             </form>
             <p class="muted import-center-hint">
                 Пароль запрашивается при каждом входе на вкладку.
@@ -95,4 +105,15 @@
         </div>
     {% endif %}
 </section>
+<script>
+    (function () {
+        const input = document.getElementById("excel_file");
+        const label = document.getElementById("excel-file-name");
+        if (!input || !label) return;
+        input.addEventListener("change", function () {
+            const fileName = input.files && input.files[0] ? input.files[0].name : "Файл не выбран";
+            label.textContent = fileName;
+        });
+    })();
+</script>
 {% endblock %}

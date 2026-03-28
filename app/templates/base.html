@@ -26,18 +26,18 @@
             </button>
 
             <nav class="top-nav" id="top-nav-menu">
-                <a href="{{ url_for('import_center') }}"
-                   class="top-nav-link top-nav-import-link desktop-only"
-                   title="Загрузить данные"
-                   aria-label="Загрузить данные">
-                    <span class="top-nav-import-icon">⤴</span>
-                </a>
                 <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
                 <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link">График</a>
             </nav>
 
             <div class="header-user-block">
+                <a href="{{ url_for('import_center') }}"
+                   class="header-icon-link"
+                   title="Импорт данных"
+                   aria-label="Импорт данных">
+                    <span class="top-nav-import-icon">⤴</span>
+                </a>
                 <a href="{{ url_for('logout') }}" class="btn btn-danger btn-logout">Выйти</a>
             </div>
         </div>
@@ -83,6 +83,79 @@
                         }
                     });
                 });
+            });
+
+            document.querySelectorAll(".bulk-table").forEach(function (wrapper) {
+                const scope = wrapper.closest(".table-card") || wrapper.parentElement || wrapper;
+                const selectedForm = scope.querySelector(".bulk-delete-selected-form");
+                const allForm = scope.querySelector(".bulk-delete-all-form");
+                const selectAll = wrapper.querySelector(".bulk-select-all");
+                const checkboxes = Array.from(wrapper.querySelectorAll(".bulk-row-checkbox"));
+                const rows = Array.from(wrapper.querySelectorAll("tbody tr"));
+
+                scope.classList.add("bulk-actions-collapsed");
+
+                rows.forEach(function (row) {
+                    row.addEventListener("dblclick", function () {
+                        scope.classList.remove("bulk-actions-collapsed");
+                        scope.classList.add("bulk-actions-visible");
+                    });
+                });
+
+                function syncState() {
+                    const checked = checkboxes.filter(function (item) { return item.checked; }).length;
+                    if (selectedForm) {
+                        const idsField = selectedForm.querySelector(".bulk-selected-ids");
+                        if (idsField) {
+                            idsField.value = checkboxes
+                                .filter(function (item) { return item.checked; })
+                                .map(function (item) { return item.value; })
+                                .join(",");
+                        }
+                        const btn = selectedForm.querySelector("button[type='submit']");
+                        if (btn) {
+                            btn.disabled = checked === 0;
+                        }
+                    }
+                    if (selectAll) {
+                        selectAll.checked = checked > 0 && checked === checkboxes.length;
+                        selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+                    }
+                }
+
+                if (selectAll) {
+                    selectAll.addEventListener("change", function () {
+                        checkboxes.forEach(function (item) { item.checked = selectAll.checked; });
+                        syncState();
+                    });
+                }
+
+                checkboxes.forEach(function (item) {
+                    item.addEventListener("change", syncState);
+                });
+
+                if (selectedForm) {
+                    selectedForm.addEventListener("submit", function (event) {
+                        const idsField = selectedForm.querySelector(".bulk-selected-ids");
+                        if (!idsField || !idsField.value) {
+                            event.preventDefault();
+                            return;
+                        }
+                        if (!confirm("Удалить выбранные записи?")) {
+                            event.preventDefault();
+                        }
+                    });
+                }
+
+                if (allForm) {
+                    allForm.addEventListener("submit", function (event) {
+                        if (!confirm("Удалить все записи в этой таблице?")) {
+                            event.preventDefault();
+                        }
+                    });
+                }
+
+                syncState();
             });
         });
     </script>
