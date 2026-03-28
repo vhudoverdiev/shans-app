@@ -142,6 +142,11 @@
     background:rgba(250,204,21,.16);
 }
 
+.planner-day-card-range{
+    border-color:rgba(34,197,94,.55);
+    background:rgba(34,197,94,.14);
+}
+
 .planner-day-card-head{
     display:flex;
     align-items:center;
@@ -637,9 +642,16 @@
     align-items:center;
     padding:7px 12px;
     border-radius:999px;
-    font-size:12px;
+    font-size:14px;
     font-weight:700;
     letter-spacing:.01em;
+    line-height:1.2;
+}
+
+.planner-type-label{
+    font-size:14px;
+    font-weight:700;
+    color:#374151;
 }
 
 .planner-type-chip{
