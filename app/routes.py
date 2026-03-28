@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import re
 
 from flask import (
     flash,
@@ -224,7 +225,22 @@ def _format_shooting_date(date_value: str) -> str:
         return "—"
 
     try:
-        return datetime.strptime(date_value, "%Y-%m-%d").strftime("%d.%m.%Y")
+        parsed = datetime.strptime(date_value, "%Y-%m-%d")
+        month_names = {
+            1: "января",
+            2: "февраля",
+            3: "марта",
+            4: "апреля",
+            5: "мая",
+            6: "июня",
+            7: "июля",
+            8: "августа",
+            9: "сентября",
+            10: "октября",
+            11: "ноября",
+            12: "декабря",
+        }
+        return f"{parsed.day} {month_names[parsed.month]} {parsed.year}"
     except ValueError:
         return date_value
 
@@ -301,6 +317,27 @@ def _validate_shooting_form(data):
             errors.append(f"Поле '{field_label}' должно быть числом.")
 
     return errors
+
+
+def _is_valid_phone_number(phone_value: str) -> bool:
+    if not phone_value:
+        return True
+    normalized = re.sub(r"[\s\-\(\)]", "", phone_value)
+    return bool(re.fullmatch(r"\+?\d{7,15}", normalized))
+
+
+def _parse_non_negative_number(value: str, label: str):
+    if value in (None, ""):
+        return None, None
+    try:
+        parsed_value = float(value)
+    except ValueError:
+        return None, f"Поле '{label}' должно быть числом."
+
+    if parsed_value < 0:
+        return None, f"Поле '{label}' не может быть отрицательным."
+
+    return parsed_value, None
 
 def _resolve_budget_category(form):
     """
@@ -676,6 +713,9 @@ def register_routes(app):
             except ValueError:
                 flash("Часы, стоимость и предоплата должны быть числами.", "danger")
                 return render_template("shootings_add.html", form_data=form_data, active_tab="add")
+            if not _is_valid_phone_number(phone):
+                flash("Телефон может содержать только цифры и символ '+'.", "danger")
+                return render_template("shootings_add.html", form_data=form_data, active_tab="add")
 
             shooting_id = create_shooting(
                 project_name=project_name,
@@ -779,6 +819,9 @@ def register_routes(app):
                 prepayment = float(prepayment) if prepayment else 0
             except ValueError:
                 flash("Часы, стоимость и предоплата должны быть числами.", "danger")
+                return redirect(url_for("shooting_edit", shooting_id=shooting_id))
+            if not _is_valid_phone_number(phone):
+                flash("Телефон может содержать только цифры и символ '+'.", "danger")
                 return redirect(url_for("shooting_edit", shooting_id=shooting_id))
 
             update_shooting(
@@ -923,11 +966,17 @@ def register_routes(app):
                 service_date = request.form.get("service_date", "").strip()
                 mileage = request.form.get("mileage", "").strip()
                 cost = request.form.get("cost", "").strip()
+                mileage_value, mileage_error = _parse_non_negative_number(mileage, "Пробег")
+                cost_value, cost_error = _parse_non_negative_number(cost, "Стоимость")
+
+                if mileage_error or cost_error:
+                    flash(mileage_error or cost_error, "error")
+                    return redirect(url_for("car_manage"))
 
                 create_car_done_service(
                     service_name=service_name,
-                    service_cost=cost,
-                    mileage=mileage,
+                    service_cost=cost_value if cost_value is not None else "",
+                    mileage=mileage_value if mileage_value is not None else "",
                     service_date=service_date,
                     detail_description=detail_description,
                     work_kind=work_kind,
@@ -963,16 +1012,21 @@ def register_routes(app):
             mileage = request.form.get("mileage", "").strip()
             cost = request.form.get("cost", "").strip()
             period_type = request.form.get("period_type", "").strip()
+            mileage_value, mileage_error = _parse_non_negative_number(mileage, "Пробег")
+            cost_value, cost_error = _parse_non_negative_number(cost, "Стоимость")
 
             if not service_name:
                 flash("Укажите наименование работы.", "error")
+                return redirect(url_for("car_done_edit", service_id=service_id))
+            if mileage_error or cost_error:
+                flash(mileage_error or cost_error, "error")
                 return redirect(url_for("car_done_edit", service_id=service_id))
 
             update_car_done_service(
                 service_id=service_id,
                 service_name=service_name,
-                service_cost=cost,
-                mileage=mileage,
+                service_cost=cost_value if cost_value is not None else "",
+                mileage=mileage_value if mileage_value is not None else "",
                 service_date=service_date,
                 detail_description=detail_description,
                 work_kind=work_kind,
@@ -997,15 +1051,20 @@ def register_routes(app):
             service_date = request.form.get("service_date", "").strip()
             mileage = request.form.get("mileage", "").strip()
             cost = request.form.get("cost", "").strip()
+            mileage_value, mileage_error = _parse_non_negative_number(mileage, "Пробег")
+            cost_value, cost_error = _parse_non_negative_number(cost, "Стоимость")
 
             if not service_date:
                 flash("Укажите дату выполнения.", "error")
                 return redirect(url_for("car_planned_complete", service_id=service_id))
+            if mileage_error or cost_error:
+                flash(mileage_error or cost_error, "error")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
 
             create_car_done_service(
                 service_name=service["service_name"],
-                service_cost=cost,
-                mileage=mileage,
+                service_cost=cost_value if cost_value is not None else "",
+                mileage=mileage_value if mileage_value is not None else "",
                 service_date=service_date,
                 detail_description=service["detail_description"],
                 work_kind=service["work_kind"],
