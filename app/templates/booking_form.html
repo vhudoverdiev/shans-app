@@ -26,12 +26,12 @@
                 </div>
                 <div class="form-group">
                     <label>Контакты</label>
-                    <input class="form-input" type="tel" name="client_contact" required value="{{ booking.client_contact }}" inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
+                    <input class="form-input" type="text" name="client_contact" required value="{{ booking.client_contact }}" placeholder="+7..., t.me/..., https://...">
                 </div>
 
                 <div class="form-group">
                     <label>Время</label>
-                    <input class="form-input" type="time" name="booking_time" required value="{{ booking.booking_time or '' }}">
+                    <input class="form-input" type="time" name="booking_time" step="900" required value="{{ booking.booking_time or '' }}">
                 </div>
                 <div class="form-group">
                     <label>Длительность</label>
@@ -51,29 +51,12 @@
                     <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="{{ booking.prepayment }}">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group form-group-full">
                     <label>Остаток к оплате</label>
-                    <input class="form-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
-                </div>
-
-                <div class="form-group" id="makeup_start_group" style="{% if booking.duration_minutes == 30 %}display:block;{% else %}display:none;{% endif %}">
-                    <label>Начало макияжа</label>
-                    <input class="form-input" type="time" name="makeup_start_time" id="makeup_start_time" value="{{ booking.makeup_start_time or '' }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Стоимость</label>
-                    <input class="form-input" type="number" min="0" step="1" name="price" id="booking_price" value="{{ booking.price }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Предоплата</label>
-                    <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="{{ booking.prepayment }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Остаток к оплате</label>
-                    <input class="form-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
+                    <div class="remaining-payment-preview" id="booking_remaining_wrap">
+                        <span class="remaining-payment-preview-label">К оплате на съёмке</span>
+                        <input class="form-input remaining-payment-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
+                    </div>
                 </div>
 
                 <div class="form-group" id="makeup_start_group" style="{% if booking.duration_minutes == 30 %}display:block;{% else %}display:none;{% endif %}">
@@ -97,6 +80,7 @@
         const priceField = document.getElementById("booking_price");
         const prepaymentField = document.getElementById("booking_prepayment");
         const remainingField = document.getElementById("booking_remaining");
+        const remainingWrap = document.getElementById("booking_remaining_wrap");
 
         if (!durationField || !priceField || !prepaymentField || !remainingField) return;
 
@@ -112,6 +96,9 @@
             const prepayment = Number(prepaymentField.value || 0);
             const remaining = Math.max(price - prepayment, 0);
             remainingField.value = `${remaining} ₽`;
+            if (remainingWrap) {
+                remainingWrap.classList.toggle("remaining-payment-preview-complete", remaining === 0);
+            }
         }
 
         durationField.addEventListener("change", toggleMakeup);
