@@ -8,7 +8,6 @@
         </div>
 
         <div class="page-actions">
-            <a href="{{ url_for('shooting_edit', shooting_id=shooting.id) }}" class="btn btn-primary">Редактировать</a>
             <a href="{{ url_for('shootings_archive' if shooting.is_archive else 'shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
@@ -23,7 +22,7 @@
             <div class="stat-value">{{ shooting.shooting_date_display }}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Остаток к оплате</div>
+            <div class="stat-label">Статус</div>
             <div class="stat-value">{% if shooting.is_archive %}В архиве{% else %}{{ shooting.remaining_payment }} ₽{% endif %}</div>
         </div>
     </div>

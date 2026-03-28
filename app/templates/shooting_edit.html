@@ -4,20 +4,18 @@
 <section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Редактировать съёмку</h1>
         </div>
     </div>
 
     <div class="car-tab-bar">
-        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link">Ближайшие съёмки</a>
-        <a href="{{ url_for('shootings_add') }}" class="car-tab-link">Добавить съёмку</a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link">Бронь</a>
         <a href="{{ url_for('shootings_archive') }}" class="car-tab-link">Архив</a>
     </div>
 
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
             <div class="car-form-head-title">Редактирование съёмки</div>
-            <div class="car-form-head-text">Обнови информацию по проекту, времени и оплате.</div>
+            <div class="car-form-head-text">Обнови информацию по бронированию</div>
         </div>
 
         <form method="POST" class="form-block">
@@ -70,7 +68,6 @@
 
             <div class="car-form-actions">
                 <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                <a href="{{ url_for('shooting_detail', shooting_id=shooting.id) }}" class="btn btn-secondary">Назад</a>
             </div>
         </form>
     </div>

@@ -9,14 +9,14 @@
     </div>
 
     <div class="car-tab-bar">
-        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Ближайшие съёмки</a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Бронь</a>
         <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
         <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
-            <div class="car-form-head-title">Новая съёмка</div>
+            <div class="car-form-head-title">Внесите бронирование</div>
             <div class="car-form-head-text">Заполни основные данные по клиенту, времени и оплате.</div>
         </div>
 
@@ -69,8 +69,7 @@
             </div>
 
             <div class="car-form-actions">
-                <button type="submit" class="btn btn-primary">Сохранить съёмку</button>
-                <a href="{{ url_for('shootings_upcoming') }}" class="btn btn-secondary">Все съёмки</a>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
             </div>
         </form>
     </div>

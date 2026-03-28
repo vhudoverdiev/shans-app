@@ -9,14 +9,12 @@
     </div>
 
     <div class="car-tab-bar">
-        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Ближайшие</a>
-        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Новая съёмка</a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Бронь</a>
         <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 
     <div class="card table-card">
         <div class="table-header">
-            <h2 class="section-title">Архив съёмок</h2>
         </div>
 
         {% if shootings %}

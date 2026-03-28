@@ -31,7 +31,6 @@
 
         {% if active_tab == 'archive' %}
             <div class="table-header">
-                <h2 class="section-title">Архив фотопроектов</h2>
             </div>
 
             {% if archived_projects %}
@@ -69,7 +68,6 @@
 
         {% else %}
             <div class="table-header">
-                <h2 class="section-title">Активные фотопроекты</h2>
                 <div class="table-actions bulk-table-actions">
                     <form method="post" action="{{ url_for('planner.delete_photo_projects_selected') }}" class="inline-form bulk-delete-selected-form">
                         <input type="hidden" name="selected_ids" class="bulk-selected-ids">
