@@ -51,6 +51,7 @@ from app.models import (
     move_planned_to_done,
     save_balance_history,
     set_current_balance,
+    sync_car_services_from_excel_if_needed,
     update_budget_entry,
     update_car_done_service,
     update_car_planned_service,
@@ -902,6 +903,7 @@ def register_routes(app):
     @app.route("/car")
     @login_required
     def car():
+        sync_car_services_from_excel_if_needed("data/car_services.xlsx")
         active_tab = request.args.get("tab", "planned")
 
         done_services = get_car_done_services()
