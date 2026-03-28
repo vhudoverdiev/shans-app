@@ -42,34 +42,56 @@
         </div>
 
         {% if shootings %}
-        <div class="table-wrapper">
-            <table class="data-table data-table-car">
-                <thead>
-                    <tr>
-                        <th>Дата</th>
-                        <th>Время</th>
-                        <th>Название</th>
-                        <th>Клиент</th>
-                        <th>Часы</th>
-                        <th>Стоимость</th>
-                        <th>Остаток</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for s in shootings %}
-                    <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'" style="cursor:pointer;">
-                        <td>{{ s.shooting_date_display }}</td>
-                        <td>{{ s.shooting_time or '—' }}</td>
-                        <td>{{ s.project_name }}</td>
-                        <td>{{ s.client_name }}</td>
-                        <td>{{ s.duration_hours or '-' }}</td>
-                        <td>{{ s.price }} ₽</td>
-                        <td><span class="status-pill">{{ s.remaining_payment }} ₽</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <form method="post" action="{{ url_for('shootings_delete_selected') }}" onsubmit="return confirm('Удалить выбранные съёмки?');">
+            <input type="hidden" name="scope" value="upcoming">
+            <div class="table-header table-header-with-tools">
+                <div class="table-bulk-tools">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" data-check-all="shootings-upcoming-selection">
+                        Выбрать все
+                    </label>
+                    <button type="submit" class="btn btn-danger btn-small">Удалить выбранное</button>
+                </div>
+                <button type="submit"
+                        class="btn btn-danger btn-small"
+                        formaction="{{ url_for('shootings_delete_all') }}"
+                        onclick="return confirm('Удалить все съёмки (включая архив)?');">
+                    Удалить все
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table data-table-car">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Название</th>
+                            <th>Клиент</th>
+                            <th>Часы</th>
+                            <th>Стоимость</th>
+                            <th>Остаток</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in shootings %}
+                        <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'" style="cursor:pointer;">
+                            <td onclick="event.stopPropagation();">
+                                <input type="checkbox" name="shooting_ids" value="{{ s.id }}" data-checkbox-group="shootings-upcoming-selection">
+                            </td>
+                            <td>{{ s.shooting_date_display }}</td>
+                            <td>{{ s.shooting_time or '—' }}</td>
+                            <td>{{ s.project_name }}</td>
+                            <td>{{ s.client_name }}</td>
+                            <td>{{ s.duration_hours or '-' }}</td>
+                            <td>{{ s.price }} ₽</td>
+                            <td><span class="status-pill">{{ s.remaining_payment }} ₽</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
         {% else %}
         <div class="empty-state empty-state-centered">Записей пока нет.</div>
         {% endif %}

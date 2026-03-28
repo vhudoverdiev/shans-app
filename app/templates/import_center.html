@@ -3,17 +3,19 @@
 {% block title %}Импорт данных | Шанс{% endblock %}
 
 {% block content %}
-<section class="car-page">
+<section class="car-page import-center-page">
     <div class="page-header">
         <div>
             <h1 class="page-title">Импорт данных</h1>
+            <p class="import-center-subtitle">Быстрая загрузка Excel в нужный раздел.</p>
         </div>
     </div>
 
     {% if not access_granted %}
-        <div class="card" style="max-width: 480px;">
-            <h2 class="section-title">Доступ к разделу</h2>
-            <form method="post" class="form-block">
+        <div class="card import-center-card import-center-lock-card">
+            <h2 class="section-title">Подтвердите доступ</h2>
+            <p class="muted">Для входа в раздел нужен пароль.</p>
+            <form method="post" class="form-block import-center-form">
                 <input type="hidden" name="action" value="unlock">
                 <div class="form-group">
                     <label for="import-password">Пароль</label>
@@ -24,13 +26,13 @@
                            placeholder="Введите пароль"
                            required>
                 </div>
-                <button type="submit" class="btn btn-primary">Открыть доступ</button>
+                <button type="submit" class="btn btn-primary">Войти в раздел</button>
             </form>
         </div>
     {% else %}
-        <div class="card" style="max-width: 760px;">
+        <div class="card import-center-card">
             <h2 class="section-title">Загрузить данные</h2>
-            <form method="post" enctype="multipart/form-data" class="form-block">
+            <form method="post" enctype="multipart/form-data" class="form-block import-center-form">
                 <input type="hidden" name="action" value="import">
 
                 <div class="form-group">
@@ -55,10 +57,40 @@
                            required>
                 </div>
 
+                <div class="form-group">
+                    <label>Режим загрузки</label>
+                    <div class="import-mode-switch">
+                        <label class="import-mode-option">
+                            <input type="radio" name="import_mode" value="append" checked>
+                            <span>
+                                <strong>Добавить данные</strong>
+                                <small>Новые строки добавляются к существующим.</small>
+                            </span>
+                        </label>
+                        <label class="import-mode-option">
+                            <input type="radio" name="import_mode" value="replace">
+                            <span>
+                                <strong>Полностью заменить</strong>
+                                <small>Старая таблица будет очищена перед импортом.</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="import-password-repeat">Пароль подтверждения</label>
+                    <input id="import-password-repeat"
+                           type="password"
+                           name="password"
+                           class="form-input"
+                           placeholder="Введите пароль ещё раз"
+                           required>
+                </div>
+
                 <button type="submit" class="btn btn-success">Загрузить данные</button>
             </form>
-            <p class="muted" style="margin-top: 10px;">
-                Импорт всегда добавляет новые записи и не удаляет уже существующие.
+            <p class="muted import-center-hint">
+                Пароль запрашивается при каждом входе на вкладку.
             </p>
         </div>
     {% endif %}

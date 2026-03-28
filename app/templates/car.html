@@ -68,59 +68,79 @@
             </div>
 
             {% if done_services %}
-                <div class="table-wrapper">
-                    <table class="data-table data-table-car">
-                        <thead>
-                            <tr>
-                                <th>Наименование</th>
-                                <th>Описание</th>
-                                <th>Периодичность</th>
-                                <th>Дата</th>
-                                <th>Пробег</th>
-                                <th>Стоимость</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in done_services %}
-                                <tr>
-                                    <td>{{ item.service_name or "—" }}</td>
-                                    <td>{{ item.detail_description or "—" }}</td>
-                                    <td>{{ item.period_type or "—" }}</td>
-                                    <td>{{ item.service_date_display or "—" }}</td>
-                                    <td>{{ item.mileage or "—" }}</td>
-                                    <td>{{ item.cost or "—" }}</td>
-                                    <td>
-                                        <span class="status-pill status-pill-done">
-                                            {{ item.status or "Выполнено" }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="table-actions-icon">
-                                            <a href="{{ url_for('car_done_edit', service_id=item.id) }}"
-                                               class="icon-action-btn icon-edit"
-                                               title="Редактировать">
-                                                ✏
-                                            </a>
+                <form method="post" action="{{ url_for('car_done_delete_selected') }}" onsubmit="return confirm('Удалить выбранные выполненные работы?');">
+                    <div class="table-header table-header-with-tools">
+                        <div class="table-bulk-tools">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" data-check-all="car-done-selection">
+                                Выбрать все
+                            </label>
+                            <button type="submit" class="btn btn-danger btn-small">Удалить выбранное</button>
+                        </div>
+                        <button type="submit"
+                                class="btn btn-danger btn-small"
+                                formaction="{{ url_for('car_done_delete_all') }}"
+                                onclick="return confirm('Удалить все выполненные работы?');">
+                            Удалить все
+                        </button>
+                    </div>
 
-                                            <form method="post"
-                                                  action="{{ url_for('car_done_delete', service_id=item.id) }}"
-                                                  class="inline-form"
-                                                  onsubmit="return confirm('Удалить эту выполненную работу?');">
+                    <div class="table-wrapper">
+                        <table class="data-table data-table-car">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Наименование</th>
+                                    <th>Описание</th>
+                                    <th>Периодичность</th>
+                                    <th>Дата</th>
+                                    <th>Пробег</th>
+                                    <th>Стоимость</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in done_services %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="service_ids" value="{{ item.id }}" data-checkbox-group="car-done-selection">
+                                        </td>
+                                        <td>{{ item.service_name or "—" }}</td>
+                                        <td>{{ item.detail_description or "—" }}</td>
+                                        <td>{{ item.period_type or "—" }}</td>
+                                        <td>{{ item.service_date_display or "—" }}</td>
+                                        <td>{{ item.mileage or "—" }}</td>
+                                        <td>{{ item.cost or "—" }}</td>
+                                        <td>
+                                            <span class="status-pill status-pill-done">
+                                                {{ item.status or "Выполнено" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="table-actions-icon">
+                                                <a href="{{ url_for('car_done_edit', service_id=item.id) }}"
+                                                   class="icon-action-btn icon-edit"
+                                                   title="Редактировать">
+                                                    ✏
+                                                </a>
+
                                                 <button type="submit"
                                                         class="icon-action-btn icon-delete"
-                                                        title="Удалить">
+                                                        title="Удалить"
+                                                        formaction="{{ url_for('car_done_delete', service_id=item.id) }}"
+                                                        formmethod="post"
+                                                        onclick="return confirm('Удалить эту выполненную работу?');">
                                                     🗑
                                                 </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
             {% else %}
                 <div class="empty-state">
                     Выполненных работ пока нет.
@@ -133,69 +153,89 @@
             </div>
 
             {% if planned_services %}
-                <div class="table-wrapper">
-                    <table class="data-table data-table-car">
-                        <thead>
-                            <tr>
-                                <th>Наименование</th>
-                                <th>Описание</th>
-                                <th>Периодичность</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in planned_services %}
-                                <tr>
-                                    <td>{{ item.service_name or "—" }}</td>
-                                    <td>{{ item.detail_description or "—" }}</td>
-                                    <td>{{ item.period_type or "—" }}</td>
-                                    <td>
-                                        {% if item.status == 'В работе' %}
-                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                               class="status-pill status-pill-work status-pill-link"
-                                               title="Перевести в выполненные">
-                                                {{ item.status }}
-                                            </a>
-                                        {% else %}
-                                            <span class="status-pill status-pill-work">
-                                                {{ item.status or "Планируется" }}
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="table-actions-icon">
-                                            <a href="{{ url_for('car_planned_edit', service_id=item.id) }}"
-                                               class="icon-action-btn icon-edit"
-                                               title="Редактировать">
-                                                ✏
-                                            </a>
+                <form method="post" action="{{ url_for('car_planned_delete_selected') }}" onsubmit="return confirm('Удалить выбранные планируемые работы?');">
+                    <div class="table-header table-header-with-tools">
+                        <div class="table-bulk-tools">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" data-check-all="car-planned-selection">
+                                Выбрать все
+                            </label>
+                            <button type="submit" class="btn btn-danger btn-small">Удалить выбранное</button>
+                        </div>
+                        <button type="submit"
+                                class="btn btn-danger btn-small"
+                                formaction="{{ url_for('car_planned_delete_all') }}"
+                                onclick="return confirm('Удалить все планируемые работы?');">
+                            Удалить все
+                        </button>
+                    </div>
 
+                    <div class="table-wrapper">
+                        <table class="data-table data-table-car">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Наименование</th>
+                                    <th>Описание</th>
+                                    <th>Периодичность</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in planned_services %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="service_ids" value="{{ item.id }}" data-checkbox-group="car-planned-selection">
+                                        </td>
+                                        <td>{{ item.service_name or "—" }}</td>
+                                        <td>{{ item.detail_description or "—" }}</td>
+                                        <td>{{ item.period_type or "—" }}</td>
+                                        <td>
                                             {% if item.status == 'В работе' %}
                                                 <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                                   class="icon-action-btn icon-complete"
-                                                   title="Завершить">
-                                                    ✓
+                                                   class="status-pill status-pill-work status-pill-link"
+                                                   title="Перевести в выполненные">
+                                                    {{ item.status }}
                                                 </a>
+                                            {% else %}
+                                                <span class="status-pill status-pill-work">
+                                                    {{ item.status or "Планируется" }}
+                                                </span>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="table-actions-icon">
+                                                <a href="{{ url_for('car_planned_edit', service_id=item.id) }}"
+                                                   class="icon-action-btn icon-edit"
+                                                   title="Редактировать">
+                                                    ✏
+                                                </a>
 
-                                            <form method="post"
-                                                  action="{{ url_for('car_planned_delete', service_id=item.id) }}"
-                                                  class="inline-form"
-                                                  onsubmit="return confirm('Удалить эту планируемую работу?');">
+                                                {% if item.status == 'В работе' %}
+                                                    <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                                       class="icon-action-btn icon-complete"
+                                                       title="Завершить">
+                                                        ✓
+                                                    </a>
+                                                {% endif %}
+
                                                 <button type="submit"
                                                         class="icon-action-btn icon-delete"
-                                                        title="Удалить">
+                                                        title="Удалить"
+                                                        formaction="{{ url_for('car_planned_delete', service_id=item.id) }}"
+                                                        formmethod="post"
+                                                        onclick="return confirm('Удалить эту планируемую работу?');">
                                                     🗑
                                                 </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
             {% else %}
                 <div class="empty-state">
                     Планируемых работ пока нет.

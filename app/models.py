@@ -178,6 +178,23 @@ def delete_budget_entry(entry_id):
     conn.close()
 
 
+def delete_budget_entries(entry_ids):
+    if not entry_ids:
+        return
+    placeholders = ",".join("?" for _ in entry_ids)
+    conn = get_connection()
+    conn.execute(f"DELETE FROM budget_entries WHERE id IN ({placeholders})", tuple(entry_ids))
+    conn.commit()
+    conn.close()
+
+
+def delete_all_budget_entries():
+    conn = get_connection()
+    conn.execute("DELETE FROM budget_entries")
+    conn.commit()
+    conn.close()
+
+
 def get_budget_entry_by_id(entry_id):
     conn = get_connection()
     entry = conn.execute(
@@ -672,12 +689,46 @@ def delete_car_done_service(service_id):
     conn.close()
 
 
+def delete_car_done_services(service_ids):
+    if not service_ids:
+        return
+    placeholders = ",".join("?" for _ in service_ids)
+    conn = get_connection()
+    conn.execute(f"DELETE FROM car_done_services WHERE id IN ({placeholders})", tuple(service_ids))
+    conn.commit()
+    conn.close()
+
+
+def delete_all_car_done_services():
+    conn = get_connection()
+    conn.execute("DELETE FROM car_done_services")
+    conn.commit()
+    conn.close()
+
+
 def delete_car_planned_service(service_id):
     conn = get_connection()
     conn.execute(
         "DELETE FROM car_planned_services WHERE id = ?",
         (service_id,)
     )
+    conn.commit()
+    conn.close()
+
+
+def delete_car_planned_services(service_ids):
+    if not service_ids:
+        return
+    placeholders = ",".join("?" for _ in service_ids)
+    conn = get_connection()
+    conn.execute(f"DELETE FROM car_planned_services WHERE id IN ({placeholders})", tuple(service_ids))
+    conn.commit()
+    conn.close()
+
+
+def delete_all_car_planned_services():
+    conn = get_connection()
+    conn.execute("DELETE FROM car_planned_services")
     conn.commit()
     conn.close()
 
@@ -744,6 +795,157 @@ def append_car_services(done_services, planned_services):
                     item.get("status", "Планируется"),
                 )
                 for item in planned_services
+            ],
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def replace_car_services(done_services, planned_services):
+    """
+    Полностью заменяет данные по машине:
+    удаляет существующие выполненные и планируемые работы,
+    затем добавляет данные из Excel.
+    """
+    conn = get_connection()
+    conn.execute("DELETE FROM car_done_services")
+    conn.execute("DELETE FROM car_planned_services")
+
+    if done_services:
+        conn.executemany(
+            """
+            INSERT INTO car_done_services (
+                service_name,
+                service_cost,
+                mileage,
+                service_date,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("service_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("service_date", ""),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Выполнено"),
+                )
+                for item in done_services
+            ],
+        )
+
+    if planned_services:
+        conn.executemany(
+            """
+            INSERT INTO car_planned_services (
+                service_name,
+                planned_cost,
+                mileage,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("planned_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Планируется"),
+                )
+                for item in planned_services
+            ],
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def replace_budget_entries(entries):
+    """
+    Полностью заменяет таблицу бюджета:
+    удаляет текущие записи и добавляет новые.
+    """
+    conn = get_connection()
+    conn.execute("DELETE FROM budget_entries")
+
+    if entries:
+        conn.executemany(
+            """
+            INSERT INTO budget_entries (
+                entry_type,
+                month_name,
+                year_value,
+                category,
+                amount
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("entry_type", ""),
+                    item.get("month_name", ""),
+                    get_current_year(),
+                    item.get("category", ""),
+                    item.get("amount", 0),
+                )
+                for item in entries
+            ],
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def replace_shootings(shootings):
+    """
+    Полностью заменяет таблицу съёмок.
+    """
+    conn = get_connection()
+    conn.execute("DELETE FROM shootings")
+
+    if shootings:
+        conn.executemany(
+            """
+            INSERT INTO shootings (
+                project_name,
+                client_name,
+                shooting_date,
+                shooting_time,
+                duration_hours,
+                phone,
+                price,
+                prepayment,
+                notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("project_name", ""),
+                    item.get("client_name", ""),
+                    item.get("shooting_date", ""),
+                    item.get("shooting_time", ""),
+                    item.get("duration_hours", 1),
+                    item.get("phone", ""),
+                    item.get("price", 0),
+                    item.get("prepayment", 0),
+                    item.get("notes", ""),
+                )
+                for item in shootings
             ],
         )
 
@@ -1247,5 +1449,22 @@ def delete_shooting(shooting_id):
 
     cursor.execute("DELETE FROM shootings WHERE id = ?", (shooting_id,))
 
+    conn.commit()
+    conn.close()
+
+
+def delete_shootings(shooting_ids):
+    if not shooting_ids:
+        return
+    conn = get_connection()
+    placeholders = ",".join("?" for _ in shooting_ids)
+    conn.execute(f"DELETE FROM shootings WHERE id IN ({placeholders})", tuple(shooting_ids))
+    conn.commit()
+    conn.close()
+
+
+def delete_all_shootings():
+    conn = get_connection()
+    conn.execute("DELETE FROM shootings")
     conn.commit()
     conn.close()

@@ -3668,3 +3668,129 @@ a {
 .remaining-card {
     border: 1px solid #bfdbfe;
 }
+
+/* ===== Import center refinements ===== */
+.desktop-only {
+    display: inline-flex;
+}
+
+.top-nav-import-link {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    padding: 0;
+}
+
+.top-nav-import-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.import-shortcut {
+    margin-top: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #5b7cfa 0%, #8d63ff 100%);
+    color: #fff;
+    text-decoration: none;
+    font-size: 20px;
+    box-shadow: 0 10px 18px rgba(91, 124, 250, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.import-shortcut:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px rgba(91, 124, 250, 0.32);
+}
+
+.import-center-page {
+    max-width: 860px;
+}
+
+.import-center-subtitle {
+    margin-top: 8px;
+    color: var(--text-secondary);
+}
+
+.import-center-card {
+    max-width: 760px;
+    border: 1px solid rgba(92, 124, 250, 0.14);
+    box-shadow: 0 18px 36px rgba(18, 26, 61, 0.08);
+}
+
+.import-center-lock-card {
+    max-width: 500px;
+}
+
+.import-center-form {
+    margin-top: 14px;
+}
+
+.import-mode-switch {
+    display: grid;
+    gap: 12px;
+}
+
+.import-mode-option {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fff;
+}
+
+.import-mode-option input[type="radio"] {
+    margin-top: 4px;
+}
+
+.import-mode-option strong {
+    display: block;
+    font-size: 14px;
+}
+
+.import-mode-option small {
+    display: block;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.import-center-hint {
+    margin-top: 14px;
+}
+
+.table-header-with-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.table-bulk-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.checkbox-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.btn-small {
+    padding: 6px 10px;
+    font-size: 13px;
+}

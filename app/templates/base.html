@@ -26,7 +26,12 @@
             </button>
 
             <nav class="top-nav" id="top-nav-menu">
-                <a href="{{ url_for('import_center') }}" class="top-nav-link">Загрузить данные</a>
+                <a href="{{ url_for('import_center') }}"
+                   class="top-nav-link top-nav-import-link desktop-only"
+                   title="Загрузить данные"
+                   aria-label="Загрузить данные">
+                    <span class="top-nav-import-icon">⤴</span>
+                </a>
                 <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
                 <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link">График</a>
@@ -76,6 +81,15 @@
                         if (headers[index]) {
                             cell.setAttribute("data-label", headers[index]);
                         }
+                    });
+                });
+            });
+
+            document.querySelectorAll("[data-check-all]").forEach(function (masterCheckbox) {
+                masterCheckbox.addEventListener("change", function () {
+                    const groupName = masterCheckbox.getAttribute("data-check-all");
+                    document.querySelectorAll('[data-checkbox-group="' + groupName + '"]').forEach(function (checkbox) {
+                        checkbox.checked = masterCheckbox.checked;
                     });
                 });
             });

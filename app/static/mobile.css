@@ -246,3 +246,9 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 900px) {
+    .desktop-only {
+        display: none !important;
+    }
+}

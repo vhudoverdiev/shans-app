@@ -488,6 +488,13 @@ def delete_task_for_shooting(shooting_id: int):
     conn.close()
 
 
+def delete_all_tasks_for_shootings():
+    conn = get_connection()
+    conn.execute("DELETE FROM schedule_tasks WHERE shooting_id IS NOT NULL")
+    conn.commit()
+    conn.close()
+
+
 def toggle_task_status(task_id: int):
     task = get_task(task_id)
     if not task:

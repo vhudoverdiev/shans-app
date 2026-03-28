@@ -21,32 +21,55 @@
         </div>
 
         {% if shootings %}
-            <div class="table-wrapper">
-                <table class="data-table data-table-car">
-                    <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Время</th>
-                            <th>Название</th>
-                            <th>Клиент</th>
-                            <th>Часы</th>
-                            <th>Стоимость</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for shooting in shootings %}
-                            <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=shooting.id) }}'" style="cursor:pointer;">
-                                <td>{{ shooting.shooting_date_display }}</td>
-                                <td>{{ shooting.shooting_time or '—' }}</td>
-                                <td>{{ shooting.project_name }}</td>
-                                <td>{{ shooting.client_name }}</td>
-                                <td>{{ shooting.duration_hours }}</td>
-                                <td>{{ shooting.price }} ₽</td>
+            <form method="post" action="{{ url_for('shootings_delete_selected') }}" onsubmit="return confirm('Удалить выбранные архивные съёмки?');">
+                <input type="hidden" name="scope" value="archive">
+                <div class="table-header table-header-with-tools">
+                    <div class="table-bulk-tools">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" data-check-all="shootings-archive-selection">
+                            Выбрать все
+                        </label>
+                        <button type="submit" class="btn btn-danger btn-small">Удалить выбранное</button>
+                    </div>
+                    <button type="submit"
+                            class="btn btn-danger btn-small"
+                            formaction="{{ url_for('shootings_delete_all') }}"
+                            onclick="return confirm('Удалить все съёмки (включая забронированные)?');">
+                        Удалить все
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table data-table-car">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th>Название</th>
+                                <th>Клиент</th>
+                                <th>Часы</th>
+                                <th>Стоимость</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {% for shooting in shootings %}
+                                <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=shooting.id) }}'" style="cursor:pointer;">
+                                    <td onclick="event.stopPropagation();">
+                                        <input type="checkbox" name="shooting_ids" value="{{ shooting.id }}" data-checkbox-group="shootings-archive-selection">
+                                    </td>
+                                    <td>{{ shooting.shooting_date_display }}</td>
+                                    <td>{{ shooting.shooting_time or '—' }}</td>
+                                    <td>{{ shooting.project_name }}</td>
+                                    <td>{{ shooting.client_name }}</td>
+                                    <td>{{ shooting.duration_hours }}</td>
+                                    <td>{{ shooting.price }} ₽</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
         {% else %}
             <div class="empty-state empty-state-centered">Записей пока нет.</div>
         {% endif %}
