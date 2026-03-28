@@ -846,11 +846,8 @@ def create_schedule_task():
     start_time = request.form.get("start_time", "")
     task_form_mode = request.form.get("task_form_mode", "single")
     range_end_date = request.form.get("range_end_date", "").strip()
-    task_type = request.form.get("task_type", "Личное")
     status = "planned"
     is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
-    project_id_raw = request.form.get("project_id", "").strip()
-    project_id = int(project_id_raw) if project_id_raw.isdigit() else None
 
     if not title or not task_date:
         flash("Для задачи нужны название и дата.", "error")
@@ -866,14 +863,13 @@ def create_schedule_task():
         created_count = 0
         while current_date <= range_finish_date:
             create_task(
-                title,
-                current_date.isoformat(),
-                description,
-                start_time,
-                "",
-                task_type,
-                status,
-                project_id,
+                title=title,
+                task_date=current_date.isoformat(),
+                description=description,
+                start_time=start_time,
+                end_time="",
+                task_type="Личное",
+                status=status,
                 is_important=is_important,
                 range_end_date=range_finish_date.isoformat(),
             )
@@ -883,14 +879,13 @@ def create_schedule_task():
         return redirect(url_for("planner.schedule", date=task_date, view="day"))
 
     create_task(
-        title,
-        task_date,
-        description,
-        start_time,
-        "",
-        task_type,
-        status,
-        project_id,
+        title=title,
+        task_date=task_date,
+        description=description,
+        start_time=start_time,
+        end_time="",
+        task_type="Личное",
+        status=status,
         is_important=is_important,
     )
     flash("Задача добавлена в график.", "success")
@@ -922,15 +917,15 @@ def edit_schedule_task(task_id: int):
             return redirect(url_for("planner.edit_schedule_task", task_id=task_id))
 
         update_task(
-            task_id,
-            title,
-            task_date,
-            description,
-            start_time,
-            "",
-            task_type,
-            status,
-            project_id,
+            task_id=task_id,
+            title=title,
+            task_date=task_date,
+            description=description,
+            start_time=start_time,
+            end_time="",
+            task_type=task_type,
+            status=status,
+            project_id=project_id,
             is_important=is_important,
             range_end_date=range_end_date,
         )

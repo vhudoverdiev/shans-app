@@ -28,8 +28,8 @@
         <div class="planner-toolbar">
             <div class="page-actions">
                 {% if current_view == 'month' %}
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=prev_date) }}">← Месяц назад</a>
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=next_date) }}">Месяц вперёд →</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=prev_date) }}">↑ Месяц назад</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=next_date) }}">↓ Месяц вперёд</a>
                 {% else %}
                 <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=prev_date) }}">←</a>
                 <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=next_date) }}">→</a>

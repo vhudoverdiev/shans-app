@@ -525,8 +525,9 @@
 
 .planner-day-text-past{
     text-decoration:line-through;
-    text-decoration-thickness:2px;
+    text-decoration-thickness:3px;
     text-decoration-color:#9ca3af;
+    font-weight:800;
 }
 
 .planner-shooting-open-btn{
