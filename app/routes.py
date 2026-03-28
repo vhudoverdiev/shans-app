@@ -8,7 +8,6 @@ from flask import (
     render_template,
     request,
     send_file,
-    session,
     url_for,
 )
 from flask_login import (
@@ -53,6 +52,9 @@ from app.models import (
     is_car_notification_hidden,
     move_planned_to_done,
     append_car_services,
+    replace_budget_entries,
+    replace_car_services,
+    replace_shootings,
     save_balance_history,
     set_current_balance,
     update_budget_entry,
@@ -251,6 +253,20 @@ def _format_shooting_date(date_value: str) -> str:
 
 def _format_shooting_time(time_value: str) -> str:
     return time_value if time_value else "Без времени"
+
+
+def _is_mobile_request() -> bool:
+    user_agent = request.headers.get("User-Agent", "").lower()
+    mobile_markers = (
+        "android",
+        "iphone",
+        "ipad",
+        "ipod",
+        "windows phone",
+        "opera mini",
+        "mobile",
+    )
+    return any(marker in user_agent for marker in mobile_markers)
 
 
 def _prepare_shooting_row(row):
@@ -1238,7 +1254,11 @@ def register_routes(app):
     @app.route("/import-center", methods=["GET", "POST"])
     @login_required
     def import_center():
-        access_granted = bool(session.get("import_center_access"))
+        if _is_mobile_request():
+            flash("Раздел импорта доступен только на ПК-версии.", "error")
+            return redirect(url_for("index"))
+
+        access_granted = False
 
         if request.method == "POST":
             action = request.form.get("action", "").strip()
@@ -1246,17 +1266,19 @@ def register_routes(app):
             if action == "unlock":
                 password = request.form.get("password", "").strip()
                 if password == "666666":
-                    session["import_center_access"] = True
+                    access_granted = True
                     flash("Доступ к разделу импорта открыт.", "success")
                 else:
                     flash("Неверный пароль.", "error")
-                return redirect(url_for("import_center"))
+                return render_template("import_center.html", access_granted=access_granted)
 
-            if not access_granted:
-                flash("Сначала введите пароль для доступа к импорту.", "error")
+            password = request.form.get("password", "").strip()
+            if password != "666666":
+                flash("Неверный пароль. Для каждого входа нужно подтверждение.", "error")
                 return redirect(url_for("import_center"))
 
             target = request.form.get("target_section", "").strip()
+            import_mode = request.form.get("import_mode", "append").strip()
             excel_file = request.files.get("excel_file")
 
             if not target:
@@ -1273,32 +1295,44 @@ def register_routes(app):
                 return redirect(url_for("import_center"))
 
             try:
+                replace_mode = import_mode == "replace"
                 if target in ("car_all", "car_done", "car_planned"):
                     done_services, planned_services = _parse_car_excel(excel_file)
                     if target == "car_done":
                         planned_services = []
                     elif target == "car_planned":
                         done_services = []
-                    append_car_services(done_services=done_services, planned_services=planned_services)
+                    if replace_mode:
+                        replace_car_services(done_services=done_services, planned_services=planned_services)
+                    else:
+                        append_car_services(done_services=done_services, planned_services=planned_services)
+                    mode_text = "Таблица заменена" if replace_mode else "Добавлены записи"
                     flash(
                         (
-                            f"Добавлено в раздел Машина: выполненных {len(done_services)}, "
+                            f"{mode_text} в разделе Машина: выполненных {len(done_services)}, "
                             f"планируемых {len(planned_services)}."
                         ),
                         "success",
                     )
                 elif target == "budget":
                     entries = _parse_budget_excel(excel_file)
-                    for entry in entries:
-                        create_budget_entry(
-                            entry_type=entry["entry_type"],
-                            month_name=entry["month_name"],
-                            category=entry["category"],
-                            amount=entry["amount"],
-                        )
-                    flash(f"Добавлено записей в Бюджет: {len(entries)}.", "success")
+                    if replace_mode:
+                        replace_budget_entries(entries)
+                        flash(f"Таблица Бюджета заменена. Загружено записей: {len(entries)}.", "success")
+                    else:
+                        for entry in entries:
+                            create_budget_entry(
+                                entry_type=entry["entry_type"],
+                                month_name=entry["month_name"],
+                                category=entry["category"],
+                                amount=entry["amount"],
+                            )
+                        flash(f"Добавлено записей в Бюджет: {len(entries)}.", "success")
                 elif target == "shootings":
                     shootings = _parse_shootings_excel(excel_file)
+                    if replace_mode:
+                        replace_shootings([])
+
                     for shooting in shootings:
                         shooting_id = create_shooting(
                             project_name=shooting["project_name"],
@@ -1324,7 +1358,10 @@ def register_routes(app):
                                 prepayment=shooting["prepayment"],
                                 notes=shooting["notes"],
                             )
-                    flash(f"Добавлено съёмок: {len(shootings)}.", "success")
+                    if replace_mode:
+                        flash(f"Таблица Съёмок заменена. Загружено записей: {len(shootings)}.", "success")
+                    else:
+                        flash(f"Добавлено съёмок: {len(shootings)}.", "success")
                 else:
                     flash("Неизвестный раздел для импорта.", "error")
             except ValueError as error:
