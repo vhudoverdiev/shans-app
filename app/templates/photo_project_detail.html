@@ -40,11 +40,6 @@
         <p>{{ project.address or 'Адрес не указан.' }}</p>
     </div>
 
-    {% if not project.is_archived %}
-    <div class="car-tab-bar">
-        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'add' %}car-tab-link-active{% endif %}">Записи</a>
-    </div>
-    {% endif %}
 
     {% if view_mode == 'bookings' %}
     <div class="card table-card">
@@ -70,8 +65,6 @@
                 <tbody>
                     {% for booking in bookings %}
                     <tr class="js-booking-row" data-href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}">
-                        <td>{{ booking.client_name }}</td>
-                    <tr>
                         <td>
                             <a class="status-pill-link" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Открыть запись">{{ booking.client_name }}</a>
                         </td>
@@ -84,7 +77,6 @@
                         <td>{{ booking.makeup_start_time or '—' }}</td>
                         <td>
                             <div class="table-actions-icon">
-                                <a class="icon-action-btn" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Подробнее">👁</a>
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}" title="Редактировать">✏</a>
                                 <form method="post" action="{{ url_for('planner.delete_photo_project_booking', booking_id=booking.id) }}" class="inline-form" onsubmit="return confirm('Удалить запись?');">
                                     <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
@@ -102,7 +94,6 @@
         </div>
     </div>
     {% elif view_mode == 'add' and not project.is_archived %}
-    {% elif view_mode == 'add' %}
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
             <div class="car-form-head-title">Добавить запись</div>
