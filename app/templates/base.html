@@ -95,14 +95,25 @@
                 const checkboxes = Array.from(wrapper.querySelectorAll(".bulk-row-checkbox"));
                 const rows = Array.from(wrapper.querySelectorAll("tbody tr"));
                 const hasBulkControls = Boolean(selectedForm || allForm);
+                const hasDataRows = checkboxes.length > 0;
+                let selectionMode = false;
+                let actionsVisible = false;
+                let cancelBtn = null;
 
-                if (hasBulkControls && bulkActions) {
-                    bulkActions.classList.add("bulk-actions-hidden");
+                if (hasBulkControls && bulkActions && hasDataRows) {
+                    cancelBtn = document.createElement("button");
+                    cancelBtn.type = "button";
+                    cancelBtn.className = "btn btn-small bulk-cancel-selection-btn";
+                    cancelBtn.textContent = "Отмена";
+                    bulkActions.appendChild(cancelBtn);
                 }
 
-                function revealBulkActions() {
-                    if (!hasBulkControls || !bulkActions) return;
-                    bulkActions.classList.remove("bulk-actions-hidden");
+                function setSelectionMode(enabled) {
+                    if (!hasBulkControls || !bulkActions || !hasDataRows) return;
+                    selectionMode = enabled;
+                    scope.classList.toggle("bulk-selection-hidden", !enabled);
+                    actionsVisible = false;
+                    bulkActions.classList.add("bulk-actions-hidden");
                 }
 
                 function syncState() {
@@ -124,24 +135,71 @@
                         selectAll.checked = checked > 0 && checked === checkboxes.length;
                         selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
                     }
+                    if (bulkActions) {
+                        if (selectionMode && checked > 0) {
+                            bulkActions.classList.remove("bulk-actions-hidden");
+                            actionsVisible = true;
+                        } else {
+                            bulkActions.classList.add("bulk-actions-hidden");
+                            actionsVisible = false;
+                        }
+                    }
+                }
+
+                function resetSelection() {
+                    if (selectAll) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    }
+                    checkboxes.forEach(function (item) {
+                        item.checked = false;
+                    });
+                    syncState();
+                }
+
+                function showBulkActions() {
+                    if (!hasBulkControls || !bulkActions || !selectionMode || !hasDataRows) return;
+                    if (!actionsVisible) {
+                        bulkActions.classList.remove("bulk-actions-hidden");
+                        actionsVisible = true;
+                    }
+                }
+
+                function hideEverything() {
+                    resetSelection();
+                    setSelectionMode(false);
                 }
 
                 if (selectAll) {
                     selectAll.addEventListener("change", function () {
+                        showBulkActions();
                         checkboxes.forEach(function (item) { item.checked = selectAll.checked; });
                         syncState();
                     });
                 }
 
                 checkboxes.forEach(function (item) {
-                    item.addEventListener("change", syncState);
+                    item.addEventListener("change", function () {
+                        syncState();
+                    });
                 });
 
                 rows.forEach(function (row) {
                     row.addEventListener("dblclick", function () {
-                        revealBulkActions();
+                        if (!hasDataRows) return;
+                        if (selectionMode) {
+                            hideEverything();
+                            return;
+                        }
+                        setSelectionMode(true);
                     });
                 });
+
+                if (cancelBtn) {
+                    cancelBtn.addEventListener("click", function () {
+                        hideEverything();
+                    });
+                }
 
                 if (selectedForm) {
                     selectedForm.addEventListener("submit", function (event) {
@@ -158,12 +216,28 @@
 
                 if (allForm) {
                     allForm.addEventListener("submit", function (event) {
+                        if (selectionMode && hasDataRows) {
+                            if (selectAll) {
+                                selectAll.checked = true;
+                                selectAll.indeterminate = false;
+                            }
+                            checkboxes.forEach(function (item) { item.checked = true; });
+                            syncState();
+                        }
                         if (!confirm("Удалить все записи в этой таблице?")) {
                             event.preventDefault();
                         }
                     });
                 }
 
+                if (!hasDataRows) {
+                    scope.classList.add("bulk-selection-hidden");
+                    if (bulkActions) {
+                        bulkActions.classList.add("bulk-actions-hidden");
+                    }
+                } else {
+                    setSelectionMode(false);
+                }
                 syncState();
             });
 
