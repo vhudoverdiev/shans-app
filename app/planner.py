@@ -776,7 +776,7 @@ def _previous_date(selected_date: date, current_view: str, step: str = "period")
     if current_view == "day":
         return selected_date - timedelta(days=1)
     if current_view == "month" and step == "period":
-        return selected_date - timedelta(days=4)
+        return selected_date - timedelta(days=7)
     if step == "week":
         return selected_date - timedelta(days=7)
     first_day_current = selected_date.replace(day=1)
@@ -788,7 +788,7 @@ def _next_date(selected_date: date, current_view: str, step: str = "period") -> 
     if current_view == "day":
         return selected_date + timedelta(days=1)
     if current_view == "month" and step == "period":
-        return selected_date + timedelta(days=4)
+        return selected_date + timedelta(days=7)
     if step == "week":
         return selected_date + timedelta(days=7)
     current_last_day = monthrange(selected_date.year, selected_date.month)[1]
@@ -807,8 +807,12 @@ def build_schedule_context(selected_date: date, current_view: str):
     month_last_day = monthrange(selected_date.year, selected_date.month)[1]
     month_end = selected_date.replace(day=month_last_day)
 
-    calendar_start = month_start - timedelta(days=month_start.weekday())
-    calendar_end = month_end + timedelta(days=(6 - month_end.weekday()))
+    if current_view == "month":
+        calendar_start = week_start - timedelta(days=7)
+        calendar_end = calendar_start + timedelta(days=41)
+    else:
+        calendar_start = month_start - timedelta(days=month_start.weekday())
+        calendar_end = month_end + timedelta(days=(6 - month_end.weekday()))
 
     tasks_in_grid = get_tasks_for_range(calendar_start.isoformat(), calendar_end.isoformat())
     tasks_by_date = defaultdict(list)
@@ -969,7 +973,7 @@ def edit_schedule_task(task_id: int):
         task_form_mode = request.form.get("task_form_mode", "single")
         range_end_date = request.form.get("range_end_date", "").strip()
         task_type = task.get("task_type") or "Личное"
-        status = request.form.get("status", "planned")
+        status = task.get("status") or "planned"
         is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
         project_id = task.get("project_id")
 
