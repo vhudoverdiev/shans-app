@@ -644,10 +644,10 @@
 .planner-type-chip{
     display:inline-flex;
     align-items:center;
-    padding:7px 12px;
+    padding:5px 10px;
     border-radius:999px;
-    font-size:14px;
-    font-weight:700;
+    font-size:12px;
+    font-weight:800;
     letter-spacing:.01em;
     line-height:1.2;
 }
