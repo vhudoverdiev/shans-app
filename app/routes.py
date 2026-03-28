@@ -69,7 +69,7 @@ from app.models import (
     get_upcoming_shootings,
     update_shooting,
 )
-from app.utils import build_budget_excel
+from app.utils import build_budget_excel, build_shootings_excel
 from app.planner import delete_task_for_shooting, upsert_task_for_shooting
 
 
@@ -762,6 +762,31 @@ def register_routes(app):
             shootings_count=shootings_count,
             nearest_shooting=nearest_shooting,
             active_tab="upcoming",
+        )
+
+
+    @app.route("/shootings/export/<string:scope>")
+    @login_required
+    def shootings_export(scope):
+        if scope == "archive":
+            shootings = get_archived_shootings()
+            report_title = "Архив съёмок"
+            file_name = "shootings_archive.xlsx"
+        else:
+            shootings = get_upcoming_shootings()
+            report_title = "Забронированные съёмки"
+            file_name = "shootings_upcoming.xlsx"
+
+        excel_file = build_shootings_excel(
+            shootings=shootings,
+            report_title=report_title,
+        )
+
+        return send_file(
+            excel_file,
+            as_attachment=True,
+            download_name=file_name,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
 
