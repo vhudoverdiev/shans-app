@@ -26,35 +26,32 @@
                 </div>
                 <div class="form-group">
                     <label>Дата фотопроекта</label>
-                    <input class="form-input" type="date" name="project_date" value="{{ project.project_date if project else '' }}">
-                </div>
-
-                <div class="form-group car-form-full">
-                    <label>Идея</label>
-                    <input class="form-input" type="text" name="idea" value="{{ project.idea if project else '' }}" required>
-                </div>
-
-                <div class="form-group car-form-full">
-                    <label>Описание</label>
-                    <textarea class="form-input car-textarea" name="description" rows="6">{{ project.description if project else '' }}</textarea>
+                    <input class="form-input" type="date" name="project_date" value="{{ project.project_date if project else '' }}" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Статус</label>
-                    <select class="form-input" name="project_status">
-                        {% for status in project_statuses %}
-                        <option value="{{ status }}" {% if project and project.project_status == status %}selected{% endif %}>{{ status }}</option>
+                    <label>Город</label>
+                    <select class="form-input" name="city" required>
+                        <option value="">Выбери город</option>
+                        {% for city in cities %}
+                        <option value="{{ city }}" {% if project and project.city == city %}selected{% endif %}>{{ city }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Цвет акцента</label>
-                    <select class="form-input" name="accent_class">
-                        {% for accent in accent_options %}
-                        <option value="{{ accent.value }}" {% if project and project.accent_class == accent.value %}selected{% endif %}>{{ accent.label }}</option>
-                        {% endfor %}
-                    </select>
+                    <label>Адрес проведения</label>
+                    <input class="form-input" type="text" name="address" value="{{ project.address if project else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Время от</label>
+                    <input class="form-input" type="time" name="start_time" value="{{ project.start_time if project else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Время до</label>
+                    <input class="form-input" type="time" name="end_time" value="{{ project.end_time if project else '' }}" required>
                 </div>
             </div>
 
