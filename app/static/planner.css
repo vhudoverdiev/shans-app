@@ -34,15 +34,16 @@
     flex-wrap:wrap;
 }
 
+.planner-nav-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
 .planner-toolbar-title{
     font-size:16px;
     font-weight:700;
     color:#111827;
-}
-
-.planner-nav-actions-month{
-    margin-left:auto;
-    align-items:center;
 }
 
 .planner-month-side-nav{
@@ -388,7 +389,7 @@
         grid-template-columns:1fr;
     }
 
-    .planner-nav-actions-month{
+    .planner-nav-actions{
         width:100%;
         justify-content:space-between;
     }
@@ -664,6 +665,12 @@
 .planner-status-chip-range{
     background:#dcfce7;
     color:#166534;
+}
+
+.planner-status-toggle-btn{
+    border:none;
+    cursor:pointer;
+    font:inherit;
 }
 
 .planner-task-actions-fancy{

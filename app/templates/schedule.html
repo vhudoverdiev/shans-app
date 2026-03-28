@@ -26,12 +26,10 @@
 
     <div class="card table-card">
         <div class="planner-toolbar">
-            <div class="page-actions planner-nav-actions {% if current_view == 'month' %}planner-nav-actions-month{% endif %}">
+            <div class="page-actions planner-nav-actions">
                 <a class="btn btn-primary btn-compact" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
-                {% if current_view != 'month' %}
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=prev_date) }}">←</a>
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=next_date) }}">→</a>
-                {% endif %}
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">←</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">→</a>
             </div>
 
             <div class="planner-toolbar-title">
@@ -53,13 +51,7 @@
     {% if current_view == 'month' %}
     <div class="card table-card">
         <div class="table-header">
-            <div class="planner-month-title-wrap">
-                <h2 class="section-title">Календарь на месяц</h2>
-                <div class="planner-month-side-nav" aria-label="Навигация по неделям">
-                    <a class="btn btn-secondary btn-compact planner-month-arrow" href="{{ url_for('planner.schedule', view='month', date=prev_week_date) }}" title="Предыдущая неделя">←</a>
-                    <a class="btn btn-secondary btn-compact planner-month-arrow" href="{{ url_for('planner.schedule', view='month', date=next_week_date) }}" title="Следующая неделя">→</a>
-                </div>
-            </div>
+            <h2 class="section-title">Календарь на месяц</h2>
         </div>
 
         <div class="planner-month-grid planner-weekdays">
@@ -111,7 +103,6 @@
                         <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                         <th>Название</th>
                         <th>Время</th>
-                        <th>Тип</th>
                         <th>Статус</th>
                         <th>Описание</th>
                         <th>Действия</th>
@@ -122,17 +113,28 @@
                     <tr class="{% if task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
-                            {{ task.title }}
+                            {% if task.range_end_date %}
+                                Протяженная
+                            {% else %}
+                                Обычная
+                            {% endif %}
                         </td>
                         <td>
                             {% if task.start_time %}
                                 {{ task.start_time }}
                             {% else %}
-                                Без времени
+                                —
                             {% endif %}
                         </td>
-                        <td>{{ task.task_type }}</td>
-                        <td><span class="status-pill planner-status-chip-{{ task.display_status }}">{{ task.display_status_label }}</span></td>
+                        <td>
+                            {% if task.display_status == 'range' %}
+                                <span class="status-pill planner-status-chip-{{ task.display_status }}">{{ task.display_status_label }}</span>
+                            {% else %}
+                                <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form">
+                                    <button class="status-pill planner-status-chip-{{ task.display_status }} planner-status-toggle-btn" type="submit">{{ task.display_status_label }}</button>
+                                </form>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if task.task_type == 'Съёмка' and task.shooting_id %}
                             <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
@@ -142,9 +144,6 @@
                         </td>
                         <td>
                             <div class="table-actions-icon">
-                                <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form">
-                                    <button class="icon-action-btn icon-complete" type="submit" title="Готово">✓</button>
-                                </form>
                                 <form method="post" action="{{ url_for('planner.move_schedule_task_next_day', task_id=task.id) }}" class="inline-form">
                                     <button class="icon-action-btn icon-edit" type="submit" title="Перенести на следующий день">⇢</button>
                                 </form>
