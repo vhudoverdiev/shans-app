@@ -3588,6 +3588,13 @@ a {
     cursor: pointer;
 }
 
+.empty-table-message {
+    text-align: center;
+    color: #64748b;
+    font-weight: 600;
+    padding: 18px 12px;
+}
+
 .js-booking-row {
     cursor: pointer;
 }
