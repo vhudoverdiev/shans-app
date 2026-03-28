@@ -595,6 +595,10 @@ a {
     justify-content: flex-end;
 }
 
+.shootings-archive-actions {
+    margin-top: 8px;
+}
+
 .bulk-actions-hidden .bulk-delete-selected-form,
 .bulk-actions-hidden .bulk-delete-all-form {
     display: none !important;
