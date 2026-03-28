@@ -9,6 +9,7 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Все проекты</a>
+            <a class="btn btn-success" href="{{ url_for('planner.photo_project_export', project_id=project.id) }}">Скачать Excel</a>
             {% if not project.is_archived %}
             <a class="btn btn-secondary" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}">Редактировать</a>
             {% endif %}
@@ -92,7 +93,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="{{ 6 if not project.is_archived else 5 }}">Записей пока нет.</td>
+                        <td class="empty-table-message" colspan="{{ 6 if not project.is_archived else 5 }}">Записей пока нет.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
