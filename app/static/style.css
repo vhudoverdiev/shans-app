@@ -242,6 +242,23 @@ a {
     min-height: 40px;
 }
 
+.import-excel-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.import-excel-label {
+    cursor: pointer;
+}
+
+.import-excel-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
 /* =========================
    FLASH
 ========================= */
