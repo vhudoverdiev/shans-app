@@ -1112,7 +1112,12 @@ def photo_project_booking_detail(booking_id: int):
     if not booking:
         flash("Запись не найдена.", "error")
         return redirect(url_for("planner.photo_projects"))
-    return render_template("photo_project_booking_detail.html", booking=_serialize_booking_row(booking))
+
+    serialized_booking = _serialize_booking_row(booking)
+    project = get_project(booking["project_id"])
+    serialized_booking["project_is_archived"] = bool(project and _serialize_project_row(project)["is_archived"])
+
+    return render_template("photo_project_booking_detail.html", booking=serialized_booking)
 
 
 @planner_bp.route("/photo-projects/bookings/<int:booking_id>/delete", methods=["POST"])
