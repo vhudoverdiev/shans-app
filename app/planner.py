@@ -752,6 +752,9 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "is_today": current_day == date.today(),
                 "is_selected": current_day == selected_date,
                 "tasks": tasks_by_date.get(day_key, []),
+                "has_photo_or_shooting": any(
+                    item["task_type"] in {"Фотопроект", "Съёмка"} for item in tasks_by_date.get(day_key, [])
+                ),
             }
         )
         current_day += timedelta(days=1)
@@ -794,9 +797,20 @@ def schedule():
     return render_template("schedule.html", **context)
 
 
-@planner_bp.route("/planner.schedule/task/create", methods=["POST"])
+@planner_bp.route("/planner.schedule/task/create", methods=["GET", "POST"])
 @login_required
 def create_schedule_task():
+    if request.method == "GET":
+        selected_date = _parse_date(request.args.get("date"), default=date.today())
+        return render_template(
+            "schedule_task_form.html",
+            task=None,
+            initial_date=selected_date.isoformat(),
+            task_types=TASK_TYPES,
+            task_statuses=TASK_STATUSES,
+            projects=[_serialize_project_row(project) for project in get_all_projects() if not _serialize_project_row(project)["is_archived"]],
+        )
+
     title = request.form.get("title", "").strip()
     task_date = request.form.get("task_date", "").strip()
     description = request.form.get("description", "")
