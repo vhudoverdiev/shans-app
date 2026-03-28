@@ -96,8 +96,15 @@
 }
 
 .planner-day-card-muted{opacity:.55}
-.planner-day-card-today{border-color:#d1d5db;background:#fff}
+.planner-day-card-today{
+    border-color:rgba(59,130,246,.45);
+    background:rgba(59,130,246,.10);
+}
 .planner-day-card-selected{border-color:#111827;background:#fff}
+.planner-day-card-photo{
+    border-color:rgba(59,130,246,.4);
+    background:rgba(59,130,246,.08);
+}
 
 .planner-day-card-head{
     display:flex;
@@ -301,6 +308,14 @@
     gap:8px;
 }
 
+.planner-task-row-photo{
+    background:rgba(59,130,246,.08);
+}
+
+.data-table tr.planner-task-row-photo{
+    background:rgba(59,130,246,.08);
+}
+
 @media (max-width: 1024px){
     .planner-layout,
     .photo-projects-grid{
@@ -330,6 +345,10 @@
     .planner-task-actions{
         flex-direction:row;
         flex-wrap:wrap;
+    }
+
+    .car-tab-bar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
