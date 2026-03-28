@@ -75,7 +75,6 @@
             <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
         </div>
 
-        {% if bookings %}
         <div class="table-wrapper">
             <table class="data-table data-table-car">
                 <thead>
@@ -114,13 +113,14 @@
                             </div>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">Записей пока нет.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="empty-state">Записей пока нет.</div>
-        {% endif %}
     </div>
 
     {% else %}
