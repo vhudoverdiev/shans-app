@@ -227,17 +227,17 @@ def build_photo_project_excel(project, bookings):
     ws = wb.active
     ws.title = "Фотопроект"
 
-    title_fill = PatternFill("solid", fgColor="166534")
-    section_fill = PatternFill("solid", fgColor="DCFCE7")
-    header_fill = PatternFill("solid", fgColor="BBF7D0")
-    odd_row_fill = PatternFill("solid", fgColor="F0FDF4")
+    title_fill = PatternFill("solid", fgColor="1E3A8A")
+    section_fill = PatternFill("solid", fgColor="E0E7FF")
+    header_fill = PatternFill("solid", fgColor="C7D2FE")
+    odd_row_fill = PatternFill("solid", fgColor="EEF2FF")
     even_row_fill = PatternFill("solid", fgColor="FFFFFF")
 
     white_bold_font = Font(color="FFFFFF", bold=True, size=14)
     bold_font = Font(bold=True)
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     left = Alignment(horizontal="left", vertical="top", wrap_text=True)
-    thin = Side(style="thin", color="D1D5DB")
+    thin = Side(style="thin", color="CBD5E1")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     ws.merge_cells("A1:K1")
