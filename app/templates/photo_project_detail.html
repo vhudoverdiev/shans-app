@@ -53,36 +53,33 @@
         </div>
 
         <div class="table-wrapper">
-            <table class="data-table data-table-car">
+            <table class="data-table data-table-car data-table-photo-bookings">
                 <thead>
                     <tr>
                         <th>Клиент</th>
                         <th>Контакты</th>
-                        <th>Время</th>
+                        <th>Дата и время</th>
                         <th>Длительность</th>
                         <th>Начало макияжа</th>
-                        <th>Стоимость</th>
-                        <th>Предоплата</th>
-                        <th>Остаток к оплате</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for booking in bookings %}
                     <tr>
-                        <td>{{ booking.client_name }}</td>
+                        <td>
+                            <a class="status-pill-link" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Открыть запись">{{ booking.client_name }}</a>
+                        </td>
                         <td>{{ booking.client_contact }}</td>
-
-                        <td>{{ booking.booking_date_display }}</td>
-
-                        <td>{{ booking.booking_time or '—' }}</td>
+                        <td>
+                            <div>{{ booking.booking_date_display }}</div>
+                            <div class="booking-meta-time">{{ booking.booking_time or '—' }}</div>
+                        </td>
                         <td>{{ booking.duration_minutes }} мин</td>
                         <td>{{ booking.makeup_start_time or '—' }}</td>
-                        <td>{{ booking.price }} ₽</td>
-                        <td>{{ booking.prepayment }} ₽</td>
-                        <td><span class="status-pill">{{ booking.remaining_payment }} ₽</span></td>
                         <td>
                             <div class="table-actions-icon">
+                                <a class="icon-action-btn" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Подробнее">👁</a>
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}" title="Редактировать">✏</a>
                                 <form method="post" action="{{ url_for('planner.delete_photo_project_booking', booking_id=booking.id) }}" class="inline-form" onsubmit="return confirm('Удалить запись?');">
                                     <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
@@ -92,7 +89,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="9">Записей пока нет.</td>
+                        <td colspan="6">Записей пока нет.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -139,9 +136,12 @@
                     <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="0">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group form-group-full">
                     <label>Остаток к оплате</label>
-                    <input class="form-input" type="text" id="booking_remaining" value="0 ₽" readonly>
+                    <div class="remaining-payment-preview" id="booking_remaining_wrap">
+                        <span class="remaining-payment-preview-label">К оплате на съёмке</span>
+                        <input class="form-input remaining-payment-input" type="text" id="booking_remaining" value="0 ₽" readonly>
+                    </div>
                 </div>
                 <div class="form-group" id="makeup_start_group" style="display:none;">
                     <label>Начало макияжа</label>
@@ -202,6 +202,10 @@
             const prepayment = Number(prepaymentField.value || 0);
             const remaining = Math.max(price - prepayment, 0);
             remainingField.value = `${remaining} ₽`;
+            const remainingWrap = document.getElementById("booking_remaining_wrap");
+            if (remainingWrap) {
+                remainingWrap.classList.toggle("remaining-payment-preview-complete", remaining === 0);
+            }
         }
 
         durationField.addEventListener("change", toggleMakeup);

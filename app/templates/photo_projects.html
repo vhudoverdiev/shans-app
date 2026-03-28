@@ -36,7 +36,7 @@
 
             {% if archived_projects %}
                 <div class="table-wrapper">
-                    <table class="data-table data-table-car">
+                    <table class="data-table data-table-car data-table-photo-projects">
                         <thead>
                             <tr>
                                 <th>Название</th>
@@ -50,29 +50,13 @@
                         <tbody>
                             {% for project in archived_projects %}
                                 <tr>
-                                    <td>{{ project.title }}</td>
-                                    <td>{{ project.city }}</td>
-                                    <td>{{ project.project_date_display }}</td>
-                                    <td>{{ project.time_range_display }}</td>
-                                    <td>{{ project.bookings_count }}</td>
                                     <td>
-                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
-                                            <button type="submit" class="btn btn-small btn-danger" title="Удалить">Удалить</button>
-                                        </form>
-
-                                    <td>{{ project.city }}</td>
-                                    <td>{{ project.project_date_display }}</td>
-                                    <td>{{ project.time_range_display }}</td>
-
-                                    <td>{{ project.idea }}</td>
-                                    <td>{{ project.project_date_display }}</td>
-                                    <td>
-                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
-                                            {{ project.effective_status }}
-                                        </span>
+                                        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
                                     </td>
-
-                                    <td>{{ project.bookings_count }}</td>
+                                    <td>{{ project.city }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>{{ project.time_range_display }}</td>
+                                    <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
                                         <div class="table-actions-icon">
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
@@ -98,7 +82,7 @@
 
             {% if projects %}
                 <div class="table-wrapper">
-                    <table class="data-table data-table-car">
+                    <table class="data-table data-table-car data-table-photo-projects">
                         <thead>
                             <tr>
                                 <th>Название</th>
@@ -118,28 +102,13 @@
                                     <td>{{ project.city }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>{{ project.time_range_display }}</td>
-                                    <td>{{ project.bookings_count }}</td>
+                                    <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
-                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
-                                            <button type="submit" class="btn btn-small btn-danger" title="Удалить">Удалить</button>
-                                <tr onclick="window.location='{{ url_for('planner.photo_project_detail', project_id=project.id) }}'" style="cursor:pointer;">
-                                    <td>{{ project.title }}</td>
-
-                                    <td>{{ project.city }}</td>
-                                    <td>{{ project.project_date_display }}</td>
-                                    <td>{{ project.time_range_display }}</td>
-
-                                    <td>{{ project.idea }}</td>
-                                    <td>{{ project.project_date_display }}</td>
-                                    <td>
-                                        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
-                                    </td>
-
-                                    <td>{{ project.bookings_count }}</td>
-                                    <td>
-                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
-                                            <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
-                                        </form>
+                                        <div class="table-actions-icon">
+                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
+                                                <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             {% endfor %}

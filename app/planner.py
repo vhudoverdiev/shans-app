@@ -894,8 +894,6 @@ def photo_project_detail(project_id: int):
         return redirect(url_for("planner.photo_projects"))
     bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
     view_mode = request.args.get("view", "bookings")
-
-    view_mode = request.args.get("view", "bookings")
     available_slots = _build_available_slots(dict(project), bookings)
 
     return render_template(
@@ -982,13 +980,6 @@ def create_photo_project_booking(project_id: int):
     if duration_minutes_raw not in {"15", "30"}:
         flash("Выбери длительность 15 или 30 минут.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
-    if not _is_valid_phone_number(client_contact):
-        flash("Контакт должен содержать только номер телефона.", "error")
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
-    if duration_minutes_raw not in {"15", "30"}:
-        flash("Выбери длительность 15 или 30 минут.", "error")
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
     duration_minutes = int(duration_minutes_raw)
     available_slots = _build_available_slots(dict(project), [_serialize_booking_row(item) for item in get_bookings_for_project(project_id)])
     if booking_time not in available_slots[duration_minutes_raw]:
@@ -997,23 +988,12 @@ def create_photo_project_booking(project_id: int):
     if duration_minutes == 30 and not makeup_start_time:
         flash("Для записи на 30 минут укажи время начала макияжа.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
-    if duration_minutes == 30 and not makeup_start_time:
-        flash("Для записи на 30 минут укажи время начала макияжа.", "error")
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
     try:
         price = float(price_raw or 0)
         prepayment = float(prepayment_raw or 0)
     except ValueError:
         flash("Стоимость и предоплата должны быть числами.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
-    if not _is_valid_phone_number(client_contact):
-        flash("Контакт должен содержать только номер телефона.", "error")
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
-    if not _is_valid_phone_number(client_contact):
-        flash("Контакт должен содержать только номер телефона.", "error")
-        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
     booking_id = create_booking(
         project_id,
@@ -1074,12 +1054,6 @@ def edit_photo_project_booking(booking_id: int):
         except ValueError:
             flash("Стоимость и предоплата должны быть числами.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
-        if not _is_valid_phone_number(client_contact):
-            flash("Контакт должен содержать только номер телефона.", "error")
-            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
-        if not _is_valid_phone_number(client_contact):
-            flash("Контакт должен содержать только номер телефона.", "error")
-            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
 
         update_booking(
             booking_id,
@@ -1097,6 +1071,16 @@ def edit_photo_project_booking(booking_id: int):
         return redirect(url_for("planner.photo_project_detail", project_id=booking["project_id"]))
 
     return render_template("booking_form.html", booking=_serialize_booking_row(booking))
+
+
+@planner_bp.route("/photo-projects/bookings/<int:booking_id>")
+@login_required
+def photo_project_booking_detail(booking_id: int):
+    booking = get_booking(booking_id)
+    if not booking:
+        flash("Запись не найдена.", "error")
+        return redirect(url_for("planner.photo_projects"))
+    return render_template("photo_project_booking_detail.html", booking=_serialize_booking_row(booking))
 
 
 @planner_bp.route("/photo-projects/bookings/<int:booking_id>/delete", methods=["POST"])
