@@ -159,13 +159,23 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Таблица операций</h2>
+            <div class="table-actions bulk-table-actions">
+                <form method="post" action="{{ url_for('budget_delete_selected') }}" class="inline-form bulk-delete-selected-form">
+                    <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                    <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                </form>
+                <form method="post" action="{{ url_for('budget_delete_all') }}" class="inline-form bulk-delete-all-form">
+                    <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                </form>
+            </div>
         </div>
 
         {% if entries %}
-            <div class="table-wrapper">
+            <div class="table-wrapper bulk-table">
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                             <th>Месяц</th>
                             <th>Тип</th>
                             <th>Категория</th>
@@ -176,6 +186,7 @@
                     <tbody>
                         {% for entry in entries %}
                             <tr>
+                                <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ entry.id }}" aria-label="Выбрать запись"></td>
                                 <td>{{ entry.month_name }}</td>
                                 <td>
                                     <span class="badge {% if entry.entry_type == 'Доход' %}badge-income{% else %}badge-expense{% endif %}">

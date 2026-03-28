@@ -78,14 +78,26 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Задачи на {{ selected_date_label }}</h2>
-            <a class="btn btn-primary btn-small" href="{{ url_for('planner.create_schedule_task') }}">Новая задача</a>
+            <div class="table-actions">
+                <form method="post" action="{{ url_for('planner.delete_schedule_tasks_selected') }}" class="inline-form bulk-delete-selected-form">
+                    <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                    <input type="hidden" name="task_date" value="{{ selected_date.isoformat() }}">
+                    <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                </form>
+                <form method="post" action="{{ url_for('planner.delete_schedule_tasks_all') }}" class="inline-form bulk-delete-all-form">
+                    <input type="hidden" name="task_date" value="{{ selected_date.isoformat() }}">
+                    <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                </form>
+                <a class="btn btn-primary btn-small" href="{{ url_for('planner.create_schedule_task') }}">Новая задача</a>
+            </div>
         </div>
 
         {% if day_tasks %}
-        <div class="table-wrapper">
+        <div class="table-wrapper bulk-table">
             <table class="data-table data-table-car">
                 <thead>
                     <tr>
+                        <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                         <th>Название</th>
                         <th>Время</th>
                         <th>Тип</th>
@@ -97,6 +109,7 @@
                 <tbody>
                     {% for task in day_tasks %}
                     <tr>
+                        <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
                             {{ task.title }}
                             {% if task.task_type == 'Съёмка' and task.shooting_id %}

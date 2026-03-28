@@ -242,6 +242,11 @@ a {
     min-height: 40px;
 }
 
+.btn-import-shortcut {
+    min-width: 44px;
+    padding: 0 12px;
+}
+
 /* =========================
    FLASH
 ========================= */
@@ -584,6 +589,22 @@ a {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.bulk-table-actions {
+    justify-content: flex-end;
+}
+
+.bulk-col {
+    width: 46px;
+    min-width: 46px;
+    text-align: center !important;
+}
+
+.bulk-col input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 .inline-form {
@@ -3730,6 +3751,27 @@ a {
 
 .import-center-form {
     margin-top: 14px;
+}
+
+.import-file-input {
+    display: none;
+}
+
+.import-file-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.import-file-btn {
+    min-width: 142px;
+}
+
+.import-file-name {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .import-mode-switch {
