@@ -3557,3 +3557,78 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+.data-table-photo-projects tbody tr:hover,
+.data-table-photo-bookings tbody tr:hover {
+    background: #f8fafc;
+}
+
+.js-project-row {
+    cursor: pointer;
+}
+
+.js-booking-row {
+    cursor: pointer;
+}
+
+.booking-meta-time {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.remaining-payment-preview {
+    border: 1px solid #dbeafe;
+    background: linear-gradient(145deg, #eff6ff, #f8fafc);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.remaining-payment-preview-label {
+    display: block;
+    color: #475569;
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.remaining-payment-input {
+    background: #fff;
+    border-color: #bfdbfe;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: center;
+}
+
+.remaining-payment-preview-complete {
+    border-color: #c7d2fe;
+    background: linear-gradient(145deg, #eef2ff, #f8fafc);
+}
+
+.booking-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.booking-detail-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background: #f8fafc;
+}
+
+.booking-payment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.remaining-card {
+    border: 1px solid #bfdbfe;
+}
