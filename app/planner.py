@@ -127,6 +127,14 @@ def _month_name_ru(month_number: int) -> str:
     return months[month_number - 1]
 
 
+def _month_short_name_ru(month_number: int) -> str:
+    months = [
+        "янв", "фев", "мар", "апр", "май", "июн",
+        "июл", "авг", "сен", "окт", "ноя", "дек",
+    ]
+    return months[month_number - 1]
+
+
 def _status_label(status: str) -> str:
     mapping = {"planned": "Запланировано", "done": "Выполнено", "cancelled": "Отменено"}
     return mapping.get(status, status)
@@ -744,16 +752,21 @@ def build_schedule_context(selected_date: date, current_view: str):
     current_day = calendar_start
     while current_day <= calendar_end:
         day_key = current_day.isoformat()
+        day_tasks = tasks_by_date.get(day_key, [])
+        first_task_title = (day_tasks[0]["title"] if day_tasks else "")[:40]
         month_cells.append(
             {
                 "date": current_day,
                 "date_key": day_key,
+                "month_short": _month_short_name_ru(current_day.month),
                 "is_current_month": current_day.month == selected_date.month,
                 "is_today": current_day == date.today(),
                 "is_selected": current_day == selected_date,
-                "tasks": tasks_by_date.get(day_key, []),
+                "is_weekend": current_day.weekday() >= 5,
+                "tasks": day_tasks,
+                "first_task_title": first_task_title,
                 "has_photo_or_shooting": any(
-                    item["task_type"] in {"Фотопроект", "Съёмка"} for item in tasks_by_date.get(day_key, [])
+                    item["task_type"] in {"Фотопроект", "Съёмка"} for item in day_tasks
                 ),
             }
         )

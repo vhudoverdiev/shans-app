@@ -97,10 +97,18 @@
 
 .planner-day-card-muted{opacity:.55}
 .planner-day-card-today{
-    border-color:rgba(59,130,246,.45);
-    background:rgba(59,130,246,.10);
+    border-color:rgba(59,130,246,.65);
+    background:rgba(59,130,246,.16);
 }
 .planner-day-card-selected{border-color:#111827;background:#fff}
+.planner-day-card-weekend{
+    border-color:rgba(239,68,68,.28);
+    background:rgba(239,68,68,.10);
+}
+.planner-day-card-weekend.planner-day-card-today{
+    border-color:rgba(59,130,246,.65);
+    background:rgba(59,130,246,.16);
+}
 .planner-day-card-photo{
     border-color:rgba(59,130,246,.4);
     background:rgba(59,130,246,.08);
@@ -515,6 +523,13 @@
     font-size:13px;
     font-weight:600;
     color:#6b7280;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.planner-month-grid-scroll{
+    scroll-behavior:smooth;
 }
 
 .planner-task-list-fancy{
