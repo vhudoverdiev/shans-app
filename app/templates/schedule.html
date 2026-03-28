@@ -27,8 +27,13 @@
     <div class="card table-card">
         <div class="planner-toolbar">
             <div class="page-actions">
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">←</a>
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">→</a>
+                {% if current_view == 'month' %}
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=prev_date) }}">← Месяц назад</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='month', date=next_date) }}">Месяц вперёд →</a>
+                {% else %}
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=prev_date) }}">←</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view='day', date=next_date) }}">→</a>
+                {% endif %}
                 <a class="btn btn-primary btn-compact" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
             </div>
 
@@ -60,10 +65,10 @@
 
         <div class="planner-month-grid planner-month-grid-scroll" data-next-month-url="{{ url_for('planner.schedule', view='month', date=next_date) }}" data-prev-month-url="{{ url_for('planner.schedule', view='month', date=prev_date) }}">
             {% for cell in month_cells %}
-            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %}">
+            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
                 <div class="planner-day-card-head">
-                    <strong>{{ cell.date.day }} {{ cell.month_short }}</strong>
-                    {% if cell.tasks %}<span class="planner-day-count">{{ cell.tasks|length }}</span>{% endif %}
+                    <strong class="{% if cell.is_past %}planner-day-text-past{% endif %}">{{ cell.date.day }} {{ cell.month_short }}</strong>
+                    {% if cell.tasks %}<span class="planner-day-count {% if cell.has_important %}planner-day-count-important{% endif %}">{{ cell.tasks|length }}</span>{% endif %}
                 </div>
                 <div class="planner-day-summary">
                     {% if cell.tasks %}
@@ -92,7 +97,6 @@
                     <input type="hidden" name="task_date" value="{{ selected_date.isoformat() }}">
                     <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
                 </form>
-                <a class="btn btn-primary btn-small" href="{{ url_for('planner.create_schedule_task', date=selected_date.isoformat()) }}">Новая задача</a>
             </div>
         </div>
 
@@ -112,18 +116,13 @@
                 </thead>
                 <tbody>
                     {% for task in day_tasks %}
-                    <tr class="{% if task.task_type in ['Фотопроект', 'Съёмка'] %}planner-task-row-photo{% endif %}">
+                    <tr class="{% if task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
                             {{ task.title }}
-                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
-                            <div><a href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a></div>
-                            {% endif %}
                         </td>
                         <td>
-                            {% if task.start_time and task.end_time %}
-                                {{ task.start_time }} — {{ task.end_time }}
-                            {% elif task.start_time %}
+                            {% if task.start_time %}
                                 {{ task.start_time }}
                             {% else %}
                                 Без времени
@@ -131,11 +130,20 @@
                         </td>
                         <td>{{ task.task_type }}</td>
                         <td><span class="status-pill planner-status-chip-{{ task.status }}">{{ status_label(task.status) }}</span></td>
-                        <td>{{ task.description or '—' }}</td>
+                        <td>
+                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
+                            <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
+                            {% else %}
+                            {{ task.description or '—' }}
+                            {% endif %}
+                        </td>
                         <td>
                             <div class="table-actions-icon">
                                 <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form">
                                     <button class="icon-action-btn icon-complete" type="submit" title="Готово">✓</button>
+                                </form>
+                                <form method="post" action="{{ url_for('planner.move_schedule_task_next_day', task_id=task.id) }}" class="inline-form">
+                                    <button class="icon-action-btn icon-edit" type="submit" title="Перенести на следующий день">⇢</button>
                                 </form>
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_schedule_task', task_id=task.id) }}" title="Изменить">✏</a>
                                 <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" class="inline-form" onsubmit="return confirm('Удалить задачу?');">
@@ -155,26 +163,4 @@
 
     {% endif %}
 </section>
-{% if current_view == 'month' %}
-<script>
-    (function () {
-        const monthGrid = document.querySelector('.planner-month-grid-scroll');
-        if (!monthGrid) return;
-
-        let wheelLocked = false;
-        monthGrid.addEventListener('wheel', function (event) {
-            if (wheelLocked || !event.deltaY) return;
-            event.preventDefault();
-
-            const targetUrl = event.deltaY > 0
-                ? monthGrid.dataset.nextMonthUrl
-                : monthGrid.dataset.prevMonthUrl;
-            if (!targetUrl) return;
-
-            wheelLocked = true;
-            window.location.href = targetUrl;
-        }, { passive: false });
-    })();
-</script>
-{% endif %}
 {% endblock %}

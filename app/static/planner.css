@@ -110,8 +110,8 @@
     background:rgba(59,130,246,.16);
 }
 .planner-day-card-photo{
-    border-color:rgba(59,130,246,.4);
-    background:rgba(59,130,246,.08);
+    border-color:rgba(234,179,8,.55);
+    background:rgba(250,204,21,.16);
 }
 
 .planner-day-card-head{
@@ -133,6 +133,10 @@
     color:#fff;
     font-size:12px;
     font-weight:700;
+}
+.planner-day-count-important{
+    background:#eab308;
+    color:#111827;
 }
 
 .planner-day-tasks,
@@ -317,11 +321,11 @@
 }
 
 .planner-task-row-photo{
-    background:rgba(59,130,246,.08);
+    background:rgba(250,204,21,.20);
 }
 
 .data-table tr.planner-task-row-photo{
-    background:rgba(59,130,246,.08);
+    background:rgba(250,204,21,.20);
 }
 
 @media (max-width: 1024px){
@@ -513,6 +517,26 @@
 .planner-day-card:hover{
     transform:translateY(-3px);
     box-shadow:0 14px 30px rgba(17,24,39,.08);
+}
+
+.planner-day-card-past{
+    opacity:.78;
+}
+
+.planner-day-text-past{
+    text-decoration:line-through;
+    text-decoration-thickness:2px;
+    text-decoration-color:#9ca3af;
+}
+
+.planner-shooting-open-btn{
+    border-color:#eab308;
+    color:#92400e;
+    background:#fef3c7;
+}
+
+.planner-form-mode-tabs{
+    margin-bottom:14px;
 }
 
 .planner-day-summary{
