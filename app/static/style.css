@@ -600,6 +600,14 @@ a {
     display: none !important;
 }
 
+.bulk-actions-hidden .bulk-cancel-selection-btn {
+    display: none !important;
+}
+
+.bulk-selection-hidden .bulk-col {
+    display: none !important;
+}
+
 .bulk-col {
     width: 46px;
     min-width: 46px;
