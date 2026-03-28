@@ -2,21 +2,17 @@
 {% block title %}График | Шанс{% endblock %}
 
 {% block content %}
-<section class="planner-page same-style-page">
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">График</span>
-                <span class="page-title-light">день и месяц</span>
-            </h1>
-            <p class="planner-page-subtitle">Календарь стал чище: без недельного режима, с аккуратными статусами и более понятными карточками задач.</p>
+            <h1 class="page-title">График</h1>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Фотопроекты</a>
         </div>
     </div>
 
-    <div class="stats-grid planner-stats-grid planner-stats-grid-spaced">
+    <div class="stats-grid car-stats-grid">
         <div class="stat-card">
             <div class="stat-label">Всего за месяц</div>
             <div class="stat-value">{{ month_stats.total }}</div>
@@ -31,200 +27,171 @@
         </div>
     </div>
 
-    <div class="planner-layout">
-        <div class="planner-main-col">
-            <div class="card table-card planner-toolbar-card">
-                <div class="planner-toolbar">
-                    <div class="page-actions">
-                        <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">← Назад</a>
-                        <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">Вперёд →</a>
-                        <a class="btn btn-primary btn-compact" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
-                    </div>
-
-                    <div class="planner-toolbar-title">
-                        {% if current_view == 'month' %}
-                            {{ month_title }}
-                        {% else %}
-                            {{ selected_date_label }}
-                        {% endif %}
-                    </div>
-
-                    <div class="planner-view-switch">
-                        <a href="{{ url_for('planner.schedule', view='day', date=selected_date.isoformat()) }}" class="planner-view-link {% if current_view == 'day' %}planner-view-link-active{% endif %}">День</a>
-                        <a href="{{ url_for('planner.schedule', view='month', date=selected_date.isoformat()) }}" class="planner-view-link {% if current_view == 'month' %}planner-view-link-active{% endif %}">Месяц</a>
-                    </div>
-                </div>
+    <div class="card table-card">
+        <div class="planner-toolbar">
+            <div class="page-actions">
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">← Назад</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">Вперёд →</a>
+                <a class="btn btn-primary btn-compact" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
             </div>
 
-            {% if current_view == 'month' %}
-            <div class="card table-card">
-                <div class="table-header">
-                    <h2 class="section-title">Календарь на месяц</h2>
-                </div>
-
-                <div class="planner-month-grid planner-weekdays">
-                    <div>Пн</div>
-                    <div>Вт</div>
-                    <div>Ср</div>
-                    <div>Чт</div>
-                    <div>Пт</div>
-                    <div>Сб</div>
-                    <div>Вс</div>
-                </div>
-
-                <div class="planner-month-grid">
-                    {% for cell in month_cells %}
-                    <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %}">
-                        <div class="planner-day-card-head">
-                            <strong>{{ cell.date.day }}</strong>
-                            {% if cell.tasks %}
-                            <span class="planner-day-count">{{ cell.tasks|length }}</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="planner-day-summary">
-                            {% if cell.tasks %}
-                            <span>Задач: {{ cell.tasks|length }}</span>
-                            {% else %}
-                            <span>Свободно</span>
-                            {% endif %}
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% else %}
-            <div class="card table-card">
-                <div class="table-header">
-                    <h2 class="section-title">Задачи на {{ selected_date_label }}</h2>
-                </div>
-
-                {% if day_tasks %}
-                <div class="planner-task-list planner-task-list-fancy">
-                    {% for task in day_tasks %}
-                    <div class="planner-task-row planner-task-row-fancy">
-                        <div class="planner-task-main">
-                            <div class="planner-task-top">
-                                <div>
-                                    <div class="planner-task-title">{{ task.title }}</div>
-                                    <div class="planner-task-badges">
-                                        <span class="planner-status-chip planner-status-chip-{{ task.status }}">{{ status_label(task.status) }}</span>
-                                        <span class="planner-type-chip">{{ task.task_type }}</span>
-                                    </div>
-                                </div>
-                                <div class="planner-task-time planner-task-time-fancy">
-                                    {% if task.start_time and task.end_time %}
-                                        {{ task.start_time }} — {{ task.end_time }}
-                                    {% elif task.start_time %}
-                                        {{ task.start_time }}
-                                    {% else %}
-                                        Без времени
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            {% if task.project_title and task.task_type != 'Фотопроект' %}
-                            <div class="planner-task-meta">Фотопроект: {{ task.project_title }}</div>
-                            {% endif %}
-
-                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
-                            <div class="planner-task-meta">
-                                <a href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
-                            </div>
-                            {% endif %}
-
-                            {% if task.description %}
-                            <div class="planner-task-description">{{ task.description }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="planner-task-actions planner-task-actions-fancy">
-                            <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}">
-                                <button class="btn btn-secondary btn-compact" type="submit">Готово</button>
-                            </form>
-                            <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.edit_schedule_task', task_id=task.id) }}">Изменить</a>
-                            <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу?');">
-                                <button class="btn btn-secondary btn-compact" type="submit">Удалить</button>
-                            </form>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+            <div class="planner-toolbar-title">
+                {% if current_view == 'month' %}
+                    {{ month_title }}
                 {% else %}
-                <div class="empty-state">На этот день задач пока нет.</div>
+                    {{ selected_date_label }}
                 {% endif %}
             </div>
-            {% endif %}
+
+            <div class="car-tab-bar">
+                <a href="{{ url_for('planner.schedule', view='day', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'day' %}car-tab-link-active{% endif %}">День</a>
+                <a href="{{ url_for('planner.schedule', view='month', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'month' %}car-tab-link-active{% endif %}">Месяц</a>
+            </div>
+        </div>
+    </div>
+
+    {% if current_view == 'month' %}
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Календарь на месяц</h2>
         </div>
 
-        <aside class="planner-side-col">
-            <div class="card table-card planner-form-shell">
-                <div class="table-header">
-                    <h2 class="section-title">Добавить задачу</h2>
+        <div class="planner-month-grid planner-weekdays">
+            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+        </div>
+
+        <div class="planner-month-grid">
+            {% for cell in month_cells %}
+            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %}">
+                <div class="planner-day-card-head">
+                    <strong>{{ cell.date.day }}</strong>
+                    {% if cell.tasks %}<span class="planner-day-count">{{ cell.tasks|length }}</span>{% endif %}
                 </div>
-
-                <form method="post" action="{{ url_for('planner.create_schedule_task') }}" class="planner-form planner-form-clean planner-form-schedule">
-                    <input type="hidden" name="return_view" value="{{ current_view }}">
-
-                    <div class="form-group">
-                        <label>Название</label>
-                        <input class="form-input" type="text" name="title" required placeholder="Например, съёмка, монтаж, созвон">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Дата</label>
-                        <input class="form-input" type="date" name="task_date" required value="{{ selected_date.isoformat() }}">
-                    </div>
-
-                    <div class="planner-form-grid">
-                        <div class="form-group">
-                            <label>Начало</label>
-                            <input class="form-input" type="time" name="start_time">
-                        </div>
-                        <div class="form-group">
-                            <label>Конец</label>
-                            <input class="form-input" type="time" name="end_time">
-                        </div>
-                    </div>
-
-                    <div class="planner-form-grid">
-                        <div class="form-group">
-                            <label>Тип</label>
-                            <select class="form-input" name="task_type">
-                                {% for item in task_types %}
-                                <option value="{{ item }}">{{ item }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Статус</label>
-                            <select class="form-input" name="status">
-                                <option value="planned">Запланировано</option>
-                                <option value="done">Выполнено</option>
-                                <option value="cancelled">Отменено</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Привязать к фотопроекту</label>
-                        <select class="form-input" name="project_id">
-                            <option value="">Без привязки</option>
-                            {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Описание</label>
-                        <textarea class="form-input" name="description" rows="4" placeholder="Короткие заметки по задаче"></textarea>
-                    </div>
-
-                    <button class="btn btn-primary btn-wide" type="submit">Сохранить задачу</button>
-                </form>
-            </div>
-        </aside>
+                <div class="planner-day-summary">
+                    {% if cell.tasks %}<span>Задач: {{ cell.tasks|length }}</span>{% else %}<span>Свободно</span>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
     </div>
+    {% else %}
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Задачи на {{ selected_date_label }}</h2>
+            <a class="btn btn-primary btn-small" href="{{ url_for('planner.create_schedule_task') }}">Новая задача</a>
+        </div>
+
+        {% if day_tasks %}
+        <div class="table-wrapper">
+            <table class="data-table data-table-car">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Время</th>
+                        <th>Тип</th>
+                        <th>Статус</th>
+                        <th>Описание</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in day_tasks %}
+                    <tr>
+                        <td>
+                            {{ task.title }}
+                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
+                            <div><a href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a></div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.start_time and task.end_time %}
+                                {{ task.start_time }} — {{ task.end_time }}
+                            {% elif task.start_time %}
+                                {{ task.start_time }}
+                            {% else %}
+                                Без времени
+                            {% endif %}
+                        </td>
+                        <td>{{ task.task_type }}</td>
+                        <td><span class="status-pill planner-status-chip-{{ task.status }}">{{ status_label(task.status) }}</span></td>
+                        <td>{{ task.description or '—' }}</td>
+                        <td>
+                            <div class="table-actions-icon">
+                                <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form">
+                                    <button class="icon-action-btn icon-complete" type="submit" title="Готово">✓</button>
+                                </form>
+                                <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_schedule_task', task_id=task.id) }}" title="Изменить">✏</a>
+                                <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" class="inline-form" onsubmit="return confirm('Удалить задачу?');">
+                                    <button class="icon-action-btn icon-delete" type="submit" title="Удалить">🗑</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">На этот день задач пока нет.</div>
+        {% endif %}
+    </div>
+
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Добавить задачу</div>
+            <div class="car-form-head-text">Быстрое добавление задачи на выбранную дату.</div>
+        </div>
+
+        <form method="post" action="{{ url_for('planner.create_schedule_task') }}" class="form-block">
+            <input type="hidden" name="return_view" value="{{ current_view }}">
+
+            <div class="car-form-grid">
+                <div class="form-group car-form-full">
+                    <label>Название</label>
+                    <input class="form-input" type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input class="form-input" type="date" name="task_date" required value="{{ selected_date.isoformat() }}">
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select class="form-input" name="task_type">{% for item in task_types %}<option value="{{ item }}">{{ item }}</option>{% endfor %}</select>
+                </div>
+                <div class="form-group">
+                    <label>Начало</label>
+                    <input class="form-input" type="time" name="start_time">
+                </div>
+                <div class="form-group">
+                    <label>Конец</label>
+                    <input class="form-input" type="time" name="end_time">
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
+                    <select class="form-input" name="status">
+                        <option value="planned">Запланировано</option>
+                        <option value="done">Выполнено</option>
+                        <option value="cancelled">Отменено</option>
+                    </select>
+                </div>
+                <div class="form-group car-form-full">
+                    <label>Привязать к фотопроекту</label>
+                    <select class="form-input" name="project_id">
+                        <option value="">Без привязки</option>
+                        {% for project in projects %}<option value="{{ project.id }}">{{ project.title }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="form-group car-form-full">
+                    <label>Описание</label>
+                    <textarea class="form-input car-textarea" name="description" rows="4"></textarea>
+                </div>
+            </div>
+
+            <div class="car-form-actions">
+                <button class="btn btn-primary" type="submit">Сохранить задачу</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 </section>
 {% endblock %}

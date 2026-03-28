@@ -1,83 +1,74 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="shooting-page shooting-page-narrow">
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">Съёмки</span>
-                <span class="page-title-light">добавить съёмку</span>
-            </h1>
+            <h1 class="page-title">Добавить съёмку</h1>
         </div>
     </div>
 
     <div class="car-tab-bar">
-        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
-            <span>Ближайшие съёмки</span>
-        </a>
-        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
-            <span>Добавить съёмку</span>
-        </a>
-        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
-            <span>Архив</span>
-        </a>
+        <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Ближайшие съёмки</a>
+        <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
+        <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 
-    <div class="content-card">
-        <div class="table-toolbar">
-            <div class="table-toolbar-title">
-                <h2>Новая съёмка</h2>
-                <p>Заполни основные данные по клиенту, времени и оплате.</p>
-            </div>
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Новая съёмка</div>
+            <div class="car-form-head-text">Заполни основные данные по клиенту, времени и оплате.</div>
         </div>
 
-        <form method="POST" class="shooting-form-grid-compact">
-            <div class="form-group">
-                <label for="project_name">Название</label>
-                <input id="project_name" name="project_name" type="text" class="form-input" value="{{ form_data.project_name }}" required>
+        <form method="POST" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label for="project_name">Название</label>
+                    <input id="project_name" name="project_name" type="text" class="form-input" value="{{ form_data.project_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="client_name">Клиент</label>
+                    <input id="client_name" name="client_name" type="text" class="form-input" value="{{ form_data.client_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="shooting_date">Дата съёмки</label>
+                    <input id="shooting_date" name="shooting_date" type="date" class="form-input" value="{{ form_data.shooting_date }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="shooting_time">Время съёмки</label>
+                    <input id="shooting_time" name="shooting_time" type="time" class="form-input" value="{{ form_data.shooting_time }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="duration_hours">Количество часов съёмки</label>
+                    <input id="duration_hours" name="duration_hours" type="number" min="0.5" step="0.5" class="form-input" value="{{ form_data.duration_hours }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон</label>
+                    <input id="phone" name="phone" type="tel" class="form-input" value="{{ form_data.phone }}" inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Стоимость</label>
+                    <input id="price" name="price" type="number" min="0" step="0.01" class="form-input" value="{{ form_data.price }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="prepayment">Предоплата</label>
+                    <input id="prepayment" name="prepayment" type="number" min="0" step="0.01" class="form-input" value="{{ form_data.prepayment }}">
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label for="notes">Дополнительная информация</label>
+                    <textarea id="notes" name="notes" class="form-input car-textarea">{{ form_data.notes }}</textarea>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="client_name">Клиент</label>
-                <input id="client_name" name="client_name" type="text" class="form-input" value="{{ form_data.client_name }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="shooting_date">Дата съёмки</label>
-                <input id="shooting_date" name="shooting_date" type="date" class="form-input" value="{{ form_data.shooting_date }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="shooting_time">Время съёмки</label>
-                <input id="shooting_time" name="shooting_time" type="time" class="form-input" value="{{ form_data.shooting_time }}">
-            </div>
-
-            <div class="form-group">
-                <label for="duration_hours">Количество часов съёмки</label>
-                <input id="duration_hours" name="duration_hours" type="number" min="0.5" step="0.5" class="form-input" value="{{ form_data.duration_hours }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Телефон</label>
-                <input id="phone" name="phone" type="text" class="form-input" value="{{ form_data.phone }}">
-            </div>
-
-            <div class="form-group">
-                <label for="price">Стоимость</label>
-                <input id="price" name="price" type="number" min="0" step="0.01" class="form-input" value="{{ form_data.price }}">
-            </div>
-
-            <div class="form-group">
-                <label for="prepayment">Предоплата</label>
-                <input id="prepayment" name="prepayment" type="number" min="0" step="0.01" class="form-input" value="{{ form_data.prepayment }}">
-            </div>
-
-            <div class="form-group shooting-form-full">
-                <label for="notes">Дополнительная информация</label>
-                <textarea id="notes" name="notes" class="form-input shooting-textarea-compact">{{ form_data.notes }}</textarea>
-            </div>
-
-            <div class="shooting-form-full shooting-actions-row">
+            <div class="car-form-actions">
                 <button type="submit" class="btn btn-primary">Сохранить съёмку</button>
                 <a href="{{ url_for('shootings_upcoming') }}" class="btn btn-secondary">Все съёмки</a>
             </div>

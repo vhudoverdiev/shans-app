@@ -2,70 +2,132 @@
 {% block title %}Фотопроекты | Шанс{% endblock %}
 
 {% block content %}
-<section class="photo-projects-page same-style-page">
+{% set active_tab = request.args.get('tab', 'active') %}
+<section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">
-                <span class="page-title-strong">Фотопроекты</span>
-                <span class="page-title-light">идеи и запись</span>
-            </h1>
-            <p class="planner-page-subtitle">Активные проекты и архив теперь разделены автоматически по дате фотопроекта.</p>
+            <h1 class="page-title">Фотопроекты</h1>
         </div>
+
         <div class="page-actions">
-            <a class="btn btn-secondary" href="{{ url_for('planner.schedule') }}">График</a>
-            <a class="btn btn-primary" href="{{ url_for('planner.create_photo_project') }}">Создать фотопроект</a>
+            <a class="btn btn-primary" href="{{ url_for('planner.create_photo_project') }}">Добавить проект</a>
         </div>
     </div>
 
-    {% if projects %}
-    <div class="planner-section-head">
-        <h2 class="section-title">Активные фотопроекты</h2>
-    </div>
-    <div class="dashboard-grid photo-projects-grid">
-        {% for project in projects %}
-        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="dashboard-card photo-project-card {{ project.accent_class }}">
-            <div class="photo-project-card-topline">
-                <span class="status-pill {{ project_status_class(project.effective_status) }}">{{ project.effective_status }}</span>
-                <span class="photo-project-date-badge">{{ project.project_date or 'Дата не указана' }}</span>
-            </div>
-            <div class="dashboard-card-title">{{ project.title }}</div>
-            <div class="photo-project-card-idea">{{ project.idea }}</div>
-            <div class="dashboard-card-text">{{ project.description or 'Описание проекта пока не заполнено.' }}</div>
-
-            <div class="photo-project-card-footer">
-                <span class="status-pill">{{ project.bookings_count }} записей</span>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if archived_projects %}
-    <div class="planner-section-head planner-section-head-archive">
-        <h2 class="section-title">Архив фотопроектов</h2>
-        <div class="planner-page-subtitle">Когда дата проекта проходит, карточка автоматически переносится сюда.</div>
-    </div>
-    <div class="dashboard-grid photo-projects-grid photo-projects-grid-archive">
-        {% for project in archived_projects %}
-        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="dashboard-card photo-project-card photo-project-card-archived {{ project.accent_class }}">
-            <div class="photo-project-card-topline">
-                <span class="status-pill {{ project_status_class(project.effective_status) }}">{{ project.effective_status }}</span>
-                <span class="photo-project-date-badge">{{ project.project_date or 'Дата не указана' }}</span>
-            </div>
-            <div class="dashboard-card-title">{{ project.title }}</div>
-            <div class="photo-project-card-idea">{{ project.idea }}</div>
-            <div class="dashboard-card-text">{{ project.description or 'Описание проекта пока не заполнено.' }}</div>
-
-            <div class="photo-project-card-footer">
-                <span class="status-pill">{{ project.bookings_count }} записей</span>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-    {% elif not projects %}
     <div class="card table-card">
-        <div class="empty-state">Пока нет фотопроектов. Создай первый проект и начни вести запись клиентов.</div>
+        <div class="car-tab-bar">
+            <a href="{{ url_for('planner.photo_projects', tab='active') }}"
+               class="car-tab-link {% if active_tab == 'active' %}car-tab-link-active{% endif %}">
+                Запущенные
+                <span class="car-tab-count">{{ projects|length }}</span>
+            </a>
+
+            <a href="{{ url_for('planner.photo_projects', tab='archive') }}"
+               class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">
+                Архив
+                <span class="car-tab-count">{{ archived_projects|length }}</span>
+            </a>
+        </div>
+
+        {% if active_tab == 'archive' %}
+            <div class="table-header">
+                <h2 class="section-title">Архив фотопроектов</h2>
+            </div>
+
+            {% if archived_projects %}
+                <div class="table-wrapper">
+                    <table class="data-table data-table-car">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Идея</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Записей</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in archived_projects %}
+                                <tr>
+                                    <td>{{ project.title }}</td>
+                                    <td>{{ project.idea }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>
+                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
+                                            {{ project.effective_status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ project.bookings_count }}</td>
+                                    <td>
+                                        <div class="table-actions-icon">
+                                            <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}"
+                                               class="icon-action-btn icon-edit"
+                                               title="Открыть">
+                                                →
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    В архиве пока нет фотопроектов.
+                </div>
+            {% endif %}
+
+        {% else %}
+            <div class="table-header">
+            </div>
+
+            {% if projects %}
+                <div class="table-wrapper">
+                    <table class="data-table data-table-car">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Идея</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Записей</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                                <tr>
+                                    <td>{{ project.title }}</td>
+                                    <td>{{ project.idea }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>
+                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
+                                            {{ project.effective_status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ project.bookings_count }}</td>
+                                    <td>
+                                        <div class="table-actions-icon">
+                                            <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}"
+                                               class="icon-action-btn icon-edit"
+                                               title="Открыть">
+                                                →
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    Активных фотопроектов пока нет.
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
-    {% endif %}
 </section>
 {% endblock %}

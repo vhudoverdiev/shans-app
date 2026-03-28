@@ -4,6 +4,7 @@ from calendar import monthrange
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
+import re
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
@@ -144,11 +145,49 @@ def _project_effective_status(project) -> str:
     return project["project_status"]
 
 
+def _format_full_date_ru(date_value: str) -> str:
+    if not date_value:
+        return "—"
+    try:
+        parsed = datetime.strptime(date_value, "%Y-%m-%d")
+    except ValueError:
+        return date_value
+    month_names = {
+        1: "января",
+        2: "февраля",
+        3: "марта",
+        4: "апреля",
+        5: "мая",
+        6: "июня",
+        7: "июля",
+        8: "августа",
+        9: "сентября",
+        10: "октября",
+        11: "ноября",
+        12: "декабря",
+    }
+    return f"{parsed.day} {month_names[parsed.month]} {parsed.year}"
+
+
+def _is_valid_phone_number(phone_value: str) -> bool:
+    if not phone_value:
+        return False
+    normalized = re.sub(r"[\s\-\(\)]", "", phone_value)
+    return bool(re.fullmatch(r"\+?\d{7,15}", normalized))
+
+
 def _serialize_project_row(project):
     project_data = dict(project)
     project_data["effective_status"] = _project_effective_status(project)
     project_data["is_archived"] = project_data["effective_status"] == "В архиве"
+    project_data["project_date_display"] = _format_full_date_ru(project_data.get("project_date"))
     return project_data
+
+
+def _serialize_booking_row(booking):
+    booking_data = dict(booking)
+    booking_data["booking_date_display"] = _format_full_date_ru(booking_data.get("booking_date"))
+    return booking_data
 
 
 def create_task(
@@ -576,7 +615,7 @@ def build_schedule_context(selected_date: date, current_view: str):
 
     return {
         "selected_date": selected_date,
-        "selected_date_label": selected_date.strftime("%d.%m.%Y"),
+        "selected_date_label": _format_full_date_ru(selected_date.isoformat()),
         "current_view": current_view,
         "month_title": f"{_month_name_ru(selected_date.month)} {selected_date.year}",
         "week_label": f"{week_start.strftime('%d.%m')} — {week_end.strftime('%d.%m')}",
@@ -732,7 +771,7 @@ def photo_project_detail(project_id: int):
     if not project:
         flash("Фотопроект не найден.", "error")
         return redirect(url_for("planner.photo_projects"))
-    bookings = get_bookings_for_project(project_id)
+    bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
     return render_template(
         "photo_project_detail.html",
         project=_serialize_project_row(project),
@@ -804,6 +843,9 @@ def create_photo_project_booking(project_id: int):
     if not client_name or not client_contact or not booking_date:
         flash("Для записи нужны клиент, контакт и дата.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if not _is_valid_phone_number(client_contact):
+        flash("Контакт должен содержать только номер телефона.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
     booking_id = create_booking(project_id, client_name, client_contact, booking_date, booking_time, comment, status)
     upsert_task_for_booking(booking_id)
@@ -829,6 +871,9 @@ def edit_photo_project_booking(booking_id: int):
 
         if not client_name or not client_contact or not booking_date:
             flash("Для записи нужны клиент, контакт и дата.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if not _is_valid_phone_number(client_contact):
+            flash("Контакт должен содержать только номер телефона.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
 
         update_booking(booking_id, client_name, client_contact, booking_date, booking_time, comment, status)
