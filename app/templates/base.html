@@ -6,6 +6,7 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='planner.css') }}">
 </head>
 <body class="app-body">
@@ -20,7 +21,11 @@
                 </span>
             </a>
 
-            <nav class="top-nav">
+            <button class="mobile-nav-toggle" type="button" id="mobile-nav-toggle" aria-expanded="false" aria-controls="top-nav-menu">
+                Меню
+            </button>
+
+            <nav class="top-nav" id="top-nav-menu">
                 <a href="{{ url_for('index') }}" class="top-nav-link">Главная</a>
                 <a href="{{ url_for('budget') }}" class="top-nav-link">Бюджет</a>
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link">График</a>
@@ -49,5 +54,31 @@
 
         {% block content %}{% endblock %}
     </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const navToggle = document.getElementById("mobile-nav-toggle");
+            const navMenu = document.getElementById("top-nav-menu");
+            if (navToggle && navMenu) {
+                navToggle.addEventListener("click", function () {
+                    const isOpen = navMenu.classList.toggle("top-nav-open");
+                    navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                });
+            }
+
+            document.querySelectorAll(".data-table").forEach(function (table) {
+                const headers = Array.from(table.querySelectorAll("thead th")).map(function (th) {
+                    return th.textContent.trim();
+                });
+
+                table.querySelectorAll("tbody tr").forEach(function (row) {
+                    row.querySelectorAll("td").forEach(function (cell, index) {
+                        if (headers[index]) {
+                            cell.setAttribute("data-label", headers[index]);
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>

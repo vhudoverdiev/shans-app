@@ -15,7 +15,7 @@
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
             <div class="car-form-head-title">Данные записи</div>
-            <div class="car-form-head-text">Обнови клиента, дату и статус записи.</div>
+            <div class="car-form-head-text">Обнови клиента, время и оплату записи.</div>
         </div>
 
         <form method="post" class="form-block">
@@ -26,30 +26,39 @@
                 </div>
                 <div class="form-group">
                     <label>Контакты</label>
-                    <input class="form-input" type="text" name="client_contact" required value="{{ booking.client_contact }}">
+                    <input class="form-input" type="tel" name="client_contact" required value="{{ booking.client_contact }}" inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
                 </div>
 
-                <div class="form-group">
-                    <label>Дата</label>
-                    <input class="form-input" type="date" name="booking_date" required value="{{ booking.booking_date }}">
-                </div>
                 <div class="form-group">
                     <label>Время</label>
-                    <input class="form-input" type="time" name="booking_time" value="{{ booking.booking_time or '' }}">
+                    <input class="form-input" type="time" name="booking_time" required value="{{ booking.booking_time or '' }}">
                 </div>
-
                 <div class="form-group">
-                    <label>Статус</label>
-                    <select class="form-input" name="status">
-                        {% for status in booking_statuses %}
-                        <option value="{{ status }}" {% if booking.status == status %}selected{% endif %}>{{ status }}</option>
-                        {% endfor %}
+                    <label>Длительность</label>
+                    <select class="form-input" name="duration_minutes" id="duration_minutes">
+                        <option value="15" {% if booking.duration_minutes == 15 %}selected{% endif %}>15 минут</option>
+                        <option value="30" {% if booking.duration_minutes == 30 %}selected{% endif %}>30 минут</option>
                     </select>
                 </div>
 
-                <div class="form-group car-form-full">
-                    <label>Комментарий</label>
-                    <textarea class="form-input car-textarea" name="comment" rows="4">{{ booking.comment or '' }}</textarea>
+                <div class="form-group">
+                    <label>Стоимость</label>
+                    <input class="form-input" type="number" min="0" step="1" name="price" id="booking_price" value="{{ booking.price }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Предоплата</label>
+                    <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="{{ booking.prepayment }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Остаток к оплате</label>
+                    <input class="form-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
+                </div>
+
+                <div class="form-group" id="makeup_start_group" style="{% if booking.duration_minutes == 30 %}display:block;{% else %}display:none;{% endif %}">
+                    <label>Начало макияжа</label>
+                    <input class="form-input" type="time" name="makeup_start_time" id="makeup_start_time" value="{{ booking.makeup_start_time or '' }}">
                 </div>
             </div>
 
@@ -60,4 +69,36 @@
         </form>
     </div>
 </section>
+<script>
+    (function () {
+        const durationField = document.getElementById("duration_minutes");
+        const makeupGroup = document.getElementById("makeup_start_group");
+        const makeupField = document.getElementById("makeup_start_time");
+        const priceField = document.getElementById("booking_price");
+        const prepaymentField = document.getElementById("booking_prepayment");
+        const remainingField = document.getElementById("booking_remaining");
+
+        if (!durationField || !priceField || !prepaymentField || !remainingField) return;
+
+        function toggleMakeup() {
+            const isThirty = durationField.value === "30";
+            makeupGroup.style.display = isThirty ? "block" : "none";
+            makeupField.required = isThirty;
+            if (!isThirty) makeupField.value = "";
+        }
+
+        function updateRemaining() {
+            const price = Number(priceField.value || 0);
+            const prepayment = Number(prepaymentField.value || 0);
+            const remaining = Math.max(price - prepayment, 0);
+            remainingField.value = `${remaining} ₽`;
+        }
+
+        durationField.addEventListener("change", toggleMakeup);
+        priceField.addEventListener("input", updateRemaining);
+        prepaymentField.addEventListener("input", updateRemaining);
+        toggleMakeup();
+        updateRemaining();
+    })();
+</script>
 {% endblock %}
