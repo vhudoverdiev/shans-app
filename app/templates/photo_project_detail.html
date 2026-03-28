@@ -57,6 +57,7 @@
         {% endif %}
     </div>
 
+    {% if view_mode != 'add' %}
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Доступное время — 30 минут</h2>
@@ -71,6 +72,7 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Записи на фотопроект</h2>
+            <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
         </div>
 
         {% if bookings %}
@@ -121,6 +123,7 @@
         {% endif %}
     </div>
 
+    {% else %}
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
             <div class="car-form-head-title">Добавить запись</div>
