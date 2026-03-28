@@ -9,7 +9,9 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Все проекты</a>
+            {% if not project.is_archived %}
             <a class="btn btn-secondary" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}">Редактировать</a>
+            {% endif %}
             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект и все записи?');">
                 <button class="btn btn-danger" type="submit">Удалить</button>
             </form>
@@ -59,7 +61,9 @@
                         <th>Дата и время</th>
                         <th>Длительность</th>
                         <th>Начало макияжа</th>
+                        {% if not project.is_archived %}
                         <th>Действия</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -75,6 +79,7 @@
                         </td>
                         <td>{{ booking.duration_minutes }} мин</td>
                         <td>{{ booking.makeup_start_time or '—' }}</td>
+                        {% if not project.is_archived %}
                         <td>
                             <div class="table-actions-icon">
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}" title="Редактировать">✏</a>
@@ -83,10 +88,11 @@
                                 </form>
                             </div>
                         </td>
+                        {% endif %}
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6">Записей пока нет.</td>
+                        <td colspan="{{ 6 if not project.is_archived else 5 }}">Записей пока нет.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
