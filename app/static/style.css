@@ -626,6 +626,14 @@ a {
     font-weight: 600;
 }
 
+.empty-table-message {
+    padding: 36px 20px !important;
+    text-align: center;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+}
+
 .edit-card {
     max-width: 680px;
 }
