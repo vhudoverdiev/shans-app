@@ -60,6 +60,7 @@
                                     <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
                                         <div class="table-actions-icon">
+                                            <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}" title="Редактировать">✏</a>
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                                 <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
                                             </form>
@@ -106,6 +107,8 @@
                                     <td><span class="status-pill">{{ project.bookings_count }}</span></td>
                                     <td>
                                         <div class="table-actions-icon">
+                                            <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}" title="Редактировать">✏</a>
+                                            <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
                                                 <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>

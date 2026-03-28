@@ -200,6 +200,18 @@ def _is_valid_phone_number(phone_value: str) -> bool:
     return bool(re.fullmatch(r"\+?\d{7,15}", normalized))
 
 
+def _is_valid_contact_value(contact_value: str) -> bool:
+    if not contact_value:
+        return False
+    if len(contact_value) > 255:
+        return False
+    if _is_valid_phone_number(contact_value):
+        return True
+    return bool(
+        re.fullmatch(r"(https?://\S+|www\.\S+|t\.me/\S+|@\w{3,}|[\w.\-]+@[\w.\-]+\.\w+)", contact_value.strip())
+    )
+
+
 def _serialize_project_row(project):
     project_data = dict(project)
     project_data["effective_status"] = _project_effective_status(project)
@@ -908,11 +920,14 @@ def photo_project_detail(project_id: int):
         return redirect(url_for("planner.photo_projects"))
     bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
     view_mode = request.args.get("view", "bookings")
+    serialized_project = _serialize_project_row(project)
+    if serialized_project["is_archived"] and view_mode == "add":
+        view_mode = "bookings"
     available_slots = _build_available_slots(dict(project), bookings)
 
     return render_template(
         "photo_project_detail.html",
-        project=_serialize_project_row(project),
+        project=serialized_project,
         bookings=bookings,
         view_mode=view_mode,
         available_slots=available_slots,
@@ -975,6 +990,10 @@ def create_photo_project_booking(project_id: int):
     if not project:
         flash("Фотопроект не найден.", "error")
         return redirect(url_for("planner.photo_projects"))
+    serialized_project = _serialize_project_row(project)
+    if serialized_project["is_archived"]:
+        flash("Нельзя добавлять записи в архивный фотопроект.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
     client_name = request.form.get("client_name", "").strip()
     client_contact = request.form.get("client_contact", "").strip()
@@ -988,8 +1007,8 @@ def create_photo_project_booking(project_id: int):
     if not client_name or not client_contact or not booking_time or not booking_date:
         flash("Для записи нужны имя, контакт и время.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
-    if not _is_valid_phone_number(client_contact):
-        flash("Контакт должен содержать только номер телефона.", "error")
+    if not _is_valid_contact_value(client_contact):
+        flash("Укажи корректный контакт: номер телефона или ссылку.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
     if duration_minutes_raw not in {"15", "30"}:
         flash("Выбери длительность 15 или 30 минут.", "error")
@@ -1046,8 +1065,8 @@ def edit_photo_project_booking(booking_id: int):
         if not client_name or not client_contact or not booking_date or not booking_time:
             flash("Для записи нужны имя, контакт и время.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
-        if not _is_valid_phone_number(client_contact):
-            flash("Контакт должен содержать только номер телефона.", "error")
+        if not _is_valid_contact_value(client_contact):
+            flash("Укажи корректный контакт: номер телефона или ссылку.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
         if duration_minutes_raw not in {"15", "30"}:
             flash("Выбери длительность 15 или 30 минут.", "error")

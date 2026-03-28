@@ -42,14 +42,15 @@
 
     <div class="car-tab-bar">
         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'add' %}car-tab-link-active{% endif %}">Записи</a>
-        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}" class="car-tab-link {% if view_mode == 'add' %}car-tab-link-active{% endif %}">Добавить запись</a>
     </div>
 
     {% if view_mode == 'bookings' %}
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Записи на фотопроект</h2>
+            {% if not project.is_archived %}
             <a class="btn btn-primary btn-small" href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}">Добавить запись</a>
+            {% endif %}
         </div>
 
         <div class="table-wrapper">
@@ -66,6 +67,8 @@
                 </thead>
                 <tbody>
                     {% for booking in bookings %}
+                    <tr class="js-booking-row" data-href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}">
+                        <td>{{ booking.client_name }}</td>
                     <tr>
                         <td>
                             <a class="status-pill-link" href="{{ url_for('planner.photo_project_booking_detail', booking_id=booking.id) }}" title="Открыть запись">{{ booking.client_name }}</a>
@@ -96,6 +99,7 @@
             </table>
         </div>
     </div>
+    {% elif view_mode == 'add' and not project.is_archived %}
     {% elif view_mode == 'add' %}
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
@@ -111,7 +115,7 @@
                 </div>
                 <div class="form-group">
                     <label>Контакты</label>
-                    <input class="form-input" type="tel" name="client_contact" required inputmode="tel" pattern="^\\+?[0-9\\s\\-\\(\\)]{7,20}$" title="Только номер телефона">
+                    <input class="form-input" type="text" name="client_contact" required placeholder="+7..., t.me/..., https://...">
                 </div>
 
                 <div class="form-group">
@@ -181,6 +185,15 @@
 
 <script>
     (function () {
+        const bookingRows = document.querySelectorAll(".js-booking-row");
+        bookingRows.forEach((row) => {
+            row.addEventListener("click", (event) => {
+                if (event.target.closest("form, button, a")) return;
+                const href = row.dataset.href;
+                if (href) window.location.href = href;
+            });
+        });
+
         const durationField = document.getElementById("duration_minutes");
         const makeupGroup = document.getElementById("makeup_start_group");
         const makeupField = document.getElementById("makeup_start_time");
