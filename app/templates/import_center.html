@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Импорт данных | Шанс{% endblock %}
+
+{% block content %}
+<section class="car-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Импорт данных</h1>
+        </div>
+    </div>
+
+    {% if not access_granted %}
+        <div class="card" style="max-width: 480px;">
+            <h2 class="section-title">Доступ к разделу</h2>
+            <form method="post" class="form-block">
+                <input type="hidden" name="action" value="unlock">
+                <div class="form-group">
+                    <label for="import-password">Пароль</label>
+                    <input id="import-password"
+                           type="password"
+                           name="password"
+                           class="form-input"
+                           placeholder="Введите пароль"
+                           required>
+                </div>
+                <button type="submit" class="btn btn-primary">Открыть доступ</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="card" style="max-width: 760px;">
+            <h2 class="section-title">Загрузить данные</h2>
+            <form method="post" enctype="multipart/form-data" class="form-block">
+                <input type="hidden" name="action" value="import">
+
+                <div class="form-group">
+                    <label for="target_section">Куда импортировать</label>
+                    <select id="target_section" name="target_section" class="form-input" required>
+                        <option value="">Выберите раздел</option>
+                        <option value="budget">Бюджет</option>
+                        <option value="shootings">Съёмки</option>
+                        <option value="car_all">Машина — все записи</option>
+                        <option value="car_done">Машина — только выполненные</option>
+                        <option value="car_planned">Машина — только планируемые</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="excel_file">Excel-файл</label>
+                    <input id="excel_file"
+                           type="file"
+                           name="excel_file"
+                           class="form-input"
+                           accept=".xlsx,.xlsm"
+                           required>
+                </div>
+
+                <button type="submit" class="btn btn-success">Загрузить данные</button>
+            </form>
+            <p class="muted" style="margin-top: 10px;">
+                Импорт всегда добавляет новые записи и не удаляет уже существующие.
+            </p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

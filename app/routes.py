@@ -8,6 +8,7 @@ from flask import (
     render_template,
     request,
     send_file,
+    session,
     url_for,
 )
 from flask_login import (
@@ -51,7 +52,7 @@ from app.models import (
     hide_car_notification,
     is_car_notification_hidden,
     move_planned_to_done,
-    replace_car_services,
+    append_car_services,
     save_balance_history,
     set_current_balance,
     update_budget_entry,
@@ -455,6 +456,117 @@ def _parse_car_excel(file_storage):
             })
 
     return done_services, planned_services
+
+
+def _parse_budget_excel(file_storage):
+    workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
+    sheet = workbook.active
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        raise ValueError("Файл Excel пустой.")
+
+    headers = [_normalize_excel_header(value) for value in rows[0]]
+    header_map = {name: index for index, name in enumerate(headers) if name}
+
+    month_index = header_map.get("месяц", header_map.get("month_name"))
+    type_index = header_map.get("тип", header_map.get("entry_type"))
+    category_index = header_map.get("категория", header_map.get("category"))
+    amount_index = header_map.get("сумма", header_map.get("amount"))
+
+    if month_index is None or type_index is None or category_index is None or amount_index is None:
+        raise ValueError("Для импорта бюджета нужны столбцы: Месяц, Тип, Категория, Сумма.")
+
+    entries = []
+    for row in rows[1:]:
+        month_name = str(row[month_index]).strip() if month_index < len(row) and row[month_index] is not None else ""
+        entry_type = str(row[type_index]).strip() if type_index < len(row) and row[type_index] is not None else ""
+        category = str(row[category_index]).strip() if category_index < len(row) and row[category_index] is not None else ""
+        amount_raw = row[amount_index] if amount_index < len(row) else None
+
+        if not month_name and not entry_type and not category and amount_raw in (None, ""):
+            continue
+
+        if not month_name or not entry_type or not category:
+            raise ValueError("В строках бюджета обязательны поля: Месяц, Тип, Категория.")
+
+        amount_value = _parse_excel_number(amount_raw)
+        entries.append({
+            "month_name": month_name,
+            "entry_type": entry_type,
+            "category": category,
+            "amount": int(amount_value),
+        })
+
+    return entries
+
+
+def _parse_shootings_excel(file_storage):
+    workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
+    sheet = workbook.active
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        raise ValueError("Файл Excel пустой.")
+
+    headers = [_normalize_excel_header(value) for value in rows[0]]
+    header_map = {name: index for index, name in enumerate(headers) if name}
+
+    project_index = header_map.get("название", header_map.get("project_name"))
+    client_index = header_map.get("клиент", header_map.get("client_name"))
+    date_index = header_map.get("дата", header_map.get("shooting_date"))
+    time_index = header_map.get("время", header_map.get("shooting_time"))
+    duration_index = header_map.get("часы", header_map.get("duration_hours"))
+    phone_index = header_map.get("телефон", header_map.get("phone"))
+    price_index = header_map.get("стоимость", header_map.get("price"))
+    prepayment_index = header_map.get("предоплата", header_map.get("prepayment"))
+    notes_index = header_map.get("комментарий", header_map.get("notes"))
+
+    if project_index is None or client_index is None or date_index is None:
+        raise ValueError("Для импорта съёмок нужны столбцы: Название, Клиент, Дата.")
+
+    shootings = []
+    for row in rows[1:]:
+        project_name = str(row[project_index]).strip() if project_index < len(row) and row[project_index] is not None else ""
+        client_name = str(row[client_index]).strip() if client_index < len(row) and row[client_index] is not None else ""
+        shooting_date = str(row[date_index]).strip() if date_index < len(row) and row[date_index] is not None else ""
+
+        if not project_name and not client_name and not shooting_date:
+            continue
+        if not project_name or not client_name or not shooting_date:
+            raise ValueError("В строках съёмок обязательны поля: Название, Клиент, Дата.")
+
+        shooting_time = ""
+        duration_hours = 1
+        phone = ""
+        price = 0
+        prepayment = 0
+        notes = ""
+
+        if time_index is not None and time_index < len(row) and row[time_index] is not None:
+            shooting_time = str(row[time_index]).strip()
+        if duration_index is not None and duration_index < len(row):
+            duration_hours = _parse_excel_number(row[duration_index]) or 1
+        if phone_index is not None and phone_index < len(row) and row[phone_index] is not None:
+            phone = str(row[phone_index]).strip()
+        if price_index is not None and price_index < len(row):
+            price = _parse_excel_number(row[price_index]) or 0
+        if prepayment_index is not None and prepayment_index < len(row):
+            prepayment = _parse_excel_number(row[prepayment_index]) or 0
+        if notes_index is not None and notes_index < len(row) and row[notes_index] is not None:
+            notes = str(row[notes_index]).strip()
+
+        shootings.append({
+            "project_name": project_name,
+            "client_name": client_name,
+            "shooting_date": shooting_date,
+            "shooting_time": shooting_time,
+            "duration_hours": duration_hours,
+            "phone": phone,
+            "price": price,
+            "prepayment": prepayment,
+            "notes": notes,
+        })
+
+    return shootings
 
 
 def _resolve_budget_category(form):
@@ -1106,7 +1218,7 @@ def register_routes(app):
 
         try:
             done_services, planned_services = _parse_car_excel(excel_file)
-            replace_car_services(done_services=done_services, planned_services=planned_services)
+            append_car_services(done_services=done_services, planned_services=planned_services)
         except ValueError as error:
             flash(str(error), "error")
             return redirect(url_for("car"))
@@ -1115,10 +1227,114 @@ def register_routes(app):
             return redirect(url_for("car"))
 
         flash(
-            f"Импорт завершён: выполненных {len(done_services)}, планируемых {len(planned_services)}.",
+            (
+                f"Импорт завершён: добавлено выполненных {len(done_services)}, "
+                f"планируемых {len(planned_services)}."
+            ),
             "success",
         )
         return redirect(url_for("car"))
+
+    @app.route("/import-center", methods=["GET", "POST"])
+    @login_required
+    def import_center():
+        access_granted = bool(session.get("import_center_access"))
+
+        if request.method == "POST":
+            action = request.form.get("action", "").strip()
+
+            if action == "unlock":
+                password = request.form.get("password", "").strip()
+                if password == "666666":
+                    session["import_center_access"] = True
+                    flash("Доступ к разделу импорта открыт.", "success")
+                else:
+                    flash("Неверный пароль.", "error")
+                return redirect(url_for("import_center"))
+
+            if not access_granted:
+                flash("Сначала введите пароль для доступа к импорту.", "error")
+                return redirect(url_for("import_center"))
+
+            target = request.form.get("target_section", "").strip()
+            excel_file = request.files.get("excel_file")
+
+            if not target:
+                flash("Выберите раздел для импорта.", "error")
+                return redirect(url_for("import_center"))
+
+            if not excel_file or not excel_file.filename:
+                flash("Выберите Excel-файл для загрузки.", "error")
+                return redirect(url_for("import_center"))
+
+            filename = excel_file.filename.lower()
+            if not (filename.endswith(".xlsx") or filename.endswith(".xlsm")):
+                flash("Поддерживаются только файлы .xlsx или .xlsm.", "error")
+                return redirect(url_for("import_center"))
+
+            try:
+                if target in ("car_all", "car_done", "car_planned"):
+                    done_services, planned_services = _parse_car_excel(excel_file)
+                    if target == "car_done":
+                        planned_services = []
+                    elif target == "car_planned":
+                        done_services = []
+                    append_car_services(done_services=done_services, planned_services=planned_services)
+                    flash(
+                        (
+                            f"Добавлено в раздел Машина: выполненных {len(done_services)}, "
+                            f"планируемых {len(planned_services)}."
+                        ),
+                        "success",
+                    )
+                elif target == "budget":
+                    entries = _parse_budget_excel(excel_file)
+                    for entry in entries:
+                        create_budget_entry(
+                            entry_type=entry["entry_type"],
+                            month_name=entry["month_name"],
+                            category=entry["category"],
+                            amount=entry["amount"],
+                        )
+                    flash(f"Добавлено записей в Бюджет: {len(entries)}.", "success")
+                elif target == "shootings":
+                    shootings = _parse_shootings_excel(excel_file)
+                    for shooting in shootings:
+                        shooting_id = create_shooting(
+                            project_name=shooting["project_name"],
+                            client_name=shooting["client_name"],
+                            shooting_date=shooting["shooting_date"],
+                            shooting_time=shooting["shooting_time"],
+                            duration_hours=shooting["duration_hours"],
+                            phone=shooting["phone"],
+                            price=shooting["price"],
+                            prepayment=shooting["prepayment"],
+                            notes=shooting["notes"],
+                        )
+                        if shooting_id:
+                            upsert_task_for_shooting(
+                                shooting_id=shooting_id,
+                                project_name=shooting["project_name"],
+                                client_name=shooting["client_name"],
+                                shooting_date=shooting["shooting_date"],
+                                shooting_time=shooting["shooting_time"],
+                                duration_hours=shooting["duration_hours"],
+                                phone=shooting["phone"],
+                                price=shooting["price"],
+                                prepayment=shooting["prepayment"],
+                                notes=shooting["notes"],
+                            )
+                    flash(f"Добавлено съёмок: {len(shootings)}.", "success")
+                else:
+                    flash("Неизвестный раздел для импорта.", "error")
+            except ValueError as error:
+                flash(str(error), "error")
+            except Exception:
+                flash("Не удалось обработать файл. Проверьте формат данных.", "error")
+
+            return redirect(url_for("import_center"))
+
+        return render_template("import_center.html", access_granted=access_granted)
 
     @app.route("/car/manage", methods=["GET", "POST"])
     @login_required
