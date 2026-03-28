@@ -1189,7 +1189,8 @@ def register_routes(app):
         deleted_count = 0
         for shooting_id in selected_ids:
             shooting = get_shooting_by_id(shooting_id)
-            if not shooting or shooting.get("is_archive"):
+            shooting_data = dict(shooting) if shooting else None
+            if not shooting_data or shooting_data.get("is_archive"):
                 continue
             delete_task_for_shooting(shooting_id)
             delete_shooting(shooting_id)
@@ -1228,7 +1229,8 @@ def register_routes(app):
         deleted_count = 0
         for shooting_id in selected_ids:
             shooting = get_shooting_by_id(shooting_id)
-            if not shooting or not shooting.get("is_archive"):
+            shooting_data = dict(shooting) if shooting else None
+            if not shooting_data or not shooting_data.get("is_archive"):
                 continue
             delete_task_for_shooting(shooting_id)
             delete_shooting(shooting_id)
