@@ -35,6 +35,13 @@
         width: 100%;
     }
 
+    .top-nav-import-link {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+    }
+
     .page-header {
         margin-bottom: 14px;
         gap: 10px;
@@ -110,6 +117,10 @@
     .table-actions-icon .inline-form,
     .table-actions .inline-form {
         width: 100%;
+    }
+
+    .import-file-picker {
+        grid-template-columns: 1fr;
     }
 
     .table-wrapper {

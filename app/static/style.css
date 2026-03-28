@@ -595,6 +595,11 @@ a {
     justify-content: flex-end;
 }
 
+.bulk-actions-hidden .bulk-delete-selected-form,
+.bulk-actions-hidden .bulk-delete-all-form {
+    display: none !important;
+}
+
 .bulk-col {
     width: 46px;
     min-width: 46px;
@@ -3696,16 +3701,27 @@ a {
 }
 
 .top-nav-import-link {
-    width: 44px;
-    height: 44px;
-    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    display: inline-flex;
     align-items: center;
-    border-radius: 12px;
-    padding: 0;
+    justify-content: center;
+    color: #64748b;
+    background: transparent;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.top-nav-import-link:hover {
+    background: #f1f5f9;
+    color: #334155;
+    transform: translateY(-1px);
 }
 
 .top-nav-import-icon {
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1;
 }
 
@@ -3758,14 +3774,55 @@ a {
 }
 
 .import-file-picker {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(230px, 320px) 1fr;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
 }
 
 .import-file-btn {
-    min-width: 142px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    background: #f8fafc;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.import-file-btn:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+    transform: translateY(-1px);
+}
+
+.import-file-btn-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    font-size: 16px;
+}
+
+.import-file-btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.import-file-btn-text strong {
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.import-file-btn-text small {
+    font-size: 12px;
+    color: #64748b;
 }
 
 .import-file-name {

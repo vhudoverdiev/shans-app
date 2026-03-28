@@ -885,8 +885,16 @@ def delete_schedule_tasks_selected():
 def delete_schedule_tasks_all():
     task_date = request.form.get("task_date", "").strip()
     if task_date:
-        for task in get_tasks_for_day(task_date):
+        tasks = get_tasks_for_day(task_date)
+        if not tasks:
+            flash("На выбранный день нет задач для удаления.", "warning")
+            return redirect(url_for("planner.schedule", date=task_date, view="day"))
+
+        for task in tasks:
             delete_task(task["id"])
+    else:
+        flash("Не удалось определить дату для удаления задач.", "warning")
+        return redirect(url_for("planner.schedule", view="day"))
     flash("Все задачи за выбранный день удалены.", "success")
     return redirect(url_for("planner.schedule", date=task_date, view="day"))
 
@@ -1059,9 +1067,15 @@ def delete_photo_projects_selected():
 @planner_bp.route("/photo-projects/delete-all", methods=["POST"])
 @login_required
 def delete_photo_projects_all():
-    for project in get_all_projects():
-        if not _serialize_project_row(project)["is_archived"]:
-            delete_project(project["id"])
+    active_projects = [
+        project for project in get_all_projects() if not _serialize_project_row(project)["is_archived"]
+    ]
+    if not active_projects:
+        flash("Нет активных фотопроектов для удаления.", "warning")
+        return redirect(url_for("planner.photo_projects"))
+
+    for project in active_projects:
+        delete_project(project["id"])
     flash("Все активные фотопроекты удалены.", "success")
     return redirect(url_for("planner.photo_projects"))
 
@@ -1238,7 +1252,12 @@ def delete_photo_project_bookings_selected(project_id: int):
 @planner_bp.route("/photo-projects/<int:project_id>/bookings/delete-all", methods=["POST"])
 @login_required
 def delete_photo_project_bookings_all(project_id: int):
-    for booking in get_bookings_for_project(project_id):
+    bookings = get_bookings_for_project(project_id)
+    if not bookings:
+        flash("В фотопроекте нет записей для удаления.", "warning")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+
+    for booking in bookings:
         delete_booking(booking["id"])
     flash("Все записи фотопроекта удалены.", "success")
     return redirect(url_for("planner.photo_project_detail", project_id=project_id))

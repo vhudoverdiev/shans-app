@@ -33,7 +33,7 @@
 
             <div class="header-user-block">
                 <a href="{{ url_for('import_center') }}"
-                   class="btn btn-primary btn-import-shortcut"
+                   class="top-nav-import-link"
                    title="Импорт данных"
                    aria-label="Импорт данных">
                     <span class="top-nav-import-icon">⤴</span>
@@ -89,8 +89,21 @@
                 const scope = wrapper.closest(".table-card") || wrapper.parentElement || wrapper;
                 const selectedForm = scope.querySelector(".bulk-delete-selected-form");
                 const allForm = scope.querySelector(".bulk-delete-all-form");
+                const bulkActions = (selectedForm && selectedForm.closest(".table-actions"))
+                    || (allForm && allForm.closest(".table-actions"));
                 const selectAll = wrapper.querySelector(".bulk-select-all");
                 const checkboxes = Array.from(wrapper.querySelectorAll(".bulk-row-checkbox"));
+                const rows = Array.from(wrapper.querySelectorAll("tbody tr"));
+                const hasBulkControls = Boolean(selectedForm || allForm);
+
+                if (hasBulkControls && bulkActions) {
+                    bulkActions.classList.add("bulk-actions-hidden");
+                }
+
+                function revealBulkActions() {
+                    if (!hasBulkControls || !bulkActions) return;
+                    bulkActions.classList.remove("bulk-actions-hidden");
+                }
 
                 function syncState() {
                     const checked = checkboxes.filter(function (item) { return item.checked; }).length;
@@ -124,6 +137,12 @@
                     item.addEventListener("change", syncState);
                 });
 
+                rows.forEach(function (row) {
+                    row.addEventListener("dblclick", function () {
+                        revealBulkActions();
+                    });
+                });
+
                 if (selectedForm) {
                     selectedForm.addEventListener("submit", function (event) {
                         const idsField = selectedForm.querySelector(".bulk-selected-ids");
@@ -146,6 +165,24 @@
                 }
 
                 syncState();
+            });
+
+            document.querySelectorAll("tr[data-href]").forEach(function (row) {
+                row.addEventListener("click", function (event) {
+                    if (event.target.closest("form, button, a, input, label")) return;
+
+                    const tableCard = row.closest(".table-card");
+                    const bulkActions = tableCard ? tableCard.querySelector(".bulk-table-actions") : null;
+                    if (bulkActions && bulkActions.classList.contains("bulk-actions-hidden")) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    const href = row.dataset.href;
+                    if (href) {
+                        window.location.href = href;
+                    }
+                });
             });
         });
     </script>
