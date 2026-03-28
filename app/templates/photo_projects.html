@@ -51,6 +51,14 @@
                             {% for project in archived_projects %}
                                 <tr>
                                     <td>{{ project.title }}</td>
+                                    <td>{{ project.city }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>{{ project.time_range_display }}</td>
+                                    <td>{{ project.bookings_count }}</td>
+                                    <td>
+                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
+                                            <button type="submit" class="btn btn-small btn-danger" title="Удалить">Удалить</button>
+                                        </form>
 
                                     <td>{{ project.city }}</td>
                                     <td>{{ project.project_date_display }}</td>
@@ -103,6 +111,17 @@
                         </thead>
                         <tbody>
                             {% for project in projects %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
+                                    </td>
+                                    <td>{{ project.city }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>{{ project.time_range_display }}</td>
+                                    <td>{{ project.bookings_count }}</td>
+                                    <td>
+                                        <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект?');">
+                                            <button type="submit" class="btn btn-small btn-danger" title="Удалить">Удалить</button>
                                 <tr onclick="window.location='{{ url_for('planner.photo_project_detail', project_id=project.id) }}'" style="cursor:pointer;">
                                     <td>{{ project.title }}</td>
 

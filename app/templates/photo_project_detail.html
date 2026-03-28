@@ -41,6 +41,16 @@
     </div>
 
     <div class="car-tab-bar">
+        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'add' %}car-tab-link-active{% endif %}">Записи</a>
+        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='add') }}" class="car-tab-link {% if view_mode == 'add' %}car-tab-link-active{% endif %}">Добавить запись</a>
+    </div>
+
+    {% if view_mode != 'add' %}
+        </div>
+        <p>{{ project.address or 'Адрес не указан.' }}</p>
+    </div>
+
+    <div class="car-tab-bar">
         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'slots' %}car-tab-link-active{% endif %}">Записи</a>
         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='slots') }}" class="car-tab-link {% if view_mode == 'slots' %}car-tab-link-active{% endif %}">Доступное время</a>
     </div>
@@ -124,6 +134,7 @@
     </div>
     {% endif %}
 
+    {% if view_mode == 'add' %}
     {% else %}
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
@@ -162,6 +173,13 @@
                 <div class="form-group">
                     <label>Предоплата</label>
                     <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Остаток к оплате</label>
+                    <input class="form-input" type="text" id="booking_remaining" value="0 ₽" readonly>
+                </div>
+
                 </div>
 
                 <div class="form-group">
