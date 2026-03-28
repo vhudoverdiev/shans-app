@@ -4,6 +4,39 @@
 
 {% block content %}
 <section class="car-page">
+    <div class="card table-card" style="margin-bottom:16px;">
+        <div class="table-header">
+            <h2 class="section-title">Загрузить данные</h2>
+        </div>
+        {% if car_import_unlocked %}
+            <form action="{{ url_for('car_import_excel') }}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="inline-form"
+                  style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:16px;">
+                <select name="target_section" class="form-select" required>
+                    <option value="auto">Автоопределение (по статусу/дате)</option>
+                    <option value="planned">Только в планируемые</option>
+                    <option value="done">Только в выполненные</option>
+                </select>
+                <input type="file" name="excel_file" accept=".xlsx,.xlsm" required>
+                <button type="submit" class="btn btn-primary">Загрузить данные</button>
+            </form>
+        {% else %}
+            <form action="{{ url_for('car_import_access') }}"
+                  method="post"
+                  class="inline-form"
+                  style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:16px;">
+                <input type="password"
+                       name="import_password"
+                       class="form-input"
+                       placeholder="Пароль для загрузки"
+                       required>
+                <button type="submit" class="btn btn-secondary">Открыть раздел</button>
+            </form>
+        {% endif %}
+    </div>
+
     <div class="page-header">
         <div>
             <h1 class="page-title">Volkswagen Polo 2018</h1>

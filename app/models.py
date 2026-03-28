@@ -682,6 +682,75 @@ def delete_car_planned_service(service_id):
     conn.close()
 
 
+def append_car_services(done_services, planned_services):
+    """
+    Добавляет импортированные записи в разделы выполненных и планируемых работ.
+    Ничего не удаляет из существующих данных.
+    """
+    conn = get_connection()
+
+    if done_services:
+        conn.executemany(
+            """
+            INSERT INTO car_done_services (
+                service_name,
+                service_cost,
+                mileage,
+                service_date,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("service_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("service_date", ""),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Выполнено"),
+                )
+                for item in done_services
+            ],
+        )
+
+    if planned_services:
+        conn.executemany(
+            """
+            INSERT INTO car_planned_services (
+                service_name,
+                planned_cost,
+                mileage,
+                detail_description,
+                work_kind,
+                period_type,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    item.get("service_name", ""),
+                    item.get("planned_cost", 0),
+                    item.get("mileage", 0),
+                    item.get("detail_description", ""),
+                    item.get("work_kind", ""),
+                    item.get("period_type", ""),
+                    item.get("status", "Планируется"),
+                )
+                for item in planned_services
+            ],
+        )
+
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # CAR - MOVE BETWEEN SECTIONS
 # =========================================================
