@@ -35,7 +35,10 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Забронированные съёмки</h2>
-            <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
+            <div class="table-actions">
+                <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success">Скачать Excel</a>
+                <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
+            </div>
         </div>
 
         {% if shootings %}
@@ -68,7 +71,7 @@
             </table>
         </div>
         {% else %}
-        <div class="empty-state">Пока нет съёмок. Добавь первую съёмку.</div>
+        <div class="empty-state empty-state-centered">Записей пока нет.</div>
         {% endif %}
     </div>
 </section>

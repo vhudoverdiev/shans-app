@@ -1,6 +1,7 @@
 from datetime import datetime, date
 import re
 
+from openpyxl import load_workbook
 from flask import (
     flash,
     redirect,
@@ -69,7 +70,7 @@ from app.models import (
     get_upcoming_shootings,
     update_shooting,
 )
-from app.utils import build_budget_excel
+from app.utils import build_budget_excel, build_shootings_excel
 from app.planner import delete_task_for_shooting, upsert_task_for_shooting
 
 
@@ -338,6 +339,78 @@ def _parse_non_negative_number(value: str, label: str):
         return None, f"Поле '{label}' не может быть отрицательным."
 
     return parsed_value, None
+
+
+def _normalize_excel_cell(value):
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m")
+    if isinstance(value, date):
+        return value.strftime("%Y-%m")
+    return str(value).strip()
+
+
+def _load_car_rows_from_excel(file_storage):
+    workbook = load_workbook(file_storage, data_only=True)
+    sheet = workbook.active
+
+    raw_headers = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), None)
+    if not raw_headers:
+        return [], "В файле нет заголовков."
+
+    header_aliases = {
+        "статус": "status",
+        "наименование": "service_name",
+        "работа": "service_name",
+        "описание": "detail_description",
+        "периодичность": "period_type",
+        "дата": "service_date",
+        "дата выполнения": "service_date",
+        "пробег": "mileage",
+        "стоимость": "cost",
+    }
+
+    mapped_headers = []
+    for header in raw_headers:
+        normalized_header = _normalize_excel_cell(header).lower()
+        mapped_headers.append(header_aliases.get(normalized_header, normalized_header))
+
+    if "service_name" not in mapped_headers:
+        return [], "В файле должен быть столбец 'Наименование'."
+
+    imported_rows = []
+    for row_values in sheet.iter_rows(min_row=2, values_only=True):
+        row_data = {}
+        for index, raw_value in enumerate(row_values):
+            if index >= len(mapped_headers):
+                continue
+            key = mapped_headers[index]
+            if not key:
+                continue
+            row_data[key] = _normalize_excel_cell(raw_value)
+
+        service_name = row_data.get("service_name", "").strip()
+        if not service_name:
+            continue
+
+        status = row_data.get("status", "Планируется").strip().lower()
+        if status in {"выполнено", "done"}:
+            normalized_status = "Выполнено"
+        else:
+            normalized_status = "Планируется"
+
+        imported_rows.append({
+            "service_name": service_name,
+            "status": normalized_status,
+            "detail_description": row_data.get("detail_description", "").strip(),
+            "period_type": row_data.get("period_type", "").strip(),
+            "service_date": row_data.get("service_date", "").strip(),
+            "mileage": row_data.get("mileage", "").strip(),
+            "cost": row_data.get("cost", "").strip(),
+        })
+
+    return imported_rows, None
 
 def _resolve_budget_category(form):
     """
@@ -765,6 +838,31 @@ def register_routes(app):
         )
 
 
+    @app.route("/shootings/export/<string:scope>")
+    @login_required
+    def shootings_export(scope):
+        if scope == "archive":
+            shootings = get_archived_shootings()
+            report_title = "Архив съёмок"
+            file_name = "shootings_archive.xlsx"
+        else:
+            shootings = get_upcoming_shootings()
+            report_title = "Забронированные съёмки"
+            file_name = "shootings_upcoming.xlsx"
+
+        excel_file = build_shootings_excel(
+            shootings=shootings,
+            report_title=report_title,
+        )
+
+        return send_file(
+            excel_file,
+            as_attachment=True,
+            download_name=file_name,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+
     @app.route("/shootings/archive")
     @login_required
     def shootings_archive():
@@ -947,6 +1045,79 @@ def register_routes(app):
             planned_count=len(prepared_planned_services),
             done_count=len(prepared_done_services),
         )
+
+    @app.route("/car/import", methods=["POST"])
+    @login_required
+    def car_import():
+        excel_file = request.files.get("excel_file")
+        if not excel_file or not excel_file.filename:
+            flash("Выбери файл Excel для импорта.", "error")
+            return redirect(url_for("car"))
+
+        if not excel_file.filename.lower().endswith(".xlsx"):
+            flash("Поддерживается только формат .xlsx.", "error")
+            return redirect(url_for("car"))
+
+        rows, load_error = _load_car_rows_from_excel(excel_file)
+        if load_error:
+            flash(load_error, "error")
+            return redirect(url_for("car"))
+
+        if not rows:
+            flash("В файле нет строк для импорта.", "error")
+            return redirect(url_for("car"))
+
+        imported_done = 0
+        imported_planned = 0
+
+        for row in rows:
+            if row["status"] == "Выполнено":
+                mileage_value, mileage_error = _parse_non_negative_number(row.get("mileage"), "Пробег")
+                cost_value, cost_error = _parse_non_negative_number(row.get("cost"), "Стоимость")
+                if mileage_error or cost_error:
+                    continue
+
+                service_date = row.get("service_date", "").strip()
+                if service_date:
+                    try:
+                        if len(service_date) == 7:
+                            datetime.strptime(service_date, "%Y-%m")
+                        else:
+                            datetime.strptime(service_date, "%Y-%m-%d")
+                    except ValueError:
+                        continue
+                else:
+                    continue
+
+                create_car_done_service(
+                    service_name=row["service_name"],
+                    service_cost=cost_value if cost_value is not None else 0,
+                    mileage=mileage_value if mileage_value is not None else 0,
+                    service_date=service_date[:7],
+                    detail_description=row.get("detail_description", ""),
+                    work_kind="",
+                    period_type=row.get("period_type", ""),
+                )
+                imported_done += 1
+            else:
+                create_car_planned_service(
+                    service_name=row["service_name"],
+                    detail_description=row.get("detail_description", ""),
+                    work_kind="",
+                    period_type=row.get("period_type", ""),
+                )
+                imported_planned += 1
+
+        total_imported = imported_done + imported_planned
+        if total_imported == 0:
+            flash("Импорт не выполнен: проверь формат дат и чисел в файле.", "error")
+            return redirect(url_for("car"))
+
+        flash(
+            f"Импорт завершён. Добавлено: выполненных — {imported_done}, планируемых — {imported_planned}.",
+            "success",
+        )
+        return redirect(url_for("car"))
 
     @app.route("/car/manage", methods=["GET", "POST"])
     @login_required

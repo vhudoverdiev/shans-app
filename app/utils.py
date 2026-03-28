@@ -113,3 +113,110 @@ def build_budget_excel(entries, summary, current_balance, selected_month):
     wb.save(output)
     output.seek(0)
     return output
+
+
+def build_shootings_excel(shootings, report_title):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Съёмки"
+
+    title_fill = PatternFill("solid", fgColor="14532D")
+    section_fill = PatternFill("solid", fgColor="DCFCE7")
+    header_fill = PatternFill("solid", fgColor="BBF7D0")
+    odd_row_fill = PatternFill("solid", fgColor="F0FDF4")
+    even_row_fill = PatternFill("solid", fgColor="FFFFFF")
+
+    white_bold_font = Font(color="FFFFFF", bold=True, size=14)
+    bold_font = Font(bold=True)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin = Side(style="thin", color="D1D5DB")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    ws.merge_cells("A1:J1")
+    ws["A1"] = report_title
+    ws["A1"].fill = title_fill
+    ws["A1"].font = white_bold_font
+    ws["A1"].alignment = center
+
+    ws.merge_cells("A3:J3")
+    ws["A3"] = f"Всего записей: {len(shootings)}"
+    ws["A3"].fill = section_fill
+    ws["A3"].font = bold_font
+    ws["A3"].alignment = left
+
+    headers = [
+        "Дата",
+        "Время",
+        "Название",
+        "Клиент",
+        "Телефон",
+        "Часы",
+        "Стоимость",
+        "Предоплата",
+        "Остаток",
+        "Комментарий",
+    ]
+
+    headers_row = 5
+    for col_index, header in enumerate(headers, start=1):
+        cell = ws.cell(row=headers_row, column=col_index)
+        cell.value = header
+        cell.font = bold_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+
+    data_row = headers_row + 1
+    for index, shooting in enumerate(shootings):
+        price = int(round(float(shooting.get("price") or 0)))
+        prepayment = int(round(float(shooting.get("prepayment") or 0)))
+        remaining_payment = max(price - prepayment, 0)
+
+        row_fill = odd_row_fill if index % 2 == 0 else even_row_fill
+
+        values = [
+            shooting.get("shooting_date_display") or shooting.get("shooting_date") or "—",
+            shooting.get("shooting_time") or "—",
+            shooting.get("project_name") or "—",
+            shooting.get("client_name") or "—",
+            shooting.get("phone") or "—",
+            shooting.get("duration_hours") or "—",
+            price,
+            prepayment,
+            remaining_payment,
+            shooting.get("notes") or "—",
+        ]
+
+        for col_index, value in enumerate(values, start=1):
+            cell = ws.cell(row=data_row, column=col_index, value=value)
+            cell.border = border
+            cell.alignment = left if col_index != 6 else center
+            cell.fill = row_fill
+
+            if col_index in {7, 8, 9}:
+                cell.number_format = '# ##0 "Р"'
+
+        data_row += 1
+
+    column_widths = {
+        1: 18,
+        2: 10,
+        3: 24,
+        4: 22,
+        5: 18,
+        6: 10,
+        7: 14,
+        8: 14,
+        9: 14,
+        10: 36,
+    }
+    for col_index, width in column_widths.items():
+        ws.column_dimensions[get_column_letter(col_index)].width = width
+
+    ws.freeze_panes = "A6"
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

@@ -242,6 +242,23 @@ a {
     min-height: 40px;
 }
 
+.import-excel-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.import-excel-label {
+    cursor: pointer;
+}
+
+.import-excel-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
 /* =========================
    FLASH
 ========================= */
@@ -615,6 +632,15 @@ a {
     background: #f8fafc;
     color: #64748b;
     text-align: center;
+}
+
+.empty-state-centered {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .edit-card {
