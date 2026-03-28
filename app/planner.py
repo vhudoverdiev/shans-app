@@ -775,6 +775,8 @@ def upsert_task_for_booking(booking_id: int):
 def _previous_date(selected_date: date, current_view: str, step: str = "period") -> date:
     if current_view == "day":
         return selected_date - timedelta(days=1)
+    if current_view == "month" and step == "period":
+        return selected_date - timedelta(days=4)
     if step == "week":
         return selected_date - timedelta(days=7)
     first_day_current = selected_date.replace(day=1)
@@ -785,6 +787,8 @@ def _previous_date(selected_date: date, current_view: str, step: str = "period")
 def _next_date(selected_date: date, current_view: str, step: str = "period") -> date:
     if current_view == "day":
         return selected_date + timedelta(days=1)
+    if current_view == "month" and step == "period":
+        return selected_date + timedelta(days=4)
     if step == "week":
         return selected_date + timedelta(days=7)
     current_last_day = monthrange(selected_date.year, selected_date.month)[1]
@@ -828,6 +832,9 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "first_task_title": (tasks_by_date.get(day_key, [{}])[0].get("title") or "")[:40],
                 "has_photo_or_shooting": any(
                     item["task_type"] in {"Фотопроект", "Съёмка"} for item in tasks_by_date.get(day_key, [])
+                ),
+                "has_range_task": any(
+                    item["range_end_date"] and item["status"] == "planned" for item in tasks_by_date.get(day_key, [])
                 ),
                 "has_important": any(item["is_important"] for item in tasks_by_date.get(day_key, [])),
                 "is_past": current_day < date.today(),
