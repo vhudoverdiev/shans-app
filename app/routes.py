@@ -1178,6 +1178,84 @@ def register_routes(app):
         flash("Съёмка удалена из раздела съёмок и из графика.", "success")
         return redirect(url_for("shootings_upcoming"))
 
+    @app.route("/shootings/upcoming/delete-selected", methods=["POST"])
+    @login_required
+    def shootings_upcoming_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы одну съёмку.", "warning")
+            return redirect(url_for("shootings_upcoming"))
+
+        deleted_count = 0
+        for shooting_id in selected_ids:
+            shooting = get_shooting_by_id(shooting_id)
+            if not shooting or shooting.get("is_archive"):
+                continue
+            delete_task_for_shooting(shooting_id)
+            delete_shooting(shooting_id)
+            deleted_count += 1
+
+        if deleted_count == 0:
+            flash("Нет подходящих съёмок для удаления.", "warning")
+        else:
+            flash(f"Удалено съёмок: {deleted_count}.", "success")
+        return redirect(url_for("shootings_upcoming"))
+
+    @app.route("/shootings/upcoming/delete-all", methods=["POST"])
+    @login_required
+    def shootings_upcoming_delete_all():
+        shootings = get_upcoming_shootings()
+        if not shootings:
+            flash("Нет забронированных съёмок для удаления.", "warning")
+            return redirect(url_for("shootings_upcoming"))
+
+        for shooting in shootings:
+            shooting_id = int(shooting["id"])
+            delete_task_for_shooting(shooting_id)
+            delete_shooting(shooting_id)
+
+        flash("Все забронированные съёмки удалены.", "success")
+        return redirect(url_for("shootings_upcoming"))
+
+    @app.route("/shootings/archive/delete-selected", methods=["POST"])
+    @login_required
+    def shootings_archive_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы одну архивную съёмку.", "warning")
+            return redirect(url_for("shootings_archive"))
+
+        deleted_count = 0
+        for shooting_id in selected_ids:
+            shooting = get_shooting_by_id(shooting_id)
+            if not shooting or not shooting.get("is_archive"):
+                continue
+            delete_task_for_shooting(shooting_id)
+            delete_shooting(shooting_id)
+            deleted_count += 1
+
+        if deleted_count == 0:
+            flash("Нет подходящих архивных съёмок для удаления.", "warning")
+        else:
+            flash(f"Удалено архивных съёмок: {deleted_count}.", "success")
+        return redirect(url_for("shootings_archive"))
+
+    @app.route("/shootings/archive/delete-all", methods=["POST"])
+    @login_required
+    def shootings_archive_delete_all():
+        shootings = get_archived_shootings()
+        if not shootings:
+            flash("Нет архивных съёмок для удаления.", "warning")
+            return redirect(url_for("shootings_archive"))
+
+        for shooting in shootings:
+            shooting_id = int(shooting["id"])
+            delete_task_for_shooting(shooting_id)
+            delete_shooting(shooting_id)
+
+        flash("Все архивные съёмки удалены.", "success")
+        return redirect(url_for("shootings_archive"))
+
     # =========================================================
     # CAR
     # =========================================================

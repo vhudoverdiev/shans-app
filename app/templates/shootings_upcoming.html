@@ -35,17 +35,25 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Забронированные съёмки</h2>
-            <div class="table-actions">
+            <div class="table-actions bulk-table-actions">
+                <form method="post" action="{{ url_for('shootings_upcoming_delete_selected') }}" class="inline-form bulk-delete-selected-form">
+                    <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                    <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                </form>
+                <form method="post" action="{{ url_for('shootings_upcoming_delete_all') }}" class="inline-form bulk-delete-all-form">
+                    <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                </form>
                 <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success">Скачать Excel</a>
                 <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
             </div>
         </div>
 
         {% if shootings %}
-        <div class="table-wrapper">
+        <div class="table-wrapper bulk-table">
             <table class="data-table data-table-car">
                 <thead>
                     <tr>
+                        <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                         <th>Дата</th>
                         <th>Время</th>
                         <th>Название</th>
@@ -53,11 +61,13 @@
                         <th>Часы</th>
                         <th>Стоимость</th>
                         <th>Остаток</th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for s in shootings %}
-                    <tr onclick="window.location='{{ url_for('shooting_detail', shooting_id=s.id) }}'" style="cursor:pointer;">
+                    <tr data-href="{{ url_for('shooting_detail', shooting_id=s.id) }}">
+                        <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ s.id }}" aria-label="Выбрать запись"></td>
                         <td>{{ s.shooting_date_display }}</td>
                         <td>{{ s.shooting_time or '—' }}</td>
                         <td>{{ s.project_name }}</td>
@@ -65,6 +75,14 @@
                         <td>{{ s.duration_hours or '-' }}</td>
                         <td>{{ s.price }} ₽</td>
                         <td><span class="status-pill">{{ s.remaining_payment }} ₽</span></td>
+                        <td>
+                            <div class="table-actions-icon">
+                                <a class="icon-action-btn icon-edit" href="{{ url_for('shooting_edit', shooting_id=s.id) }}" title="Редактировать">✏</a>
+                                <form method="post" action="{{ url_for('shooting_delete', shooting_id=s.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить съёмку?');">
+                                    <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
