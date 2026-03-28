@@ -2008,6 +2008,14 @@ a {
     margin-bottom: 18px;
 }
 
+.car-tab-actions {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 .car-tab-link {
     display: inline-flex;
     align-items: center;
@@ -2164,6 +2172,18 @@ a {
         justify-content: space-between;
     }
 
+    .car-tab-actions {
+        margin-left: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .car-tab-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
     .table-actions-icon {
         flex-wrap: wrap;
     }
@@ -2288,6 +2308,14 @@ a {
     margin-bottom: 18px;
 }
 
+.car-tab-actions {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 .car-tab-link {
     display: inline-flex;
     align-items: center;
@@ -2364,6 +2392,18 @@ a {
 
     .car-tab-link {
         justify-content: space-between;
+    }
+
+    .car-tab-actions {
+        margin-left: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .car-tab-actions .btn {
+        width: 100%;
+        text-align: center;
     }
 
     .notification-card-top {

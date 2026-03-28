@@ -15,6 +15,11 @@
         </a>
         <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
         <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
+
+        <div class="car-tab-actions">
+            <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success">Скачать Excel</a>
+            <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
+        </div>
     </div>
 
     <div class="stats-grid car-stats-grid">
@@ -35,6 +40,7 @@
     <div class="card table-card">
         <div class="table-header">
             <h2 class="section-title">Забронированные съёмки</h2>
+            {% if shootings %}
             <div class="table-actions bulk-table-actions">
                 <form method="post" action="{{ url_for('shootings_upcoming_delete_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
@@ -43,9 +49,8 @@
                 <form method="post" action="{{ url_for('shootings_upcoming_delete_all') }}" class="inline-form bulk-delete-all-form">
                     <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
                 </form>
-                <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success">Скачать Excel</a>
-                <a href="{{ url_for('shootings_add') }}" class="btn btn-primary">Добавить съёмку</a>
             </div>
+            {% endif %}
         </div>
 
         {% if shootings %}
