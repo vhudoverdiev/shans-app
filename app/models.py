@@ -682,15 +682,12 @@ def delete_car_planned_service(service_id):
     conn.close()
 
 
-def replace_car_services(done_services, planned_services):
+def append_car_services(done_services, planned_services):
     """
-    Полностью заменяет данные в разделах выполненных и планируемых работ.
-    Используется для массового импорта из Excel.
+    Добавляет данные в разделы выполненных и планируемых работ,
+    не удаляя существующие записи.
     """
     conn = get_connection()
-
-    conn.execute("DELETE FROM car_done_services")
-    conn.execute("DELETE FROM car_planned_services")
 
     if done_services:
         conn.executemany(
