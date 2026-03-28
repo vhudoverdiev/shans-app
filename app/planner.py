@@ -561,6 +561,8 @@ def toggle_task_status(task_id: int) -> Optional[str]:
     task = get_task(task_id)
     if not task:
         return None
+    if task["range_end_date"]:
+        return task["status"]
 
     new_status = "planned" if task["status"] == "done" else "done"
     conn = get_connection()
