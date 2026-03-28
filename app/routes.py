@@ -131,6 +131,17 @@ def _add_months(base_date: datetime, months: int) -> datetime:
     return datetime(year, month, 1)
 
 
+def _parse_selected_ids(raw_value: str) -> list[int]:
+    if not raw_value:
+        return []
+    result = []
+    for item in raw_value.split(","):
+        token = item.strip()
+        if token.isdigit():
+            result.append(int(token))
+    return result
+
+
 def _build_car_notifications():
     periodic_planned, periodic_done = get_periodic_services_for_notifications()
     hidden_keys = set(get_hidden_notification_keys())
@@ -865,6 +876,28 @@ def register_routes(app):
         flash("Запись успешно удалена.", "success")
         return redirect(url_for("budget_manage"))
 
+    @app.route("/budget/delete-selected", methods=["POST"])
+    @login_required
+    def budget_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы одну запись для удаления.", "warning")
+            return redirect(url_for("budget_manage"))
+
+        for entry_id in selected_ids:
+            delete_budget_entry(entry_id)
+        flash(f"Удалено записей: {len(selected_ids)}.", "success")
+        return redirect(url_for("budget_manage"))
+
+    @app.route("/budget/delete-all", methods=["POST"])
+    @login_required
+    def budget_delete_all():
+        entries = get_all_budget_entries()
+        for entry in entries:
+            delete_budget_entry(entry["id"])
+        flash("Все записи бюджета удалены.", "success")
+        return redirect(url_for("budget_manage"))
+
     @app.route("/budget/export")
     @login_required
     def budget_export():
@@ -1538,14 +1571,56 @@ def register_routes(app):
     def car_done_delete(service_id):
         delete_car_done_service(service_id)
         flash("Выполненная работа удалена.", "success")
-        return redirect(url_for("car"))
+        return redirect(url_for("car", tab="done"))
 
     @app.route("/car/planned/delete/<int:service_id>", methods=["POST"])
     @login_required
     def car_planned_delete(service_id):
         delete_car_planned_service(service_id)
         flash("Планируемая работа удалена.", "success")
-        return redirect(url_for("car"))
+        return redirect(url_for("car", tab="planned"))
+
+    @app.route("/car/done/delete-selected", methods=["POST"])
+    @login_required
+    def car_done_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы одну выполненную работу.", "warning")
+            return redirect(url_for("car", tab="done"))
+
+        for service_id in selected_ids:
+            delete_car_done_service(service_id)
+        flash(f"Удалено выполненных работ: {len(selected_ids)}.", "success")
+        return redirect(url_for("car", tab="done"))
+
+    @app.route("/car/done/delete-all", methods=["POST"])
+    @login_required
+    def car_done_delete_all():
+        for item in get_car_done_services():
+            delete_car_done_service(item["id"])
+        flash("Все выполненные работы удалены.", "success")
+        return redirect(url_for("car", tab="done"))
+
+    @app.route("/car/planned/delete-selected", methods=["POST"])
+    @login_required
+    def car_planned_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы одну планируемую работу.", "warning")
+            return redirect(url_for("car", tab="planned"))
+
+        for service_id in selected_ids:
+            delete_car_planned_service(service_id)
+        flash(f"Удалено планируемых работ: {len(selected_ids)}.", "success")
+        return redirect(url_for("car", tab="planned"))
+
+    @app.route("/car/planned/delete-all", methods=["POST"])
+    @login_required
+    def car_planned_delete_all():
+        for item in get_car_planned_services():
+            delete_car_planned_service(item["id"])
+        flash("Все планируемые работы удалены.", "success")
+        return redirect(url_for("car", tab="planned"))
 
     @app.route("/car/notifications/archive/delete", methods=["POST"])
     @login_required
@@ -1635,4 +1710,48 @@ def register_routes(app):
 
         hide_car_notification(notification_key)
         flash("Уведомление скрыто.", "success")
-        return redirect(url_for("car_notifications"))    
+        return redirect(url_for("car_notifications"))
+
+    @app.route("/car/notifications/delete-selected", methods=["POST"])
+    @login_required
+    def car_notifications_delete_selected():
+        active_filter = request.form.get("filter", "need").strip() or "need"
+        selected_keys = [
+            token.strip()
+            for token in request.form.get("selected_ids", "").split(",")
+            if token.strip()
+        ]
+        if not selected_keys:
+            flash("Выбери хотя бы одно уведомление.", "warning")
+            return redirect(url_for("car_notifications", filter=active_filter))
+
+        for notification_key in selected_keys:
+            if active_filter == "archive":
+                delete_archived_car_notification(notification_key)
+            else:
+                hide_car_notification(notification_key)
+
+        flash(f"Удалено уведомлений: {len(selected_keys)}.", "success")
+        return redirect(url_for("car_notifications", filter=active_filter))
+
+    @app.route("/car/notifications/delete-all", methods=["POST"])
+    @login_required
+    def car_notifications_delete_all():
+        active_filter = request.form.get("filter", "need").strip() or "need"
+        notifications = _build_car_notifications()
+        if active_filter == "archive":
+            filtered = [item for item in notifications if item["status"] == "Архив"]
+            for item in filtered:
+                delete_archived_car_notification(item["notification_key"])
+        elif active_filter == "soon":
+            filtered = [item for item in notifications if item["status"] == "Скоро"]
+            for item in filtered:
+                hide_car_notification(item["notification_key"])
+        else:
+            filtered = [item for item in notifications if item["status"] == "Нужна замена"]
+            active_filter = "need"
+            for item in filtered:
+                hide_car_notification(item["notification_key"])
+
+        flash("Все уведомления на вкладке удалены.", "success")
+        return redirect(url_for("car_notifications", filter=active_filter))

@@ -43,10 +43,25 @@
         </div>
 
         {% if notifications %}
-            <div class="table-wrapper">
+            <div class="table-header">
+                <h2 class="section-title">Список уведомлений</h2>
+                <div class="table-actions bulk-table-actions">
+                    <form method="post" action="{{ url_for('car_notifications_delete_selected') }}" class="inline-form bulk-delete-selected-form">
+                        <input type="hidden" name="selected_ids" class="bulk-selected-ids">
+                        <input type="hidden" name="filter" value="{{ active_filter }}">
+                        <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
+                    </form>
+                    <form method="post" action="{{ url_for('car_notifications_delete_all') }}" class="inline-form bulk-delete-all-form">
+                        <input type="hidden" name="filter" value="{{ active_filter }}">
+                        <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
+                    </form>
+                </div>
+            </div>
+            <div class="table-wrapper bulk-table">
                 <table class="data-table data-table-car notifications-table">
                     <thead>
                         <tr>
+                            <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                             <th>Наименование</th>
                             <th>Периодичность</th>
                             <th>Последняя дата</th>
@@ -58,6 +73,7 @@
                     <tbody>
                         {% for item in notifications %}
                             <tr>
+                                <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ item.notification_key }}" aria-label="Выбрать запись"></td>
                                 <td>{{ item.title or "—" }}</td>
                                 <td>{{ item.period_type or "—" }}</td>
                                 <td>{{ item.last_service_date_text or "—" }}</td>
