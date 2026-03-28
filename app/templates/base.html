@@ -42,6 +42,21 @@
             </div>
         </div>
     </header>
+
+    <div class="mobile-fab-nav" id="mobile-fab-nav">
+        <button class="mobile-fab-trigger" type="button" id="mobile-fab-trigger" aria-expanded="false" aria-controls="mobile-fab-panel">
+            Ш
+        </button>
+        <div class="mobile-fab-panel" id="mobile-fab-panel">
+            <a href="{{ url_for('index') }}" class="mobile-fab-link">Главная</a>
+            <a href="{{ url_for('budget') }}" class="mobile-fab-link">Бюджет</a>
+            <a href="{{ url_for('planner.schedule') }}" class="mobile-fab-link">График</a>
+            <a href="{{ url_for('car') }}" class="mobile-fab-link">Машина</a>
+            <a href="{{ url_for('shootings') }}" class="mobile-fab-link">Съёмки</a>
+            <a href="{{ url_for('planner.photo_projects') }}" class="mobile-fab-link">Фотопроекты</a>
+            <a href="{{ url_for('logout') }}" class="mobile-fab-link mobile-fab-link-danger">Выйти</a>
+        </div>
+    </div>
     {% endif %}
 
     <main class="page-shell">
@@ -271,6 +286,50 @@
                         window.location.href = href;
                     }
                 });
+            });
+
+            const mobileFabTrigger = document.getElementById("mobile-fab-trigger");
+            const mobileFabPanel = document.getElementById("mobile-fab-panel");
+            if (mobileFabTrigger && mobileFabPanel) {
+                mobileFabTrigger.addEventListener("click", function () {
+                    const isOpen = mobileFabPanel.classList.toggle("mobile-fab-panel-open");
+                    mobileFabTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (!event.target.closest("#mobile-fab-nav")) {
+                        mobileFabPanel.classList.remove("mobile-fab-panel-open");
+                        mobileFabTrigger.setAttribute("aria-expanded", "false");
+                    }
+                });
+            }
+
+            const strictDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+            document.querySelectorAll("input[type='date']").forEach(function (input) {
+                function validateDateField() {
+                    if (!input.value) {
+                        input.setCustomValidity("");
+                        return;
+                    }
+
+                    if (!strictDatePattern.test(input.value)) {
+                        input.setCustomValidity("Год должен состоять строго из 4 цифр.");
+                        return;
+                    }
+
+                    const [year, month, day] = input.value.split("-").map(function (value) {
+                        return Number(value);
+                    });
+                    const candidate = new Date(Date.UTC(year, month - 1, day));
+                    const isValidDate = candidate.getUTCFullYear() === year
+                        && candidate.getUTCMonth() === month - 1
+                        && candidate.getUTCDate() === day;
+                    input.setCustomValidity(isValidDate ? "" : "Введите корректную дату.");
+                }
+
+                input.addEventListener("input", validateDateField);
+                input.addEventListener("change", validateDateField);
+                validateDateField();
             });
         });
     </script>
