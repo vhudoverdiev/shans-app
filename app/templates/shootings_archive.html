@@ -18,7 +18,7 @@
         </div>
 
         {% if shootings %}
-            <div class="table-actions bulk-table-actions">
+            <div class="table-actions bulk-table-actions shootings-archive-actions">
                 <form method="post" action="{{ url_for('shootings_archive_delete_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
                     <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
