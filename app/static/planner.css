@@ -154,8 +154,8 @@
     margin-bottom:10px;
 }
 
-.planner-day-card-head strong{
-    font-weight:500;
+.planner-day-date{
+    font-weight:700;
 }
 
 .planner-day-count{
@@ -579,14 +579,7 @@
 }
 
 .planner-day-card-past{
-    opacity:.78;
-}
-
-.planner-day-text-past{
-    text-decoration:line-through;
-    text-decoration-thickness:3px;
-    text-decoration-color:#9ca3af;
-    font-weight:600;
+    opacity:.42;
 }
 
 .planner-shooting-open-btn{
