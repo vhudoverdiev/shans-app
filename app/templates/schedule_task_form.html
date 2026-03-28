@@ -22,13 +22,11 @@
             {% if not task %}
             <input type="hidden" name="return_view" value="day">
             {% endif %}
-            {% if not task %}
             <div class="car-tab-bar planner-form-mode-tabs">
-                <button class="car-tab-link car-tab-link-active planner-mode-tab" type="button" data-mode="single">Обычная (1 дата)</button>
+                <button class="car-tab-link planner-mode-tab" type="button" data-mode="single">Обычная (1 дата)</button>
                 <button class="car-tab-link planner-mode-tab" type="button" data-mode="range">Протяжённая (с–до)</button>
             </div>
-            <input type="hidden" name="task_form_mode" id="task_form_mode" value="single">
-            {% endif %}
+            <input type="hidden" name="task_form_mode" id="task_form_mode" value="single" data-initial-mode="{% if task and task.range_end_date %}range{% else %}single{% endif %}">
             <div class="car-form-grid">
                 <div class="form-group">
                     <label>Название</label>
@@ -43,12 +41,11 @@
                     <label>Время</label>
                     <input class="form-input" type="time" name="start_time" value="{{ task.start_time if task else '' }}">
                 </div>
-                <div class="form-group planner-range-field" {% if not task %}style="display:none"{% endif %}>
+                <div class="form-group planner-range-field" style="display:none">
                     <label>Дата окончания</label>
-                    <input class="form-input" type="date" name="range_end_date" value="{{ task.range_end_date if task else initial_date }}">
+                    <input class="form-input" type="date" name="range_end_date" value="{{ task.range_end_date if task and task.range_end_date else (initial_date if not task else task.task_date) }}">
                 </div>
 
-                {% if task %}
                 <div class="form-group">
                     <label>Тип</label>
                     <select class="form-input" name="task_type">
@@ -87,7 +84,6 @@
                         {% endfor %}
                     </select>
                 </div>
-                {% endif %}
 
             </div>
 
@@ -98,7 +94,6 @@
         </form>
     </div>
 </section>
-{% if not task %}
 <script>
     (function () {
         const tabs = document.querySelectorAll('.planner-mode-tab');
@@ -120,8 +115,7 @@
             });
         });
 
-        applyMode('single');
+        applyMode(modeInput.dataset.initialMode || 'single');
     })();
 </script>
-{% endif %}
 {% endblock %}

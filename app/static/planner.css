@@ -40,6 +40,27 @@
     color:#111827;
 }
 
+.planner-nav-actions-month{
+    margin-left:auto;
+    align-items:center;
+}
+
+.planner-month-side-nav{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.planner-month-arrow{
+    width:38px;
+    height:38px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+}
+
 .planner-view-switch{
     display:flex;
     align-items:center;
@@ -135,6 +156,11 @@
     font-weight:700;
 }
 .planner-day-count-important{
+    background:#dc2626;
+    color:#fff;
+}
+
+.planner-day-count-photo{
     background:#eab308;
     color:#111827;
 }
@@ -346,6 +372,15 @@
 @media (max-width: 768px){
     .planner-form-grid{
         grid-template-columns:1fr;
+    }
+
+    .planner-nav-actions-month{
+        width:100%;
+        justify-content:space-between;
+    }
+
+    .planner-month-side-nav{
+        flex-direction:row;
     }
 
     .planner-task-row,
