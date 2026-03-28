@@ -7,9 +7,6 @@
         <div>
             <h1 class="page-title">График</h1>
         </div>
-        <div class="page-actions">
-            <a class="btn btn-primary" href="{{ url_for('planner.create_schedule_task', date=selected_date.isoformat()) }}">Добавить задачу</a>
-        </div>
     </div>
 
     <div class="stats-grid car-stats-grid">
@@ -61,15 +58,21 @@
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
         </div>
 
-        <div class="planner-month-grid">
+        <div class="planner-month-grid planner-month-grid-scroll" data-next-month-url="{{ url_for('planner.schedule', view='month', date=next_date) }}" data-prev-month-url="{{ url_for('planner.schedule', view='month', date=prev_date) }}">
             {% for cell in month_cells %}
-            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if cell.has_photo_or_shooting %}planner-day-card-photo{% endif %}">
+            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %}">
                 <div class="planner-day-card-head">
-                    <strong>{{ cell.date.day }}</strong>
+                    <strong>{{ cell.date.day }} {{ cell.month_short }}</strong>
                     {% if cell.tasks %}<span class="planner-day-count">{{ cell.tasks|length }}</span>{% endif %}
                 </div>
                 <div class="planner-day-summary">
-                    {% if cell.tasks %}<span>Задач: {{ cell.tasks|length }}</span>{% else %}<span>Свободно</span>{% endif %}
+                    {% if cell.tasks %}
+                    <span>
+                        {{ cell.first_task_title }}{% if cell.tasks|length > 1 %} +{{ cell.tasks|length - 1 }}{% endif %}
+                    </span>
+                    {% else %}
+                    <span>Свободно</span>
+                    {% endif %}
                 </div>
             </a>
             {% endfor %}
@@ -152,4 +155,26 @@
 
     {% endif %}
 </section>
+{% if current_view == 'month' %}
+<script>
+    (function () {
+        const monthGrid = document.querySelector('.planner-month-grid-scroll');
+        if (!monthGrid) return;
+
+        let wheelLocked = false;
+        monthGrid.addEventListener('wheel', function (event) {
+            if (wheelLocked || !event.deltaY) return;
+            event.preventDefault();
+
+            const targetUrl = event.deltaY > 0
+                ? monthGrid.dataset.nextMonthUrl
+                : monthGrid.dataset.prevMonthUrl;
+            if (!targetUrl) return;
+
+            wheelLocked = true;
+            window.location.href = targetUrl;
+        }, { passive: false });
+    })();
+</script>
+{% endif %}
 {% endblock %}
