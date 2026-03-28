@@ -3604,6 +3604,8 @@ a {
 .remaining-payment-preview-complete {
     border-color: #c7d2fe;
     background: linear-gradient(145deg, #eef2ff, #f8fafc);
+    border-color: #bbf7d0;
+    background: linear-gradient(145deg, #ecfdf3, #f8fafc);
 }
 
 .booking-detail-grid {
