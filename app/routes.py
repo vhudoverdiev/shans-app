@@ -76,7 +76,8 @@ from app.models import (
     update_shooting,
 )
 from app.utils import build_budget_excel, build_shootings_excel
-from app.planner import delete_task_for_shooting, upsert_task_for_shooting
+from app.database import get_connection
+from app.planner import create_task, delete_task_for_shooting, upsert_task_for_shooting
 
 
 MONTHS = [
@@ -484,6 +485,99 @@ def _parse_car_excel(file_storage):
 
     return done_services, planned_services
 
+
+
+
+def _parse_excel_schedule_date(value) -> str:
+    if value in (None, ""):
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d")
+    if isinstance(value, date):
+        return value.strftime("%Y-%m-%d")
+
+    text = str(value).strip()
+    if not text:
+        return ""
+
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(text, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return text
+
+
+def _parse_schedule_excel(file_storage):
+    workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
+    sheet = workbook.active
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        raise ValueError("Файл Excel пустой.")
+
+    headers = [_normalize_excel_header(value) for value in rows[0]]
+    header_map = {name: index for index, name in enumerate(headers) if name}
+
+    title_index = header_map.get("название", header_map.get("title"))
+    task_date_index = header_map.get("дата", header_map.get("task_date"))
+
+    if title_index is None or task_date_index is None:
+        raise ValueError("Для импорта графика нужны столбцы: Название, Дата.")
+
+    description_index = header_map.get("описание", header_map.get("description"))
+    start_time_index = header_map.get("время", header_map.get("start_time"))
+    type_index = header_map.get("тип", header_map.get("task_type"))
+    status_index = header_map.get("статус", header_map.get("status"))
+    important_index = header_map.get("важность", header_map.get("is_important"))
+    range_end_index = header_map.get("дата окончания", header_map.get("range_end_date"))
+
+    tasks = []
+    for row in rows[1:]:
+        title = str(row[title_index]).strip() if title_index < len(row) and row[title_index] is not None else ""
+        task_date = _parse_excel_schedule_date(row[task_date_index]) if task_date_index < len(row) else ""
+
+        if not title and not task_date:
+            continue
+
+        if not title or not task_date:
+            raise ValueError("В строках графика обязательны поля: Название и Дата.")
+
+        description = str(row[description_index]).strip() if description_index is not None and description_index < len(row) and row[description_index] is not None else ""
+        start_time = str(row[start_time_index]).strip() if start_time_index is not None and start_time_index < len(row) and row[start_time_index] is not None else ""
+        task_type = str(row[type_index]).strip() if type_index is not None and type_index < len(row) and row[type_index] is not None else "Личное"
+        status_raw = str(row[status_index]).strip().lower() if status_index is not None and status_index < len(row) and row[status_index] is not None else "planned"
+        important_raw = str(row[important_index]).strip().lower() if important_index is not None and important_index < len(row) and row[important_index] is not None else ""
+        range_end_date = _parse_excel_schedule_date(row[range_end_index]) if range_end_index is not None and range_end_index < len(row) else ""
+
+        status_map = {
+            "planned": "planned",
+            "запланировано": "planned",
+            "done": "done",
+            "выполнено": "done",
+            "cancelled": "cancelled",
+            "отменено": "cancelled",
+            "range": "range",
+            "протяженная": "range",
+            "протяжённая": "range",
+        }
+        status = status_map.get(status_raw, "planned")
+        if range_end_date:
+            status = "range"
+
+        is_important = 1 if important_raw in {"да", "yes", "1", "true", "важная"} else 0
+
+        tasks.append({
+            "title": title,
+            "task_date": task_date,
+            "description": description,
+            "start_time": start_time,
+            "task_type": task_type or "Личное",
+            "status": status,
+            "is_important": is_important,
+            "range_end_date": range_end_date,
+        })
+
+    return tasks
 
 def _parse_budget_excel(file_storage):
     workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
@@ -1479,6 +1573,31 @@ def register_routes(app):
                         flash(f"Таблица Съёмок заменена. Загружено записей: {len(shootings)}.", "success")
                     else:
                         flash(f"Добавлено съёмок: {len(shootings)}.", "success")
+                elif target == "schedule":
+                    tasks = _parse_schedule_excel(excel_file)
+                    if replace_mode:
+                        conn = get_connection()
+                        conn.execute("DELETE FROM schedule_tasks")
+                        conn.commit()
+                        conn.close()
+
+                    for task in tasks:
+                        create_task(
+                            title=task["title"],
+                            task_date=task["task_date"],
+                            description=task["description"],
+                            start_time=task["start_time"],
+                            end_time="",
+                            is_important=task["is_important"],
+                            range_end_date=task["range_end_date"],
+                            task_type=task["task_type"],
+                            status=task["status"],
+                        )
+
+                    if replace_mode:
+                        flash(f"Таблица Графика заменена. Загружено задач: {len(tasks)}.", "success")
+                    else:
+                        flash(f"Добавлено задач в График: {len(tasks)}.", "success")
                 else:
                     flash("Неизвестный раздел для импорта.", "error")
             except ValueError as error:
