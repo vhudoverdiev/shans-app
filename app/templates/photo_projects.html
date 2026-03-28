@@ -113,9 +113,7 @@
                                     <td>{{ project.idea }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>
-                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
-                                            {{ project.effective_status }}
-                                        </span>
+                                        <a href="{{ url_for('planner.photo_project_detail', project_id=project.id) }}" class="status-pill-link">{{ project.title }}</a>
                                     </td>
 
                                     <td>{{ project.bookings_count }}</td>
