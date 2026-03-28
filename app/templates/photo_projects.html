@@ -51,9 +51,19 @@
                             {% for project in archived_projects %}
                                 <tr>
                                     <td>{{ project.title }}</td>
+
                                     <td>{{ project.city }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>{{ project.time_range_display }}</td>
+
+                                    <td>{{ project.idea }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>
+                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
+                                            {{ project.effective_status }}
+                                        </span>
+                                    </td>
+
                                     <td>{{ project.bookings_count }}</td>
                                     <td>
                                         <div class="table-actions-icon">
@@ -93,11 +103,21 @@
                         </thead>
                         <tbody>
                             {% for project in projects %}
-                                <tr onclick="if (!event.target.closest('form') && !event.target.closest('button')) { window.location='{{ url_for('planner.photo_project_detail', project_id=project.id) }}'; }" style="cursor:pointer;">
+                                <tr onclick="window.location='{{ url_for('planner.photo_project_detail', project_id=project.id) }}'" style="cursor:pointer;">
                                     <td>{{ project.title }}</td>
+
                                     <td>{{ project.city }}</td>
                                     <td>{{ project.project_date_display }}</td>
                                     <td>{{ project.time_range_display }}</td>
+
+                                    <td>{{ project.idea }}</td>
+                                    <td>{{ project.project_date_display }}</td>
+                                    <td>
+                                        <span class="status-pill {{ project_status_class(project.effective_status) }}">
+                                            {{ project.effective_status }}
+                                        </span>
+                                    </td>
+
                                     <td>{{ project.bookings_count }}</td>
                                     <td>
                                         <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
