@@ -51,6 +51,12 @@
     gap:8px;
 }
 
+.planner-month-title-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
 .planner-month-arrow{
     width:38px;
     height:38px;
@@ -354,6 +360,14 @@
     background:rgba(250,204,21,.20);
 }
 
+.planner-task-row-range{
+    background:rgba(34,197,94,.16);
+}
+
+.data-table tr.planner-task-row-range{
+    background:rgba(34,197,94,.16);
+}
+
 @media (max-width: 1024px){
     .planner-layout,
     .photo-projects-grid{
@@ -645,6 +659,11 @@
 .planner-status-chip-cancelled{
     background:#fff1f2;
     color:#be123c;
+}
+
+.planner-status-chip-range{
+    background:#dcfce7;
+    color:#166534;
 }
 
 .planner-task-actions-fancy{

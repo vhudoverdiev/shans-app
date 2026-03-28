@@ -151,6 +151,18 @@ def _status_badge_class(status: str) -> str:
     return mapping.get(status, "badge-neutral")
 
 
+def _task_display_status(task) -> str:
+    if task["range_end_date"] and task["status"] == "planned":
+        return "range"
+    return task["status"]
+
+
+def _task_display_status_label(task) -> str:
+    if _task_display_status(task) == "range":
+        return "Протяжённая"
+    return _status_label(task["status"])
+
+
 def _accent_options() -> List[Dict[str, str]]:
     return [
         {"value": "accent-violet", "label": "Фиолетовый"},
@@ -415,6 +427,35 @@ def update_task(
 def delete_task(task_id: int):
     conn = get_connection()
     conn.execute("DELETE FROM schedule_tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
+
+
+def replace_manual_schedule_tasks(tasks: List[Dict[str, object]]):
+    conn = get_connection()
+    conn.execute("DELETE FROM schedule_tasks WHERE shooting_id IS NULL AND booking_id IS NULL")
+
+    for task in tasks:
+        conn.execute(
+            """
+            INSERT INTO schedule_tasks (
+                title, description, task_date, start_time, end_time, is_important, range_end_date,
+                task_type, status, project_id, booking_id, shooting_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL)
+            """,
+            (
+                str(task.get("title", "")).strip(),
+                str(task.get("description", "")).strip(),
+                str(task.get("task_date", "")).strip(),
+                str(task.get("start_time", "")).strip() or None,
+                str(task.get("end_time", "")).strip() or None,
+                1 if task.get("is_important") else 0,
+                str(task.get("range_end_date", "")).strip() or None,
+                str(task.get("task_type", "Личное")).strip() or "Личное",
+                str(task.get("status", "planned")).strip() or "planned",
+            ),
+        )
+
     conn.commit()
     conn.close()
 
@@ -793,6 +834,10 @@ def build_schedule_context(selected_date: date, current_view: str):
         current_day += timedelta(days=1)
 
     day_tasks = get_tasks_for_day(selected_date.isoformat())
+    for task in day_tasks:
+        task["display_status"] = _task_display_status(task)
+        task["display_status_label"] = _task_display_status_label(task)
+
     total_tasks_month = sum(len(tasks) for tasks in tasks_by_date.values())
     done_tasks_month = sum(1 for tasks in tasks_by_date.values() for task in tasks if task["status"] == "done")
     cancelled_tasks_month = sum(1 for tasks in tasks_by_date.values() for task in tasks if task["status"] == "cancelled")
