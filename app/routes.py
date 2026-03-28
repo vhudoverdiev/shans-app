@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from pathlib import Path
 import re
 
 from openpyxl import load_workbook
@@ -20,6 +21,8 @@ from flask_login import (
 from app.auth import verify_user
 from app.models import (
     archive_car_notification,
+    clear_car_done_services,
+    clear_car_planned_services,
     create_budget_entry,
     create_car_done_service,
     create_car_planned_service,
@@ -43,6 +46,7 @@ from app.models import (
     get_car_planned_services,
     get_car_total_spent,
     get_current_balance,
+    get_app_meta,
     get_hidden_notification_keys,
     get_periodic_services_for_notifications,
     get_shooting_by_id,
@@ -51,6 +55,7 @@ from app.models import (
     is_car_notification_hidden,
     move_planned_to_done,
     save_balance_history,
+    set_app_meta,
     set_current_balance,
     update_budget_entry,
     update_car_done_service,
@@ -411,6 +416,62 @@ def _load_car_rows_from_excel(file_storage):
         })
 
     return imported_rows, None
+
+
+def _sync_car_from_excel_file():
+    excel_path = Path("data/car_services.xlsx")
+    if not excel_path.exists():
+        return
+
+    current_mtime = str(excel_path.stat().st_mtime_ns)
+    last_synced_mtime = get_app_meta("car_excel_sync_mtime", "")
+    if current_mtime == last_synced_mtime:
+        return
+
+    rows, load_error = _load_car_rows_from_excel(str(excel_path))
+    if load_error or not rows:
+        return
+
+    clear_car_done_services()
+    clear_car_planned_services()
+
+    for row in rows:
+        if row["status"] == "Выполнено":
+            mileage_value, mileage_error = _parse_non_negative_number(row.get("mileage"), "Пробег")
+            cost_value, cost_error = _parse_non_negative_number(row.get("cost"), "Стоимость")
+            if mileage_error or cost_error:
+                continue
+
+            service_date = row.get("service_date", "").strip()
+            if service_date:
+                try:
+                    if len(service_date) == 7:
+                        datetime.strptime(service_date, "%Y-%m")
+                    else:
+                        datetime.strptime(service_date, "%Y-%m-%d")
+                except ValueError:
+                    continue
+            else:
+                continue
+
+            create_car_done_service(
+                service_name=row["service_name"],
+                service_cost=cost_value if cost_value is not None else 0,
+                mileage=mileage_value if mileage_value is not None else 0,
+                service_date=service_date[:7],
+                detail_description=row.get("detail_description", ""),
+                work_kind="",
+                period_type=row.get("period_type", ""),
+            )
+        else:
+            create_car_planned_service(
+                service_name=row["service_name"],
+                detail_description=row.get("detail_description", ""),
+                work_kind="",
+                period_type=row.get("period_type", ""),
+            )
+
+    set_app_meta("car_excel_sync_mtime", current_mtime)
 
 def _resolve_budget_category(form):
     """
@@ -975,6 +1036,7 @@ def register_routes(app):
     @app.route("/car")
     @login_required
     def car():
+        _sync_car_from_excel_file()
         active_tab = request.args.get("tab", "planned")
 
         done_services = get_car_done_services()
@@ -1045,79 +1107,6 @@ def register_routes(app):
             planned_count=len(prepared_planned_services),
             done_count=len(prepared_done_services),
         )
-
-    @app.route("/car/import", methods=["POST"])
-    @login_required
-    def car_import():
-        excel_file = request.files.get("excel_file")
-        if not excel_file or not excel_file.filename:
-            flash("Выбери файл Excel для импорта.", "error")
-            return redirect(url_for("car"))
-
-        if not excel_file.filename.lower().endswith(".xlsx"):
-            flash("Поддерживается только формат .xlsx.", "error")
-            return redirect(url_for("car"))
-
-        rows, load_error = _load_car_rows_from_excel(excel_file)
-        if load_error:
-            flash(load_error, "error")
-            return redirect(url_for("car"))
-
-        if not rows:
-            flash("В файле нет строк для импорта.", "error")
-            return redirect(url_for("car"))
-
-        imported_done = 0
-        imported_planned = 0
-
-        for row in rows:
-            if row["status"] == "Выполнено":
-                mileage_value, mileage_error = _parse_non_negative_number(row.get("mileage"), "Пробег")
-                cost_value, cost_error = _parse_non_negative_number(row.get("cost"), "Стоимость")
-                if mileage_error or cost_error:
-                    continue
-
-                service_date = row.get("service_date", "").strip()
-                if service_date:
-                    try:
-                        if len(service_date) == 7:
-                            datetime.strptime(service_date, "%Y-%m")
-                        else:
-                            datetime.strptime(service_date, "%Y-%m-%d")
-                    except ValueError:
-                        continue
-                else:
-                    continue
-
-                create_car_done_service(
-                    service_name=row["service_name"],
-                    service_cost=cost_value if cost_value is not None else 0,
-                    mileage=mileage_value if mileage_value is not None else 0,
-                    service_date=service_date[:7],
-                    detail_description=row.get("detail_description", ""),
-                    work_kind="",
-                    period_type=row.get("period_type", ""),
-                )
-                imported_done += 1
-            else:
-                create_car_planned_service(
-                    service_name=row["service_name"],
-                    detail_description=row.get("detail_description", ""),
-                    work_kind="",
-                    period_type=row.get("period_type", ""),
-                )
-                imported_planned += 1
-
-        total_imported = imported_done + imported_planned
-        if total_imported == 0:
-            flash("Импорт не выполнен: проверь формат дат и чисел в файле.", "error")
-            return redirect(url_for("car"))
-
-        flash(
-            f"Импорт завершён. Добавлено: выполненных — {imported_done}, планируемых — {imported_planned}.",
-            "success",
-        )
-        return redirect(url_for("car"))
 
     @app.route("/car/manage", methods=["GET", "POST"])
     @login_required

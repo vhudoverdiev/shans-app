@@ -13,6 +13,35 @@ def get_current_year():
     return datetime.now().year
 
 
+def get_app_meta(meta_key, default_value=None):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT meta_value FROM app_meta WHERE meta_key = ?",
+        (meta_key,),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return default_value
+    return row["meta_value"]
+
+
+def set_app_meta(meta_key, meta_value):
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO app_meta (meta_key, meta_value, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(meta_key)
+        DO UPDATE SET
+            meta_value = excluded.meta_value,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (meta_key, str(meta_value)),
+    )
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # USERS
 # =========================================================
@@ -368,6 +397,13 @@ def create_car_done_service(
     conn.close()
 
 
+def clear_car_done_services():
+    conn = get_connection()
+    conn.execute("DELETE FROM car_done_services")
+    conn.commit()
+    conn.close()
+
+
 def create_car_planned_service(
     service_name,
     detail_description,
@@ -395,6 +431,13 @@ def create_car_planned_service(
         period_type,
         "Планируется",
     ))
+    conn.commit()
+    conn.close()
+
+
+def clear_car_planned_services():
+    conn = get_connection()
+    conn.execute("DELETE FROM car_planned_services")
     conn.commit()
     conn.close()
 

@@ -168,6 +168,17 @@ def init_db():
         """)
 
     # =========================================================
+    # APP META
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS app_meta (
+            meta_key TEXT PRIMARY KEY,
+            meta_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # =========================================================
     # CAR DONE SERVICES
     # =========================================================
     cursor.execute("""

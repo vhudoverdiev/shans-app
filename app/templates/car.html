@@ -11,17 +11,6 @@
 
         <div class="page-actions">
             <a href="{{ url_for('car_notifications') }}" class="btn btn-secondary">Переодические ТО</a>
-            <form action="{{ url_for('car_import') }}" method="post" enctype="multipart/form-data" class="import-excel-form">
-                <label class="btn btn-success import-excel-label" for="car-excel-file">Импорт Excel</label>
-                <input
-                    id="car-excel-file"
-                    type="file"
-                    name="excel_file"
-                    accept=".xlsx"
-                    class="import-excel-input"
-                    onchange="this.form.submit()"
-                >
-            </form>
             <a href="{{ url_for('car_manage') }}" class="btn btn-primary">Добавить работу</a>
         </div>
     </div>
