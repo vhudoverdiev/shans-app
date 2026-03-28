@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ booking.client_name }} | Запись | Шанс{% endblock %}
+
+{% block content %}
+<section class="car-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Запись: {{ booking.client_name }}</h1>
+            <div class="car-form-head-text">Подробности по клиенту, времени и оплате.</div>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('planner.photo_project_detail', project_id=booking.project_id) }}">Назад к проекту</a>
+            <a class="btn btn-primary" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}">Редактировать</a>
+        </div>
+    </div>
+
+    <div class="stats-grid car-stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Дата</div>
+            <div class="stat-value">{{ booking.booking_date_display }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Время</div>
+            <div class="stat-value">{{ booking.booking_time or '—' }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Длительность</div>
+            <div class="stat-value">{{ booking.duration_minutes }} мин</div>
+        </div>
+    </div>
+
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Контактные данные</h2>
+        </div>
+        <div class="booking-detail-grid">
+            <div class="booking-detail-item">
+                <div class="stat-label">Имя клиента</div>
+                <div class="stat-value">{{ booking.client_name }}</div>
+            </div>
+            <div class="booking-detail-item">
+                <div class="stat-label">Телефон</div>
+                <div class="stat-value">{{ booking.client_contact }}</div>
+            </div>
+            <div class="booking-detail-item">
+                <div class="stat-label">Начало макияжа</div>
+                <div class="stat-value">{{ booking.makeup_start_time or '—' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card table-card">
+        <div class="table-header">
+            <h2 class="section-title">Оплата</h2>
+        </div>
+        <div class="booking-payment-grid">
+            <div class="stat-card">
+                <div class="stat-label">Стоимость</div>
+                <div class="stat-value">{{ booking.price }} ₽</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Предоплата</div>
+                <div class="stat-value">{{ booking.prepayment }} ₽</div>
+            </div>
+            <div class="stat-card remaining-card">
+                <div class="stat-label">Остаток к оплате</div>
+                <div class="stat-value">{{ booking.remaining_payment }} ₽</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
