@@ -93,7 +93,9 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td class="empty-table-message" colspan="{{ 6 if not project.is_archived else 5 }}">Записей пока нет.</td>
+                        <td colspan="{{ 6 if not project.is_archived else 5 }}">
+                            <div class="empty-state">Записей пока нет.</div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
