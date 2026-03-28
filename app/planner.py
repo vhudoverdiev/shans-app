@@ -205,17 +205,20 @@ def _serialize_project_row(project):
     project_data["effective_status"] = _project_effective_status(project)
     project_data["is_archived"] = project_data["effective_status"] == "В архиве"
     project_data["project_date_display"] = _format_full_date_ru(project_data.get("project_date"))
+
     project_data["city"] = project_data.get("city") or project_data.get("idea") or "—"
     project_data["address"] = project_data.get("address") or project_data.get("description") or "—"
     start_time = project_data.get("start_time") or ""
     end_time = project_data.get("end_time") or ""
     project_data["time_range_display"] = f"{start_time} — {end_time}" if start_time and end_time else "—"
+
     return project_data
 
 
 def _serialize_booking_row(booking):
     booking_data = dict(booking)
     booking_data["booking_date_display"] = _format_full_date_ru(booking_data.get("booking_date"))
+
     duration = int(booking_data.get("duration_minutes") or 15)
     price = float(booking_data.get("price") or 0)
     prepayment = float(booking_data.get("prepayment") or 0)
@@ -275,6 +278,11 @@ def _build_available_slots(project, bookings):
         current += 15
 
     return {"15": slots_15, "30": slots_30}
+
+
+
+    return booking_data
+
 
 
 def create_task(
@@ -886,11 +894,16 @@ def photo_project_detail(project_id: int):
         return redirect(url_for("planner.photo_projects"))
     bookings = [_serialize_booking_row(booking) for booking in get_bookings_for_project(project_id)]
     view_mode = request.args.get("view", "bookings")
+
+    view_mode = request.args.get("view", "bookings")
+    available_slots = _build_available_slots(dict(project), bookings)
+
     return render_template(
         "photo_project_detail.html",
         project=_serialize_project_row(project),
         bookings=bookings,
         view_mode=view_mode,
+        available_slots=available_slots,
     )
 
 
@@ -969,6 +982,13 @@ def create_photo_project_booking(project_id: int):
     if duration_minutes_raw not in {"15", "30"}:
         flash("Выбери длительность 15 или 30 минут.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if not _is_valid_phone_number(client_contact):
+        flash("Контакт должен содержать только номер телефона.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if duration_minutes_raw not in {"15", "30"}:
+        flash("Выбери длительность 15 или 30 минут.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
     duration_minutes = int(duration_minutes_raw)
     available_slots = _build_available_slots(dict(project), [_serialize_booking_row(item) for item in get_bookings_for_project(project_id)])
     if booking_time not in available_slots[duration_minutes_raw]:
@@ -977,12 +997,23 @@ def create_photo_project_booking(project_id: int):
     if duration_minutes == 30 and not makeup_start_time:
         flash("Для записи на 30 минут укажи время начала макияжа.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if duration_minutes == 30 and not makeup_start_time:
+        flash("Для записи на 30 минут укажи время начала макияжа.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
     try:
         price = float(price_raw or 0)
         prepayment = float(prepayment_raw or 0)
     except ValueError:
         flash("Стоимость и предоплата должны быть числами.", "error")
         return redirect(url_for("planner.photo_project_detail", project_id=project_id, view="add"))
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if not _is_valid_phone_number(client_contact):
+        flash("Контакт должен содержать только номер телефона.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
+    if not _is_valid_phone_number(client_contact):
+        flash("Контакт должен содержать только номер телефона.", "error")
+        return redirect(url_for("planner.photo_project_detail", project_id=project_id))
 
     booking_id = create_booking(
         project_id,
@@ -1042,6 +1073,12 @@ def edit_photo_project_booking(booking_id: int):
             prepayment = float(prepayment_raw or 0)
         except ValueError:
             flash("Стоимость и предоплата должны быть числами.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if not _is_valid_phone_number(client_contact):
+            flash("Контакт должен содержать только номер телефона.", "error")
+            return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
+        if not _is_valid_phone_number(client_contact):
+            flash("Контакт должен содержать только номер телефона.", "error")
             return redirect(url_for("planner.edit_photo_project_booking", booking_id=booking_id))
 
         update_booking(

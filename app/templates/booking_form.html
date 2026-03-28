@@ -60,6 +60,26 @@
                     <label>Начало макияжа</label>
                     <input class="form-input" type="time" name="makeup_start_time" id="makeup_start_time" value="{{ booking.makeup_start_time or '' }}">
                 </div>
+
+                <div class="form-group">
+                    <label>Стоимость</label>
+                    <input class="form-input" type="number" min="0" step="1" name="price" id="booking_price" value="{{ booking.price }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Предоплата</label>
+                    <input class="form-input" type="number" min="0" step="1" name="prepayment" id="booking_prepayment" value="{{ booking.prepayment }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Остаток к оплате</label>
+                    <input class="form-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
+                </div>
+
+                <div class="form-group" id="makeup_start_group" style="{% if booking.duration_minutes == 30 %}display:block;{% else %}display:none;{% endif %}">
+                    <label>Начало макияжа</label>
+                    <input class="form-input" type="time" name="makeup_start_time" id="makeup_start_time" value="{{ booking.makeup_start_time or '' }}">
+                </div>
             </div>
 
             <div class="car-form-actions">
