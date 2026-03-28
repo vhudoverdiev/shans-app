@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from io import BytesIO
 import re
 
 from flask import (
@@ -15,6 +16,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from openpyxl import load_workbook
 
 from app.auth import verify_user
 from app.models import (
@@ -49,6 +51,7 @@ from app.models import (
     hide_car_notification,
     is_car_notification_hidden,
     move_planned_to_done,
+    replace_car_services,
     save_balance_history,
     set_current_balance,
     update_budget_entry,
@@ -338,6 +341,121 @@ def _parse_non_negative_number(value: str, label: str):
         return None, f"Поле '{label}' не может быть отрицательным."
 
     return parsed_value, None
+
+
+def _normalize_excel_header(value) -> str:
+    if value is None:
+        return ""
+    return str(value).strip().lower()
+
+
+def _parse_excel_number(value):
+    if value in (None, ""):
+        return 0
+    if isinstance(value, (int, float)):
+        return value
+    try:
+        return float(str(value).replace(",", ".").strip())
+    except ValueError:
+        return 0
+
+
+def _parse_excel_date(value) -> str:
+    if value in (None, ""):
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m")
+    if isinstance(value, date):
+        return value.strftime("%Y-%m")
+    text = str(value).strip()
+    if not text:
+        return ""
+    for fmt in ("%Y-%m", "%Y-%m-%d", "%d.%m.%Y", "%m.%Y"):
+        try:
+            parsed = datetime.strptime(text, fmt)
+            return parsed.strftime("%Y-%m")
+        except ValueError:
+            continue
+    return text
+
+
+def _parse_car_excel(file_storage):
+    workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
+    sheet = workbook.active
+
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        raise ValueError("Файл Excel пустой.")
+
+    headers = [_normalize_excel_header(value) for value in rows[0]]
+    header_map = {name: index for index, name in enumerate(headers) if name}
+
+    service_name_index = header_map.get("наименование", header_map.get("service_name"))
+    if service_name_index is None:
+        raise ValueError("В Excel не найден столбец 'Наименование'.")
+
+    description_index = header_map.get("описание", header_map.get("detail_description"))
+    period_index = header_map.get("периодичность", header_map.get("period_type"))
+    status_index = header_map.get("статус", header_map.get("status"))
+    date_index = header_map.get("дата", header_map.get("service_date"))
+    mileage_index = header_map.get("пробег", header_map.get("mileage"))
+    cost_index = header_map.get("стоимость", header_map.get("service_cost"))
+
+    done_services = []
+    planned_services = []
+
+    for row in rows[1:]:
+        service_name = str(row[service_name_index]).strip() if row[service_name_index] is not None else ""
+        if not service_name:
+            continue
+
+        detail_description = ""
+        period_type = ""
+        status_text = ""
+        service_date = ""
+        mileage_value = 0
+        cost_value = 0
+
+        if description_index is not None and description_index < len(row):
+            detail_description = str(row[description_index]).strip() if row[description_index] is not None else ""
+        if period_index is not None and period_index < len(row):
+            period_type = str(row[period_index]).strip() if row[period_index] is not None else ""
+        if status_index is not None and status_index < len(row):
+            status_text = str(row[status_index]).strip() if row[status_index] is not None else ""
+        if date_index is not None and date_index < len(row):
+            service_date = _parse_excel_date(row[date_index])
+        if mileage_index is not None and mileage_index < len(row):
+            mileage_value = _parse_excel_number(row[mileage_index])
+        if cost_index is not None and cost_index < len(row):
+            cost_value = _parse_excel_number(row[cost_index])
+
+        normalized_status = status_text.lower()
+        is_done = normalized_status == "выполнено" or bool(service_date)
+
+        if is_done:
+            done_services.append({
+                "service_name": service_name,
+                "service_cost": cost_value,
+                "mileage": mileage_value,
+                "service_date": service_date,
+                "detail_description": detail_description,
+                "work_kind": "",
+                "period_type": period_type,
+                "status": "Выполнено",
+            })
+        else:
+            planned_services.append({
+                "service_name": service_name,
+                "planned_cost": cost_value,
+                "mileage": mileage_value,
+                "detail_description": detail_description,
+                "work_kind": "",
+                "period_type": period_type,
+                "status": "Планируется",
+            })
+
+    return done_services, planned_services
+
 
 def _resolve_budget_category(form):
     """
@@ -972,6 +1090,35 @@ def register_routes(app):
             planned_count=len(prepared_planned_services),
             done_count=len(prepared_done_services),
         )
+
+    @app.route("/car/import-excel", methods=["POST"])
+    @login_required
+    def car_import_excel():
+        excel_file = request.files.get("excel_file")
+        if not excel_file or not excel_file.filename:
+            flash("Выберите Excel-файл для загрузки.", "error")
+            return redirect(url_for("car"))
+
+        filename = excel_file.filename.lower()
+        if not (filename.endswith(".xlsx") or filename.endswith(".xlsm")):
+            flash("Поддерживаются только файлы .xlsx или .xlsm.", "error")
+            return redirect(url_for("car"))
+
+        try:
+            done_services, planned_services = _parse_car_excel(excel_file)
+            replace_car_services(done_services=done_services, planned_services=planned_services)
+        except ValueError as error:
+            flash(str(error), "error")
+            return redirect(url_for("car"))
+        except Exception:
+            flash("Не удалось обработать Excel-файл. Проверьте формат данных.", "error")
+            return redirect(url_for("car"))
+
+        flash(
+            f"Импорт завершён: выполненных {len(done_services)}, планируемых {len(planned_services)}.",
+            "success",
+        )
+        return redirect(url_for("car"))
 
     @app.route("/car/manage", methods=["GET", "POST"])
     @login_required
