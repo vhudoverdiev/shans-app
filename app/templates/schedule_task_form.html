@@ -46,24 +46,18 @@
                     <input class="form-input" type="date" name="range_end_date" value="{{ task.range_end_date if task and task.range_end_date else (initial_date if not task else task.task_date) }}">
                 </div>
 
-                {% if task %}
-                <div class="form-group">
-                    <label>Тип</label>
-                    <select class="form-input" name="task_type">
-                        {% for item in task_types %}
-                        <option value="{{ item }}" {% if task.task_type == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
                 <div class="form-group">
                     <label>Статус</label>
                     {% if task %}
-                        <select class="form-input" name="status">
-                            <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
-                            <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
-                            <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
-                        </select>
+                        {% if task.range_end_date %}
+                            <input class="form-input" type="text" value="Запланировано" disabled>
+                        {% else %}
+                            <select class="form-input" name="status">
+                                <option value="planned" {% if task.status == 'planned' %}selected{% endif %}>Запланировано</option>
+                                <option value="done" {% if task.status == 'done' %}selected{% endif %}>Выполнено</option>
+                                <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Отменено</option>
+                            </select>
+                        {% endif %}
                     {% else %}
                         <input class="form-input" type="text" value="Запланировано" disabled>
                     {% endif %}
@@ -76,18 +70,6 @@
                         <option value="yes" {% if task and task.is_important %}selected{% endif %}>Да</option>
                     </select>
                 </div>
-
-                {% if task %}
-                <div class="form-group car-form-full">
-                    <label>Привязать к фотопроекту</label>
-                    <select class="form-input" name="project_id">
-                        <option value="">Без привязки</option>
-                        {% for project in projects %}
-                        <option value="{{ project.id }}" {% if task and task.project_id == project.id %}selected{% endif %}>{{ project.title }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
 
             </div>
 

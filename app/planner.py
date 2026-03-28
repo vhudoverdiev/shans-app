@@ -968,11 +968,10 @@ def edit_schedule_task(task_id: int):
         start_time = request.form.get("start_time", "")
         task_form_mode = request.form.get("task_form_mode", "single")
         range_end_date = request.form.get("range_end_date", "").strip()
-        task_type = request.form.get("task_type", "Личное")
+        task_type = task.get("task_type") or "Личное"
         status = request.form.get("status", "planned")
         is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
-        project_id_raw = request.form.get("project_id", "").strip()
-        project_id = int(project_id_raw) if project_id_raw.isdigit() else None
+        project_id = task.get("project_id")
 
         if not title or not task_date:
             flash("Для задачи нужны название и дата.", "error")
@@ -980,6 +979,8 @@ def edit_schedule_task(task_id: int):
 
         if task_form_mode != "range":
             range_end_date = ""
+        else:
+            status = "planned"
 
         update_task(
             task_id=task_id,
