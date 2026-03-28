@@ -3582,7 +3582,7 @@ a {
 }
 
 .remaining-payment-preview {
-    border: 1px solid #dbeafe;
+    border: 1px solid #dbeahttps://github.com/vhudoverdiev/shans-app/pull/19/conflict?name=app%252Ftemplates%252Fphoto_project_detail.html&ancestor_oid=bba042351896587016fc68f32b664431dcceff41&base_oid=47dbcc130c586705ddca6ca2b4d451839b46a966&head_oid=6d389ab7fa897f1b15827e4a24418d5ad30d7114fe;
     background: linear-gradient(145deg, #eff6ff, #f8fafc);
     border-radius: 14px;
     padding: 10px 12px;
@@ -3608,6 +3608,8 @@ a {
 .remaining-payment-preview-complete {
     border-color: #c7d2fe;
     background: linear-gradient(145deg, #eef2ff, #f8fafc);
+    border-color: #bbf7d0;
+    background: linear-gradient(145deg, #ecfdf3, #f8fafc);
 }
 
 .booking-detail-grid {

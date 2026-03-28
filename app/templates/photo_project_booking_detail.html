@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Подробности записи | Шанс{% endblock %}
+{% block title %}{{ booking.client_name }} | Запись | Шанс{% endblock %}
 
 {% block content %}
 <section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Подробности записи</h1>
+            <h1 class="page-title">Запись: {{ booking.client_name }}</h1>
             <div class="car-form-head-text">Подробности по клиенту, времени и оплате.</div>
         </div>
         <div class="page-actions">
