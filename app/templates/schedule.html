@@ -113,11 +113,7 @@
                     <tr class="{% if task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
-                            {% if task.range_end_date %}
-                                <span class="planner-type-label">Протяженная</span>
-                            {% else %}
-                                <span class="planner-type-label">Обычная</span>
-                            {% endif %}
+                            {{ task.title }}
                         </td>
                         <td>
                             {% if task.start_time %}
