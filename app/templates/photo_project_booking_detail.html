@@ -10,7 +10,9 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.photo_project_detail', project_id=booking.project_id) }}">Назад к проекту</a>
+            {% if not booking.project_is_archived %}
             <a class="btn btn-primary" href="{{ url_for('planner.edit_photo_project_booking', booking_id=booking.id) }}">Редактировать</a>
+            {% endif %}
         </div>
     </div>
 
