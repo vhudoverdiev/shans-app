@@ -62,7 +62,7 @@
                     </table>
                 </div>
             {% else %}
-                <div class="empty-state">
+                <div class="empty-state empty-state-horizontal-only">
                     В архиве пока нет фотопроектов.
                 </div>
             {% endif %}
@@ -98,6 +98,7 @@
                                     <td>
                                         <div class="table-actions-icon">
                                             <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}" title="Редактировать">✏</a>
+                                            <a class="icon-action-btn icon-export" href="{{ url_for('planner.photo_project_export', project_id=project.id) }}" title="Скачать Excel">⇩</a>
                                             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="event.stopPropagation(); return confirm('Удалить фотопроект?');">
                                                 <button type="submit" class="icon-action-btn icon-delete" title="Удалить">🗑</button>
                                             </form>
@@ -109,7 +110,7 @@
                     </table>
                 </div>
             {% else %}
-                <div class="empty-state">
+                <div class="empty-state empty-state-horizontal-only">
                     Активных фотопроектов пока нет.
                 </div>
             {% endif %}

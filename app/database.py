@@ -280,16 +280,5 @@ def init_db():
         "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     )
 
-    # =========================================================
-    # APP META (служебные ключ-значение)
-    # =========================================================
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS app_meta (
-            key TEXT PRIMARY KEY,
-            value TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
     conn.commit()
     conn.close()

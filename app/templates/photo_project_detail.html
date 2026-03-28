@@ -9,10 +9,10 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" href="{{ url_for('planner.photo_projects') }}">Все проекты</a>
-            <a class="btn btn-success" href="{{ url_for('planner.photo_project_export', project_id=project.id) }}">Скачать Excel</a>
             {% if not project.is_archived %}
             <a class="btn btn-secondary" href="{{ url_for('planner.edit_photo_project', project_id=project.id) }}">Редактировать</a>
             {% endif %}
+            <a class="btn btn-secondary" href="{{ url_for('planner.photo_project_export', project_id=project.id) }}">Скачать Excel</a>
             <form method="post" action="{{ url_for('planner.delete_photo_project', project_id=project.id) }}" class="inline-form" onsubmit="return confirm('Удалить фотопроект и все записи?');">
                 <button class="btn btn-danger" type="submit">Удалить</button>
             </form>
@@ -93,7 +93,9 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td class="empty-table-message" colspan="{{ 6 if not project.is_archived else 5 }}">Записей пока нет.</td>
+                        <td colspan="{{ 6 if not project.is_archived else 5 }}">
+                            <div class="empty-state">Записей пока нет.</div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
