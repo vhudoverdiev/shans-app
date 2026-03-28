@@ -40,9 +40,11 @@
         <p>{{ project.address or 'Адрес не указан.' }}</p>
     </div>
 
+    {% if not project.is_archived %}
     <div class="car-tab-bar">
         <a href="{{ url_for('planner.photo_project_detail', project_id=project.id, view='bookings') }}" class="car-tab-link {% if view_mode != 'add' %}car-tab-link-active{% endif %}">Записи</a>
     </div>
+    {% endif %}
 
     {% if view_mode == 'bookings' %}
     <div class="card table-card">
