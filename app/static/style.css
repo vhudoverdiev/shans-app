@@ -3681,12 +3681,17 @@ a {
     background: #f8fafc;
 }
 
-.js-project-row {
+.js-project-row,
+.js-booking-row,
+.js-shooting-row {
     cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.js-booking-row {
-    cursor: pointer;
+.js-project-row:active,
+.js-booking-row:active,
+.js-shooting-row:active {
+    transform: translateY(1px) scale(0.998);
 }
 
 .booking-meta-time {
