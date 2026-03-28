@@ -516,17 +516,17 @@ def delete_task_for_shooting(shooting_id: int):
     conn.close()
 
 
-def toggle_task_status(task_id: int):
+def toggle_task_status(task_id: int) -> Optional[str]:
     task = get_task(task_id)
     if not task:
-        return
-    if task["status"] == "done":
-        return
-    new_status = "done"
+        return None
+
+    new_status = "planned" if task["status"] == "done" else "done"
     conn = get_connection()
     conn.execute("UPDATE schedule_tasks SET status = ? WHERE id = ?", (new_status, task_id))
     conn.commit()
     conn.close()
+    return new_status
 
 
 def create_project(title: str, city: str, address: str, project_date: str, start_time: str, end_time: str):
@@ -729,17 +729,21 @@ def upsert_task_for_booking(booking_id: int):
     conn.close()
 
 
-def _previous_date(selected_date: date, current_view: str) -> date:
+def _previous_date(selected_date: date, current_view: str, step: str = "period") -> date:
     if current_view == "day":
         return selected_date - timedelta(days=1)
+    if step == "week":
+        return selected_date - timedelta(days=7)
     first_day_current = selected_date.replace(day=1)
     prev_month_last = first_day_current - timedelta(days=1)
     return prev_month_last.replace(day=min(selected_date.day, monthrange(prev_month_last.year, prev_month_last.month)[1]))
 
 
-def _next_date(selected_date: date, current_view: str) -> date:
+def _next_date(selected_date: date, current_view: str, step: str = "period") -> date:
     if current_view == "day":
         return selected_date + timedelta(days=1)
+    if step == "week":
+        return selected_date + timedelta(days=7)
     current_last_day = monthrange(selected_date.year, selected_date.month)[1]
     first_next_month = selected_date.replace(day=current_last_day) + timedelta(days=1)
     return first_next_month.replace(day=min(selected_date.day, monthrange(first_next_month.year, first_next_month.month)[1]))
@@ -814,6 +818,8 @@ def build_schedule_context(selected_date: date, current_view: str):
         "projects": [_serialize_project_row(project) for project in get_all_projects() if not _serialize_project_row(project)["is_archived"]],
         "prev_date": _previous_date(selected_date, current_view).isoformat(),
         "next_date": _next_date(selected_date, current_view).isoformat(),
+        "prev_week_date": _previous_date(selected_date, current_view, step="week").isoformat(),
+        "next_week_date": _next_date(selected_date, current_view, step="week").isoformat(),
     }
 
 
@@ -847,6 +853,7 @@ def create_schedule_task():
     task_form_mode = request.form.get("task_form_mode", "single")
     range_end_date = request.form.get("range_end_date", "").strip()
     status = "planned"
+    task_type = request.form.get("task_type", "Личное")
     is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
 
     if not title or not task_date:
@@ -868,7 +875,7 @@ def create_schedule_task():
                 description=description,
                 start_time=start_time,
                 end_time="",
-                task_type="Личное",
+                task_type=task_type,
                 status=status,
                 is_important=is_important,
                 range_end_date=range_finish_date.isoformat(),
@@ -884,7 +891,7 @@ def create_schedule_task():
         description=description,
         start_time=start_time,
         end_time="",
-        task_type="Личное",
+        task_type=task_type,
         status=status,
         is_important=is_important,
     )
@@ -905,6 +912,7 @@ def edit_schedule_task(task_id: int):
         task_date = request.form.get("task_date", "").strip()
         description = request.form.get("description", "")
         start_time = request.form.get("start_time", "")
+        task_form_mode = request.form.get("task_form_mode", "single")
         range_end_date = request.form.get("range_end_date", "").strip()
         task_type = request.form.get("task_type", "Личное")
         status = request.form.get("status", "planned")
@@ -915,6 +923,9 @@ def edit_schedule_task(task_id: int):
         if not title or not task_date:
             flash("Для задачи нужны название и дата.", "error")
             return redirect(url_for("planner.edit_schedule_task", task_id=task_id))
+
+        if task_form_mode != "range":
+            range_end_date = ""
 
         update_task(
             task_id=task_id,
@@ -995,8 +1006,13 @@ def toggle_schedule_task(task_id: int):
     if not task:
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
-    toggle_task_status(task_id)
-    flash("Статус задачи обновлён.", "success")
+    new_status = toggle_task_status(task_id)
+    if new_status == "done":
+        flash("Задача отмечена как выполненная.", "success")
+    elif new_status == "planned":
+        flash("Задача возвращена в запланированные.", "success")
+    else:
+        flash("Статус задачи не изменён.", "warning")
     return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
 
 
