@@ -3951,3 +3951,45 @@ a {
 .import-center-hint {
     margin-top: 14px;
 }
+
+/* =========================
+   UNIFIED GM TABS
+========================= */
+.btn-tab,
+.car-tab-link {
+    background: transparent;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.btn-tab:hover,
+.car-tab-link:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+}
+
+.btn-tab-active,
+.car-tab-link-active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+}
+
+.btn-tab.btn-tab-active:hover,
+.car-tab-link.car-tab-link-active:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.car-tab-link:not(.car-tab-link-active) .car-tab-count {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.empty-state-table {
+    width: 100%;
+    min-height: 0;
+}
