@@ -9,9 +9,6 @@
             <h1 class="page-title">Фотопроекты</h1>
         </div>
 
-        <div class="page-actions">
-            <a class="car-tab-link" href="{{ url_for('planner.create_photo_project') }}">Добавить проект</a>
-        </div>
     </div>
 
     <div class="card table-card">
@@ -27,6 +24,8 @@
                 Архив
                 <span class="car-tab-count">{{ archived_projects|length }}</span>
             </a>
+
+            <a href="{{ url_for('planner.create_photo_project') }}" class="car-tab-link">Добавить проект</a>
         </div>
 
         {% if active_tab == 'archive' %}
