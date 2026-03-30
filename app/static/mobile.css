@@ -238,15 +238,15 @@
     }
 
     .top-nav-link {
-        background: rgba(37, 99, 235, 0.14);
-        border: 1px solid rgba(37, 99, 235, 0.24);
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
         border-radius: 10px;
-        color: #1d4ed8;
+        color: #3730a3;
     }
 
     .top-nav-link.top-nav-link-active {
-        background: #2563eb;
-        border-color: #2563eb;
+        background: #4338ca;
+        border-color: #4338ca;
         color: #ffffff;
     }
 
@@ -316,14 +316,14 @@
         text-decoration: none;
         font-size: 14px;
         font-weight: 600;
-        color: #1d4ed8;
-        background: rgba(37, 99, 235, 0.14);
-        border: 1px solid rgba(37, 99, 235, 0.24);
+        color: #3730a3;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
     }
 
     .mobile-fab-link-active {
-        background: #2563eb;
-        border-color: #2563eb;
+        background: #4338ca;
+        border-color: #4338ca;
         color: #ffffff;
     }
 
