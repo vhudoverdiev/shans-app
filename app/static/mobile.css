@@ -212,6 +212,42 @@
     .budget-report-export-btn {
         display: none;
     }
+
+    .table-actions-budget-report {
+        display: inline-flex;
+        gap: 6px;
+        width: auto;
+        margin-left: auto;
+    }
+
+    .table-actions-budget-report .inline-form {
+        display: inline-flex;
+        margin: 0;
+        width: auto;
+    }
+
+    .table-actions-budget-report .btn-icon-mobile {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        line-height: 1;
+    }
+
+    .table-actions-budget-report .btn-icon-mobile-text {
+        display: none;
+    }
+
+    .table-actions-budget-report .btn-icon-mobile-glyph {
+        display: inline-block;
+        font-size: 16px;
+        line-height: 1;
+    }
 }
 
 @media (max-width: 420px) {
@@ -249,6 +285,7 @@
     .data-table td::before {
         font-size: 10px;
     }
+
 }
 
 /* =========================
