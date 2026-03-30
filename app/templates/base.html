@@ -26,7 +26,7 @@
             </button>
 
             <nav class="top-nav" id="top-nav-menu">
-                {% set is_home_page = request.endpoint in ['index', 'shootings', 'shootings_upcoming', 'shootings_archive', 'shootings_add', 'shooting_detail', 'shooting_edit'] %}
+                {% set is_home_page = request.endpoint == 'index' %}
                 {% set is_budget_page = request.endpoint in ['budget', 'budget_manage', 'budget_edit', 'budget_report', 'budget_balance'] %}
                 {% set is_schedule_page = request.endpoint in ['planner.schedule', 'planner.create_schedule_task', 'planner.edit_schedule_task'] %}
 
