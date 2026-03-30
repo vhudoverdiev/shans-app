@@ -91,25 +91,24 @@ a {
     text-decoration: none;
     padding: 10px 14px;
     border-radius: 12px;
-    color: #3730a3;
+    color: #2563eb;
     background: #eef2ff;
-    border: 1px solid #c7d2fe;
+    border: none;
     font-size: 14px;
     font-weight: 600;
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .top-nav-link:hover {
-    background: #e0e7ff;
-    color: #312e81;
+    background: #dbeafe;
+    color: #1d4ed8;
     transform: translateY(-1px);
 }
 
 .top-nav-link-active {
-    background: #4338ca;
+    background: #2563eb;
     color: #ffffff;
-    border-color: #4338ca;
-    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.24);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
 }
 
 .header-user-block {
@@ -223,7 +222,18 @@ a {
 
 .btn-secondary {
     background: #eef2ff;
-    color: #3730a3;
+    color: #2563eb;
+}
+
+.btn-tab {
+    background: #eef2ff;
+    color: #2563eb;
+}
+
+.btn-tab-active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
 }
 
 .btn-success {
@@ -2983,23 +2993,22 @@ a {
     border-radius: 14px;
     text-decoration: none;
     background: #eef2ff;
-    color: #3730a3;
-    border: 1px solid #c7d2fe;
+    color: #2563eb;
+    border: none;
     font-weight: 700;
     transition: 0.15s ease;
 }
 
 .shooting-nav-link:hover {
     transform: translateY(-1px);
-    background: #e0e7ff;
-    color: #312e81;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .shooting-nav-link-active {
-    background: #4338ca;
+    background: #2563eb;
     color: #ffffff;
-    border-color: #4338ca;
-    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.24);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
 }
 
 .shooting-nav-count {
@@ -3016,8 +3025,8 @@ a {
 }
 
 .shooting-nav-link:not(.shooting-nav-link-active) .shooting-nav-count {
-    background: #e0e7ff;
-    color: #3730a3;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .shooting-summary-grid {
