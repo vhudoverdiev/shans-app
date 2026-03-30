@@ -261,10 +261,8 @@
     display: none;
 }
 
-@media (min-width: 769px) {
-    .budget-mobile-sections-nav {
-        display: none;
-    }
+.budget-mobile-sections-nav {
+    display: none;
 }
 
 @media (max-width: 768px) {
@@ -343,66 +341,6 @@
     .data-table td .table-actions,
     .data-table td .table-actions .inline-form {
         width: 100%;
-    }
-
-    .budget-entries-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .budget-entries-table {
-        display: table;
-        width: 100%;
-        min-width: 620px;
-        border-collapse: collapse;
-    }
-
-    .budget-entries-table thead {
-        display: table-header-group;
-    }
-
-    .budget-entries-table tbody {
-        display: table-row-group;
-    }
-
-    .budget-entries-table tr {
-        display: table-row;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-        box-shadow: none;
-    }
-
-    .budget-entries-table th,
-    .budget-entries-table td {
-        display: table-cell;
-        width: auto;
-        padding: 10px 8px;
-        border-bottom: 1px solid #e2e8f0;
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-
-    .budget-entries-table td::before {
-        content: none;
-    }
-
-    .budget-entries-table .table-actions {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 6px;
-        align-items: center;
-        width: auto;
-    }
-
-    .budget-entries-table .table-actions .btn,
-    .budget-entries-table .table-actions .inline-form,
-    .budget-entries-table .table-actions .inline-form .btn {
-        width: auto;
-        min-width: auto;
-        white-space: nowrap;
     }
 
     .mobile-fab-nav {
