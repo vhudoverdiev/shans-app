@@ -11,6 +11,9 @@
         </h1>
 
         <div class="page-actions">
+            <a href="{{ url_for('budget_manage') }}" class="btn btn-tab">Управление бюджетом</a>
+            <a href="{{ url_for('budget_balance') }}" class="btn btn-tab">История баланса</a>
+            <a href="{{ url_for('budget_report') }}" class="btn btn-tab btn-tab-active">Подробный отчёт</a>
             <a href="{{ url_for('budget') }}" class="btn btn-secondary">Назад к бюджету</a>
             <a
                 href="{{ url_for('budget_export', month=selected_month, type_filter=type_filter, category_filter=category_filter) }}"

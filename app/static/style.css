@@ -226,6 +226,18 @@ a {
     color: #3730a3;
 }
 
+.btn-tab {
+    background: #eef2ff;
+    color: #2563eb;
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+}
+
+.btn-tab-active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+}
+
 .btn-success {
     background: #16a34a;
     color: #ffffff;
