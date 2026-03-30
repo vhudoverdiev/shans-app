@@ -2743,38 +2743,43 @@ a {
 .notifications-table td {
     vertical-align: top;
     white-space: normal;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .notifications-table th:nth-child(1),
 .notifications-table td:nth-child(1) {
-    width: 18%;
+    width: 46px;
 }
 
 .notifications-table th:nth-child(2),
 .notifications-table td:nth-child(2) {
-    width: 12%;
+    width: 22%;
 }
 
 .notifications-table th:nth-child(3),
 .notifications-table td:nth-child(3) {
-    width: 14%;
+    width: 16%;
 }
 
 .notifications-table th:nth-child(4),
 .notifications-table td:nth-child(4) {
-    width: 28%;
+    width: 14%;
 }
 
 .notifications-table th:nth-child(5),
 .notifications-table td:nth-child(5) {
-    width: 14%;
+    width: 24%;
 }
 
 .notifications-table th:nth-child(6),
 .notifications-table td:nth-child(6) {
     width: 14%;
+}
+
+.notifications-table th:nth-child(7),
+.notifications-table td:nth-child(7) {
+    width: 10%;
 }
 
 @media (max-width: 900px) {
