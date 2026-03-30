@@ -878,6 +878,7 @@ def build_schedule_context(selected_date: date, current_view: str):
         "next_date": _next_date(selected_date, current_view).isoformat(),
         "prev_week_date": _previous_date(selected_date, current_view, step="week").isoformat(),
         "next_week_date": _next_date(selected_date, current_view, step="week").isoformat(),
+        "is_today_selected": selected_date == date.today(),
     }
 
 

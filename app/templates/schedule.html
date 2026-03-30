@@ -27,7 +27,7 @@
     <div class="card table-card">
         <div class="planner-toolbar">
             <div class="page-actions planner-nav-actions">
-                <a class="car-tab-link" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
+                <a class="car-tab-link {% if is_today_selected %}car-tab-link-active{% endif %}" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
                 <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">←</a>
                 <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">→</a>
             </div>
