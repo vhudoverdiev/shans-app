@@ -238,9 +238,16 @@
     }
 
     .top-nav-link {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: rgba(37, 99, 235, 0.14);
+        border: 1px solid rgba(37, 99, 235, 0.24);
         border-radius: 10px;
+        color: #1d4ed8;
+    }
+
+    .top-nav-link.top-nav-link-active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
     }
 
     .car-tab-bar {
@@ -309,9 +316,15 @@
         text-decoration: none;
         font-size: 14px;
         font-weight: 600;
-        color: #1e293b;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        color: #1d4ed8;
+        background: rgba(37, 99, 235, 0.14);
+        border: 1px solid rgba(37, 99, 235, 0.24);
+    }
+
+    .mobile-fab-link-active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
     }
 
     .mobile-fab-link-danger {

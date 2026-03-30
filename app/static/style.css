@@ -91,16 +91,25 @@ a {
     text-decoration: none;
     padding: 10px 14px;
     border-radius: 12px;
-    color: #334155;
+    color: #1d4ed8;
+    background: rgba(37, 99, 235, 0.14);
+    border: 1px solid rgba(37, 99, 235, 0.24);
     font-size: 14px;
     font-weight: 600;
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .top-nav-link:hover {
-    background: #eef2ff;
-    color: #3730a3;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
     transform: translateY(-1px);
+}
+
+.top-nav-link-active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
 }
 
 .header-user-block {
@@ -2027,17 +2036,17 @@ a {
     padding: 10px 16px;
     border-radius: 14px;
     text-decoration: none;
-    background: #f8fafc;
-    color: #334155;
-    border: 1px solid #e2e8f0;
+    background: rgba(37, 99, 235, 0.14);
+    color: #1d4ed8;
+    border: 1px solid rgba(37, 99, 235, 0.24);
     font-weight: 700;
     transition: 0.15s ease;
 }
 
 .car-tab-link:hover {
     transform: translateY(-1px);
-    background: #eef2ff;
-    color: #3730a3;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
 }
 
 .car-tab-link-active {
@@ -2061,8 +2070,8 @@ a {
 }
 
 .car-tab-link:not(.car-tab-link-active) .car-tab-count {
-    background: #e2e8f0;
-    color: #334155;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1d4ed8;
 }
 
 .notifications-list-pretty {
@@ -2327,17 +2336,17 @@ a {
     padding: 10px 16px;
     border-radius: 14px;
     text-decoration: none;
-    background: #f8fafc;
-    color: #334155;
-    border: 1px solid #e2e8f0;
+    background: rgba(37, 99, 235, 0.14);
+    color: #1d4ed8;
+    border: 1px solid rgba(37, 99, 235, 0.24);
     font-weight: 700;
     transition: 0.15s ease;
 }
 
 .car-tab-link:hover {
     transform: translateY(-1px);
-    background: #eef2ff;
-    color: #3730a3;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
 }
 
 .car-tab-link-active {
@@ -2361,8 +2370,8 @@ a {
 }
 
 .car-tab-link:not(.car-tab-link-active) .car-tab-count {
-    background: #e2e8f0;
-    color: #334155;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1d4ed8;
 }
 
 /* =========================
@@ -2973,17 +2982,17 @@ a {
     padding: 10px 16px;
     border-radius: 14px;
     text-decoration: none;
-    background: #f8fafc;
-    color: #334155;
-    border: 1px solid #e2e8f0;
+    background: rgba(37, 99, 235, 0.14);
+    color: #1d4ed8;
+    border: 1px solid rgba(37, 99, 235, 0.24);
     font-weight: 700;
     transition: 0.15s ease;
 }
 
 .shooting-nav-link:hover {
     transform: translateY(-1px);
-    background: #eef2ff;
-    color: #3730a3;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
 }
 
 .shooting-nav-link-active {
@@ -3007,8 +3016,8 @@ a {
 }
 
 .shooting-nav-link:not(.shooting-nav-link-active) .shooting-nav-count {
-    background: #e2e8f0;
-    color: #334155;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1d4ed8;
 }
 
 .shooting-summary-grid {
