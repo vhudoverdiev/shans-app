@@ -266,6 +266,14 @@
 }
 
 @media (max-width: 768px) {
+    .budget-mobile-sections-nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
     .mobile-nav-toggle {
         display: inline-flex;
         align-items: center;
