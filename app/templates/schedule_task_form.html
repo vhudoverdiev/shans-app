@@ -23,8 +23,8 @@
             <input type="hidden" name="return_view" value="day">
             {% endif %}
             <div class="car-tab-bar planner-form-mode-tabs">
-                <button class="car-tab-link planner-mode-tab" type="button" data-mode="single">Обычная (1 дата)</button>
-                <button class="car-tab-link planner-mode-tab" type="button" data-mode="range">Протяжённая (с–до)</button>
+                <button class="car-tab-link planner-mode-tab" type="button" data-mode="single">Обычная</button>
+                <button class="car-tab-link planner-mode-tab" type="button" data-mode="range">Протяжённая</button>
             </div>
             <input type="hidden" name="task_form_mode" id="task_form_mode" value="single" data-initial-mode="{% if task and task.range_end_date %}range{% else %}single{% endif %}">
             <div class="car-form-grid">

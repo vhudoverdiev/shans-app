@@ -2058,7 +2058,7 @@ a {
     padding: 10px 16px;
     border-radius: 14px;
     text-decoration: none;
-    background: #eef2ff;
+    background: transparent;
     color: #3730a3;
     border: 1px solid #c7d2fe;
     font-weight: 700;
@@ -2067,7 +2067,7 @@ a {
 
 .car-tab-link:hover {
     transform: translateY(-1px);
-    background: #e0e7ff;
+    background: #eef2ff;
     color: #312e81;
 }
 
@@ -2358,7 +2358,7 @@ a {
     padding: 10px 16px;
     border-radius: 14px;
     text-decoration: none;
-    background: #eef2ff;
+    background: transparent;
     color: #3730a3;
     border: 1px solid #c7d2fe;
     font-weight: 700;
@@ -2367,7 +2367,7 @@ a {
 
 .car-tab-link:hover {
     transform: translateY(-1px);
-    background: #e0e7ff;
+    background: #eef2ff;
     color: #312e81;
 }
 
