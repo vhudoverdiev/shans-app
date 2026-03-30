@@ -137,6 +137,7 @@
     .data-table td {
         display: block;
         width: 100%;
+        min-width: 0;
     }
 
     .data-table thead {
@@ -230,6 +231,22 @@
     .table-actions-budget-report .inline-form {
         margin: 0;
     }
+
+    .btn-budget-report-action {
+        min-height: 38px;
+        padding: 0;
+        gap: 0;
+    }
+
+    .btn-budget-report-action-text {
+        display: none;
+    }
+
+    .btn-budget-report-action .btn-icon-mobile-glyph,
+    .btn-budget-report-action-icon {
+        display: inline;
+        font-size: 17px;
+    }
 }
 
 @media (max-width: 420px) {
@@ -269,7 +286,7 @@
     }
 
     .table-actions-budget-report {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
