@@ -210,22 +210,21 @@
 }
 
 @media (max-width: 768px) {
-    .site-header {
-        display: none;
-    }
-
     .mobile-nav-toggle {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 100%;
+        border-color: #bfdbfe;
+        background: transparent;
+        color: #2563eb;
     }
 
     .top-nav {
         display: none;
         width: 100%;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border: 1px solid #dbeafe;
         border-radius: 12px;
         padding: 8px;
         overflow: hidden;
@@ -238,25 +237,28 @@
     }
 
     .top-nav-link {
-        background: #eef2ff;
-        border: 1px solid #c7d2fe;
+        background: transparent;
+        border: 1px solid #bfdbfe;
         border-radius: 10px;
-        color: #3730a3;
+        color: #2563eb;
     }
 
     .top-nav-link.top-nav-link-active {
-        background: #4338ca;
-        border-color: #4338ca;
+        background: #2563eb;
+        border-color: #2563eb;
         color: #ffffff;
     }
 
     .car-tab-bar {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
         gap: 8px;
     }
 
     .car-tab-link {
+        flex: 0 0 auto;
+        white-space: nowrap;
         justify-content: center;
         text-align: center;
         padding: 10px 8px;
@@ -316,14 +318,14 @@
         text-decoration: none;
         font-size: 14px;
         font-weight: 600;
-        color: #3730a3;
-        background: #eef2ff;
-        border: 1px solid #c7d2fe;
+        color: #2563eb;
+        background: transparent;
+        border: 1px solid #bfdbfe;
     }
 
     .mobile-fab-link-active {
-        background: #4338ca;
-        border-color: #4338ca;
+        background: #2563eb;
+        border-color: #2563eb;
         color: #ffffff;
     }
 
@@ -338,13 +340,18 @@
     }
 }
 
-@media (max-width: 480px) {
-    .car-tab-bar {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 900px) {
+    .mobile-fab-nav {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 240;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+    }
+
     .desktop-only {
         display: none !important;
     }
