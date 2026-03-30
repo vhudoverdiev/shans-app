@@ -2,8 +2,12 @@
    GLOBAL MOBILE ADAPTATION
 ========================= */
 @media (max-width: 768px) {
+    .site-header {
+        display: none;
+    }
+
     .page-shell {
-        padding: 14px 10px 24px;
+        padding: 12px 10px 20px;
     }
 
     .site-header-inner {
@@ -174,6 +178,32 @@
     .data-table th.bulk-col::before {
         content: none;
     }
+
+    .budget-mobile-sections-nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .budget-mobile-tab-btn {
+        width: 100%;
+    }
+
+    .budget-mobile-tab-btn-active {
+        border-color: #2563eb;
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .budget-mobile-section {
+        display: none;
+    }
+
+    .budget-mobile-section-active {
+        display: block;
+    }
 }
 
 @media (max-width: 420px) {
@@ -188,6 +218,28 @@
     .btn {
         min-height: 42px;
         padding: 0 12px;
+    }
+
+    .page-title {
+        font-size: 21px;
+        line-height: 1.2;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .data-table tr {
+        padding: 7px;
+    }
+
+    .data-table td {
+        padding: 7px 2px;
+        font-size: 14px;
+    }
+
+    .data-table td::before {
+        font-size: 10px;
     }
 }
 
@@ -206,6 +258,10 @@
 }
 
 .mobile-fab-nav {
+    display: none;
+}
+
+.budget-mobile-sections-nav {
     display: none;
 }
 
@@ -271,6 +327,12 @@
 
     .data-table td {
         word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .data-table td .table-actions,
+    .data-table td .table-actions .inline-form {
+        width: 100%;
     }
 
     .mobile-fab-nav {

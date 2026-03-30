@@ -18,7 +18,31 @@
     </div>
 
     <div class="budget-manage-grid budget-manage-grid-top">
-        <div class="card balance-card-compact">
+        <div class="budget-mobile-sections-nav" role="tablist" aria-label="Разделы управления бюджетом">
+            <button
+                type="button"
+                class="btn btn-tab budget-mobile-tab-btn budget-mobile-tab-btn-active"
+                data-budget-mobile-tab="balance"
+            >
+                Задать текущий баланс
+            </button>
+            <button
+                type="button"
+                class="btn btn-tab budget-mobile-tab-btn"
+                data-budget-mobile-tab="operation"
+            >
+                Добавить операцию
+            </button>
+            <button
+                type="button"
+                class="btn btn-tab budget-mobile-tab-btn"
+                data-budget-mobile-tab="sorting"
+            >
+                Сортировка
+            </button>
+        </div>
+
+        <div class="card balance-card-compact budget-mobile-section budget-mobile-section-active" data-budget-mobile-section="balance">
             <h2 class="section-title">Текущий баланс</h2>
             <div class="big-balance">{{ current_balance|money }}</div>
 
@@ -44,7 +68,7 @@
             </form>
         </div>
 
-        <div class="card operation-card">
+        <div class="card operation-card budget-mobile-section" data-budget-mobile-section="operation">
             <h2 class="section-title">Добавить операцию</h2>
 
             <form method="POST" class="form-block">
@@ -110,7 +134,7 @@
         </div>
     </div>
 
-    <div class="card filter-card">
+    <div class="card filter-card budget-mobile-section" data-budget-mobile-section="sorting">
         <form method="GET" class="filter-grid">
             <div class="form-group">
                 <label for="month_filter">Месяц</label>
@@ -233,5 +257,36 @@
             customInput.value = "";
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabButtons = Array.from(document.querySelectorAll(".budget-mobile-tab-btn"));
+        const sections = Array.from(document.querySelectorAll(".budget-mobile-section"));
+
+        if (!tabButtons.length || !sections.length) {
+            return;
+        }
+
+        function setActiveSection(sectionName) {
+            tabButtons.forEach(function (button) {
+                button.classList.toggle(
+                    "budget-mobile-tab-btn-active",
+                    button.dataset.budgetMobileTab === sectionName
+                );
+            });
+
+            sections.forEach(function (section) {
+                section.classList.toggle(
+                    "budget-mobile-section-active",
+                    section.dataset.budgetMobileSection === sectionName
+                );
+            });
+        }
+
+        tabButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                setActiveSection(button.dataset.budgetMobileTab);
+            });
+        });
+    });
 </script>
 {% endblock %}
