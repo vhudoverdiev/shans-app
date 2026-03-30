@@ -158,6 +158,10 @@
     font-weight:700;
 }
 
+.planner-day-weekday{
+    display:none;
+}
+
 .planner-day-count{
     min-width:22px;
     height:22px;
@@ -394,6 +398,10 @@
 }
 
 @media (max-width: 768px){
+    .planner-mobile-stats{
+        display:none;
+    }
+
     .planner-form-grid{
         grid-template-columns:1fr;
     }
@@ -403,8 +411,55 @@
         justify-content:space-between;
     }
 
+    .planner-nav-actions.page-actions{
+        display:flex;
+        flex-wrap:nowrap;
+        align-items:center;
+        gap:8px;
+    }
+
+    .planner-nav-actions.page-actions .car-tab-link{
+        flex:1 1 auto;
+        text-align:center;
+        white-space:nowrap;
+    }
+
+    .planner-nav-actions.page-actions .btn{
+        width:auto;
+        min-width:40px;
+        flex:0 0 auto;
+    }
+
+    .planner-day-title{
+        white-space:nowrap;
+        font-size:18px;
+    }
+
     .planner-month-side-nav{
         flex-direction:row;
+    }
+
+    .planner-weekdays{
+        display:none;
+    }
+
+    .planner-month-grid{
+        grid-template-columns:repeat(7, minmax(96px, 1fr));
+        gap:8px;
+    }
+
+    .planner-month-grid-scroll{
+        overflow-x:auto;
+        padding-bottom:6px;
+    }
+
+    .planner-day-weekday{
+        display:inline;
+    }
+
+    .planner-day-date{
+        white-space:nowrap;
+        font-size:13px;
     }
 
     .planner-task-row,

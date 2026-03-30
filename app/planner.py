@@ -141,6 +141,11 @@ def _month_short_name_ru(month_number: int) -> str:
     return months[month_number - 1]
 
 
+def _weekday_short_name_ru(weekday_number: int) -> str:
+    weekdays = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
+    return weekdays[weekday_number]
+
+
 def _status_label(status: str) -> str:
     mapping = {"planned": "Запланировано", "done": "Выполнено", "cancelled": "Отменено"}
     return mapping.get(status, status)
@@ -828,6 +833,7 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "date": current_day,
                 "date_key": day_key,
                 "month_short": _month_short_name_ru(current_day.month),
+                "weekday_short": _weekday_short_name_ru(current_day.weekday()),
                 "is_current_month": current_day.month == selected_date.month,
                 "is_today": current_day == date.today(),
                 "is_selected": current_day == selected_date,

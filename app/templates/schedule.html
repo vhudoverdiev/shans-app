@@ -9,7 +9,7 @@
         </div>
     </div>
 
-    <div class="stats-grid car-stats-grid">
+    <div class="stats-grid car-stats-grid planner-mobile-stats">
         <div class="stat-card">
             <div class="stat-label">Всего за месяц</div>
             <div class="stat-value">{{ month_stats.total }}</div>
@@ -62,7 +62,7 @@
             {% for cell in month_cells %}
             <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if not cell.is_past and cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if not cell.is_past and cell.has_range_task %}planner-day-card-range{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
                 <div class="planner-day-card-head">
-                    <strong class="planner-day-date">{{ cell.date.day }} {{ cell.month_short }}</strong>
+                    <strong class="planner-day-date">{{ cell.date.day }} {{ cell.month_short }} <span class="planner-day-weekday">({{ cell.weekday_short }})</span></strong>
                     {% if not cell.is_past and cell.tasks %}<span class="planner-day-count {% if cell.has_important %}planner-day-count-important{% elif cell.has_photo_or_shooting %}planner-day-count-photo{% endif %}">{{ cell.tasks|length }}</span>{% endif %}
                 </div>
                 <div class="planner-day-summary">
@@ -81,7 +81,7 @@
     {% else %}
     <div class="card table-card">
         <div class="table-header">
-            <h2 class="section-title">Задачи на {{ selected_date_label }}</h2>
+            <h2 class="section-title planner-day-title">Задачи на {{ selected_date_label }}</h2>
             <div class="table-actions bulk-table-actions">
                 <form method="post" action="{{ url_for('planner.delete_schedule_tasks_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
