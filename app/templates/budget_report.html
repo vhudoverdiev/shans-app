@@ -106,15 +106,9 @@
                                 <td>{{ entry.amount|money }}</td>
                                 <td>
                                     <div class="table-actions table-actions-budget-report">
-                                        <a href="{{ url_for('budget_edit', entry_id=entry.id) }}" class="btn btn-small btn-secondary btn-icon-mobile" aria-label="Редактировать">
-                                            <span class="btn-icon-mobile-glyph" aria-hidden="true">✏️</span>
-                                            <span class="btn-icon-mobile-text">Редактировать</span>
-                                        </a>
+                                        <a href="{{ url_for('budget_edit', entry_id=entry.id) }}" class="btn btn-small btn-secondary">Редактировать</a>
                                         <form method="POST" action="{{ url_for('budget_delete', entry_id=entry.id) }}" class="inline-form" onsubmit="return confirm('Удалить запись?');">
-                                            <button type="submit" class="btn btn-small btn-danger btn-icon-mobile" aria-label="Удалить">
-                                                <span class="btn-icon-mobile-glyph" aria-hidden="true">🗑️</span>
-                                                <span class="btn-icon-mobile-text">Удалить</span>
-                                            </button>
+                                            <button type="submit" class="btn btn-small btn-danger">Удалить</button>
                                         </form>
                                     </div>
                                 </td>
