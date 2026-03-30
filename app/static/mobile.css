@@ -204,6 +204,14 @@
     .budget-mobile-section-active {
         display: block;
     }
+
+    .budget-operations-table-card {
+        display: none;
+    }
+
+    .budget-report-export-btn {
+        display: none;
+    }
 }
 
 @media (max-width: 420px) {
