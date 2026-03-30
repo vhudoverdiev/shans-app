@@ -444,13 +444,13 @@
     }
 
     .planner-month-grid{
-        grid-template-columns:repeat(7, minmax(96px, 1fr));
+        grid-template-columns:repeat(2, minmax(0, 1fr));
         gap:8px;
     }
 
     .planner-month-grid-scroll{
-        overflow-x:auto;
-        padding-bottom:6px;
+        overflow-x:visible;
+        padding-bottom:0;
     }
 
     .planner-day-weekday{
@@ -716,10 +716,10 @@
 }
 
 .planner-status-chip-planned{
-    background:linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
-    color:#166534;
-    border:1px solid rgba(22, 101, 52, .18);
-    box-shadow:0 8px 18px rgba(22, 101, 52, .14);
+    background:linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+    color:#991b1b;
+    border:1px solid rgba(153, 27, 27, .18);
+    box-shadow:0 8px 18px rgba(153, 27, 27, .14);
 }
 
 .planner-status-chip-done{
@@ -735,10 +735,10 @@
 }
 
 .planner-status-chip-range{
-    background:linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
-    color:#166534;
-    border:1px solid rgba(22, 101, 52, .18);
-    box-shadow:0 8px 18px rgba(22, 101, 52, .14);
+    background:linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color:#1e3a8a;
+    border:1px solid rgba(30, 58, 138, .2);
+    box-shadow:0 8px 18px rgba(30, 58, 138, .14);
 }
 
 .planner-status-toggle-btn{
