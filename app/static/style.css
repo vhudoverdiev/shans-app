@@ -2056,6 +2056,7 @@ a {
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
+    white-space: nowrap;
     border-radius: 14px;
     text-decoration: none;
     background: transparent;
@@ -2360,6 +2361,7 @@ a {
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
+    white-space: nowrap;
     border-radius: 14px;
     text-decoration: none;
     background: transparent;
@@ -3964,6 +3966,7 @@ a {
     background: transparent;
     color: #2563eb;
     border: 1px solid #bfdbfe;
+    white-space: nowrap;
 }
 
 .btn-tab:hover,
