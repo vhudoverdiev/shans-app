@@ -4,6 +4,7 @@ import hmac
 import re
 
 from flask import (
+    current_app,
     flash,
     redirect,
     render_template,
@@ -83,6 +84,7 @@ from app.models import (
     update_shooting,
 )
 from app.utils import build_budget_excel, build_shootings_excel
+from app.logging_setup import log_audit, log_invalid_form, log_import_result
 from app.planner import (
     create_task,
     delete_task_for_shooting,
@@ -776,6 +778,11 @@ def register_routes(app):
             ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
 
             if is_login_rate_limited(username, ip_address):
+                current_app.logger.warning(
+                    "Login rate limit triggered: username=%s ip=%s",
+                    username,
+                    ip_address,
+                )
                 flash("Слишком много попыток входа. Повторите позже.", "danger")
                 return render_template("login.html"), 429
 
@@ -783,9 +790,11 @@ def register_routes(app):
             if user:
                 clear_failed_logins(username, ip_address)
                 login_user(user)
+                log_audit(current_app, "user_login", username=user.username)
                 return redirect(url_for("index"))
 
             register_failed_login(username, ip_address)
+            current_app.logger.warning("Failed login: username=%s ip=%s", username, ip_address)
             flash("Неверный логин или пароль.", "danger")
 
         return render_template("login.html")
@@ -793,7 +802,9 @@ def register_routes(app):
     @app.route("/logout")
     @login_required
     def logout():
+        username = current_user.username
         logout_user()
+        log_audit(current_app, "user_logout", username=username)
         return redirect(url_for("login"))
 
     # =========================================================
@@ -840,6 +851,7 @@ def register_routes(app):
                 category = _resolve_budget_category(request.form)
 
                 if not month_name or not entry_type or not amount_raw:
+                    log_invalid_form(current_app, "budget_add_entry", "missing_required_fields")
                     flash("Заполни все обязательные поля.", "warning")
                     return redirect(url_for("budget_manage"))
 
@@ -860,6 +872,14 @@ def register_routes(app):
                 create_budget_entry(
                     entry_type=entry_type,
                     month_name=month_name,
+                    category=category,
+                    amount=amount_value,
+                )
+                log_audit(
+                    current_app,
+                    "budget_entry_created",
+                    month=month_name,
+                    entry_type=entry_type,
                     category=category,
                     amount=amount_value,
                 )
@@ -997,6 +1017,7 @@ def register_routes(app):
                 category=category,
                 amount=amount_value,
             )
+            log_audit(current_app, "budget_entry_updated", entry_id=entry_id)
             flash("Запись успешно обновлена.", "success")
             return redirect(url_for("budget_manage"))
 
@@ -1012,6 +1033,7 @@ def register_routes(app):
     @login_required
     def budget_delete(entry_id):
         delete_budget_entry(entry_id)
+        log_audit(current_app, "budget_entry_deleted", entry_id=entry_id)
         flash("Запись успешно удалена.", "success")
         return redirect(url_for("budget_manage"))
 
@@ -1164,6 +1186,12 @@ def register_routes(app):
                     prepayment=prepayment,
                     notes=notes,
                 )
+                log_audit(
+                    current_app,
+                    "shooting_created",
+                    shooting_id=shooting_id,
+                    project_name=project_name,
+                )
 
             flash("Съёмка успешно добавлена и появилась в графике.", "success")
             return redirect(url_for("shootings_upcoming"))
@@ -1296,6 +1324,7 @@ def register_routes(app):
                 prepayment=prepayment,
                 notes=notes,
             )
+            log_audit(current_app, "shooting_updated", shooting_id=shooting_id)
 
             flash("Съёмка обновлена и синхронизирована с графиком.", "success")
             return redirect(url_for("shooting_detail", shooting_id=shooting_id))
@@ -1314,6 +1343,7 @@ def register_routes(app):
 
         delete_task_for_shooting(shooting_id)
         delete_shooting(shooting_id)
+        log_audit(current_app, "shooting_deleted", shooting_id=shooting_id)
         flash("Съёмка удалена из раздела съёмок и из графика.", "success")
         return redirect(url_for("shootings_upcoming"))
 
@@ -1491,7 +1521,16 @@ def register_routes(app):
         try:
             done_services, planned_services = _parse_car_excel(excel_file)
             append_car_services(done_services=done_services, planned_services=planned_services)
+            log_import_result(
+                current_app,
+                import_type="car",
+                rows_added=len(done_services) + len(planned_services),
+                errors_count=0,
+                mode="append",
+            )
         except ValueError as error:
+            current_app.logger.warning("Car excel import validation error: %s", error)
+            log_import_result(current_app, import_type="car", rows_added=0, errors_count=1, mode="append")
             flash(str(error), "error")
             return redirect(url_for("car"))
         except Exception:
@@ -1565,6 +1604,13 @@ def register_routes(app):
                     else:
                         append_car_services(done_services=done_services, planned_services=planned_services)
                     mode_text = "Таблица заменена" if replace_mode else "Добавлены записи"
+                    log_import_result(
+                        current_app,
+                        import_type=target,
+                        rows_added=len(done_services) + len(planned_services),
+                        errors_count=0,
+                        mode=import_mode,
+                    )
                     flash(
                         (
                             f"{mode_text} в разделе Машина: выполненных {len(done_services)}, "
@@ -1576,6 +1622,7 @@ def register_routes(app):
                     entries = _parse_budget_excel(excel_file)
                     if replace_mode:
                         replace_budget_entries(entries)
+                        log_import_result(current_app, import_type="budget", rows_added=len(entries), errors_count=0, mode=import_mode)
                         flash(f"Таблица Бюджета заменена. Загружено записей: {len(entries)}.", "success")
                     else:
                         for entry in entries:
@@ -1585,6 +1632,7 @@ def register_routes(app):
                                 category=entry["category"],
                                 amount=entry["amount"],
                             )
+                        log_import_result(current_app, import_type="budget", rows_added=len(entries), errors_count=0, mode=import_mode)
                         flash(f"Добавлено записей в Бюджет: {len(entries)}.", "success")
                 elif target == "shootings":
                     shootings = _parse_shootings_excel(excel_file)
@@ -1617,13 +1665,16 @@ def register_routes(app):
                                 notes=shooting["notes"],
                             )
                     if replace_mode:
+                        log_import_result(current_app, import_type="shootings", rows_added=len(shootings), errors_count=0, mode=import_mode)
                         flash(f"Таблица Съёмок заменена. Загружено записей: {len(shootings)}.", "success")
                     else:
+                        log_import_result(current_app, import_type="shootings", rows_added=len(shootings), errors_count=0, mode=import_mode)
                         flash(f"Добавлено съёмок: {len(shootings)}.", "success")
                 elif target == "schedule":
                     tasks = _parse_schedule_excel(excel_file)
                     if replace_mode:
                         replace_manual_schedule_tasks(tasks)
+                        log_import_result(current_app, import_type="schedule", rows_added=len(tasks), errors_count=0, mode=import_mode)
                         flash(f"Таблица Графика заменена. Загружено задач: {len(tasks)}.", "success")
                     else:
                         for task in tasks:
@@ -1637,12 +1688,17 @@ def register_routes(app):
                                 task_type=task["task_type"],
                                 status=task["status"],
                             )
+                        log_import_result(current_app, import_type="schedule", rows_added=len(tasks), errors_count=0, mode=import_mode)
                         flash(f"Добавлено задач в График: {len(tasks)}.", "success")
                 else:
                     flash("Неизвестный раздел для импорта.", "error")
             except ValueError as error:
+                current_app.logger.warning("Import-center validation error: target=%s mode=%s error=%s", target, import_mode, error)
+                log_import_result(current_app, import_type=target or "unknown", rows_added=0, errors_count=1, mode=import_mode or "unknown")
                 flash(str(error), "error")
             except Exception:
+                current_app.logger.exception("Import-center unexpected error: target=%s mode=%s", target, import_mode)
+                log_import_result(current_app, import_type=target or "unknown", rows_added=0, errors_count=1, mode=import_mode or "unknown")
                 flash("Не удалось обработать файл. Проверьте формат данных.", "error")
 
             return redirect(url_for("import_center"))
@@ -1683,6 +1739,7 @@ def register_routes(app):
                     work_kind=work_kind,
                     period_type=period_type,
                 )
+                log_audit(current_app, "car_done_created", service_name=service_name)
                 flash("Выполненная работа добавлена.", "success")
             else:
                 create_car_planned_service(
@@ -1691,6 +1748,7 @@ def register_routes(app):
                     work_kind=work_kind,
                     period_type=period_type,
                 )
+                log_audit(current_app, "car_planned_created", service_name=service_name)
                 flash("Планируемая работа добавлена.", "success")
 
             return redirect(url_for("car"))
@@ -1735,6 +1793,7 @@ def register_routes(app):
                 status="Выполнено",
             )
 
+            log_audit(current_app, "car_done_updated", service_id=service_id)
             flash("Выполненная работа обновлена.", "success")
             return redirect(url_for("car", tab="done"))
 
@@ -1773,6 +1832,7 @@ def register_routes(app):
             )
 
             delete_car_planned_service(service_id)
+            log_audit(current_app, "car_planned_completed", service_id=service_id)
             flash("Работа перенесена в выполненные.", "success")
             return redirect(url_for("car", tab="done"))
 
@@ -1804,6 +1864,7 @@ def register_routes(app):
                 period_type=period_type,
             )
 
+            log_audit(current_app, "car_planned_updated", service_id=service_id)
             flash("Планируемая работа обновлена.", "success")
             return redirect(url_for("car"))
 
@@ -1813,6 +1874,7 @@ def register_routes(app):
     @login_required
     def car_done_delete(service_id):
         delete_car_done_service(service_id)
+        log_audit(current_app, "car_done_deleted", service_id=service_id)
         flash("Выполненная работа удалена.", "success")
         return redirect(url_for("car", tab="done"))
 
@@ -1820,6 +1882,7 @@ def register_routes(app):
     @login_required
     def car_planned_delete(service_id):
         delete_car_planned_service(service_id)
+        log_audit(current_app, "car_planned_deleted", service_id=service_id)
         flash("Планируемая работа удалена.", "success")
         return redirect(url_for("car", tab="planned"))
 

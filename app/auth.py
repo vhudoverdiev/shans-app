@@ -1,3 +1,4 @@
+import logging
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -8,6 +9,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
 from app.database import get_connection
 from app.models import get_user_by_id
+
+
+logger = logging.getLogger(__name__)
 
 
 class User(UserMixin):
@@ -52,9 +56,9 @@ def create_admin_if_not_exists():
         )
         conn.commit()
         if generated_password:
-            print(
-                "WARNING: ADMIN_PASSWORD не задан. "
-                f"Создан временный пароль администратора: {generated_password}"
+            logger.warning(
+                "ADMIN_PASSWORD не задан. Создан временный пароль администратора: %s",
+                generated_password,
             )
 
     conn.close()
