@@ -18,7 +18,7 @@ _HARDCODED_VK_ACCESS_TOKEN = "vk1.a.-MluYBU8Y_UJZ6NmdrIzLAvBMidKS1ru4Olm1WVGyVq0
 _HARDCODED_VK_PROFILE_URL = "https://vk.com/hudoverdiev"
 _HARDCODED_TIMEZONE = "Europe/Moscow"
 _DAILY_NOTIFICATION_HOUR = 23
-_DAILY_NOTIFICATION_MINUTE = 0
+_DAILY_NOTIFICATION_MINUTE = 30
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
