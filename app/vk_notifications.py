@@ -187,9 +187,9 @@ def _build_tomorrow_tasks_text(now_local: datetime) -> str:
     conn.close()
 
     if not tasks:
-        return f"График на {tomorrow.strftime('%d.%m.%Y')}: задач нет."
+        return f"График на завтра ({tomorrow.strftime('%d.%m.%Y')}): задач нет."
 
-    lines = [f"График на {tomorrow.strftime('%d.%m.%Y')}:"]
+    lines = [f"График на завтра ({tomorrow.strftime('%d.%m.%Y')}):"]
     for idx, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
         start_time = (task["start_time"] or "").strip()

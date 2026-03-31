@@ -25,23 +25,6 @@
     </div>
 
     <div class="card table-card">
-        <div class="table-header">
-            <h2 class="section-title">VK-уведомления по графику</h2>
-        </div>
-        <div class="planner-vk-test-box">
-            <div class="planner-vk-test-title">Проверка отправки</div>
-            <div class="planner-vk-test-description">
-                Ежедневная отправка в 23:59 включена. Здесь можно отправить сообщение сразу с задачами на завтра.
-            </div>
-            <form method="post" action="{{ url_for('planner.test_vk_notification_send') }}" class="inline-form">
-                <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">
-                <input type="hidden" name="current_view" value="{{ current_view }}">
-                <button type="submit" class="btn btn-secondary">Отправить тестовое уведомление</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="card table-card">
         <div class="planner-toolbar">
             <div class="page-actions planner-nav-actions">
                 <a class="car-tab-link {% if is_today_selected %}car-tab-link-active{% endif %}" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
