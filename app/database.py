@@ -100,6 +100,15 @@ def init_db():
             password_hash TEXT NOT NULL
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            attempted_at TEXT NOT NULL
+        )
+    """)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS car_notification_hidden (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

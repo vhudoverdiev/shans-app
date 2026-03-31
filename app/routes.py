@@ -19,7 +19,12 @@ from flask_login import (
 )
 from openpyxl import load_workbook
 
-from app.auth import verify_user
+from app.auth import (
+    verify_user,
+    is_login_rate_limited,
+    register_failed_login,
+    clear_failed_logins,
+)
 from config import Config
 from app.models import (
     archive_car_notification,
@@ -768,12 +773,19 @@ def register_routes(app):
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "").strip()
+            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+
+            if is_login_rate_limited(username, ip_address):
+                flash("Слишком много попыток входа. Повторите позже.", "danger")
+                return render_template("login.html"), 429
 
             user = verify_user(username, password)
             if user:
+                clear_failed_logins(username, ip_address)
                 login_user(user)
                 return redirect(url_for("index"))
 
+            register_failed_login(username, ip_address)
             flash("Неверный логин или пароль.", "danger")
 
         return render_template("login.html")
