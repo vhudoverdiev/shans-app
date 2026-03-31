@@ -17,6 +17,8 @@ _VK_API_VERSION = "5.199"
 _HARDCODED_VK_ACCESS_TOKEN = "vk1.a.-MluYBU8Y_UJZ6NmdrIzLAvBMidKS1ru4Olm1WVGyVq0Yz-SNLBK1F9IOiCg4UJsLsc4gs0kj-EBCGM7tzZkWcStS1MavY31Q6zrfbtG2JY-m3yeicLMVhrwSdFHIfLKaq2PlsnwQuRNbAtRvbaOOna56cn86uXCcdCMCtvd1bQzeKnmxip1s3_vzBesIbsRUOYqf0XAfTtcsdeXYtPFAg"
 _HARDCODED_VK_PROFILE_URL = "https://vk.com/hudoverdiev"
 _HARDCODED_TIMEZONE = "Europe/Moscow"
+_DAILY_NOTIFICATION_HOUR = 23
+_DAILY_NOTIFICATION_MINUTE = 0
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
@@ -258,7 +260,7 @@ def run_vk_daily_notification_cycle() -> tuple[bool, str]:
     today_key = now_local.date().isoformat()
     last_sent = (settings["last_daily_sent_date"] or "").strip()
 
-    if now_local.hour < 23 or (now_local.hour == 23 and now_local.minute < 59):
+    if (now_local.hour, now_local.minute) < (_DAILY_NOTIFICATION_HOUR, _DAILY_NOTIFICATION_MINUTE):
         return False, "Ещё не время отправки"
 
     if last_sent == today_key:
