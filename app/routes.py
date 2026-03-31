@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from io import BytesIO
+import hmac
 import re
 
 from flask import (
@@ -19,6 +20,7 @@ from flask_login import (
 from openpyxl import load_workbook
 
 from app.auth import verify_user
+from config import Config
 from app.models import (
     archive_car_notification,
     create_budget_entry,
@@ -1485,7 +1487,8 @@ def register_routes(app):
 
             if action == "unlock":
                 password = request.form.get("password", "").strip()
-                if password == "666666":
+                import_password = Config.IMPORT_CENTER_PASSWORD
+                if import_password and hmac.compare_digest(password, import_password):
                     access_granted = True
                     flash("Доступ к разделу импорта открыт.", "success")
                 else:
@@ -1493,7 +1496,8 @@ def register_routes(app):
                 return render_template("import_center.html", access_granted=access_granted)
 
             password = request.form.get("password", "").strip()
-            if password != "666666":
+            import_password = Config.IMPORT_CENTER_PASSWORD
+            if not import_password or not hmac.compare_digest(password, import_password):
                 flash("Неверный пароль. Для каждого входа нужно подтверждение.", "error")
                 return redirect(url_for("import_center"))
 
