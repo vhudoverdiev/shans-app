@@ -8,7 +8,7 @@
         </div>
     </div>
 
-    <div class="car-tab-bar">
+    <div class="car-tab-bar shootings-mobile-tab-bar">
         <a href="{{ url_for('shootings_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">
             Бронь
             <span class="car-tab-count">{{ shootings_count }}</span>
@@ -17,7 +17,7 @@
 
         <div class="car-tab-actions">
             <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success shootings-export-btn">Скачать Excel</a>
-            <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
+            <a href="{{ url_for('shootings_add') }}" class="car-tab-link shootings-add-tab {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
         </div>
     </div>
 
