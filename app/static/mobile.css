@@ -403,6 +403,18 @@
         white-space: nowrap;
     }
 
+    .shootings-mobile-tab-bar-add .shootings-tab-booking {
+        order: 1;
+    }
+
+    .shootings-mobile-tab-bar-add .shootings-tab-archive {
+        order: 2;
+    }
+
+    .shootings-mobile-tab-bar-add .shootings-tab-add {
+        order: 3;
+    }
+
     .photo-projects-mobile-tab-bar .car-tab-link {
         white-space: nowrap;
     }
