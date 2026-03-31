@@ -25,7 +25,10 @@
                 <span class="car-tab-count">{{ archived_projects|length }}</span>
             </a>
 
-            <a href="{{ url_for('planner.create_photo_project') }}" class="car-tab-link">Добавить фотопроект</a>
+            <a href="{{ url_for('planner.create_photo_project') }}" class="car-tab-link photo-projects-add-tab" aria-label="Добавить фотопроект" title="Добавить фотопроект">
+                <span class="photo-projects-add-icon" aria-hidden="true">＋</span>
+                <span class="photo-projects-add-text">Добавить фотопроект</span>
+            </a>
         </div>
 
         {% if active_tab == 'archive' %}

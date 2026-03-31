@@ -47,7 +47,7 @@
     {% if view_mode == 'bookings' %}
     <div class="card table-card">
         <div class="table-header">
-            <h2 class="section-title">Записи на фотопроект</h2>
+            <h2 class="section-title photo-project-bookings-title">Записи на фотопроект</h2>
             {% if not project.is_archived %}
             <div class="table-actions">
                 <form method="post" action="{{ url_for('planner.delete_photo_project_bookings_selected', project_id=project.id) }}" class="inline-form bulk-delete-selected-form">
