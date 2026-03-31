@@ -20,6 +20,11 @@ _HARDCODED_TIMEZONE = "Europe/Moscow"
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
+def _table_columns(conn, table_name: str) -> set[str]:
+    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return {row["name"] for row in rows}
+
+
 
 def init_vk_notifications_db():
     conn = get_connection()
@@ -38,6 +43,20 @@ def init_vk_notifications_db():
         )
         """
     )
+
+    existing_columns = _table_columns(conn, "vk_notification_settings")
+    if "timezone_name" not in existing_columns:
+        cursor.execute(
+            "ALTER TABLE vk_notification_settings ADD COLUMN timezone_name TEXT NOT NULL DEFAULT 'Europe/Moscow'"
+        )
+    if "last_daily_sent_date" not in existing_columns:
+        cursor.execute(
+            "ALTER TABLE vk_notification_settings ADD COLUMN last_daily_sent_date TEXT"
+        )
+    if "updated_at" not in existing_columns:
+        cursor.execute(
+            "ALTER TABLE vk_notification_settings ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP"
+        )
 
     row = cursor.execute("SELECT id FROM vk_notification_settings WHERE id = 1").fetchone()
     if not row:
