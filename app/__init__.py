@@ -14,6 +14,7 @@ from app.auth import load_user_from_db, create_admin_if_not_exists
 from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
+from app.logging_setup import setup_logging, register_request_hooks
 
 
 login_manager = LoginManager()
@@ -53,6 +54,8 @@ def _register_management_commands(app):
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(Config)
+    setup_logging(app)
+    register_request_hooks(app)
     Config.validate_security_settings()
 
     if app.config.get("SECRET_KEY") == "dev_secret_key_change_me":
