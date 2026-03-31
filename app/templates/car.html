@@ -30,7 +30,7 @@
         <div class="stat-card">
             <div class="stat-label">Потрачено</div>
             <div class="stat-value">
-                {{ "%.0f"|format(total_cost) }} ₽
+                {{ total_cost|money }}
             </div>
         </div>
     </div>
@@ -89,7 +89,7 @@
                                     <td>{{ item.period_type or "—" }}</td>
                                     <td>{{ item.service_date_display or "—" }}</td>
                                     <td>{{ item.mileage or "—" }}</td>
-                                    <td>{{ item.service_cost or "—" }}</td>
+                                    <td>{{ item.service_cost|money if item.service_cost not in (None, "") else "—" }}</td>
                                     <td>
                                         <span class="status-pill status-pill-done">
                                             {{ item.status or "Выполнено" }}

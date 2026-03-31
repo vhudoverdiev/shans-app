@@ -55,7 +55,7 @@
                     <label>Остаток к оплате</label>
                     <div class="remaining-payment-preview" id="booking_remaining_wrap">
                         <span class="remaining-payment-preview-label">К оплате на съёмке</span>
-                        <input class="form-input remaining-payment-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} ₽" readonly>
+                        <input class="form-input remaining-payment-input" type="text" id="booking_remaining" value="{{ booking.remaining_payment }} Р" readonly>
                     </div>
                 </div>
 
@@ -95,7 +95,7 @@
             const price = Number(priceField.value || 0);
             const prepayment = Number(prepaymentField.value || 0);
             const remaining = Math.max(price - prepayment, 0);
-            remainingField.value = `${remaining} ₽`;
+            remainingField.value = `${remaining} Р`;
             if (remainingWrap) {
                 remainingWrap.classList.toggle("remaining-payment-preview-complete", remaining === 0);
             }
