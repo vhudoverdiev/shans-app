@@ -11,7 +11,7 @@ from flask_login import login_required
 
 from app.database import get_connection
 from app.utils import build_photo_project_excel
-from app.vk_notifications import get_vk_settings, send_vk_tomorrow_tasks_message, update_vk_settings
+from app.vk_notifications import send_vk_tomorrow_tasks_message
 
 planner_bp = Blueprint("planner", __name__)
 
@@ -895,32 +895,7 @@ def schedule():
     current_view = request.args.get("view", "day")
     selected_date = _parse_date(request.args.get("date"), default=date.today())
     context = build_schedule_context(selected_date, current_view)
-    context["vk_settings"] = get_vk_settings()
     return render_template("schedule.html", **context)
-
-
-@planner_bp.route("/planner.schedule/vk-settings", methods=["POST"])
-@login_required
-def update_vk_notification_settings():
-    is_enabled = request.form.get("is_enabled", "") == "1"
-    access_token = request.form.get("access_token", "").strip()
-    profile_url = request.form.get("profile_url", "").strip()
-    timezone_name = request.form.get("timezone_name", "Europe/Moscow").strip()
-    selected_date = _parse_date(request.form.get("selected_date"), default=date.today())
-    current_view = request.form.get("current_view", "day")
-
-    if is_enabled and (not access_token or not profile_url):
-        flash("Чтобы включить рассылку, укажи токен VK и ссылку на страницу.", "error")
-        return redirect(url_for("planner.schedule", date=selected_date.isoformat(), view=current_view))
-
-    update_vk_settings(
-        is_enabled=is_enabled,
-        access_token=access_token,
-        profile_url=profile_url,
-        timezone_name=timezone_name or "Europe/Moscow",
-    )
-    flash("Настройки VK-уведомлений сохранены.", "success")
-    return redirect(url_for("planner.schedule", date=selected_date.isoformat(), view=current_view))
 
 
 @planner_bp.route("/planner.schedule/vk-test-send", methods=["POST"])
