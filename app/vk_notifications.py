@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 import threading
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 from urllib.parse import urlencode
 from urllib.request import urlopen
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import current_app
 
@@ -109,13 +109,15 @@ def update_vk_settings(is_enabled: bool, access_token: str, profile_url: str, ti
     return None
 
 
-def _get_target_timezone() -> ZoneInfo:
+def _get_target_timezone():
     settings = get_vk_settings()
     tz_name = settings["timezone_name"] if settings and settings["timezone_name"] else "Europe/Moscow"
     try:
         return ZoneInfo(tz_name)
-    except Exception:
-        return ZoneInfo("Europe/Moscow")
+    except ZoneInfoNotFoundError:
+        # Fallback для окружений без tzdata (например, Python на Windows без пакета tzdata).
+        # Для Москвы используется фиксированный UTC+3 (без сезонного перевода времени).
+        return timezone(timedelta(hours=3), name="Europe/Moscow")
 
 
 def _extract_screen_name(profile_url: str) -> str:
