@@ -16,7 +16,7 @@
         <a href="{{ url_for('shootings_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
 
         <div class="car-tab-actions">
-            <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success">Скачать Excel</a>
+            <a href="{{ url_for('shootings_export', scope='upcoming') }}" class="btn btn-success shootings-export-btn">Скачать Excel</a>
             <a href="{{ url_for('shootings_add') }}" class="car-tab-link {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить съёмку</a>
         </div>
     </div>

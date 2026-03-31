@@ -444,6 +444,19 @@
         border-color: #fecaca;
         background: #fef2f2;
     }
+    .notifications-table {
+        min-width: 0;
+    }
+
+    .notifications-table th,
+    .notifications-table td {
+        width: 100% !important;
+    }
+
+    .shootings-export-btn,
+    .shootings-add-tab {
+        display: none !important;
+    }
 
     .top-nav-import-link {
         display: none;
