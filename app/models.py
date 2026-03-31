@@ -1049,7 +1049,7 @@ def is_car_notification_hidden(notification_key):
     conn = get_connection()
     item = conn.execute("""
         SELECT id
-        FROM car_notification_hidden
+        FROM car_hidden_notifications
         WHERE notification_key = ?
     """, (notification_key,)).fetchone()
     conn.close()
@@ -1068,6 +1068,21 @@ def get_hidden_notification_keys():
 def get_periodic_services_for_notifications():
     conn = get_connection()
 
+    planned = conn.execute("""
+        SELECT
+            id,
+            service_name,
+            mileage,
+            detail_description,
+            work_kind,
+            period_type,
+            status,
+            '' AS service_date,
+            'planned' AS source_type
+        FROM car_planned_services
+        WHERE period_type IN ('6 мес', '12 мес')
+    """).fetchall()
+
     done = conn.execute("""
         SELECT
             id,
@@ -1084,7 +1099,7 @@ def get_periodic_services_for_notifications():
     """).fetchall()
 
     conn.close()
-    return [], done
+    return planned, done
 
 
 # =========================================================

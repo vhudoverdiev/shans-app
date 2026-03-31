@@ -435,6 +435,28 @@ def _parse_excel_full_date(value) -> str:
     return text
 
 
+def _parse_excel_time(value) -> str:
+    if value in (None, ""):
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%H:%M")
+    if isinstance(value, date):
+        return ""
+
+    text = str(value).strip()
+    if not text:
+        return ""
+
+    for fmt in ("%H:%M", "%H:%M:%S"):
+        try:
+            parsed = datetime.strptime(text, fmt)
+            return parsed.strftime("%H:%M")
+        except ValueError:
+            continue
+
+    return text
+
+
 def _parse_car_excel(file_storage):
     workbook = load_workbook(filename=BytesIO(file_storage.read()), data_only=True)
     sheet = workbook.active
@@ -582,7 +604,7 @@ def _parse_shootings_excel(file_storage):
     for row in rows[1:]:
         project_name = str(row[project_index]).strip() if project_index < len(row) and row[project_index] is not None else ""
         client_name = str(row[client_index]).strip() if client_index < len(row) and row[client_index] is not None else ""
-        shooting_date = str(row[date_index]).strip() if date_index < len(row) and row[date_index] is not None else ""
+        shooting_date = _parse_excel_full_date(row[date_index]) if date_index < len(row) else ""
 
         if not project_name and not client_name and not shooting_date:
             continue
@@ -597,7 +619,7 @@ def _parse_shootings_excel(file_storage):
         notes = ""
 
         if time_index is not None and time_index < len(row) and row[time_index] is not None:
-            shooting_time = str(row[time_index]).strip()
+            shooting_time = _parse_excel_time(row[time_index])
         if duration_index is not None and duration_index < len(row):
             duration_hours = _parse_excel_number(row[duration_index]) or 1
         if phone_index is not None and phone_index < len(row) and row[phone_index] is not None:
