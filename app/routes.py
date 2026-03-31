@@ -371,6 +371,21 @@ def _is_valid_phone_number(phone_value: str) -> bool:
     return bool(re.fullmatch(r"\+?\d{7,15}", normalized))
 
 
+def _is_valid_contact_value(contact_value: str) -> bool:
+    if not contact_value:
+        return True
+    if len(contact_value) > 255:
+        return False
+    if _is_valid_phone_number(contact_value):
+        return True
+    return bool(
+        re.fullmatch(
+            r"(https?://\S+|www\.\S+|t\.me/\S+|@\w{3,}|[\w.\-]+@[\w.\-]+\.\w+)",
+            contact_value.strip(),
+        )
+    )
+
+
 def _parse_non_negative_number(value: str, label: str):
     if value in (None, ""):
         return None, None
@@ -1158,8 +1173,8 @@ def register_routes(app):
             except ValueError:
                 flash("Часы, стоимость и предоплата должны быть числами.", "danger")
                 return render_template("shootings_add.html", form_data=form_data, active_tab="add")
-            if not _is_valid_phone_number(phone):
-                flash("Телефон может содержать только цифры и символ '+'.", "danger")
+            if not _is_valid_contact_value(phone):
+                flash("Укажи корректный контакт: номер телефона или ссылку.", "danger")
                 return render_template("shootings_add.html", form_data=form_data, active_tab="add")
 
             shooting_id = create_shooting(
@@ -1296,8 +1311,8 @@ def register_routes(app):
             except ValueError:
                 flash("Часы, стоимость и предоплата должны быть числами.", "danger")
                 return redirect(url_for("shooting_edit", shooting_id=shooting_id))
-            if not _is_valid_phone_number(phone):
-                flash("Телефон может содержать только цифры и символ '+'.", "danger")
+            if not _is_valid_contact_value(phone):
+                flash("Укажи корректный контакт: номер телефона или ссылку.", "danger")
                 return redirect(url_for("shooting_edit", shooting_id=shooting_id))
 
             update_shooting(

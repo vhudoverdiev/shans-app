@@ -517,7 +517,7 @@ def upsert_task_for_shooting(
 
     description_parts = [f"Клиент: {client_name}"]
     if phone:
-        description_parts.append(f"Телефон: {phone}")
+        description_parts.append(f"Контакт: {phone}")
     if duration_hours not in (None, ""):
         description_parts.append(f"Длительность: {duration_hours} ч")
     if price not in (None, ""):
