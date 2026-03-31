@@ -1,4 +1,5 @@
 import os
+import secrets
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -22,7 +23,11 @@ def create_admin_if_not_exists():
     если его ещё нет в базе.
     """
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
-    admin_password = os.getenv("ADMIN_PASSWORD", "12345")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    generated_password = None
+    if not admin_password:
+        generated_password = secrets.token_urlsafe(12)
+        admin_password = generated_password
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -39,6 +44,11 @@ def create_admin_if_not_exists():
             (admin_username, password_hash)
         )
         conn.commit()
+        if generated_password:
+            print(
+                "WARNING: ADMIN_PASSWORD не задан. "
+                f"Создан временный пароль администратора: {generated_password}"
+            )
 
     conn.close()
 
