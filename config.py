@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 # Загружаем переменные из файла .env
@@ -27,6 +28,9 @@ class Config:
     SESSION_COOKIE_SECURE = _to_bool(os.getenv("SESSION_COOKIE_SECURE"), default=False)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SECURE = _to_bool(os.getenv("REMEMBER_COOKIE_SECURE"), default=False)
+    REMEMBER_COOKIE_DURATION = timedelta(days=int(os.getenv("REMEMBER_COOKIE_DURATION_DAYS", "30")))
+    REMEMBER_COOKIE_REFRESH_EACH_REQUEST = True
     IMPORT_CENTER_PASSWORD = os.getenv("IMPORT_CENTER_PASSWORD", "")
 
     LOGIN_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("LOGIN_RATE_LIMIT_WINDOW_SECONDS", "900"))
