@@ -1782,7 +1782,6 @@ def register_routes(app):
         if request.method == "POST":
             service_name = request.form.get("service_name", "").strip()
             detail_description = request.form.get("detail_description", "").strip()
-            work_kind = request.form.get("work_kind", "").strip()
             service_date = request.form.get("service_date", "").strip()
             mileage = request.form.get("mileage", "").strip()
             cost = request.form.get("cost", "").strip()
@@ -1804,7 +1803,7 @@ def register_routes(app):
                 mileage=mileage_value if mileage_value is not None else "",
                 service_date=service_date,
                 detail_description=detail_description,
-                work_kind=work_kind,
+                work_kind=service["work_kind"],
                 period_type=period_type,
                 status="Выполнено",
             )
@@ -1865,7 +1864,6 @@ def register_routes(app):
         if request.method == "POST":
             service_name = request.form.get("service_name", "").strip()
             detail_description = request.form.get("detail_description", "").strip()
-            work_kind = request.form.get("work_kind", "").strip()
             period_type = request.form.get("period_type", "").strip()
 
             if not service_name:
@@ -1876,7 +1874,7 @@ def register_routes(app):
                 service_id=service_id,
                 service_name=service_name,
                 detail_description=detail_description,
-                work_kind=work_kind,
+                work_kind=service["work_kind"],
                 period_type=period_type,
             )
 
