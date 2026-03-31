@@ -1,8 +1,11 @@
 import os
 import secrets
+from datetime import datetime, timedelta, timezone
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from config import Config
 from app.database import get_connection
 from app.models import get_user_by_id
 
@@ -25,7 +28,11 @@ def create_admin_if_not_exists():
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     admin_password = os.getenv("ADMIN_PASSWORD")
     generated_password = None
+
     if not admin_password:
+        if Config.is_production():
+            raise RuntimeError("ADMIN_PASSWORD must be set in production mode")
+
         generated_password = secrets.token_urlsafe(12)
         admin_password = generated_password
 
@@ -51,6 +58,53 @@ def create_admin_if_not_exists():
             )
 
     conn.close()
+
+
+def _utcnow_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def register_failed_login(username, ip_address):
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO login_attempts (username, ip_address, attempted_at)
+        VALUES (?, ?, ?)
+        """,
+        (username, ip_address, _utcnow_iso()),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_failed_logins(username, ip_address):
+    conn = get_connection()
+    conn.execute(
+        "DELETE FROM login_attempts WHERE username = ? AND ip_address = ?",
+        (username, ip_address),
+    )
+    conn.commit()
+    conn.close()
+
+
+def is_login_rate_limited(username, ip_address):
+    window_seconds = Config.LOGIN_RATE_LIMIT_WINDOW_SECONDS
+    max_attempts = Config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS
+    lower_bound = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
+
+    conn = get_connection()
+    count_row = conn.execute(
+        """
+        SELECT COUNT(*) AS attempts_count
+        FROM login_attempts
+        WHERE username = ? AND ip_address = ? AND attempted_at >= ?
+        """,
+        (username, ip_address, lower_bound),
+    ).fetchone()
+    conn.close()
+
+    attempts_count = count_row["attempts_count"] if count_row else 0
+    return attempts_count >= max_attempts
 
 
 def verify_user(username, password):
