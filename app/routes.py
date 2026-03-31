@@ -775,6 +775,7 @@ def register_routes(app):
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "").strip()
+            remember_me = request.form.get("remember_me") == "on"
             ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
 
             if is_login_rate_limited(username, ip_address):
@@ -789,7 +790,7 @@ def register_routes(app):
             user = verify_user(username, password)
             if user:
                 clear_failed_logins(username, ip_address)
-                login_user(user)
+                login_user(user, remember=remember_me)
                 log_audit(current_app, "user_login", username=user.username)
                 return redirect(url_for("index"))
 
