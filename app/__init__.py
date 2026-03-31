@@ -15,6 +15,7 @@ from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
 from app.logging_setup import setup_logging, register_request_hooks
+from app.vk_notifications import init_vk_notifications_db, start_vk_scheduler
 
 
 login_manager = LoginManager()
@@ -74,11 +75,14 @@ def create_app():
 
     init_db()
     init_planner_db()
+    init_vk_notifications_db()
     create_admin_if_not_exists()
 
     register_routes(app)
     app.register_blueprint(planner_bp)
     _register_management_commands(app)
+    if os.getenv("WERKZEUG_RUN_MAIN") in {None, "true"}:
+        start_vk_scheduler(app)
 
     app.jinja_env.filters["money"] = format_money
 
