@@ -28,36 +28,10 @@
         <div class="table-header">
             <h2 class="section-title">VK-уведомления по графику</h2>
         </div>
-        <form method="post" action="{{ url_for('planner.update_vk_notification_settings') }}" class="planner-vk-form">
-            <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">
-            <input type="hidden" name="current_view" value="{{ current_view }}">
-            <div class="form-row">
-                <label class="form-label" for="vk_access_token">Токен VK</label>
-                <input id="vk_access_token" class="input" type="password" name="access_token" value="{{ vk_settings.access_token if vk_settings else '' }}" placeholder="vk1.a...." autocomplete="off">
-            </div>
-            <div class="form-row">
-                <label class="form-label" for="vk_profile_url">Ссылка на страницу VK</label>
-                <input id="vk_profile_url" class="input" type="text" name="profile_url" value="{{ vk_settings.profile_url if vk_settings else '' }}" placeholder="https://vk.com/username">
-            </div>
-            <div class="form-row">
-                <label class="form-label" for="vk_timezone_name">Часовой пояс</label>
-                <input id="vk_timezone_name" class="input" type="text" name="timezone_name" value="{{ vk_settings.timezone_name if vk_settings else 'Europe/Moscow' }}" placeholder="Europe/Moscow">
-            </div>
-            <div class="form-row planner-vk-toggle-row">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="is_enabled" value="1" {% if vk_settings and vk_settings.is_enabled %}checked{% endif %}>
-                    Включить ежедневную отправку в 23:59
-                </label>
-            </div>
-            <div class="table-actions">
-                <button type="submit" class="btn btn-primary">Сохранить настройки</button>
-            </div>
-        </form>
-
         <div class="planner-vk-test-box">
             <div class="planner-vk-test-title">Проверка отправки</div>
             <div class="planner-vk-test-description">
-                Отправляет сообщение сразу с задачами на завтра из раздела «График».
+                Ежедневная отправка в 23:59 включена. Здесь можно отправить сообщение сразу с задачами на завтра.
             </div>
             <form method="post" action="{{ url_for('planner.test_vk_notification_send') }}" class="inline-form">
                 <input type="hidden" name="selected_date" value="{{ selected_date.isoformat() }}">

@@ -14,6 +14,9 @@ from flask import current_app
 from app.database import get_connection
 
 _VK_API_VERSION = "5.199"
+_HARDCODED_VK_ACCESS_TOKEN = "vk1.a.-MluYBU8Y_UJZ6NmdrIzLAvBMidKS1ru4Olm1WVGyVq0Yz-SNLBK1F9IOiCg4UJsLsc4gs0kj-EBCGM7tzZkWcStS1MavY31Q6zrfbtG2JY-m3yeicLMVhrwSdFHIfLKaq2PlsnwQuRNbAtRvbaOOna56cn86uXCcdCMCtvd1bQzeKnmxip1s3_vzBesIbsRUOYqf0XAfTtcsdeXYtPFAg"
+_HARDCODED_VK_PROFILE_URL = "https://vk.com/hudoverdiev"
+_HARDCODED_TIMEZONE = "Europe/Moscow"
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
@@ -26,7 +29,7 @@ def init_vk_notifications_db():
         """
         CREATE TABLE IF NOT EXISTS vk_notification_settings (
             id INTEGER PRIMARY KEY CHECK (id = 1),
-            is_enabled INTEGER NOT NULL DEFAULT 0,
+            is_enabled INTEGER NOT NULL DEFAULT 1,
             access_token TEXT,
             profile_url TEXT,
             timezone_name TEXT NOT NULL DEFAULT 'Europe/Moscow',
@@ -42,8 +45,19 @@ def init_vk_notifications_db():
             """
             INSERT INTO vk_notification_settings (
                 id, is_enabled, access_token, profile_url, timezone_name, last_daily_sent_date
-            ) VALUES (1, 0, '', '', 'Europe/Moscow', NULL)
+            ) VALUES (1, 1, ?, ?, ?, NULL)
             """
+            ,
+            (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
+        )
+    else:
+        cursor.execute(
+            """
+            UPDATE vk_notification_settings
+            SET is_enabled = 1, access_token = ?, profile_url = ?, timezone_name = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = 1
+            """,
+            (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
         )
 
     conn.commit()
@@ -52,23 +66,28 @@ def init_vk_notifications_db():
 
 def get_vk_settings():
     conn = get_connection()
-    row = conn.execute("SELECT * FROM vk_notification_settings WHERE id = 1").fetchone()
+    row = conn.execute(
+        """
+        SELECT
+            id,
+            1 AS is_enabled,
+            ? AS access_token,
+            ? AS profile_url,
+            ? AS timezone_name,
+            last_daily_sent_date,
+            updated_at
+        FROM vk_notification_settings
+        WHERE id = 1
+        """,
+        (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
+    ).fetchone()
     conn.close()
     return row
 
 
 def update_vk_settings(is_enabled: bool, access_token: str, profile_url: str, timezone_name: str):
-    conn = get_connection()
-    conn.execute(
-        """
-        UPDATE vk_notification_settings
-        SET is_enabled = ?, access_token = ?, profile_url = ?, timezone_name = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = 1
-        """,
-        (1 if is_enabled else 0, access_token.strip(), profile_url.strip(), timezone_name.strip() or "Europe/Moscow"),
-    )
-    conn.commit()
-    conn.close()
+    # Настройки захардкожены, метод оставлен для обратной совместимости.
+    return None
 
 
 def _get_target_timezone() -> ZoneInfo:
