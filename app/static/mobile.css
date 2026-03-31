@@ -376,6 +376,37 @@
         min-height: 44px;
     }
 
+    .car-mobile-tabs-row {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+    }
+
+    .car-mobile-tabs-row .car-tab-link {
+        width: auto;
+        min-width: max-content;
+    }
+
+    .shootings-mobile-tab-bar {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .shootings-mobile-tab-bar .car-tab-actions {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .shootings-mobile-tab-bar .car-tab-link {
+        white-space: nowrap;
+    }
+
+    .photo-projects-mobile-tab-bar .car-tab-link {
+        white-space: nowrap;
+    }
+
     .data-table tr {
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
     }
@@ -454,7 +485,7 @@
     }
 
     .shootings-export-btn,
-    .shootings-add-tab {
+    .photo-project-export-btn {
         display: none !important;
     }
 

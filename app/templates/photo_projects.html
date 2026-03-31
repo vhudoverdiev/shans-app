@@ -12,7 +12,7 @@
     </div>
 
     <div class="card table-card">
-        <div class="car-tab-bar">
+        <div class="car-tab-bar photo-projects-mobile-tab-bar">
             <a href="{{ url_for('planner.photo_projects', tab='active') }}"
                class="car-tab-link {% if active_tab == 'active' %}car-tab-link-active{% endif %}">
                 Активные
@@ -25,7 +25,7 @@
                 <span class="car-tab-count">{{ archived_projects|length }}</span>
             </a>
 
-            <a href="{{ url_for('planner.create_photo_project') }}" class="car-tab-link">Добавить проект</a>
+            <a href="{{ url_for('planner.create_photo_project') }}" class="car-tab-link">Добавить фотопроект</a>
         </div>
 
         {% if active_tab == 'archive' %}
