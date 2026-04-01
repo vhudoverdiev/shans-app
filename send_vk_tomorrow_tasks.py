@@ -59,7 +59,7 @@ def build_message(tasks: list[sqlite3.Row]) -> str | None:
     now_local = datetime.now(ZoneInfo(TIMEZONE_NAME))
     tomorrow_display = (now_local.date() + timedelta(days=1)).strftime("%d.%m.%Y")
 
-    lines = [f"Шанс — задачи на завтра ({tomorrow_display})", ""]
+    lines = [f"Задачи на завтра ({tomorrow_display})", ""]
 
     for index, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
