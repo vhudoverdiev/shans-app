@@ -1,6 +1,6 @@
 venv/
-__pycache__/
-*.pyc
-app.db
+venv_broken_*/
+logs/
+*.db
+*.db.backup*
 .env
-.vscode/
