@@ -6,3 +6,9 @@ venv_broken_*/
 logs/
 *.db
 *.db.backup*
+venv/
+venv_broken_*/
+logs/
+*.db
+*.db.backup*
+.env
