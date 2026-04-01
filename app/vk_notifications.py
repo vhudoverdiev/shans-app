@@ -17,8 +17,8 @@ _VK_API_VERSION = "5.199"
 _HARDCODED_VK_ACCESS_TOKEN = "vk1.a.-MluYBU8Y_UJZ6NmdrIzLAvBMidKS1ru4Olm1WVGyVq0Yz-SNLBK1F9IOiCg4UJsLsc4gs0kj-EBCGM7tzZkWcStS1MavY31Q6zrfbtG2JY-m3yeicLMVhrwSdFHIfLKaq2PlsnwQuRNbAtRvbaOOna56cn86uXCcdCMCtvd1bQzeKnmxip1s3_vzBesIbsRUOYqf0XAfTtcsdeXYtPFAg"
 _HARDCODED_VK_PROFILE_URL = "https://vk.com/hudoverdiev"
 _HARDCODED_TIMEZONE = "Europe/Moscow"
-_DAILY_NOTIFICATION_HOUR = 23
-_DAILY_NOTIFICATION_MINUTE = 30
+_DAILY_NOTIFICATION_HOUR = 20
+_DAILY_NOTIFICATION_MINUTE = 0
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
@@ -42,6 +42,14 @@ def init_vk_notifications_db():
             timezone_name TEXT NOT NULL DEFAULT 'Europe/Moscow',
             last_daily_sent_date TEXT,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS vk_daily_send_locks (
+            send_date TEXT PRIMARY KEY,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """
     )
@@ -266,7 +274,35 @@ def run_vk_daily_notification_cycle() -> tuple[bool, str]:
     if last_sent == today_key:
         return False, "Уже отправлено сегодня"
 
-    return send_vk_tomorrow_tasks_message(force=False)
+    if not _reserve_daily_send_slot(today_key):
+        return False, "Уже отправляется или отправлено другим процессом"
+
+    ok, reason = send_vk_tomorrow_tasks_message(force=False)
+    if not ok:
+        _release_daily_send_slot(today_key)
+    return ok, reason
+
+
+def _reserve_daily_send_slot(today_key: str) -> bool:
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO vk_daily_send_locks (send_date) VALUES (?)",
+            (today_key,),
+        )
+        conn.commit()
+        return cursor.rowcount == 1
+    finally:
+        conn.close()
+
+
+def _release_daily_send_slot(today_key: str) -> None:
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM vk_daily_send_locks WHERE send_date = ?", (today_key,))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def _scheduler_worker(app):
