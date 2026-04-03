@@ -167,6 +167,10 @@
                                                title="Перевести в выполненные">
                                                 {{ item.status }}
                                             </a>
+                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                               class="btn btn-small btn-success car-mobile-complete-btn">
+                                                Перенести в выполненные
+                                            </a>
                                         {% else %}
                                             <span class="status-pill status-pill-work">
                                                 {{ item.status or "Планируется" }}
