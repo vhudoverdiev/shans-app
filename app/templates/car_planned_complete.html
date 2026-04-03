@@ -32,13 +32,24 @@
         <form method="post" class="form-block">
             <div class="car-form-grid">
                 <div class="form-group">
-                    <label>Периодичность</label>
+                    <label for="service_name">Наименование</label>
                     <input
                         type="text"
+                        id="service_name"
+                        name="service_name"
                         class="form-input"
-                        value="{{ service.period_type or 'Нет' }}"
-                        disabled
+                        value="{{ service.service_name or '' }}"
+                        required
                     >
+                </div>
+
+                <div class="form-group">
+                    <label for="period_type">Периодичность</label>
+                    <select id="period_type" name="period_type" class="form-input">
+                        <option value="" {% if not service.period_type %}selected{% endif %}>Нет</option>
+                        <option value="6 мес" {% if service.period_type == '6 мес' %}selected{% endif %}>6 мес</option>
+                        <option value="12 мес" {% if service.period_type == '12 мес' %}selected{% endif %}>12 мес</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -48,6 +59,7 @@
                         id="service_date"
                         name="service_date"
                         class="form-input"
+                        value="{{ service.service_date or '' }}"
                         required
                     >
                 </div>
@@ -59,6 +71,7 @@
                         id="mileage"
                         name="mileage"
                         class="form-input"
+                        value="{{ service.mileage or '' }}"
                     >
                 </div>
 
@@ -70,15 +83,17 @@
                         id="cost"
                         name="cost"
                         class="form-input"
+                        value="{{ service.service_cost or '' }}"
                     >
                 </div>
 
                 <div class="form-group car-form-full">
-                    <label>Описание</label>
+                    <label for="detail_description">Описание</label>
                     <textarea
+                        id="detail_description"
+                        name="detail_description"
                         class="form-input car-textarea"
                         rows="4"
-                        disabled
                     >{{ service.detail_description or '' }}</textarea>
                 </div>
             </div>
