@@ -1823,12 +1823,18 @@ def register_routes(app):
             return redirect(url_for("car", tab="planned"))
 
         if request.method == "POST":
+            service_name = request.form.get("service_name", "").strip()
+            detail_description = request.form.get("detail_description", "").strip()
+            period_type = request.form.get("period_type", "").strip()
             service_date = request.form.get("service_date", "").strip()
             mileage = request.form.get("mileage", "").strip()
             cost = request.form.get("cost", "").strip()
             mileage_value, mileage_error = _parse_non_negative_number(mileage, "Пробег")
             cost_value, cost_error = _parse_non_negative_number(cost, "Стоимость")
 
+            if not service_name:
+                flash("Укажите наименование работы.", "error")
+                return redirect(url_for("car_planned_complete", service_id=service_id))
             if not service_date:
                 flash("Укажите дату выполнения.", "error")
                 return redirect(url_for("car_planned_complete", service_id=service_id))
@@ -1837,13 +1843,13 @@ def register_routes(app):
                 return redirect(url_for("car_planned_complete", service_id=service_id))
 
             create_car_done_service(
-                service_name=service["service_name"],
+                service_name=service_name,
                 service_cost=cost_value if cost_value is not None else "",
                 mileage=mileage_value if mileage_value is not None else "",
                 service_date=service_date,
-                detail_description=service["detail_description"],
+                detail_description=detail_description,
                 work_kind=service["work_kind"],
-                period_type=service["period_type"],
+                period_type=period_type,
             )
 
             delete_car_planned_service(service_id)
