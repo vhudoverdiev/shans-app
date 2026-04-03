@@ -1,7 +1,18 @@
 /* =========================
    GLOBAL MOBILE ADAPTATION
 ========================= */
+.car-mobile-complete-btn {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    .car-mobile-complete-btn {
+        display: inline-flex;
+        width: 100%;
+        justify-content: center;
+        margin-top: 8px;
+    }
+
     .site-header {
         display: none;
     }
