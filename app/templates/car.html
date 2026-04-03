@@ -161,21 +161,15 @@
                                     <td>{{ item.detail_description or "—" }}</td>
                                     <td>{{ item.period_type or "—" }}</td>
                                     <td>
-                                        {% if item.status == 'В работе' %}
-                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                               class="status-pill status-pill-work status-pill-link"
-                                               title="Перевести в выполненные">
-                                                {{ item.status }}
-                                            </a>
-                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                               class="btn btn-small btn-success car-mobile-complete-btn">
-                                                Перенести в выполненные
-                                            </a>
-                                        {% else %}
-                                            <span class="status-pill status-pill-work">
-                                                {{ item.status or "Планируется" }}
-                                            </span>
-                                        {% endif %}
+                                        <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                           class="status-pill status-pill-work status-pill-link"
+                                           title="Перевести в выполненные">
+                                            {{ item.status or "Планируется" }}
+                                        </a>
+                                        <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                           class="btn btn-small btn-success car-mobile-complete-btn">
+                                            Перенести в выполненные
+                                        </a>
                                     </td>
                                     <td>
                                         <div class="table-actions-icon">
@@ -185,13 +179,11 @@
                                                 ✏
                                             </a>
 
-                                            {% if item.status == 'В работе' %}
-                                                <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                                   class="icon-action-btn icon-complete"
-                                                   title="Завершить">
-                                                    ✓
-                                                </a>
-                                            {% endif %}
+                                            <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
+                                               class="icon-action-btn icon-complete"
+                                               title="Завершить">
+                                                ✓
+                                            </a>
 
                                             <form method="post"
                                                   action="{{ url_for('car_planned_delete', service_id=item.id) }}"
