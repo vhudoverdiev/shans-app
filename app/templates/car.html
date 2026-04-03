@@ -166,11 +166,6 @@
                                            title="Перевести в выполненные">
                                             {{ item.status or "Планируется" }}
                                         </a>
-                                        <a href="{{ url_for('car_planned_complete', service_id=item.id) }}"
-                                           class="btn btn-small btn-success car-mobile-complete-btn"
-                                           aria-label="Перенести в выполненные">
-                                            ✓
-                                        </a>
                                     </td>
                                     <td>
                                         <div class="table-actions-icon">
