@@ -12,7 +12,7 @@
 
     <div class="card account-hero-card">
         <div class="account-profile-line account-profile-main-line">
-            <div class="account-avatar-preview-wrap account-avatar-edit-wrap" id="avatar-preview-wrap">
+            <div class="account-avatar-preview-wrap account-avatar-edit-wrap {% if avatar_url %}account-avatar-preview-wrap-has-avatar{% endif %}" id="avatar-preview-wrap" data-has-avatar="{% if avatar_url %}1{% else %}0{% endif %}">
                 <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
                     {% if avatar_url %}
                     <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
@@ -20,7 +20,9 @@
                     <span id="avatar-preview-letter">{{ avatar_letter }}</span>
                     {% endif %}
                 </div>
-                <button type="button" class="account-avatar-edit-btn {% if not avatar_url %}account-avatar-edit-btn-visible{% endif %}" id="account-avatar-edit-btn" aria-label="Изменить аватарку" title="Изменить аватарку">✎</button>
+                {% if not avatar_url %}
+                <button type="button" class="account-avatar-edit-btn" id="account-avatar-edit-btn" aria-label="Изменить аватарку" title="Изменить аватарку">✎</button>
+                {% endif %}
                 {% if avatar_url %}
                 <form method="post" action="{{ url_for('remove_account_avatar') }}" class="account-avatar-remove-form" id="account-avatar-remove-form">
                     <button type="submit" class="account-avatar-remove-btn" aria-label="Удалить аватарку" title="Удалить аватарку">🗑</button>
@@ -245,6 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const avatarForm = document.getElementById("avatar-upload-form");
     const avatarEditBtn = document.getElementById("account-avatar-edit-btn");
     const avatarPreviewWrap = document.getElementById("avatar-preview-wrap");
+    const avatarHasImage = avatarPreviewWrap && avatarPreviewWrap.dataset && avatarPreviewWrap.dataset.hasAvatar === "1";
     const cropModal = document.getElementById("avatar-crop-modal");
     const cropFrame = document.getElementById("avatar-crop-frame");
     const cropImage = document.getElementById("avatar-crop-image");
@@ -393,6 +396,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (avatarPreviewWrap) {
         avatarPreviewWrap.addEventListener("click", function (event) {
+            if (avatarHasImage) return;
             const isRemoveAction = event.target.closest && event.target.closest("#account-avatar-remove-form");
             if (isRemoveAction) return;
             triggerAvatarFileSelect();

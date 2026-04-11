@@ -133,6 +133,10 @@ a {
     overflow: hidden;
 }
 
+.account-avatar-preview-wrap-has-avatar .header-avatar {
+    background: transparent;
+}
+
 .header-avatar-image {
     width: 100%;
     height: 100%;
@@ -158,19 +162,18 @@ a {
 
 .account-avatar-edit-btn {
     position: absolute;
-    right: -6px;
-    bottom: -6px;
-    width: 28px;
-    height: 28px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     border: 0;
     border-radius: 999px;
-    background: #2563eb;
+    background: rgba(37, 99, 235, 0.88);
     color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.38);
+    font-size: 26px;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.28);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
@@ -178,7 +181,6 @@ a {
     z-index: 2;
 }
 
-.account-avatar-edit-btn-visible,
 .account-avatar-preview-wrap:hover .account-avatar-edit-btn,
 .account-avatar-preview-wrap:focus-within .account-avatar-edit-btn {
     opacity: 1;
