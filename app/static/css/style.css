@@ -377,6 +377,41 @@ a {
     font-size: 16px;
 }
 
+.account-inline-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    background: linear-gradient(135deg, #fff7ed, #fff1f2);
+    color: #991b1b;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(153, 27, 27, 0.12);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.account-inline-notice-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.account-inline-notice-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    background: rgba(220, 38, 38, 0.15);
+    color: #b91c1c;
+}
+
 .avatar-crop-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 220px;
@@ -468,6 +503,10 @@ a {
     gap: 8px;
 }
 
+#avatar-crop-zoom {
+    touch-action: none;
+}
+
 .avatar-crop-preview-wrap {
     border-radius: 16px;
     border: 1px solid #dbe3f0;
@@ -532,6 +571,13 @@ a {
     padding: 8px 10px;
     font-size: 13px;
     color: #334155;
+}
+
+html.avatar-crop-scroll-locked,
+body.avatar-crop-scroll-locked {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
 }
 
 .recovery-codes-card {
