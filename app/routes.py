@@ -976,6 +976,16 @@ def register_routes(app):
     def setup_2fa():
         pending_user_id = session.get("pending_otp_user_id")
         from_settings = bool(session.get("otp_setup_from_settings"))
+        finish_setup_requested = request.method == "POST" and request.form.get("finish_setup") == "1"
+
+        if finish_setup_requested and current_user.is_authenticated and session.get("pending_setup_recovery_codes"):
+            target = "account_settings" if from_settings else "index"
+            session.pop("pending_setup_recovery_codes", None)
+            session.pop("pending_otp_user_id", None)
+            session.pop("pending_otp_remember", None)
+            session.pop("otp_setup_from_settings", None)
+            return redirect(url_for(target))
+
         if not pending_user_id:
             flash("Сначала войдите в систему.", "danger")
             return redirect(url_for("login"))
@@ -1003,9 +1013,12 @@ def register_routes(app):
         generated_codes = session.get("pending_setup_recovery_codes", [])
 
         if request.method == "POST":
-            if request.form.get("finish_setup") == "1":
+            if finish_setup_requested:
                 target = "account_settings" if from_settings else "index"
                 session.pop("pending_setup_recovery_codes", None)
+                session.pop("pending_otp_user_id", None)
+                session.pop("pending_otp_remember", None)
+                session.pop("otp_setup_from_settings", None)
                 return redirect(url_for(target))
 
             otp_code = request.form.get("otp_code", "").strip()
@@ -1021,9 +1034,6 @@ def register_routes(app):
 
             set_user_otp(user_row["id"], otp_secret, otp_enabled=True)
             remember_me = bool(session.get("pending_otp_remember"))
-            session.pop("pending_otp_user_id", None)
-            session.pop("pending_otp_remember", None)
-            session.pop("otp_setup_from_settings", None)
             authenticated_user = load_user_from_db(user_row["id"])
             login_user(authenticated_user, remember=remember_me)
             log_audit(current_app, "user_login_2fa_setup_completed", username=user_row["username"])
