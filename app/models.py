@@ -37,6 +37,16 @@ def get_user_by_id(user_id):
     return user
 
 
+def set_user_otp(user_id, otp_secret, otp_enabled=True):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE users SET otp_secret = ?, otp_enabled = ? WHERE id = ?",
+        (otp_secret, 1 if otp_enabled else 0, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # BUDGET
 # =========================================================

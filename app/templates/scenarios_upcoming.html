@@ -18,7 +18,10 @@
 
         <div class="car-tab-actions">
             <a href="{{ url_for('scenarios_export', scope='upcoming') }}" class="btn btn-success shootings-export-btn">Скачать Excel</a>
-            <a href="{{ url_for('scenarios_add') }}" class="car-tab-link shootings-add-tab {% if active_tab == 'add' %}car-tab-link-active{% endif %}">Добавить сценарий</a>
+            <a href="{{ url_for('scenarios_add') }}" class="car-tab-link shootings-add-tab {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
+                <span class="mobile-text-hidden">Добавить сценарий</span>
+                <span class="mobile-text-only">+добавить</span>
+            </a>
         </div>
     </div>
 

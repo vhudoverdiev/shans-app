@@ -118,6 +118,31 @@ a {
     flex-wrap: wrap;
 }
 
+.header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.account-profile-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.mobile-text-only {
+    display: none;
+}
+
 .header-user-name {
     font-size: 14px;
     font-weight: 600;

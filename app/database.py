@@ -118,9 +118,13 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            otp_secret TEXT,
+            otp_enabled INTEGER NOT NULL DEFAULT 0
         )
     """)
+    _add_column_if_not_exists(cursor, "users", "otp_secret", "TEXT")
+    _add_column_if_not_exists(cursor, "users", "otp_enabled", "INTEGER NOT NULL DEFAULT 0")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
