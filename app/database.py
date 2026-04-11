@@ -157,6 +157,18 @@ def init_db():
         )
     """)
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_login_sessions (
+            session_key TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            device TEXT NOT NULL,
+            browser TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            first_login_at TEXT NOT NULL,
+            last_seen_at TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS car_notification_hidden (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         notification_key TEXT NOT NULL UNIQUE,
