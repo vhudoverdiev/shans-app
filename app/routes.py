@@ -959,11 +959,30 @@ def register_routes(app):
     @login_required
     def account_settings():
         user_row = get_user_by_id(current_user.id)
+        security_preferences = session.get("account_security_preferences", {})
+        login_history = session.get("account_login_history", [])
+        current_entry = {
+            "device": (request.user_agent.platform or "Неизвестное устройство").capitalize(),
+            "browser": request.user_agent.browser or "Неизвестный браузер",
+            "ip": request.headers.get("X-Forwarded-For", request.remote_addr or "—"),
+            "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
+            "current": True,
+        }
+        login_history = [current_entry] + [
+            {**item, "current": False}
+            for item in login_history[:9]
+            if item.get("ip") != current_entry["ip"] or item.get("browser") != current_entry["browser"]
+        ]
+        session["account_login_history"] = login_history
+        recovery_codes = session.get("account_recovery_codes", [])
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
             avatar_url=_build_avatar_url(user_row),
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
+            security_preferences=security_preferences,
+            login_history=login_history,
+            recovery_codes=recovery_codes,
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])
@@ -1003,6 +1022,20 @@ def register_routes(app):
 
         set_user_avatar_filename(current_user.id, new_filename)
         flash("Аватарка обновлена.", "success")
+        return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/avatar/remove", methods=["POST"])
+    @login_required
+    def remove_account_avatar():
+        upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
+        user_row = get_user_by_id(current_user.id)
+        previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
+        if previous_filename:
+            previous_path = os.path.join(upload_dir, previous_filename)
+            if os.path.exists(previous_path):
+                os.remove(previous_path)
+        set_user_avatar_filename(current_user.id, "")
+        flash("Аватарка удалена.", "success")
         return redirect(url_for("account_settings"))
 
     @app.route("/account/settings/password", methods=["POST"])
@@ -1058,6 +1091,54 @@ def register_routes(app):
         set_user_otp(current_user.id, "", otp_enabled=False)
         flash("2FA отключена для аккаунта.", "success")
         return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/security/options", methods=["POST"])
+    @login_required
+    def update_account_security_options():
+        channel = request.form.get("two_factor_channel", "app").strip().lower()
+        recovery_email = request.form.get("recovery_email", "").strip()
+        recovery_phone = request.form.get("recovery_phone", "").strip()
+        allowed_channels = {"email", "sms", "app"}
+        if channel not in allowed_channels:
+            flash("Выберите корректный способ 2FA.", "danger")
+            return redirect(url_for("account_settings"))
+        if recovery_email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", recovery_email):
+            flash("Укажите корректный email для восстановления.", "danger")
+            return redirect(url_for("account_settings"))
+        if recovery_phone and not re.match(r"^\+?[0-9\- ()]{10,20}$", recovery_phone):
+            flash("Укажите корректный номер телефона.", "danger")
+            return redirect(url_for("account_settings"))
+
+        session["account_security_preferences"] = {
+            "two_factor_channel": channel,
+            "recovery_email": recovery_email,
+            "recovery_phone": recovery_phone,
+        }
+        flash("Параметры безопасности сохранены.", "success")
+        return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/recovery-codes", methods=["POST"])
+    @login_required
+    def regenerate_recovery_codes():
+        user_row = get_user_by_id(current_user.id)
+        password = request.form.get("password", "").strip()
+        if not user_row or not check_password_hash(user_row.get("password_hash", ""), password):
+            flash("Для генерации кодов введите корректный пароль.", "danger")
+            return redirect(url_for("account_settings"))
+        codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper() for _ in range(8)]
+        session["account_recovery_codes"] = codes
+        flash("Новые резервные коды сгенерированы. Сохраните их в безопасном месте.", "success")
+        return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/logout-all", methods=["POST"])
+    @login_required
+    def logout_all_devices():
+        username = current_user.username
+        session.clear()
+        logout_user()
+        log_audit(current_app, "user_logout_all_devices", username=username)
+        flash("Вы вышли из аккаунта на текущем устройстве. Рекомендуем сменить пароль для завершения остальных сессий.", "success")
+        return redirect(url_for("login"))
 
     @app.route("/logout")
     @login_required
