@@ -305,6 +305,8 @@ def _get_unified_logs(limit: int = 250) -> list[dict]:
 
         for line in lines:
             parsed = _parse_log_line(line)
+            if parsed.get("logger") != "audit":
+                continue
             timestamp_text = parsed.get("timestamp", "")
             timestamp_value = datetime.min
             if timestamp_text:
@@ -1260,7 +1262,6 @@ def register_routes(app):
         ]
         session["account_login_history"] = login_history
         recovery_codes = session.get("account_recovery_codes", [])
-        unified_logs = _get_unified_logs(limit=120)
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
@@ -1268,7 +1269,6 @@ def register_routes(app):
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
             login_history=login_history,
             recovery_codes=recovery_codes[:8],
-            unified_logs=unified_logs,
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])
@@ -2649,7 +2649,8 @@ def register_routes(app):
             flash("Раздел логов доступен только на ПК-версии.", "error")
             return redirect(url_for("index"))
 
-        access_granted = bool(session.get("logs_access_granted"))
+        session.pop("logs_access_granted", None)
+        access_granted = False
         logs_payload = []
         available_logs = []
         logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
@@ -2671,8 +2672,8 @@ def register_routes(app):
                     log_lines_limit=500,
                 )
 
-            access_granted = True
             session["logs_access_granted"] = True
+            access_granted = True
             logs_payload = _get_unified_logs(limit=500)
 
             if not logs_payload:
@@ -2685,9 +2686,6 @@ def register_routes(app):
                 available_logs=available_logs,
                 log_lines_limit=500,
             )
-
-        if access_granted:
-            logs_payload = _get_unified_logs(limit=500)
 
         return render_template(
             "site_logs.html",
