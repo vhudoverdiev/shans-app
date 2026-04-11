@@ -91,13 +91,9 @@
     }
 
     .account-profile-main-line {
-        position: sticky;
-        top: 72px;
-        z-index: 25;
         padding: 10px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(6px);
     }
 
     .account-profile-main-line .btn {

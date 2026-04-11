@@ -265,10 +265,7 @@ a {
 }
 
 .account-hero-card {
-    position: sticky;
-    top: 84px;
-    z-index: 20;
-    backdrop-filter: blur(8px);
+    position: static;
 }
 
 .account-avatar-hidden-form {
