@@ -91,7 +91,6 @@
         <div class="confirm-modal-backdrop"></div>
         <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
             <div class="confirm-modal-title" id="confirm-modal-title">Вы точно хотите удалить?</div>
-            <div class="confirm-modal-text" id="confirm-modal-text">Удалить запись?</div>
             <div class="confirm-modal-actions">
                 <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Отмена</button>
                 <button type="button" class="btn btn-danger" id="confirm-modal-approve">Удалить</button>
@@ -101,16 +100,14 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const confirmModal = document.getElementById("confirm-modal");
-            const confirmModalText = document.getElementById("confirm-modal-text");
             const confirmModalApprove = document.getElementById("confirm-modal-approve");
             const confirmModalCancel = document.getElementById("confirm-modal-cancel");
             let confirmResolver = null;
 
-            function openConfirmDialog(message) {
-                if (!confirmModal || !confirmModalText || !confirmModalApprove || !confirmModalCancel) {
-                    return Promise.resolve(window.confirm(message));
+            function openConfirmDialog() {
+                if (!confirmModal || !confirmModalApprove || !confirmModalCancel) {
+                    return Promise.resolve(window.confirm("Вы точно хотите удалить?"));
                 }
-                confirmModalText.textContent = message || "Удалить запись?";
                 confirmModal.hidden = false;
                 return new Promise(function (resolve) {
                     confirmResolver = resolve;
@@ -317,7 +314,7 @@
                             return;
                         }
                         event.preventDefault();
-                        const approved = await openConfirmDialog("Удалить выбранные записи?");
+                        const approved = await openConfirmDialog();
                         if (!approved) {
                             return;
                         }
@@ -336,7 +333,7 @@
                             checkboxes.forEach(function (item) { item.checked = true; });
                             syncState();
                         }
-                        const approved = await openConfirmDialog("Удалить все записи в этой таблице?");
+                        const approved = await openConfirmDialog();
                         if (!approved) {
                             return;
                         }
@@ -367,11 +364,9 @@
                 const hasDeleteIntent = /confirm\(/i.test(onsubmit) || action.includes("/delete") || submitTitle.includes("удал");
                 if (!hasDeleteIntent) return;
 
-                const match = onsubmit.match(/confirm\((['"`])(.+?)\1\)/);
-                const message = match ? match[2] : "Вы точно хотите удалить запись?";
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                const approved = await openConfirmDialog(message);
+                const approved = await openConfirmDialog();
                 if (!approved) return;
 
                 form.dataset.confirmHandled = "1";
