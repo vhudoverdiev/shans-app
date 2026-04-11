@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Логи системы | Шанс{% endblock %}
+
+{% block content %}
+<section class="car-page import-center-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Логи системы</h1>
+            <p class="import-center-subtitle">Просмотр технических журналов сайта в защищённом разделе.</p>
+        </div>
+    </div>
+
+    {% if not access_granted %}
+        <div class="card import-center-card import-center-lock-card">
+            <h2 class="section-title">Подтвердите доступ</h2>
+            <p class="muted">Для входа используйте пароль, как в разделе импорта данных.</p>
+            <form method="post" class="form-block import-center-form">
+                <input type="hidden" name="action" value="unlock">
+                <div class="form-group">
+                    <label for="logs-password">Пароль</label>
+                    <input id="logs-password"
+                           type="password"
+                           name="password"
+                           class="form-input"
+                           placeholder="Введите пароль"
+                           required>
+                </div>
+                <button type="submit" class="btn btn-primary">Открыть логи</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="card import-center-card">
+            <h2 class="section-title">Журналы событий</h2>
+            <form method="post" class="form-block import-center-form">
+                <input type="hidden" name="action" value="view">
+                <div class="form-group">
+                    <label for="log_name">Файл логов</label>
+                    <select id="log_name" name="log_name" class="form-input" required>
+                        {% for log_name in available_logs %}
+                            <option value="{{ log_name }}" {% if log_name == selected_log %}selected{% endif %}>{{ log_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="logs-password-repeat">Пароль подтверждения</label>
+                    <input id="logs-password-repeat"
+                           type="password"
+                           name="password"
+                           class="form-input"
+                           placeholder="Введите пароль ещё раз"
+                           required>
+                </div>
+                <button type="submit" class="btn btn-primary">Открыть файл</button>
+            </form>
+            <p class="muted import-center-hint">Показываются последние {{ log_lines_limit }} строк выбранного файла.</p>
+        </div>
+
+        {% for log in logs_payload %}
+            {% if log.is_selected %}
+                <div class="card import-center-card">
+                    <h3 class="section-title">{{ log.name }}</h3>
+                    <pre class="site-log-output">{{ log.content if log.content else 'Лог пока пуст.' }}</pre>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</section>
+{% endblock %}
