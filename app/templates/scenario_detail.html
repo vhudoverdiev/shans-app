@@ -19,7 +19,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Статус</div>
-            <div class="stat-value">{% if scenario.is_archive %}В архиве{% else %}Активный{% endif %}</div>
+            <div class="stat-value">{% if scenario.is_archive %}В архиве{% else %}{{ scenario.effective_status_label }}{% endif %}</div>
         </div>
     </div>
 

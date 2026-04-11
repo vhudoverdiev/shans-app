@@ -1426,15 +1426,37 @@ def _prepare_scenario(row):
         return None
 
     scenario = dict(row)
+    base_status = scenario.get("scenario_status") or "in_progress"
     scenario["shooting_date_display"] = _format_date_display(
         scenario.get("shooting_date")
     )
     shooting_date = scenario.get("shooting_date")
-    scenario["is_archive"] = bool(shooting_date and shooting_date < date.today().isoformat())
+    is_expired = bool(shooting_date and shooting_date < date.today().isoformat())
+    effective_status = "done" if is_expired else base_status
+    scenario["scenario_status"] = base_status
+    scenario["effective_status"] = effective_status
+    scenario["effective_status_label"] = "Выполнено" if effective_status == "done" else "В работе"
+    scenario["effective_status_class"] = "done" if effective_status == "done" else "work"
+    scenario["is_archive"] = effective_status == "done"
     return scenario
 
 
-def create_scenario(title, shooting_date, scenario_text):
+def _sync_expired_scenarios_status():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE scenarios
+        SET scenario_status = 'done'
+        WHERE scenario_status = 'in_progress' AND shooting_date < ?
+        """,
+        (date.today().isoformat(),),
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_scenario(title, shooting_date, scenario_text, scenario_status="in_progress"):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -1443,11 +1465,12 @@ def create_scenario(title, shooting_date, scenario_text):
         INSERT INTO scenarios (
             title,
             shooting_date,
+            scenario_status,
             scenario_text
         )
-        VALUES (?, ?, ?)
+        VALUES (?, ?, ?, ?)
         """,
-        (title, shooting_date, scenario_text),
+        (title, shooting_date, scenario_status, scenario_text),
     )
     conn.commit()
     scenario_id = cursor.lastrowid
@@ -1456,6 +1479,7 @@ def create_scenario(title, shooting_date, scenario_text):
 
 
 def get_upcoming_scenarios():
+    _sync_expired_scenarios_status()
     conn = get_connection()
     cursor = conn.cursor()
     today = date.today().isoformat()
@@ -1464,7 +1488,7 @@ def get_upcoming_scenarios():
         """
         SELECT *
         FROM scenarios
-        WHERE shooting_date >= ?
+        WHERE scenario_status = 'in_progress' AND shooting_date >= ?
         ORDER BY shooting_date ASC, id DESC
         """,
         (today,),
@@ -1475,6 +1499,7 @@ def get_upcoming_scenarios():
 
 
 def get_archived_scenarios():
+    _sync_expired_scenarios_status()
     conn = get_connection()
     cursor = conn.cursor()
     today = date.today().isoformat()
@@ -1483,7 +1508,7 @@ def get_archived_scenarios():
         """
         SELECT *
         FROM scenarios
-        WHERE shooting_date < ?
+        WHERE scenario_status = 'done' OR shooting_date < ?
         ORDER BY shooting_date DESC, id DESC
         """,
         (today,),
@@ -1494,6 +1519,7 @@ def get_archived_scenarios():
 
 
 def get_nearest_scenario():
+    _sync_expired_scenarios_status()
     conn = get_connection()
     cursor = conn.cursor()
     today = date.today().isoformat()
@@ -1502,7 +1528,7 @@ def get_nearest_scenario():
         """
         SELECT *
         FROM scenarios
-        WHERE shooting_date >= ?
+        WHERE scenario_status = 'in_progress' AND shooting_date >= ?
         ORDER BY shooting_date ASC, id DESC
         LIMIT 1
         """,
@@ -1514,6 +1540,7 @@ def get_nearest_scenario():
 
 
 def get_scenarios_count():
+    _sync_expired_scenarios_status()
     conn = get_connection()
     cursor = conn.cursor()
     today = date.today().isoformat()
@@ -1522,7 +1549,7 @@ def get_scenarios_count():
         """
         SELECT COUNT(*) AS total
         FROM scenarios
-        WHERE shooting_date >= ?
+        WHERE scenario_status = 'in_progress' AND shooting_date >= ?
         """,
         (today,),
     )
@@ -1532,6 +1559,7 @@ def get_scenarios_count():
 
 
 def get_scenario_by_id(scenario_id):
+    _sync_expired_scenarios_status()
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1547,7 +1575,7 @@ def get_scenario_by_id(scenario_id):
     return _prepare_scenario(row)
 
 
-def update_scenario(scenario_id, title, shooting_date, scenario_text):
+def update_scenario(scenario_id, title, shooting_date, scenario_text, scenario_status):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1556,10 +1584,31 @@ def update_scenario(scenario_id, title, shooting_date, scenario_text):
         SET
             title = ?,
             shooting_date = ?,
+            scenario_status = ?,
             scenario_text = ?
         WHERE id = ?
         """,
-        (title, shooting_date, scenario_text, scenario_id),
+        (title, shooting_date, scenario_status, scenario_text, scenario_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def toggle_scenario_status(scenario_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    row = cursor.execute(
+        "SELECT scenario_status FROM scenarios WHERE id = ?",
+        (scenario_id,),
+    ).fetchone()
+    if not row:
+        conn.close()
+        return
+    current_status = row["scenario_status"] or "in_progress"
+    next_status = "done" if current_status == "in_progress" else "in_progress"
+    cursor.execute(
+        "UPDATE scenarios SET scenario_status = ? WHERE id = ?",
+        (next_status, scenario_id),
     )
     conn.commit()
     conn.close()

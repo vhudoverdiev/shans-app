@@ -98,10 +98,17 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             shooting_date TEXT NOT NULL,
+            scenario_status TEXT NOT NULL DEFAULT 'in_progress',
             scenario_text TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    _add_column_if_not_exists(
+        cursor,
+        "scenarios",
+        "scenario_status",
+        "TEXT NOT NULL DEFAULT 'in_progress'",
+    )
     _add_column_if_not_exists(cursor, "scenarios", "scenario_text", "TEXT")
     _add_column_if_not_exists(cursor, "scenarios", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     # =========================================================

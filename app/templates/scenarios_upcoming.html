@@ -55,6 +55,7 @@
                         <th class="bulk-col"><input type="checkbox" class="bulk-select-all" aria-label="Выбрать все"></th>
                         <th>Название</th>
                         <th>Дата съёмки</th>
+                        <th>Статус</th>
                         <th>Сценарий</th>
                         <th>Действия</th>
                     </tr>
@@ -65,6 +66,11 @@
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ item.id }}" aria-label="Выбрать запись"></td>
                         <td>{{ item.title }}</td>
                         <td>{{ item.shooting_date_display }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('scenario_toggle_status', scenario_id=item.id) }}" class="inline-form" onsubmit="event.stopPropagation();">
+                                <button class="status-pill status-pill-{{ item.effective_status_class }}" type="submit">{{ item.effective_status_label }}</button>
+                            </form>
+                        </td>
                         <td>{{ item.scenario_text or '—' }}</td>
                         <td>
                             <div class="table-actions-icon">
