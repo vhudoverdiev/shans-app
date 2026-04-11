@@ -104,6 +104,7 @@ from app.models import (
     update_scenario,
     update_shooting,
     get_user_by_id,
+    get_login_session_owner,
     get_system_password,
     set_user_avatar_filename,
     set_user_last_login_ip,
@@ -1059,6 +1060,32 @@ def register_routes(app):
         )
         session["account_current_session_key"] = session_key
         return session_key
+
+    @app.before_request
+    def enforce_active_account_session():
+        if not current_user.is_authenticated:
+            return None
+
+        if request.endpoint in {"login", "static", "health"}:
+            return None
+
+        current_session_key = (session.get("account_current_session_key") or "").strip()
+        if not current_session_key:
+            return None
+
+        session_row = get_login_session_owner(current_session_key)
+        if not session_row:
+            return None
+
+        if session_row["user_id"] == current_user.id and int(session_row["is_active"]) == 1:
+            return None
+
+        username = current_user.username
+        session.clear()
+        logout_user()
+        log_audit(current_app, "user_logout_device_session_current", username=username)
+        flash("Сессия завершена в настройках аккаунта на другом устройстве.", "warning")
+        return redirect(url_for("login"))
 
     @app.route("/")
     @login_required

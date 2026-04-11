@@ -163,6 +163,20 @@ def deactivate_all_user_login_sessions(user_id):
     conn.close()
 
 
+def get_login_session_owner(session_key):
+    conn = get_connection()
+    row = conn.execute(
+        """
+        SELECT user_id, is_active
+        FROM user_login_sessions
+        WHERE session_key = ?
+        """,
+        (session_key,),
+    ).fetchone()
+    conn.close()
+    return row
+
+
 def get_system_password():
     conn = get_connection()
     row = conn.execute(
