@@ -824,12 +824,71 @@ def register_routes(app):
         if current_user.is_authenticated:
             return redirect(url_for("index"))
 
+        pending_user_id = session.get("pending_login_user_id")
+        pending_remember_me = bool(session.get("pending_login_remember"))
+        pending_user_row = get_user_by_id(pending_user_id) if pending_user_id else None
+
+        if pending_user_id and (not pending_user_row or not pending_user_row.get("otp_enabled")):
+            session.pop("pending_login_user_id", None)
+            session.pop("pending_login_remember", None)
+            pending_user_row = None
+            pending_remember_me = False
+
         if request.method == "POST":
+            stage = request.form.get("stage", "credentials")
+            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+
+            if stage == "otp":
+                otp_code = request.form.get("otp_code", "").strip()
+                if not pending_user_row:
+                    flash("Сессия входа истекла. Введите логин и пароль снова.", "warning")
+                    return render_template("login.html", login_stage="credentials"), 400
+
+                username = pending_user_row.get("username", "")
+                if is_login_rate_limited(username, ip_address):
+                    current_app.logger.warning(
+                        "Login rate limit triggered: username=%s ip=%s",
+                        username,
+                        ip_address,
+                    )
+                    flash("Слишком много попыток входа. Повторите позже.", "danger")
+                    return render_template(
+                        "login.html",
+                        login_stage="otp",
+                        pending_username=username,
+                    ), 429
+
+                if not verify_totp_code(pending_user_row.get("otp_secret"), otp_code):
+                    register_failed_login(username, ip_address)
+                    current_app.logger.warning(
+                        "Failed login (invalid otp): username=%s ip=%s",
+                        username,
+                        ip_address,
+                    )
+                    flash("Неверный код Google Authenticator.", "danger")
+                    return render_template(
+                        "login.html",
+                        login_stage="otp",
+                        pending_username=username,
+                    ), 401
+
+                authenticated_user = load_user_from_db(pending_user_row["id"])
+                if not authenticated_user:
+                    session.pop("pending_login_user_id", None)
+                    session.pop("pending_login_remember", None)
+                    flash("Пользователь не найден.", "danger")
+                    return render_template("login.html", login_stage="credentials"), 400
+
+                clear_failed_logins(username, ip_address)
+                session.pop("pending_login_user_id", None)
+                session.pop("pending_login_remember", None)
+                login_user(authenticated_user, remember=pending_remember_me)
+                log_audit(current_app, "user_login", username=authenticated_user.username)
+                return redirect(url_for("index"))
+
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "").strip()
-            otp_code = request.form.get("otp_code", "").strip()
             remember_me = request.form.get("remember_me") == "on"
-            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
 
             if is_login_rate_limited(username, ip_address):
                 current_app.logger.warning(
@@ -838,23 +897,24 @@ def register_routes(app):
                     ip_address,
                 )
                 flash("Слишком много попыток входа. Повторите позже.", "danger")
-                return render_template("login.html"), 429
+                return render_template("login.html", login_stage="credentials"), 429
 
             user = verify_user(username, password)
             if user:
                 db_user = get_user_by_id(user.id)
                 if db_user and db_user.get("otp_enabled"):
-                    if not verify_totp_code(db_user.get("otp_secret"), otp_code):
-                        register_failed_login(username, ip_address)
-                        current_app.logger.warning(
-                            "Failed login (invalid otp): username=%s ip=%s",
-                            username,
-                            ip_address,
-                        )
-                        flash("Неверный код Google Authenticator.", "danger")
-                        return render_template("login.html"), 401
+                    session["pending_login_user_id"] = user.id
+                    session["pending_login_remember"] = 1 if remember_me else 0
+                    flash("Логин и пароль верны. Введите код Google Authenticator.", "info")
+                    return render_template(
+                        "login.html",
+                        login_stage="otp",
+                        pending_username=user.username,
+                    )
 
                 clear_failed_logins(username, ip_address)
+                session.pop("pending_login_user_id", None)
+                session.pop("pending_login_remember", None)
                 login_user(user, remember=remember_me)
                 log_audit(current_app, "user_login", username=user.username)
                 return redirect(url_for("index"))
@@ -862,8 +922,16 @@ def register_routes(app):
             register_failed_login(username, ip_address)
             current_app.logger.warning("Failed login: username=%s ip=%s", username, ip_address)
             flash("Неверный логин или пароль.", "danger")
+            return render_template("login.html", login_stage="credentials"), 401
 
-        return render_template("login.html")
+        if pending_user_row and pending_user_row.get("otp_enabled"):
+            return render_template(
+                "login.html",
+                login_stage="otp",
+                pending_username=pending_user_row["username"],
+            )
+
+        return render_template("login.html", login_stage="credentials")
 
     @app.route("/setup-2fa", methods=["GET", "POST"])
     def setup_2fa():
