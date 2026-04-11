@@ -88,6 +88,7 @@ from app.models import (
     get_scenario_by_id,
     get_scenarios_count,
     get_upcoming_scenarios,
+    toggle_scenario_status,
     update_scenario,
     update_shooting,
 )
@@ -1462,17 +1463,21 @@ def register_routes(app):
     @app.route("/scenarios/add", methods=["GET", "POST"])
     @login_required
     def scenarios_add():
-        form_data = {"title": "", "shooting_date": "", "scenario_text": ""}
+        form_data = {"title": "", "shooting_date": "", "scenario_text": "", "scenario_status": "in_progress"}
 
         if request.method == "POST":
             title = request.form.get("title", "").strip()
             shooting_date = request.form.get("shooting_date", "").strip()
             scenario_text = request.form.get("scenario_text", "").strip()
+            scenario_status = request.form.get("scenario_status", "in_progress").strip()
             form_data = {
                 "title": title,
                 "shooting_date": shooting_date,
                 "scenario_text": scenario_text,
+                "scenario_status": scenario_status,
             }
+            if scenario_status not in ["in_progress", "done"]:
+                scenario_status = "in_progress"
 
             if not title or not shooting_date:
                 flash("Заполните обязательные поля: название и дата съёмки.", "danger")
@@ -1488,7 +1493,12 @@ def register_routes(app):
                 flash("Текст сценария не должен превышать 700 символов.", "danger")
                 return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
 
-            scenario_id = create_scenario(title=title, shooting_date=shooting_date, scenario_text=scenario_text)
+            scenario_id = create_scenario(
+                title=title,
+                shooting_date=shooting_date,
+                scenario_text=scenario_text,
+                scenario_status=scenario_status,
+            )
             log_audit(current_app, "scenario_created", scenario_id=scenario_id, title=title)
             flash("Сценарий успешно добавлен.", "success")
             return redirect(url_for("scenarios_upcoming"))
@@ -1556,6 +1566,9 @@ def register_routes(app):
             title = request.form.get("title", "").strip()
             shooting_date = request.form.get("shooting_date", "").strip()
             scenario_text = request.form.get("scenario_text", "").strip()
+            scenario_status = request.form.get("scenario_status", "in_progress").strip()
+            if scenario_status not in ["in_progress", "done"]:
+                scenario_status = "in_progress"
 
             if not title or not shooting_date:
                 flash("Заполните обязательные поля: название и дата съёмки.", "danger")
@@ -1576,12 +1589,29 @@ def register_routes(app):
                 title=title,
                 shooting_date=shooting_date,
                 scenario_text=scenario_text,
+                scenario_status=scenario_status,
             )
             log_audit(current_app, "scenario_updated", scenario_id=scenario_id)
             flash("Сценарий обновлён.", "success")
             return redirect(url_for("scenario_detail", scenario_id=scenario_id))
 
         return render_template("scenario_edit.html", scenario=scenario)
+
+    @app.route("/scenarios/<int:scenario_id>/toggle-status", methods=["POST"])
+    @login_required
+    def scenario_toggle_status(scenario_id):
+        scenario = get_scenario_by_id(scenario_id)
+        if not scenario:
+            flash("Сценарий не найден.", "danger")
+            return redirect(url_for("scenarios_upcoming"))
+
+        toggle_scenario_status(scenario_id)
+        log_audit(current_app, "scenario_status_toggled", scenario_id=scenario_id)
+        flash("Статус сценария обновлён.", "success")
+        updated_scenario = get_scenario_by_id(scenario_id)
+        if updated_scenario and updated_scenario.get("is_archive"):
+            return redirect(url_for("scenarios_archive"))
+        return redirect(url_for("scenarios_upcoming"))
 
     @app.route("/scenarios/<int:scenario_id>/delete", methods=["POST"])
     @login_required

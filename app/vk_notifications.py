@@ -187,7 +187,7 @@ def _build_tomorrow_tasks_text(now_local: datetime) -> str:
     conn = get_connection()
     tasks = conn.execute(
         """
-        SELECT title, start_time, description
+        SELECT title, start_time, description, task_type
         FROM schedule_tasks
         WHERE task_date = ? AND status = 'planned'
         ORDER BY COALESCE(start_time, '99:99') ASC, id ASC
@@ -196,23 +196,26 @@ def _build_tomorrow_tasks_text(now_local: datetime) -> str:
     ).fetchall()
     conn.close()
 
+    header = f"Задачи на завтра ({tomorrow.strftime('%d.%m.%Y')}):"
     if not tasks:
-        return f"График на завтра ({tomorrow.strftime('%d.%m.%Y')}): задач нет."
+        return f"{header}\nЗадач нет."
 
-    lines = [f"График на завтра ({tomorrow.strftime('%d.%m.%Y')}):"]
+    lines = [header, ""]
     for idx, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
         start_time = (task["start_time"] or "").strip()
         description = (task["description"] or "").strip()
-        time_part = f"[{start_time}] " if start_time else ""
-        row = f"{idx}. {time_part}{title}"
-        if description:
+        task_type = (task["task_type"] or "").strip()
+        time_part = start_time if start_time else "—"
+        row = f"{idx}. {time_part} — {title}"
+        if description and task_type not in ["Съёмка", "Фотопроект"]:
             short_description = description.replace("\n", " ")
             if len(short_description) > 120:
                 short_description = short_description[:117] + "..."
             row += f" — {short_description}"
         lines.append(row)
 
+    lines.extend(["", f"Всего задач: {len(tasks)}"])
     return "\n".join(lines)
 
 

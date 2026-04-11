@@ -31,6 +31,13 @@
                     <label for="shooting_date">Дата съёмки</label>
                     <input id="shooting_date" name="shooting_date" type="date" class="form-input" value="{{ form_data.shooting_date }}" required>
                 </div>
+                <div class="form-group">
+                    <label for="scenario_status">Статус</label>
+                    <select id="scenario_status" name="scenario_status" class="form-input">
+                        <option value="in_progress" {% if form_data.scenario_status != 'done' %}selected{% endif %}>В работе</option>
+                        <option value="done" {% if form_data.scenario_status == 'done' %}selected{% endif %}>Выполнено</option>
+                    </select>
+                </div>
 
                 <div class="form-group car-form-full">
                     <label for="scenario_text">Сценарий</label>
