@@ -16,10 +16,12 @@
             Обязательно сохраните эти коды в надёжном месте (например, в менеджере паролей или на бумаге).
             Каждый код одноразовый и поможет войти, если нет доступа к Google Authenticator.
         </p>
-        <div class="account-codes-grid">
-            {% for code in recovery_codes %}
-            <div class="account-code-item">{{ code }}</div>
-            {% endfor %}
+        <div class="recovery-codes-card">
+            <div class="account-codes-grid">
+                {% for code in recovery_codes %}
+                <div class="account-code-item">{{ code }}</div>
+                {% endfor %}
+            </div>
         </div>
         <form method="POST" class="form-block account-inline-form-spaced">
             <input type="hidden" name="finish_setup" value="1">

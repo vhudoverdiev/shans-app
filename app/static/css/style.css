@@ -158,8 +158,14 @@ a {
 }
 
 .account-profile-main-line {
-    justify-content: space-between;
+    justify-content: flex-start;
     flex-wrap: wrap;
+}
+
+.account-profile-userline {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
 .account-settings-subtitle {
@@ -183,7 +189,6 @@ a {
 
 .account-tab-content {
     display: none;
-    animation: accountFade 0.24s ease;
 }
 
 .account-tab-content-active {
@@ -276,7 +281,6 @@ a {
     gap: 16px;
     margin: 10px 0 16px;
     align-items: start;
-    animation: accountFade 0.25s ease;
 }
 
 .avatar-crop-stage {
@@ -344,6 +348,44 @@ a {
     border-radius: 999px;
     border: 1px solid #d3deee;
     background: #ffffff;
+}
+
+.avatar-file-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.avatar-file-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+}
+
+.avatar-file-selected {
+    margin-top: 10px;
+    border: 1px dashed #bfd2f3;
+    border-radius: 10px;
+    background: #f8fbff;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #334155;
+}
+
+.recovery-codes-card {
+    margin-top: 16px;
+    border: 1px solid #d8e3f7;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    padding: 14px;
 }
 
 @keyframes accountFade {

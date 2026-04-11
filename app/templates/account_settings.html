@@ -19,27 +19,29 @@
                 <span id="avatar-preview-letter">{{ avatar_letter }}</span>
                 {% endif %}
             </div>
-            <div>
-                <div class="stat-label">Пользователь</div>
-                <div class="stat-value">{{ current_user.username }}</div>
+            <div class="account-profile-userline">
+                <span class="stat-label">Пользователь:</span>
+                <span class="stat-value">{{ current_user.username }}</span>
             </div>
         </div>
 
         <div class="account-nav" role="tablist" aria-label="Разделы настроек">
             <button type="button" class="btn btn-tab account-tab-btn btn-tab-active" data-account-tab="profile">Профиль</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
+            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
         </div>
     </div>
 
     <div class="account-tab-content account-tab-content-active" data-account-panel="profile">
-        <div class="account-grid account-grid-two">
+        <div class="account-grid">
             <div class="card account-card account-card-glow">
                 <h2 class="section-title">Фото профиля</h2>
                 <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form" id="avatar-upload-form">
                     <div class="form-group">
-                        <label for="avatar_file">Выберите изображение</label>
-                        <input type="file" id="avatar_file" name="avatar_file" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
-                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
+                        <label for="avatar_file" class="avatar-file-label">Выберите файл</label>
+                        <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
+                        <div class="avatar-file-selected" id="avatar-file-selected">Файл не выбран</div>
+                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ. После выбора сможете обрезать фото и посмотреть предпросмотр.</small>
                         <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data">
                     </div>
 
@@ -68,11 +70,6 @@
                 </form>
             </div>
 
-            <div class="card account-card">
-                <h2 class="section-title">Импорт данных</h2>
-                <p class="muted-text">Переносите данные из таблиц и файлов в пару кликов.</p>
-                <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
-            </div>
         </div>
     </div>
 
@@ -123,7 +120,7 @@
                 </form>
                 {% endif %}
 
-                {% if recovery_codes %}
+                {% if otp_enabled and recovery_codes %}
                 <div class="account-inline-form-spaced">
                     <h3 class="section-subtitle">Резервные коды</h3>
                     <p class="muted-text">Сохраните коды в надёжном месте. Они помогут восстановить доступ.</p>
@@ -146,6 +143,7 @@
                                 <th>Браузер</th>
                                 <th>IP</th>
                                 <th>Дата входа</th>
+                                <th>Действие</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,6 +153,19 @@
                                 <td>{{ item.browser }}</td>
                                 <td>{{ item.ip }}</td>
                                 <td>{{ item.date }}</td>
+                                <td>
+                                    {% if item.current %}
+                                    <form method="post" action="{{ url_for('logout_device_session') }}" class="inline-form">
+                                        <input type="hidden" name="session_key" value="{{ item.session_key }}">
+                                        <button type="submit" class="btn btn-danger btn-small">Выйти</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" action="{{ url_for('logout_device_session') }}" class="inline-form">
+                                        <input type="hidden" name="session_key" value="{{ item.session_key }}">
+                                        <button type="submit" class="btn btn-secondary btn-small">Завершить</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -163,6 +174,16 @@
                 <form method="post" action="{{ url_for('logout_all_devices') }}" class="inline-form account-inline-form-spaced">
                     <button type="submit" class="btn btn-danger">Выйти со всех устройств</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-tab-content" data-account-panel="import">
+        <div class="account-grid">
+            <div class="card account-card">
+                <h2 class="section-title">Импорт данных</h2>
+                <p class="muted-text">Переносите данные из таблиц и файлов в пару кликов.</p>
+                <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
             </div>
         </div>
     </div>
@@ -189,6 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const avatarInput = document.getElementById("avatar_file");
+    const selectedFileLabel = document.getElementById("avatar-file-selected");
     const previewBox = document.getElementById("avatar-preview-box");
     const cropLayout = document.getElementById("avatar-crop-layout");
     const cropImage = document.getElementById("avatar-crop-image");
@@ -281,6 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
         avatarInput.addEventListener("change", function () {
             const file = avatarInput.files && avatarInput.files[0];
             if (!file) return;
+            if (selectedFileLabel) {
+                selectedFileLabel.textContent = "Выбран файл: " + file.name;
+            }
             startCropForFile(file);
         });
     }
