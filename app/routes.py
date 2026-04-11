@@ -9,6 +9,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     send_file,
     url_for,
 )
@@ -21,7 +22,10 @@ from flask_login import (
 from openpyxl import load_workbook
 
 from app.auth import (
+    generate_totp_secret,
+    load_user_from_db,
     verify_user,
+    verify_totp_code,
     is_login_rate_limited,
     register_failed_login,
     clear_failed_logins,
@@ -91,6 +95,8 @@ from app.models import (
     toggle_scenario_status,
     update_scenario,
     update_shooting,
+    get_user_by_id,
+    set_user_otp,
 )
 from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
@@ -791,6 +797,9 @@ def _collect_budget_categories(entries):
 
 
 def register_routes(app):
+    def _build_avatar_letter(username: str) -> str:
+        return (username or "?").strip()[:1].upper() or "?"
+
     @app.route("/")
     @login_required
     def index():
@@ -804,6 +813,7 @@ def register_routes(app):
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "").strip()
+            otp_code = request.form.get("otp_code", "").strip()
             remember_me = request.form.get("remember_me") == "on"
             ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
 
@@ -818,6 +828,27 @@ def register_routes(app):
 
             user = verify_user(username, password)
             if user:
+                db_user = get_user_by_id(user.id)
+                if db_user and db_user.get("otp_enabled"):
+                    if not verify_totp_code(db_user.get("otp_secret"), otp_code):
+                        register_failed_login(username, ip_address)
+                        current_app.logger.warning(
+                            "Failed login (invalid otp): username=%s ip=%s",
+                            username,
+                            ip_address,
+                        )
+                        flash("Неверный код Google Authenticator.", "danger")
+                        return render_template("login.html"), 401
+                else:
+                    pending_secret = db_user.get("otp_secret") if db_user else ""
+                    if not pending_secret:
+                        pending_secret = generate_totp_secret()
+                        if db_user:
+                            set_user_otp(user.id, pending_secret, otp_enabled=False)
+                    session["pending_otp_user_id"] = user.id
+                    session["pending_otp_remember"] = 1 if remember_me else 0
+                    return redirect(url_for("setup_2fa"))
+
                 clear_failed_logins(username, ip_address)
                 login_user(user, remember=remember_me)
                 log_audit(current_app, "user_login", username=user.username)
@@ -828,6 +859,72 @@ def register_routes(app):
             flash("Неверный логин или пароль.", "danger")
 
         return render_template("login.html")
+
+    @app.route("/setup-2fa", methods=["GET", "POST"])
+    def setup_2fa():
+        pending_user_id = session.get("pending_otp_user_id")
+        if not pending_user_id:
+            flash("Сначала войдите в систему.", "danger")
+            return redirect(url_for("login"))
+
+        user_row = get_user_by_id(pending_user_id)
+        if not user_row:
+            session.pop("pending_otp_user_id", None)
+            session.pop("pending_otp_remember", None)
+            flash("Пользователь не найден.", "danger")
+            return redirect(url_for("login"))
+
+        otp_secret = user_row.get("otp_secret") or generate_totp_secret()
+        if not user_row.get("otp_secret"):
+            set_user_otp(user_row["id"], otp_secret, otp_enabled=False)
+            user_row = get_user_by_id(pending_user_id)
+
+        app_name = "Shans App"
+        otp_uri = (
+            f"otpauth://totp/{app_name}:{user_row['username']}"
+            f"?secret={otp_secret}&issuer={app_name}"
+        )
+        qr_url = f"https://quickchart.io/qr?text={otp_uri}&size=220"
+
+        if request.method == "POST":
+            otp_code = request.form.get("otp_code", "").strip()
+            if not verify_totp_code(otp_secret, otp_code):
+                flash("Код не подошёл. Проверьте код в Google Authenticator.", "danger")
+                return render_template(
+                    "setup_2fa.html",
+                    user=user_row,
+                    otp_secret=otp_secret,
+                    otp_uri=otp_uri,
+                    qr_url=qr_url,
+                )
+
+            set_user_otp(user_row["id"], otp_secret, otp_enabled=True)
+            remember_me = bool(session.get("pending_otp_remember"))
+            session.pop("pending_otp_user_id", None)
+            session.pop("pending_otp_remember", None)
+            authenticated_user = load_user_from_db(user_row["id"])
+            login_user(authenticated_user, remember=remember_me)
+            log_audit(current_app, "user_login_2fa_setup_completed", username=user_row["username"])
+            flash("Google Authenticator подключён. Теперь вход защищён 2FA.", "success")
+            return redirect(url_for("index"))
+
+        return render_template(
+            "setup_2fa.html",
+            user=user_row,
+            otp_secret=otp_secret,
+            otp_uri=otp_uri,
+            qr_url=qr_url,
+        )
+
+    @app.route("/account/settings")
+    @login_required
+    def account_settings():
+        user_row = get_user_by_id(current_user.id)
+        return render_template(
+            "account_settings.html",
+            avatar_letter=_build_avatar_letter(current_user.username),
+            otp_enabled=bool(user_row and user_row.get("otp_enabled")),
+        )
 
     @app.route("/logout")
     @login_required

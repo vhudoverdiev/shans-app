@@ -43,6 +43,10 @@
                    aria-label="Импорт данных">
                     <span class="top-nav-import-icon">⤴</span>
                 </a>
+                <a href="{{ url_for('account_settings') }}" class="header-avatar" title="Настройки аккаунта">
+                    {{ (current_user.username[:1] if current_user.username else '?')|upper }}
+                </a>
+                <a href="{{ url_for('account_settings') }}" class="btn btn-secondary">Настройки аккаунта</a>
                 <a href="{{ url_for('logout') }}" class="btn btn-danger btn-logout">Выйти</a>
             </div>
         </div>

@@ -57,6 +57,14 @@
         border-radius: 12px;
     }
 
+    .mobile-text-hidden {
+        display: none;
+    }
+
+    .mobile-text-only {
+        display: inline;
+    }
+
     .page-header {
         margin-bottom: 14px;
         gap: 10px;

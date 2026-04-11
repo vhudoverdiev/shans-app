@@ -1,6 +1,9 @@
 import logging
 import os
 import secrets
+import base64
+import hashlib
+import hmac
 from datetime import datetime, timedelta, timezone
 
 from flask_login import UserMixin
@@ -18,10 +21,11 @@ class User(UserMixin):
     """
     Класс пользователя для Flask-Login.
     """
-    def __init__(self, user_id, username, password_hash):
+    def __init__(self, user_id, username, password_hash, otp_enabled=False):
         self.id = user_id
         self.username = username
         self.password_hash = password_hash
+        self.otp_enabled = bool(otp_enabled)
 
 
 def create_admin_if_not_exists():
@@ -50,9 +54,10 @@ def create_admin_if_not_exists():
 
     if not existing_user:
         password_hash = generate_password_hash(admin_password)
+        otp_secret = generate_totp_secret()
         cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (admin_username, password_hash)
+            "INSERT INTO users (username, password_hash, otp_secret, otp_enabled) VALUES (?, ?, ?, 1)",
+            (admin_username, password_hash, otp_secret)
         )
         conn.commit()
         if generated_password:
@@ -60,6 +65,14 @@ def create_admin_if_not_exists():
                 "ADMIN_PASSWORD не задан. Создан временный пароль администратора: %s",
                 generated_password,
             )
+
+    if existing_user and (not existing_user.get("otp_secret") or not existing_user.get("otp_enabled")):
+        otp_secret = existing_user.get("otp_secret") or generate_totp_secret()
+        cursor.execute(
+            "UPDATE users SET otp_secret = ?, otp_enabled = 1 WHERE id = ?",
+            (otp_secret, existing_user["id"]),
+        )
+        conn.commit()
 
     conn.close()
 
@@ -123,7 +136,12 @@ def verify_user(username, password):
     conn.close()
 
     if user and check_password_hash(user["password_hash"], password):
-        return User(user["id"], user["username"], user["password_hash"])
+        return User(
+            user["id"],
+            user["username"],
+            user["password_hash"],
+            user.get("otp_enabled", 0),
+        )
 
     return None
 
@@ -134,5 +152,45 @@ def load_user_from_db(user_id):
     """
     user = get_user_by_id(user_id)
     if user:
-        return User(user["id"], user["username"], user["password_hash"])
+        return User(
+            user["id"],
+            user["username"],
+            user["password_hash"],
+            user.get("otp_enabled", 0),
+        )
     return None
+
+
+def generate_totp_secret():
+    raw = secrets.token_bytes(20)
+    return base64.b32encode(raw).decode("utf-8").rstrip("=")
+
+
+def _totp_code_for_counter(secret: str, counter: int) -> str:
+    normalized = (secret or "").strip().replace(" ", "").upper()
+    if not normalized:
+        return ""
+    padding = "=" * ((8 - (len(normalized) % 8)) % 8)
+    key = base64.b32decode(normalized + padding)
+    counter_bytes = counter.to_bytes(8, "big")
+    digest = hmac.new(key, counter_bytes, hashlib.sha1).digest()
+    offset = digest[-1] & 0x0F
+    binary = (
+        ((digest[offset] & 0x7F) << 24)
+        | ((digest[offset + 1] & 0xFF) << 16)
+        | ((digest[offset + 2] & 0xFF) << 8)
+        | (digest[offset + 3] & 0xFF)
+    )
+    return f"{binary % 1000000:06d}"
+
+
+def verify_totp_code(secret: str, code: str, drift_windows: int = 1) -> bool:
+    cleaned_code = (code or "").strip().replace(" ", "")
+    if len(cleaned_code) != 6 or not cleaned_code.isdigit():
+        return False
+    now_counter = int(datetime.now(timezone.utc).timestamp() // 30)
+    for offset in range(-drift_windows, drift_windows + 1):
+        expected_code = _totp_code_for_counter(secret, now_counter + offset)
+        if expected_code and hmac.compare_digest(expected_code, cleaned_code):
+            return True
+    return False
