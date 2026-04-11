@@ -351,7 +351,6 @@ def build_scenarios_excel(scenarios, report_title):
     ws.title = "Сценарии"
 
     title_fill = PatternFill("solid", fgColor="1E3A8A")
-    subtitle_fill = PatternFill("solid", fgColor="E0E7FF")
     header_fill = PatternFill("solid", fgColor="C7D2FE")
     odd_row_fill = PatternFill("solid", fgColor="EEF2FF")
     even_row_fill = PatternFill("solid", fgColor="FFFFFF")
@@ -369,14 +368,8 @@ def build_scenarios_excel(scenarios, report_title):
     ws["A1"].font = white_bold_font
     ws["A1"].alignment = center
 
-    ws.merge_cells("A3:D3")
-    ws["A3"] = "Экспорт сценариев"
-    ws["A3"].fill = subtitle_fill
-    ws["A3"].font = bold_font
-    ws["A3"].alignment = left
-
     headers = ["Название", "Дата съёмки", "Статус", "Сценарий"]
-    headers_row = 5
+    headers_row = 4
     for col_index, header in enumerate(headers, start=1):
         cell = ws.cell(row=headers_row, column=col_index)
         cell.value = header
@@ -407,7 +400,7 @@ def build_scenarios_excel(scenarios, report_title):
     for col_index, width in column_widths.items():
         ws.column_dimensions[get_column_letter(col_index)].width = width
 
-    ws.freeze_panes = "A6"
+    ws.freeze_panes = "A5"
     output = BytesIO()
     wb.save(output)
     output.seek(0)
