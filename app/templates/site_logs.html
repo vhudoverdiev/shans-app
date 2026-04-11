@@ -43,7 +43,6 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Показать логи за период</button>
             </form>
-            <p class="muted import-center-hint" id="logs-last-update"></p>
         </div>
 
         <div class="card import-center-card">
@@ -65,7 +64,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const humanContainer = document.getElementById("human-log-container");
-    const lastUpdateNode = document.getElementById("logs-last-update");
     const filterForm = document.getElementById("logs-filter-form");
     const startInput = document.getElementById("logs-start-dt");
     const endInput = document.getElementById("logs-end-dt");
@@ -107,11 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     row.textContent = line;
                     humanContainer.appendChild(row);
                 });
-            }
-            if (lastUpdateNode && payload.updated_at) {
-                const startText = payload.period && payload.period.start ? payload.period.start : "начало не задано";
-                const endText = payload.period && payload.period.end ? payload.period.end : "конец не задан";
-                lastUpdateNode.textContent = `Период: ${startText} — ${endText}. Последнее обновление: ${payload.updated_at}`;
             }
             scrollLogsToBottom();
         } catch (error) {
