@@ -57,7 +57,7 @@ def create_admin_if_not_exists():
         password_hash = generate_password_hash(admin_password)
         otp_secret = generate_totp_secret()
         cursor.execute(
-            "INSERT INTO users (username, password_hash, otp_secret, otp_enabled) VALUES (?, ?, ?, 1)",
+            "INSERT INTO users (username, password_hash, otp_secret, otp_enabled) VALUES (?, ?, ?, 0)",
             (admin_username, password_hash, otp_secret)
         )
         conn.commit()
@@ -67,10 +67,10 @@ def create_admin_if_not_exists():
                 generated_password,
             )
 
-    if existing_user and (not existing_user.get("otp_secret") or not existing_user.get("otp_enabled")):
-        otp_secret = existing_user.get("otp_secret") or generate_totp_secret()
+    if existing_user and not existing_user.get("otp_secret"):
+        otp_secret = generate_totp_secret()
         cursor.execute(
-            "UPDATE users SET otp_secret = ?, otp_enabled = 1 WHERE id = ?",
+            "UPDATE users SET otp_secret = ? WHERE id = ?",
             (otp_secret, existing_user["id"]),
         )
         conn.commit()
