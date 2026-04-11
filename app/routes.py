@@ -853,15 +853,6 @@ def register_routes(app):
                         )
                         flash("Неверный код Google Authenticator.", "danger")
                         return render_template("login.html"), 401
-                else:
-                    pending_secret = db_user.get("otp_secret") if db_user else ""
-                    if not pending_secret:
-                        pending_secret = generate_totp_secret()
-                        if db_user:
-                            set_user_otp(user.id, pending_secret, otp_enabled=False)
-                    session["pending_otp_user_id"] = user.id
-                    session["pending_otp_remember"] = 1 if remember_me else 0
-                    return redirect(url_for("setup_2fa"))
 
                 clear_failed_logins(username, ip_address)
                 login_user(user, remember=remember_me)
