@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Логи системы | Шанс{% endblock %}
+{% block title %}Логи действий пользователя | Шанс{% endblock %}
 
 {% block content %}
 <section class="car-page import-center-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Логи системы</h1>
-            <p class="import-center-subtitle">Просмотр технических журналов сайта в защищённом разделе.</p>
+            <h1 class="page-title">Логи действий пользователя</h1>
+            <p class="import-center-subtitle">Просмотр действий пользователя на сайте в защищённом разделе.</p>
         </div>
     </div>
 
     {% if not access_granted %}
         <div class="card import-center-card import-center-lock-card">
             <h2 class="section-title">Подтвердите доступ</h2>
-            <p class="muted">Для входа используйте пароль, как в разделе импорта данных.</p>
+            <p class="muted">Для входа используйте системный пароль, как в разделе импорта данных.</p>
             <form method="post" class="form-block import-center-form">
                 <input type="hidden" name="action" value="unlock">
                 <div class="form-group">
@@ -31,20 +31,8 @@
         </div>
     {% else %}
         <div class="card import-center-card">
-            <h2 class="section-title">Журналы событий</h2>
-            <form method="post" class="form-block import-center-form">
-                <div class="form-group">
-                    <label for="logs-password-repeat">Пароль подтверждения</label>
-                    <input id="logs-password-repeat"
-                           type="password"
-                           name="password"
-                           class="form-input"
-                           placeholder="Введите пароль ещё раз"
-                           required>
-                </div>
-                <button type="submit" class="btn btn-primary">Обновить журнал</button>
-            </form>
-            <p class="muted import-center-hint">Показывается единый журнал из всех файлов логов. Обновление каждые 5 секунд.</p>
+            <h2 class="section-title">Журнал действий пользователя</h2>
+            <p class="muted import-center-hint">Показываются только события, которые совершал пользователь на сайте. Обновление каждые 5 секунд.</p>
             <p class="muted import-center-hint" id="logs-last-update"></p>
         </div>
 

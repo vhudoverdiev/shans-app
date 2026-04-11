@@ -36,7 +36,7 @@
             <button type="button" class="btn btn-tab account-tab-btn btn-tab-active" data-account-tab="profile">Профиль</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
-            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="logs">Логи</button>
+            <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link">Логи</a>
         </div>
     </div>
 
@@ -227,24 +227,6 @@
         </div>
     </div>
 
-    <div class="account-tab-content" data-account-panel="logs">
-        <div class="account-grid">
-            <div class="card account-card account-card-glow">
-                <h2 class="section-title">Логи активности</h2>
-                <p class="muted-text">Единый журнал действий пользователя на сайте в понятном формате.</p>
-                <div class="site-log-output-human">
-                    {% if unified_logs %}
-                        {% for item in unified_logs %}
-                            <div class="site-log-row">{{ item.humanized }}</div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="site-log-row">Логи пока пусты.</div>
-                    {% endif %}
-                </div>
-                <a href="{{ url_for('site_logs') }}" class="btn btn-secondary">Открыть расширенный раздел логов</a>
-            </div>
-        </div>
-    </div>
 </section>
 
 <script>
@@ -254,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
     const allowedTabs = isMobileViewport
         ? new Set(["profile", "security"])
-        : new Set(["profile", "security", "import", "logs"]);
+        : new Set(["profile", "security", "import"]);
 
     function activateTab(target) {
         if (!target) return;
