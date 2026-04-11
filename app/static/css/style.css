@@ -4569,3 +4569,6 @@ a {
     width: 100%;
     min-height: 0;
 }
+.photo-projects-add-icon {
+    display: none;
+}
