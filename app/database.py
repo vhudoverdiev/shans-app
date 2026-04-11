@@ -120,11 +120,13 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             otp_secret TEXT,
-            otp_enabled INTEGER NOT NULL DEFAULT 0
+            otp_enabled INTEGER NOT NULL DEFAULT 0,
+            avatar_filename TEXT
         )
     """)
     _add_column_if_not_exists(cursor, "users", "otp_secret", "TEXT")
     _add_column_if_not_exists(cursor, "users", "otp_enabled", "INTEGER NOT NULL DEFAULT 0")
+    _add_column_if_not_exists(cursor, "users", "avatar_filename", "TEXT")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (

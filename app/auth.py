@@ -21,11 +21,12 @@ class User(UserMixin):
     """
     Класс пользователя для Flask-Login.
     """
-    def __init__(self, user_id, username, password_hash, otp_enabled=False):
+    def __init__(self, user_id, username, password_hash, otp_enabled=False, avatar_filename=None):
         self.id = user_id
         self.username = username
         self.password_hash = password_hash
         self.otp_enabled = bool(otp_enabled)
+        self.avatar_filename = avatar_filename
 
 
 def create_admin_if_not_exists():
@@ -141,6 +142,7 @@ def verify_user(username, password):
             user["username"],
             user["password_hash"],
             user.get("otp_enabled", 0),
+            user.get("avatar_filename"),
         )
 
     return None
@@ -157,6 +159,7 @@ def load_user_from_db(user_id):
             user["username"],
             user["password_hash"],
             user.get("otp_enabled", 0),
+            user.get("avatar_filename"),
         )
     return None
 
