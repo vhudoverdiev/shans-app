@@ -514,6 +514,28 @@ a {
     word-break: break-word;
 }
 
+.site-log-output-human {
+    margin: 0;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #d8e3f7;
+    background: #f8fbff;
+    color: #0f172a;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: auto;
+    max-height: 540px;
+}
+
+.site-log-row {
+    padding: 8px 10px;
+    border-bottom: 1px solid #dbe7fb;
+}
+
+.site-log-row:last-child {
+    border-bottom: none;
+}
+
 @keyframes accountFade {
     from {
         opacity: 0;
