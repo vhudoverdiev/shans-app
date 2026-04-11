@@ -110,7 +110,7 @@
                 </thead>
                 <tbody>
                     {% for task in day_tasks %}
-                    <tr class="{% if task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
+                    <tr class="{% if task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка', 'Сценарий'] or task.is_important %}planner-task-row-photo{% endif %}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
                             {{ task.title }}
@@ -134,6 +134,8 @@
                         <td>
                             {% if task.task_type == 'Съёмка' and task.shooting_id %}
                             <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
+                            {% elif task.task_type == 'Сценарий' and task.scenario_id %}
+                            <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('scenario_detail', scenario_id=task.scenario_id) }}">Открыть сценарий</a>
                             {% else %}
                             {{ task.description or '—' }}
                             {% endif %}

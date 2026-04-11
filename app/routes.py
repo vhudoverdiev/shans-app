@@ -96,8 +96,10 @@ from app.utils import build_budget_excel, build_shootings_excel, build_scenarios
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
 from app.planner import (
     create_task,
+    delete_task_for_scenario,
     delete_task_for_shooting,
     replace_manual_schedule_tasks,
+    upsert_task_for_scenario,
     upsert_task_for_shooting,
 )
 
@@ -1499,8 +1501,15 @@ def register_routes(app):
                 scenario_text=scenario_text,
                 scenario_status=scenario_status,
             )
+            upsert_task_for_scenario(
+                scenario_id=scenario_id,
+                title=title,
+                shooting_date=shooting_date,
+                scenario_text=scenario_text,
+                scenario_status=scenario_status,
+            )
             log_audit(current_app, "scenario_created", scenario_id=scenario_id, title=title)
-            flash("Сценарий успешно добавлен.", "success")
+            flash("Сценарий успешно добавлен и синхронизирован с графиком.", "success")
             return redirect(url_for("scenarios_upcoming"))
 
         return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
@@ -1591,8 +1600,15 @@ def register_routes(app):
                 scenario_text=scenario_text,
                 scenario_status=scenario_status,
             )
+            upsert_task_for_scenario(
+                scenario_id=scenario_id,
+                title=title,
+                shooting_date=shooting_date,
+                scenario_text=scenario_text,
+                scenario_status=scenario_status,
+            )
             log_audit(current_app, "scenario_updated", scenario_id=scenario_id)
-            flash("Сценарий обновлён.", "success")
+            flash("Сценарий обновлён и синхронизирован с графиком.", "success")
             return redirect(url_for("scenario_detail", scenario_id=scenario_id))
 
         return render_template("scenario_edit.html", scenario=scenario)
@@ -1606,9 +1622,17 @@ def register_routes(app):
             return redirect(url_for("scenarios_upcoming"))
 
         toggle_scenario_status(scenario_id)
+        updated_scenario = get_scenario_by_id(scenario_id)
+        if updated_scenario:
+            upsert_task_for_scenario(
+                scenario_id=scenario_id,
+                title=updated_scenario.get("title", ""),
+                shooting_date=updated_scenario.get("shooting_date", ""),
+                scenario_text=updated_scenario.get("scenario_text", ""),
+                scenario_status=updated_scenario.get("scenario_status", "in_progress"),
+            )
         log_audit(current_app, "scenario_status_toggled", scenario_id=scenario_id)
         flash("Статус сценария обновлён.", "success")
-        updated_scenario = get_scenario_by_id(scenario_id)
         if updated_scenario and updated_scenario.get("is_archive"):
             return redirect(url_for("scenarios_archive"))
         return redirect(url_for("scenarios_upcoming"))
@@ -1621,9 +1645,10 @@ def register_routes(app):
             flash("Сценарий не найден.", "danger")
             return redirect(url_for("scenarios_upcoming"))
 
+        delete_task_for_scenario(scenario_id)
         delete_scenario(scenario_id)
         log_audit(current_app, "scenario_deleted", scenario_id=scenario_id)
-        flash("Сценарий удалён.", "success")
+        flash("Сценарий удалён из раздела сценариев и из графика.", "success")
         return redirect(url_for("scenarios_upcoming"))
 
     @app.route("/scenarios/upcoming/delete-selected", methods=["POST"])
@@ -1640,6 +1665,7 @@ def register_routes(app):
             scenario_data = dict(scenario) if scenario else None
             if not scenario_data or scenario_data.get("is_archive"):
                 continue
+            delete_task_for_scenario(scenario_id)
             delete_scenario(scenario_id)
             deleted_count += 1
 
@@ -1658,7 +1684,9 @@ def register_routes(app):
             return redirect(url_for("scenarios_upcoming"))
 
         for scenario in scenarios:
-            delete_scenario(int(scenario["id"]))
+            scenario_id = int(scenario["id"])
+            delete_task_for_scenario(scenario_id)
+            delete_scenario(scenario_id)
 
         flash("Все активные сценарии удалены.", "success")
         return redirect(url_for("scenarios_upcoming"))
@@ -1677,6 +1705,7 @@ def register_routes(app):
             scenario_data = dict(scenario) if scenario else None
             if not scenario_data or not scenario_data.get("is_archive"):
                 continue
+            delete_task_for_scenario(scenario_id)
             delete_scenario(scenario_id)
             deleted_count += 1
 
@@ -1695,7 +1724,9 @@ def register_routes(app):
             return redirect(url_for("scenarios_archive"))
 
         for scenario in scenarios:
-            delete_scenario(int(scenario["id"]))
+            scenario_id = int(scenario["id"])
+            delete_task_for_scenario(scenario_id)
+            delete_scenario(scenario_id)
 
         flash("Все архивные сценарии удалены.", "success")
         return redirect(url_for("scenarios_archive"))

@@ -798,10 +798,13 @@ a {
     align-items: center;
     justify-content: center;
     padding: 6px 12px;
+    border: none;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .status-pill-done {
@@ -812,6 +815,64 @@ a {
 .status-pill-work {
     background: rgba(245, 158, 11, 0.16);
     color: #92400e;
+}
+
+.scenario-status-pill.status-pill-work {
+    background: rgba(37, 99, 235, 0.18);
+    color: #1d4ed8;
+}
+
+.scenario-status-pill.status-pill-done {
+    background: rgba(29, 78, 216, 0.12);
+    color: #1e40af;
+}
+
+.confirm-modal[hidden] {
+    display: none;
+}
+
+.confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+}
+
+.confirm-modal-card {
+    position: relative;
+    width: min(94vw, 420px);
+    background: linear-gradient(165deg, #ffffff 0%, #eff6ff 100%);
+    border: 1px solid #dbeafe;
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
+    border-radius: 18px;
+    padding: 22px;
+}
+
+.confirm-modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.confirm-modal-text {
+    color: #334155;
+    margin-bottom: 18px;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 /* =========================
    MOBILE ADAPTATION
