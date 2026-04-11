@@ -12,7 +12,7 @@
 
     <div class="card account-hero-card">
         <div class="account-profile-line account-profile-main-line">
-            <div class="account-avatar-preview-wrap" id="avatar-preview-wrap">
+            <div class="account-avatar-preview-wrap account-avatar-edit-wrap" id="avatar-preview-wrap">
                 <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
                     {% if avatar_url %}
                     <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
@@ -20,6 +20,7 @@
                     <span id="avatar-preview-letter">{{ avatar_letter }}</span>
                     {% endif %}
                 </div>
+                <button type="button" class="account-avatar-edit-btn {% if not avatar_url %}account-avatar-edit-btn-visible{% endif %}" id="account-avatar-edit-btn" aria-label="Изменить аватарку" title="Изменить аватарку">✎</button>
                 {% if avatar_url %}
                 <form method="post" action="{{ url_for('remove_account_avatar') }}" class="account-avatar-remove-form" id="account-avatar-remove-form">
                     <button type="submit" class="account-avatar-remove-btn" aria-label="Удалить аватарку" title="Удалить аватарку">🗑</button>
@@ -33,54 +34,40 @@
         </div>
 
         <div class="account-nav" role="tablist" aria-label="Разделы настроек">
-            <button type="button" class="btn btn-tab account-tab-btn btn-tab-active" data-account-tab="profile">Профиль</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
-            <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link">Логи</a>
+            <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
         </div>
     </div>
-
-    <div class="account-tab-content account-tab-content-active" data-account-panel="profile">
-        <div class="account-grid">
-            <div class="card account-card account-card-glow">
-                <h2 class="section-title">Фото профиля</h2>
-                <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form" id="avatar-upload-form">
-                    <div class="form-group">
-                        <label for="avatar_file" class="avatar-file-label">Выберите файл</label>
-                        <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
-                        <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data" value="">
-                    </div>
-
-                    <div class="avatar-crop-modal" id="avatar-crop-modal" hidden>
-                        <div class="avatar-crop-modal-backdrop"></div>
-                        <div class="avatar-crop-modal-card" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-modal-title">
-                            <div class="avatar-crop-modal-title" id="avatar-crop-modal-title">Обрезка аватарки</div>
-                            <div class="avatar-crop-layout" id="avatar-crop-layout">
-                                <div class="avatar-crop-stage">
-                                    <div class="avatar-crop-frame" id="avatar-crop-frame">
-                                        <img src="" alt="Обрезка аватара" id="avatar-crop-image">
-                                    </div>
-                                    <div class="avatar-crop-controls">
-                                        <label for="avatar-crop-zoom" class="form-hint">Масштаб</label>
-                                        <input type="range" id="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
-                                    </div>
-                                </div>
-                                <div class="avatar-crop-preview-wrap">
-                                    <div class="avatar-crop-preview-title">Предпросмотр после сохранения</div>
-                                    <canvas class="avatar-crop-preview" id="avatar-crop-preview" width="220" height="220"></canvas>
-                                </div>
-                            </div>
-                            <div class="avatar-crop-modal-actions">
-                                <button type="button" class="btn btn-secondary" id="avatar-crop-cancel-btn">Отмена</button>
-                                <button type="submit" class="btn btn-primary" id="avatar-save-btn">Сохранить аватарку</button>
-                            </div>
+    <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form account-avatar-hidden-form" id="avatar-upload-form">
+        <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif">
+        <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data" value="">
+        <div class="avatar-crop-modal" id="avatar-crop-modal" hidden>
+            <div class="avatar-crop-modal-backdrop"></div>
+            <div class="avatar-crop-modal-card" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-modal-title">
+                <div class="avatar-crop-modal-title" id="avatar-crop-modal-title">Обрезка аватарки</div>
+                <div class="avatar-crop-layout" id="avatar-crop-layout">
+                    <div class="avatar-crop-stage">
+                        <div class="avatar-crop-frame" id="avatar-crop-frame">
+                            <img src="" alt="Обрезка аватара" id="avatar-crop-image">
+                        </div>
+                        <div class="avatar-crop-controls">
+                            <label for="avatar-crop-zoom" class="form-hint">Масштаб</label>
+                            <input type="range" id="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
                         </div>
                     </div>
-                </form>
+                    <div class="avatar-crop-preview-wrap">
+                        <div class="avatar-crop-preview-title">Предпросмотр после сохранения</div>
+                        <canvas class="avatar-crop-preview" id="avatar-crop-preview" width="256" height="256"></canvas>
+                    </div>
+                </div>
+                <div class="avatar-crop-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="avatar-crop-cancel-btn">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="avatar-save-btn">Сохранить аватарку</button>
+                </div>
             </div>
-
         </div>
-    </div>
+    </form>
 
     <div class="account-tab-content" data-account-panel="security">
         <div class="account-grid">
@@ -235,8 +222,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const tabPanels = document.querySelectorAll(".account-tab-content");
     const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
     const allowedTabs = isMobileViewport
-        ? new Set(["profile", "security"])
-        : new Set(["profile", "security", "import"]);
+        ? new Set(["security"])
+        : new Set(["security", "import"]);
 
     function activateTab(target) {
         if (!target) return;
@@ -251,11 +238,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const tabFromUrl = new URLSearchParams(window.location.search).get("tab");
-    const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "profile";
+    const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "security";
     activateTab(initialTab);
 
     const avatarInput = document.getElementById("avatar_file");
     const avatarForm = document.getElementById("avatar-upload-form");
+    const avatarEditBtn = document.getElementById("account-avatar-edit-btn");
+    const avatarPreviewWrap = document.getElementById("avatar-preview-wrap");
     const cropModal = document.getElementById("avatar-crop-modal");
     const cropFrame = document.getElementById("avatar-crop-frame");
     const cropImage = document.getElementById("avatar-crop-image");
@@ -295,6 +284,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const size = cropPreview.width;
 
         ctx.clearRect(0, 0, size, size);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         ctx.save();
         ctx.beginPath();
         ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
@@ -335,10 +326,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const sourceRect = getCropSourceRect();
         if (!sourceRect) return false;
         const canvas = document.createElement("canvas");
-        canvas.width = 512;
-        canvas.height = 512;
+        canvas.width = 384;
+        canvas.height = 384;
         const ctx = canvas.getContext("2d");
         if (!ctx) return false;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         ctx.drawImage(
             cropImage,
             sourceRect.sourceX,
@@ -347,10 +340,10 @@ document.addEventListener("DOMContentLoaded", function () {
             sourceRect.sourceHeight,
             0,
             0,
-            512,
-            512
+            384,
+            384
         );
-        croppedAvatarDataInput.value = canvas.toDataURL("image/png");
+        croppedAvatarDataInput.value = canvas.toDataURL("image/jpeg", 0.86);
         return true;
     }
 
@@ -388,6 +381,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 };
                 reader.readAsDataURL(file);
             }
+        });
+    }
+
+    function triggerAvatarFileSelect() {
+        if (!avatarInput) return;
+        avatarInput.click();
+    }
+    if (avatarEditBtn) {
+        avatarEditBtn.addEventListener("click", triggerAvatarFileSelect);
+    }
+    if (avatarPreviewWrap) {
+        avatarPreviewWrap.addEventListener("click", function (event) {
+            const isRemoveAction = event.target.closest && event.target.closest("#account-avatar-remove-form");
+            if (isRemoveAction) return;
+            triggerAvatarFileSelect();
         });
     }
 
