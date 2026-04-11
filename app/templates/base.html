@@ -6,9 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='planner.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css') }}">
 </head>
 <body class="app-body">
     {% if current_user.is_authenticated %}
