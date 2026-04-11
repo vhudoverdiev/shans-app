@@ -51,7 +51,11 @@
 
     <div class="mobile-fab-nav" id="mobile-fab-nav">
         <button class="mobile-fab-trigger" type="button" id="mobile-fab-trigger" aria-expanded="false" aria-controls="mobile-fab-panel">
-            Ш
+            {% if current_user.avatar_filename %}
+            <img src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar_filename) }}" alt="Аватар" class="mobile-fab-trigger-avatar">
+            {% else %}
+            <span class="mobile-fab-trigger-letter">{{ (current_user.username[:1] if current_user.username else '?')|upper }}</span>
+            {% endif %}
         </button>
         <div class="mobile-fab-panel" id="mobile-fab-panel">
             {% set is_car_page = request.endpoint in ['car', 'car_manage', 'car_done_edit', 'car_planned_edit', 'car_planned_complete', 'car_notifications'] %}
