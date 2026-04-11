@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Подключение 2FA | Шанс{% endblock %}
+{% block title %}Google Authenticator | Шанс{% endblock %}
 
 {% block content %}
 <section class="car-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Подключи Google Authenticator</h1>
+            <h1 class="page-title">Google Authenticator</h1>
         </div>
     </div>
 
@@ -13,7 +13,7 @@
         {% if setup_complete %}
         <h2 class="section-title">Резервные коды восстановления</h2>
         <p class="muted-text">
-            Обязательно сохраните эти коды в надёжном месте (например, в менеджере паролей или на бумаге).
+            Обязательно сохраните эти коды в надёжном месте.
             Каждый код одноразовый и поможет войти, если нет доступа к Google Authenticator.
         </p>
         <div class="recovery-codes-card">
@@ -43,7 +43,7 @@
                 <label for="otp_code">Код из приложения</label>
                 <input type="text" id="otp_code" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
             </div>
-            <button type="submit" class="btn btn-primary">Подтвердить и войти</button>
+            <button type="submit" class="btn btn-primary">Подтвердить</button>
         </form>
         {% endif %}
     </div>

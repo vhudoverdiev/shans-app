@@ -114,14 +114,14 @@
                 {% if otp_enabled %}
                 <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
                     <div class="form-group">
-                        <label for="disable_2fa_otp">Код Google Authenticator</label>
+                        <label for="disable_2fa_otp">Код</label>
                         <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
                     </div>
-                    <button type="submit" class="btn btn-danger">Отключить Google 2FA</button>
+                    <button type="submit" class="btn btn-danger">Отключить</button>
                 </form>
                 {% else %}
                 <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form account-inline-form-spaced">
-                    <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
+                    <button type="submit" class="btn btn-success">Подключить</button>
                 </form>
                 {% endif %}
             </div>
@@ -175,25 +175,23 @@
         <div class="account-grid">
             <div class="card account-card">
                 <h2 class="section-title">Импорт данных</h2>
-                <p class="muted-text">Переносите данные из таблиц и файлов в пару кликов.</p>
-                <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
+                <p class="muted-text">Переносите данные в пару кликов.</p>
+                <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть</a>
             </div>
             <div class="card account-card account-card-glow">
                 <h2 class="section-title">Пороль системы</h2>
-                <p class="muted-text">Один пороль для доступа к импорту данных и логам.</p>
                 <form method="post" action="{{ url_for('update_system_password') }}" class="form-block account-settings-form" id="system-password-form">
                     <div class="form-group">
-                        <label for="current_system_password">Текущий пороль системы</label>
+                        <label for="current_system_password">Текущий пороль</label>
                         <div class="password-input-wrap">
                             <input type="password" id="current_system_password" name="current_system_password" class="form-input">
                             <button type="button" class="password-toggle" data-password-toggle="current_system_password" aria-label="Показать пароль">
                                 <span class="eye-icon"></span>
                             </button>
                         </div>
-                        <small class="form-hint">Если пороль ещё не задан, поле можно оставить пустым.</small>
                     </div>
                     <div class="form-group">
-                        <label for="new_system_password">Новый пороль системы</label>
+                        <label for="new_system_password">Новый пороль</label>
                         <div class="password-input-wrap">
                             <input type="password" id="new_system_password" name="new_system_password" class="form-input" minlength="4" required>
                             <button type="button" class="password-toggle" data-password-toggle="new_system_password" aria-label="Показать пароль">
@@ -210,7 +208,7 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Сохранить пороль системы</button>
+                    <button type="submit" class="btn btn-primary">Сохранить пороль</button>
                 </form>
             </div>
         </div>
