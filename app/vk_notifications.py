@@ -204,16 +204,8 @@ def _build_tomorrow_tasks_text(now_local: datetime) -> str:
     for idx, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
         start_time = (task["start_time"] or "").strip()
-        description = (task["description"] or "").strip()
-        task_type = (task["task_type"] or "").strip()
         time_part = start_time if start_time else "—"
-        row = f"{idx}. {time_part} — {title}"
-        if description and task_type not in ["Съёмка", "Фотопроект"]:
-            short_description = description.replace("\n", " ")
-            if len(short_description) > 120:
-                short_description = short_description[:117] + "..."
-            row += f" — {short_description}"
-        lines.append(row)
+        lines.append(f"{idx}. {time_part} — {title}")
 
     lines.extend(["", f"Всего задач: {len(tasks)}"])
     return "\n".join(lines)

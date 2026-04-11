@@ -86,8 +86,56 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    <div class="confirm-modal" id="confirm-modal" hidden>
+        <div class="confirm-modal-backdrop"></div>
+        <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+            <div class="confirm-modal-title" id="confirm-modal-title">Подтверждение удаления</div>
+            <div class="confirm-modal-text" id="confirm-modal-text">Удалить запись?</div>
+            <div class="confirm-modal-actions">
+                <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-modal-approve">Удалить</button>
+            </div>
+        </div>
+    </div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const confirmModal = document.getElementById("confirm-modal");
+            const confirmModalText = document.getElementById("confirm-modal-text");
+            const confirmModalApprove = document.getElementById("confirm-modal-approve");
+            const confirmModalCancel = document.getElementById("confirm-modal-cancel");
+            let confirmResolver = null;
+
+            function openConfirmDialog(message) {
+                if (!confirmModal || !confirmModalText || !confirmModalApprove || !confirmModalCancel) {
+                    return Promise.resolve(window.confirm(message));
+                }
+                confirmModalText.textContent = message || "Удалить запись?";
+                confirmModal.hidden = false;
+                return new Promise(function (resolve) {
+                    confirmResolver = resolve;
+                });
+            }
+
+            function closeConfirmDialog(approved) {
+                if (!confirmModal) return;
+                confirmModal.hidden = true;
+                if (confirmResolver) {
+                    confirmResolver(Boolean(approved));
+                    confirmResolver = null;
+                }
+            }
+
+            if (confirmModalApprove && confirmModalCancel && confirmModal) {
+                confirmModalApprove.addEventListener("click", function () { closeConfirmDialog(true); });
+                confirmModalCancel.addEventListener("click", function () { closeConfirmDialog(false); });
+                confirmModal.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("confirm-modal-backdrop")) {
+                        closeConfirmDialog(false);
+                    }
+                });
+            }
+
             const csrfMeta = document.querySelector("meta[name='csrf-token']");
             const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
 
@@ -262,20 +310,24 @@
                 }
 
                 if (selectedForm) {
-                    selectedForm.addEventListener("submit", function (event) {
+                    selectedForm.addEventListener("submit", async function (event) {
                         const idsField = selectedForm.querySelector(".bulk-selected-ids");
                         if (!idsField || !idsField.value) {
                             event.preventDefault();
                             return;
                         }
-                        if (!confirm("Удалить выбранные записи?")) {
-                            event.preventDefault();
+                        event.preventDefault();
+                        const approved = await openConfirmDialog("Удалить выбранные записи?");
+                        if (!approved) {
+                            return;
                         }
+                        selectedForm.submit();
                     });
                 }
 
                 if (allForm) {
-                    allForm.addEventListener("submit", function (event) {
+                    allForm.addEventListener("submit", async function (event) {
+                        event.preventDefault();
                         if (selectionMode && hasDataRows) {
                             if (selectAll) {
                                 selectAll.checked = true;
@@ -284,9 +336,11 @@
                             checkboxes.forEach(function (item) { item.checked = true; });
                             syncState();
                         }
-                        if (!confirm("Удалить все записи в этой таблице?")) {
-                            event.preventDefault();
+                        const approved = await openConfirmDialog("Удалить все записи в этой таблице?");
+                        if (!approved) {
+                            return;
                         }
+                        allForm.submit();
                     });
                 }
 
@@ -300,6 +354,30 @@
                 }
                 syncState();
             });
+
+            document.addEventListener("submit", async function (event) {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (form.dataset.confirmHandled === "1") return;
+
+                const onsubmit = form.getAttribute("onsubmit") || "";
+                const action = form.getAttribute("action") || "";
+                const button = event.submitter;
+                const submitTitle = button && button.getAttribute ? (button.getAttribute("title") || "").toLowerCase() : "";
+                const hasDeleteIntent = /confirm\(/i.test(onsubmit) || action.includes("/delete") || submitTitle.includes("удал");
+                if (!hasDeleteIntent) return;
+
+                const match = onsubmit.match(/confirm\((['"`])(.+?)\1\)/);
+                const message = match ? match[2] : "Вы точно хотите удалить запись?";
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const approved = await openConfirmDialog(message);
+                if (!approved) return;
+
+                form.dataset.confirmHandled = "1";
+                form.submit();
+                form.dataset.confirmHandled = "0";
+            }, true);
 
             document.querySelectorAll("tr[data-href]").forEach(function (row) {
                 row.addEventListener("click", function (event) {

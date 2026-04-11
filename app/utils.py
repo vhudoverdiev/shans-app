@@ -350,32 +350,32 @@ def build_scenarios_excel(scenarios, report_title):
     ws = wb.active
     ws.title = "Сценарии"
 
-    title_fill = PatternFill("solid", fgColor="14532D")
-    section_fill = PatternFill("solid", fgColor="DCFCE7")
-    header_fill = PatternFill("solid", fgColor="BBF7D0")
-    odd_row_fill = PatternFill("solid", fgColor="F0FDF4")
+    title_fill = PatternFill("solid", fgColor="1E3A8A")
+    subtitle_fill = PatternFill("solid", fgColor="E0E7FF")
+    header_fill = PatternFill("solid", fgColor="C7D2FE")
+    odd_row_fill = PatternFill("solid", fgColor="EEF2FF")
     even_row_fill = PatternFill("solid", fgColor="FFFFFF")
 
     white_bold_font = Font(color="FFFFFF", bold=True, size=14)
     bold_font = Font(bold=True)
     center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     left = Alignment(horizontal="left", vertical="top", wrap_text=True)
-    thin = Side(style="thin", color="D1D5DB")
+    thin = Side(style="thin", color="CBD5E1")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    ws.merge_cells("A1:C1")
+    ws.merge_cells("A1:D1")
     ws["A1"] = report_title
     ws["A1"].fill = title_fill
     ws["A1"].font = white_bold_font
     ws["A1"].alignment = center
 
-    ws.merge_cells("A3:C3")
-    ws["A3"] = f"Всего записей: {len(scenarios)}"
-    ws["A3"].fill = section_fill
+    ws.merge_cells("A3:D3")
+    ws["A3"] = "Экспорт сценариев"
+    ws["A3"].fill = subtitle_fill
     ws["A3"].font = bold_font
     ws["A3"].alignment = left
 
-    headers = ["Название", "Дата съёмки", "Сценарий"]
+    headers = ["Название", "Дата съёмки", "Статус", "Сценарий"]
     headers_row = 5
     for col_index, header in enumerate(headers, start=1):
         cell = ws.cell(row=headers_row, column=col_index)
@@ -391,18 +391,19 @@ def build_scenarios_excel(scenarios, report_title):
         values = [
             item.get("title") or "—",
             item.get("shooting_date_display") or item.get("shooting_date") or "—",
+            item.get("effective_status_label") or "В работе",
             item.get("scenario_text") or "—",
         ]
 
         for col_index, value in enumerate(values, start=1):
             cell = ws.cell(row=data_row, column=col_index, value=value)
             cell.border = border
-            cell.alignment = left
+            cell.alignment = center if col_index == 3 else left
             cell.fill = row_fill
 
         data_row += 1
 
-    column_widths = {1: 28, 2: 18, 3: 70}
+    column_widths = {1: 28, 2: 18, 3: 14, 4: 66}
     for col_index, width in column_widths.items():
         ws.column_dimensions[get_column_letter(col_index)].width = width
 

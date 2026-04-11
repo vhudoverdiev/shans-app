@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}Сценарии | Шанс{% endblock %}
 
 {% block content %}
 <section class="car-page">
@@ -68,7 +69,7 @@
                         <td>{{ item.shooting_date_display }}</td>
                         <td>
                             <form method="post" action="{{ url_for('scenario_toggle_status', scenario_id=item.id) }}" class="inline-form" onsubmit="event.stopPropagation();">
-                                <button class="status-pill status-pill-{{ item.effective_status_class }}" type="submit">{{ item.effective_status_label }}</button>
+                                <button class="status-pill scenario-status-pill status-pill-{{ item.effective_status_class }}" type="submit">{{ item.effective_status_label }}</button>
                             </form>
                         </td>
                         <td>{{ item.scenario_text or '—' }}</td>

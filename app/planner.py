@@ -15,7 +15,7 @@ from app.vk_notifications import send_vk_tomorrow_tasks_message
 
 planner_bp = Blueprint("planner", __name__)
 
-TASK_TYPES = ["Личное", "Съёмка", "Фотопроект", "Встреча", "Другое"]
+TASK_TYPES = ["Личное", "Съёмка", "Сценарий", "Фотопроект", "Встреча", "Другое"]
 TASK_STATUSES = ["planned", "done", "cancelled"]
 PROJECT_CITIES = ["Архангельск", "Северодвинск"]
 
@@ -40,6 +40,7 @@ def init_planner_db():
             project_id INTEGER,
             booking_id INTEGER,
             shooting_id INTEGER,
+            scenario_id INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """
@@ -48,6 +49,8 @@ def init_planner_db():
     existing_columns = {row[1] for row in cursor.execute("PRAGMA table_info(schedule_tasks)").fetchall()}
     if "shooting_id" not in existing_columns:
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN shooting_id INTEGER")
+    if "scenario_id" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN scenario_id INTEGER")
     if "is_important" not in existing_columns:
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN is_important INTEGER NOT NULL DEFAULT 0")
     if "range_end_date" not in existing_columns:
@@ -439,7 +442,7 @@ def delete_task(task_id: int):
 
 def replace_manual_schedule_tasks(tasks: List[Dict[str, object]]):
     conn = get_connection()
-    conn.execute("DELETE FROM schedule_tasks WHERE shooting_id IS NULL AND booking_id IS NULL")
+    conn.execute("DELETE FROM schedule_tasks WHERE shooting_id IS NULL AND booking_id IS NULL AND scenario_id IS NULL")
 
     for task in tasks:
         conn.execute(
@@ -559,6 +562,51 @@ def upsert_task_for_shooting(
 def delete_task_for_shooting(shooting_id: int):
     conn = get_connection()
     conn.execute("DELETE FROM schedule_tasks WHERE shooting_id = ?", (shooting_id,))
+    conn.commit()
+    conn.close()
+
+
+def upsert_task_for_scenario(
+    scenario_id: int,
+    title: str,
+    shooting_date: str,
+    scenario_text: str = "",
+    scenario_status: str = "in_progress",
+):
+    clean_title = (title or "").strip() or "Без названия"
+    description = (scenario_text or "").strip()
+    schedule_status = "done" if scenario_status == "done" else "planned"
+
+    conn = get_connection()
+    existing_task = conn.execute("SELECT id FROM schedule_tasks WHERE scenario_id = ?", (scenario_id,)).fetchone()
+
+    if existing_task:
+        conn.execute(
+            """
+            UPDATE schedule_tasks
+            SET title = ?, description = ?, task_date = ?, start_time = NULL,
+                task_type = ?, status = ?, project_id = NULL, booking_id = NULL, shooting_id = NULL
+            WHERE scenario_id = ?
+            """,
+            (clean_title, description, shooting_date, "Сценарий", schedule_status, scenario_id),
+        )
+    else:
+        conn.execute(
+            """
+            INSERT INTO schedule_tasks (
+                title, description, task_date, start_time, task_type, status, scenario_id
+            ) VALUES (?, ?, ?, NULL, ?, ?, ?)
+            """,
+            (clean_title, description, shooting_date, "Сценарий", schedule_status, scenario_id),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def delete_task_for_scenario(scenario_id: int):
+    conn = get_connection()
+    conn.execute("DELETE FROM schedule_tasks WHERE scenario_id = ?", (scenario_id,))
     conn.commit()
     conn.close()
 
@@ -842,7 +890,7 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "tasks": tasks_by_date.get(day_key, []),
                 "first_task_title": (tasks_by_date.get(day_key, [{}])[0].get("title") or "")[:40],
                 "has_photo_or_shooting": any(
-                    item["task_type"] in {"Фотопроект", "Съёмка"} for item in tasks_by_date.get(day_key, [])
+                    item["task_type"] in {"Фотопроект", "Съёмка", "Сценарий"} for item in tasks_by_date.get(day_key, [])
                 ),
                 "has_range_task": any(
                     item["range_end_date"] and item["status"] == "planned" for item in tasks_by_date.get(day_key, [])
