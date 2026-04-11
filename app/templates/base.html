@@ -44,6 +44,9 @@
                     {{ (current_user.username[:1] if current_user.username else '?')|upper }}
                     {% endif %}
                 </a>
+                {% if request.endpoint == 'index' %}
+                <a href="{{ url_for('logout') }}" class="btn btn-danger btn-small">Выйти</a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -57,6 +60,7 @@
             {% set is_shootings_page = request.endpoint in ['shootings', 'shootings_upcoming', 'shootings_archive', 'shootings_add', 'shooting_detail', 'shooting_edit'] %}
             {% set is_scenarios_page = request.endpoint in ['scenarios', 'scenarios_upcoming', 'scenarios_archive', 'scenarios_add', 'scenario_detail', 'scenario_edit'] %}
             {% set is_photo_projects_page = request.endpoint in ['planner.photo_projects', 'planner.photo_project_detail', 'planner.create_photo_project', 'planner.edit_photo_project', 'planner.create_photo_project_booking', 'planner.edit_photo_project_booking', 'planner.photo_project_booking_detail'] %}
+            {% set is_settings_page = request.endpoint in ['account_settings', 'update_account_avatar', 'remove_account_avatar', 'update_account_password', 'start_account_2fa_setup', 'disable_account_2fa'] %}
 
             <a href="{{ url_for('index') }}" class="mobile-fab-link {% if is_home_page %}mobile-fab-link-active{% endif %}">Главная</a>
             <a href="{{ url_for('budget') }}" class="mobile-fab-link {% if is_budget_page %}mobile-fab-link-active{% endif %}">Бюджет</a>
@@ -65,6 +69,7 @@
             <a href="{{ url_for('shootings') }}" class="mobile-fab-link {% if is_shootings_page %}mobile-fab-link-active{% endif %}">Съёмки</a>
             <a href="{{ url_for('planner.photo_projects') }}" class="mobile-fab-link {% if is_photo_projects_page %}mobile-fab-link-active{% endif %}">Фотопроекты</a>
             <a href="{{ url_for('scenarios') }}" class="mobile-fab-link {% if is_scenarios_page %}mobile-fab-link-active{% endif %}">Сценарии</a>
+            <a href="{{ url_for('account_settings') }}" class="mobile-fab-link mobile-fab-link-settings {% if is_settings_page %}mobile-fab-link-active{% endif %}">⚙ Настройки</a>
             <a href="{{ url_for('logout') }}" class="mobile-fab-link mobile-fab-link-danger">Выйти</a>
         </div>
     </div>

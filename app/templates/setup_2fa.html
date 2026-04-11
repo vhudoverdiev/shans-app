@@ -10,6 +10,24 @@
     </div>
 
     <div class="card">
+        {% if setup_complete %}
+        <h2 class="section-title">Резервные коды восстановления</h2>
+        <p class="muted-text">
+            Обязательно сохраните эти коды в надёжном месте (например, в менеджере паролей или на бумаге).
+            Каждый код одноразовый и поможет войти, если нет доступа к Google Authenticator.
+        </p>
+        <div class="account-codes-grid">
+            {% for code in recovery_codes %}
+            <div class="account-code-item">{{ code }}</div>
+            {% endfor %}
+        </div>
+        <form method="POST" class="form-block account-inline-form-spaced">
+            <input type="hidden" name="finish_setup" value="1">
+            <button type="submit" class="btn btn-primary">
+                Продолжить
+            </button>
+        </form>
+        {% else %}
         <p>1. Открой Google Authenticator и добавь новый аккаунт по QR-коду.</p>
         <p>2. Если QR не открывается, введи ключ вручную:</p>
         <div class="form-group">
@@ -25,6 +43,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Подтвердить и войти</button>
         </form>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
