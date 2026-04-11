@@ -338,8 +338,45 @@ a {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 220px;
     gap: 16px;
-    margin: 10px 0 16px;
+    margin: 10px 0 0;
     align-items: start;
+}
+
+.avatar-crop-modal[hidden] {
+    display: none;
+}
+
+.avatar-crop-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+
+.avatar-crop-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.avatar-crop-modal-card {
+    position: relative;
+    width: min(760px, 100%);
+    border-radius: 18px;
+    border: 1px solid #dbe3f0;
+    background: #ffffff;
+    padding: 18px;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.25);
+}
+
+.avatar-crop-modal-title {
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
 }
 
 .avatar-crop-stage {
@@ -408,6 +445,13 @@ a {
     border-radius: 999px;
     border: 1px solid #d3deee;
     background: #ffffff;
+}
+
+.avatar-crop-modal-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .avatar-file-input {
