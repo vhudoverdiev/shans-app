@@ -106,9 +106,12 @@
                 </thead>
                 <tbody>
                     {% for task in day_tasks %}
-                    <tr class="{% if task.task_type == 'Сценарий' %}planner-task-row-scenario{% elif task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
+                    <tr>
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
+                            {% if task.task_type == 'Сценарий' or (task.range_end_date and task.status == 'planned') or task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}
+                            <span class="planner-task-alert-icon" aria-hidden="true" title="Важная задача">❗</span>
+                            {% endif %}
                             {{ task.title }}
                         </td>
                         <td>
