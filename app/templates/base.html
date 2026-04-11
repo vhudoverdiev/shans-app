@@ -63,8 +63,8 @@
             <a href="{{ url_for('planner.schedule') }}" class="mobile-fab-link {% if is_schedule_page %}mobile-fab-link-active{% endif %}">График</a>
             <a href="{{ url_for('car') }}" class="mobile-fab-link {% if is_car_page %}mobile-fab-link-active{% endif %}">Машина</a>
             <a href="{{ url_for('shootings') }}" class="mobile-fab-link {% if is_shootings_page %}mobile-fab-link-active{% endif %}">Съёмки</a>
-            <a href="{{ url_for('scenarios') }}" class="mobile-fab-link {% if is_scenarios_page %}mobile-fab-link-active{% endif %}">Сценарии</a>
             <a href="{{ url_for('planner.photo_projects') }}" class="mobile-fab-link {% if is_photo_projects_page %}mobile-fab-link-active{% endif %}">Фотопроекты</a>
+            <a href="{{ url_for('scenarios') }}" class="mobile-fab-link {% if is_scenarios_page %}mobile-fab-link-active{% endif %}">Сценарии</a>
             <a href="{{ url_for('logout') }}" class="mobile-fab-link mobile-fab-link-danger">Выйти</a>
         </div>
     </div>
@@ -90,7 +90,7 @@
     <div class="confirm-modal" id="confirm-modal" hidden>
         <div class="confirm-modal-backdrop"></div>
         <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
-            <div class="confirm-modal-title" id="confirm-modal-title">Подтверждение удаления</div>
+            <div class="confirm-modal-title" id="confirm-modal-title">Вы точно хотите удалить?</div>
             <div class="confirm-modal-text" id="confirm-modal-text">Удалить запись?</div>
             <div class="confirm-modal-actions">
                 <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Отмена</button>

@@ -817,15 +817,6 @@ a {
     color: #92400e;
 }
 
-.scenario-status-pill.status-pill-work {
-    background: rgba(37, 99, 235, 0.18);
-    color: #1d4ed8;
-}
-
-.scenario-status-pill.status-pill-done {
-    background: rgba(29, 78, 216, 0.12);
-    color: #1e40af;
-}
 
 .confirm-modal[hidden] {
     display: none;
