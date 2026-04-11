@@ -1078,18 +1078,29 @@ def register_routes(app):
     def account_settings():
         user_row = get_user_by_id(current_user.id)
         login_history = session.get("account_login_history", [])
+        normalized_history = []
+        for item in login_history:
+            if not isinstance(item, dict):
+                continue
+            history_item = dict(item)
+            if not history_item.get("session_key"):
+                history_item["session_key"] = secrets.token_hex(12)
+            normalized_history.append(history_item)
+        login_history = normalized_history
         device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
         current_entry = {
+            "session_key": session.get("account_current_session_key") or secrets.token_hex(12),
             "device": device_name,
             "browser": browser_name,
             "ip": request.headers.get("X-Forwarded-For", request.remote_addr or "—"),
             "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
             "current": True,
         }
+        session["account_current_session_key"] = current_entry["session_key"]
         login_history = [current_entry] + [
             {**item, "current": False}
             for item in login_history[:9]
-            if item.get("ip") != current_entry["ip"] or item.get("browser") != current_entry["browser"]
+            if item.get("session_key") != current_entry["session_key"]
         ]
         session["account_login_history"] = login_history
         recovery_codes = session.get("account_recovery_codes", [])
@@ -1239,6 +1250,35 @@ def register_routes(app):
         log_audit(current_app, "user_logout_all_devices", username=username)
         flash("Вы вышли из аккаунта на текущем устройстве. Рекомендуем сменить пароль для завершения остальных сессий.", "success")
         return redirect(url_for("login"))
+
+    @app.route("/account/settings/logout-device", methods=["POST"])
+    @login_required
+    def logout_device_session():
+        target_session_key = request.form.get("session_key", "").strip()
+        if not target_session_key:
+            flash("Сессия не найдена.", "danger")
+            return redirect(url_for("account_settings"))
+
+        current_session_key = session.get("account_current_session_key")
+        if target_session_key == current_session_key:
+            username = current_user.username
+            session.clear()
+            logout_user()
+            log_audit(current_app, "user_logout_device_session_current", username=username)
+            flash("Текущая сессия завершена.", "success")
+            return redirect(url_for("login"))
+
+        login_history = session.get("account_login_history", [])
+        filtered_history = [
+            item for item in login_history
+            if isinstance(item, dict) and item.get("session_key") != target_session_key
+        ]
+        if len(filtered_history) == len(login_history):
+            flash("Выбранная сессия не найдена.", "warning")
+        else:
+            session["account_login_history"] = filtered_history
+            flash("Выбранная сессия завершена.", "success")
+        return redirect(url_for("account_settings"))
 
     @app.route("/logout")
     @login_required
