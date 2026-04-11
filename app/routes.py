@@ -5,10 +5,12 @@ import hmac
 import os
 import re
 import secrets
+import shlex
 
 from flask import (
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -181,6 +183,109 @@ def _parse_selected_ids(raw_value: str) -> list[int]:
         if token.isdigit():
             result.append(int(token))
     return result
+
+
+AUDIT_EVENT_LABELS = {
+    "user_login": "Пользователь вошёл в систему",
+    "user_logout": "Пользователь вышел из системы",
+    "user_logout_all_devices": "Пользователь завершил все сессии",
+    "user_logout_device_session_current": "Пользователь завершил текущую сессию",
+    "excel_import": "Импорт данных завершён",
+    "budget_entry_created": "Добавлена запись бюджета",
+    "budget_entry_updated": "Обновлена запись бюджета",
+    "budget_entry_deleted": "Удалена запись бюджета",
+    "car_done_created": "Добавлена выполненная работа по авто",
+    "car_done_updated": "Обновлена выполненная работа по авто",
+    "car_done_deleted": "Удалена выполненная работа по авто",
+    "car_planned_created": "Добавлена плановая работа по авто",
+    "car_planned_updated": "Обновлена плановая работа по авто",
+    "car_planned_completed": "Плановая работа по авто переведена в выполненные",
+    "car_planned_deleted": "Удалена плановая работа по авто",
+    "shooting_updated": "Обновлена съёмка",
+    "shooting_deleted": "Удалена съёмка",
+    "scenario_created": "Создан сценарий",
+    "scenario_updated": "Обновлён сценарий",
+    "scenario_status_toggled": "Изменён статус сценария",
+    "scenario_deleted": "Удалён сценарий",
+}
+
+LOG_LINE_RE = re.compile(
+    r"^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<level>[A-Z]+) \[(?P<logger>[^\]]+)\] (?P<message>.*)$"
+)
+KV_RE = re.compile(r"(?P<key>\w+)=('(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"|\S+)")
+
+
+def _parse_log_line(raw_line: str) -> dict:
+    line = (raw_line or "").strip()
+    parsed = {"raw": line, "timestamp": "", "level": "", "logger": "", "message": line}
+    match = LOG_LINE_RE.match(line)
+    if not match:
+        return parsed
+    parsed.update(
+        {
+            "timestamp": match.group("ts"),
+            "level": match.group("level"),
+            "logger": match.group("logger"),
+            "message": match.group("message"),
+        }
+    )
+    return parsed
+
+
+def _extract_key_values(message: str) -> tuple[dict, str]:
+    pairs = {}
+    for match in KV_RE.finditer(message or ""):
+        key = match.group("key")
+        token = match.group(0)
+        try:
+            parsed = shlex.split(token)
+            value = parsed[0].split("=", 1)[1] if parsed else match.group(2)
+        except (ValueError, IndexError):
+            value = token.split("=", 1)[1]
+        pairs[key] = value
+    short_message = KV_RE.sub("", message or "").strip()
+    return pairs, short_message
+
+
+def _humanize_log_line(raw_line: str) -> str:
+    parsed = _parse_log_line(raw_line)
+    kv_pairs, plain_message = _extract_key_values(parsed["message"])
+
+    prefix_parts = []
+    if parsed["timestamp"]:
+        prefix_parts.append(parsed["timestamp"])
+    if parsed["level"]:
+        prefix_parts.append(parsed["level"])
+    prefix = " | ".join(prefix_parts)
+
+    if parsed["logger"] == "audit":
+        event = kv_pairs.get("event", "")
+        user = kv_pairs.get("user", "anonymous")
+        ip = kv_pairs.get("ip", "unknown")
+        path = kv_pairs.get("path", "")
+        method = kv_pairs.get("method", "")
+        details = ", ".join(
+            f"{key}: {value}"
+            for key, value in kv_pairs.items()
+            if key not in {"event", "user", "ip", "path", "method"}
+        )
+        action = AUDIT_EVENT_LABELS.get(event, f"Событие: {event}") if event else "Событие системы"
+        sentence = f"{action}. Пользователь: {user}. IP: {ip}."
+        if method or path:
+            sentence += f" Запрос: {method} {path}.".strip()
+        if details:
+            sentence += f" Детали: {details}."
+        return f"{prefix} — {sentence}".strip(" —")
+
+    if "Failed login" in parsed["message"]:
+        return f"{prefix} — Неудачная попытка входа. {plain_message or parsed['message']}"
+    if "Login rate limit triggered" in parsed["message"]:
+        return f"{prefix} — Сработало ограничение частоты входов. {plain_message or parsed['message']}"
+    if "Suspicious" in parsed["message"]:
+        return f"{prefix} — Обнаружена подозрительная активность. {plain_message or parsed['message']}"
+
+    base = plain_message or parsed["message"]
+    return f"{prefix} — {base}".strip(" —")
 
 
 def _build_car_notifications():
@@ -2506,15 +2611,20 @@ def register_routes(app):
             flash("Раздел логов доступен только на ПК-версии.", "error")
             return redirect(url_for("index"))
 
-        access_granted = False
+        access_granted = bool(session.get("logs_access_granted"))
         logs_payload = []
         available_logs = []
         logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
+        selected_log = request.args.get("log_name", "").strip()
 
         if os.path.isdir(logs_dir):
             available_logs = sorted(
                 [name for name in os.listdir(logs_dir) if name.endswith(".log")]
             )
+        if not selected_log and available_logs:
+            selected_log = available_logs[0]
+        if selected_log and selected_log not in available_logs:
+            selected_log = available_logs[0] if available_logs else ""
 
         if request.method == "POST":
             action = request.form.get("action", "").strip()
@@ -2523,17 +2633,19 @@ def register_routes(app):
 
             if not import_password or not hmac.compare_digest(password, import_password):
                 flash("Неверный пароль.", "error")
+                session.pop("logs_access_granted", None)
                 return render_template(
                     "site_logs.html",
                     access_granted=False,
                     logs_payload=[],
                     available_logs=available_logs,
-                    selected_log="",
+                    selected_log=selected_log,
                     log_lines_limit=500,
                 )
 
             access_granted = True
-            selected_log = request.form.get("log_name", "").strip()
+            session["logs_access_granted"] = True
+            selected_log = request.form.get("log_name", "").strip() or selected_log
             if action == "unlock":
                 selected_log = available_logs[0] if available_logs else ""
 
@@ -2553,6 +2665,7 @@ def register_routes(app):
                     {
                         "name": log_name,
                         "content": "".join(lines).strip(),
+                        "humanized_content": "\n".join(_humanize_log_line(line) for line in lines if line.strip()),
                         "is_selected": log_name == selected_log,
                     }
                 )
@@ -2569,13 +2682,64 @@ def register_routes(app):
                 log_lines_limit=500,
             )
 
+        if access_granted and selected_log:
+            for log_name in available_logs:
+                log_path = os.path.join(logs_dir, log_name)
+                lines = []
+                try:
+                    with open(log_path, "r", encoding="utf-8", errors="replace") as source:
+                        lines = source.readlines()[-500:]
+                except OSError:
+                    lines = ["Ошибка чтения файла логов."]
+                logs_payload.append(
+                    {
+                        "name": log_name,
+                        "content": "".join(lines).strip(),
+                        "humanized_content": "\n".join(_humanize_log_line(line) for line in lines if line.strip()),
+                        "is_selected": log_name == selected_log,
+                    }
+                )
+
         return render_template(
             "site_logs.html",
             access_granted=access_granted,
-            logs_payload=[],
+            logs_payload=logs_payload,
             available_logs=available_logs,
-            selected_log="",
+            selected_log=selected_log,
             log_lines_limit=500,
+        )
+
+    @app.route("/log/stream", methods=["GET"])
+    @login_required
+    def site_logs_stream():
+        if not session.get("logs_access_granted"):
+            return jsonify({"ok": False, "error": "forbidden"}), 403
+
+        log_name = request.args.get("log_name", "").strip()
+        logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
+        if not log_name:
+            return jsonify({"ok": False, "error": "missing_log_name"}), 400
+        if ".." in log_name or "/" in log_name or "\\" in log_name:
+            return jsonify({"ok": False, "error": "invalid_log_name"}), 400
+
+        log_path = os.path.join(logs_dir, log_name)
+        if not os.path.isfile(log_path):
+            return jsonify({"ok": False, "error": "not_found"}), 404
+
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="replace") as source:
+                raw_lines = [line.strip() for line in source.readlines()[-200:] if line.strip()]
+        except OSError:
+            return jsonify({"ok": False, "error": "read_failed"}), 500
+
+        humanized_lines = [_humanize_log_line(line) for line in raw_lines]
+        return jsonify(
+            {
+                "ok": True,
+                "log_name": log_name,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "items": humanized_lines,
+            }
         )
 
     @app.route("/car/manage", methods=["GET", "POST"])
