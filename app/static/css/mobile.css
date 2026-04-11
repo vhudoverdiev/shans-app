@@ -90,16 +90,10 @@
         grid-template-columns: 1fr !important;
     }
 
-    .account-hero-card {
-        position: static;
-        top: auto;
-        z-index: auto;
-    }
-
     .account-profile-main-line {
-        position: static;
-        top: auto;
-        z-index: auto;
+        position: sticky;
+        top: 72px;
+        z-index: 25;
         padding: 10px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.92);

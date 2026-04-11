@@ -58,6 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const lastUpdateNode = document.getElementById("logs-last-update");
     if (!humanContainer) return;
 
+    function scrollLogsToBottom() {
+        humanContainer.scrollTop = humanContainer.scrollHeight;
+    }
+
     async function refreshLogs() {
         try {
             const response = await fetch("/log/stream", {
@@ -84,12 +88,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (lastUpdateNode && payload.updated_at) {
                 lastUpdateNode.textContent = `Последнее обновление: ${payload.updated_at}`;
             }
-            humanContainer.scrollTop = humanContainer.scrollHeight;
+            scrollLogsToBottom();
         } catch (error) {
             console.error("Не удалось обновить логи", error);
         }
     }
 
+    scrollLogsToBottom();
     window.setInterval(refreshLogs, 180000);
 });
 </script>
