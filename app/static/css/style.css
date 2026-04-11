@@ -1065,6 +1065,39 @@ a {
     display: none;
 }
 
+.validation-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 18px) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10000;
+    max-width: min(92vw, 420px);
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    background: linear-gradient(180deg, #fff7ed 0%, #fffbeb 100%);
+    color: #9a3412;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 16px 36px rgba(154, 52, 18, 0.2);
+    transition: opacity .24s ease, transform .24s ease;
+}
+
+.validation-toast-show {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    animation: validationToastPulse .36s ease;
+}
+
+@keyframes validationToastPulse {
+    0% { transform: translate(-50%, 4px) scale(.98); }
+    55% { transform: translate(-50%, -2px) scale(1.02); }
+    100% { transform: translate(-50%, 0) scale(1); }
+}
+
 .confirm-modal {
     position: fixed;
     inset: 0;

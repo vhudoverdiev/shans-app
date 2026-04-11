@@ -143,8 +143,8 @@
 }
 
 .planner-day-card-scenario{
-    border-color:rgba(22,163,74,.6);
-    background:rgba(22,163,74,.16);
+    border-color:rgba(234,179,8,.55);
+    background:rgba(250,204,21,.16);
 }
 
 .planner-day-card-range{
@@ -388,11 +388,11 @@
 }
 
 .planner-task-row-scenario{
-    background:rgba(22,163,74,.20);
+    background:rgba(250,204,21,.20);
 }
 
 .data-table tr.planner-task-row-scenario{
-    background:rgba(22,163,74,.20);
+    background:rgba(250,204,21,.20);
 }
 
 @media (max-width: 1024px){
@@ -655,9 +655,9 @@
 }
 
 .planner-shooting-open-btn{
-    border-color:#16a34a;
-    color:#14532d;
-    background:#dcfce7;
+    border-color:#f59e0b;
+    color:#78350f;
+    background:#fef3c7;
 }
 
 .planner-form-mode-tabs{
@@ -712,8 +712,8 @@
     padding:5px 10px;
     border-radius:999px;
     font-size:12px;
-    font-weight:800;
-    letter-spacing:.01em;
+    font-weight:700;
+    letter-spacing:normal;
     line-height:1.2;
 }
 
@@ -731,20 +731,22 @@
 .planner-status-chip-planned{
     background:rgba(245, 158, 11, 0.16);
     color:#92400e;
-    border:1px solid rgba(146, 64, 14, .18);
-    box-shadow:0 8px 18px rgba(146, 64, 14, .14);
+    border:none;
+    box-shadow:none;
 }
 
 .planner-status-chip-done{
     background:rgba(22, 163, 74, 0.14);
     color:#166534;
-    border:1px solid rgba(22, 101, 52, .18);
-    box-shadow:0 8px 18px rgba(22, 101, 52, .14);
+    border:none;
+    box-shadow:none;
 }
 
 .planner-status-chip-cancelled{
-    background:#fff1f2;
-    color:#be123c;
+    background:rgba(220, 38, 38, 0.12);
+    color:#991b1b;
+    border:none;
+    box-shadow:none;
 }
 
 .planner-status-chip-range{

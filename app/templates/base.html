@@ -102,12 +102,27 @@
             </div>
         </div>
     </div>
+    <div class="validation-toast" id="validation-toast" role="status" aria-live="polite"></div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const confirmModal = document.getElementById("confirm-modal");
             const confirmModalApprove = document.getElementById("confirm-modal-approve");
             const confirmModalCancel = document.getElementById("confirm-modal-cancel");
+            const validationToast = document.getElementById("validation-toast");
             let confirmResolver = null;
+            let validationToastTimer = null;
+
+            function showValidationToast(message) {
+                if (!validationToast) return;
+                validationToast.textContent = message || "Заполните это поле.";
+                validationToast.classList.add("validation-toast-show");
+                if (validationToastTimer) {
+                    window.clearTimeout(validationToastTimer);
+                }
+                validationToastTimer = window.setTimeout(function () {
+                    validationToast.classList.remove("validation-toast-show");
+                }, 2200);
+            }
 
             function openConfirmDialog() {
                 if (!confirmModal || !confirmModalApprove || !confirmModalCancel) {
@@ -439,6 +454,28 @@
                 input.addEventListener("input", validateDateField);
                 input.addEventListener("change", validateDateField);
                 validateDateField();
+            });
+
+            document.addEventListener("invalid", function (event) {
+                const input = event.target;
+                if (!(input instanceof HTMLElement)) return;
+                const message = input.validationMessage || "Заполните это поле.";
+                showValidationToast(message);
+            }, true);
+
+            document.addEventListener("input", function (event) {
+                const input = event.target;
+                if (!(input instanceof HTMLElement)) return;
+                if (!input.matches("input, textarea, select")) return;
+                if (input.checkValidity()) {
+                    if (validationToastTimer) {
+                        window.clearTimeout(validationToastTimer);
+                        validationToastTimer = null;
+                    }
+                    if (validationToast) {
+                        validationToast.classList.remove("validation-toast-show");
+                    }
+                }
             });
         });
     </script>
