@@ -288,6 +288,42 @@ def _humanize_log_line(raw_line: str) -> str:
     return f"{prefix} — {base}".strip(" —")
 
 
+def _get_unified_logs(limit: int = 250) -> list[dict]:
+    logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
+    if not os.path.isdir(logs_dir):
+        return []
+
+    merged_items = []
+    log_names = sorted([name for name in os.listdir(logs_dir) if name.endswith(".log")])
+    for log_name in log_names:
+        log_path = os.path.join(logs_dir, log_name)
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="replace") as source:
+                lines = [line.strip() for line in source.readlines() if line.strip()]
+        except OSError:
+            continue
+
+        for line in lines:
+            parsed = _parse_log_line(line)
+            timestamp_text = parsed.get("timestamp", "")
+            timestamp_value = datetime.min
+            if timestamp_text:
+                try:
+                    timestamp_value = datetime.strptime(timestamp_text, "%Y-%m-%d %H:%M:%S,%f")
+                except ValueError:
+                    timestamp_value = datetime.min
+            merged_items.append(
+                {
+                    "timestamp": timestamp_value,
+                    "humanized": _humanize_log_line(line),
+                    "source": log_name,
+                }
+            )
+
+    merged_items.sort(key=lambda item: item["timestamp"], reverse=True)
+    return merged_items[:limit]
+
+
 def _build_car_notifications():
     periodic_planned, periodic_done = get_periodic_services_for_notifications()
     hidden_keys = set(get_hidden_notification_keys())
@@ -1224,6 +1260,7 @@ def register_routes(app):
         ]
         session["account_login_history"] = login_history
         recovery_codes = session.get("account_recovery_codes", [])
+        unified_logs = _get_unified_logs(limit=120)
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
@@ -1231,6 +1268,7 @@ def register_routes(app):
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
             login_history=login_history,
             recovery_codes=recovery_codes[:8],
+            unified_logs=unified_logs,
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])
@@ -2615,19 +2653,10 @@ def register_routes(app):
         logs_payload = []
         available_logs = []
         logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
-        selected_log = request.args.get("log_name", "").strip()
-
         if os.path.isdir(logs_dir):
-            available_logs = sorted(
-                [name for name in os.listdir(logs_dir) if name.endswith(".log")]
-            )
-        if not selected_log and available_logs:
-            selected_log = available_logs[0]
-        if selected_log and selected_log not in available_logs:
-            selected_log = available_logs[0] if available_logs else ""
+            available_logs = sorted([name for name in os.listdir(logs_dir) if name.endswith(".log")])
 
         if request.method == "POST":
-            action = request.form.get("action", "").strip()
             password = request.form.get("password", "").strip()
             import_password = get_system_password().strip()
 
@@ -2639,36 +2668,12 @@ def register_routes(app):
                     access_granted=False,
                     logs_payload=[],
                     available_logs=available_logs,
-                    selected_log=selected_log,
                     log_lines_limit=500,
                 )
 
             access_granted = True
             session["logs_access_granted"] = True
-            selected_log = request.form.get("log_name", "").strip() or selected_log
-            if action == "unlock":
-                selected_log = available_logs[0] if available_logs else ""
-
-            if selected_log and selected_log not in available_logs:
-                flash("Запрошенный файл логов не найден.", "error")
-                selected_log = available_logs[0] if available_logs else ""
-
-            for log_name in available_logs:
-                log_path = os.path.join(logs_dir, log_name)
-                lines = []
-                try:
-                    with open(log_path, "r", encoding="utf-8", errors="replace") as source:
-                        lines = source.readlines()[-500:]
-                except OSError:
-                    lines = ["Ошибка чтения файла логов."]
-                logs_payload.append(
-                    {
-                        "name": log_name,
-                        "content": "".join(lines).strip(),
-                        "humanized_content": "\n".join(_humanize_log_line(line) for line in lines if line.strip()),
-                        "is_selected": log_name == selected_log,
-                    }
-                )
+            logs_payload = _get_unified_logs(limit=500)
 
             if not logs_payload:
                 flash("Файлы логов не найдены.", "error")
@@ -2678,34 +2683,17 @@ def register_routes(app):
                 access_granted=access_granted,
                 logs_payload=logs_payload,
                 available_logs=available_logs,
-                selected_log=selected_log,
                 log_lines_limit=500,
             )
 
-        if access_granted and selected_log:
-            for log_name in available_logs:
-                log_path = os.path.join(logs_dir, log_name)
-                lines = []
-                try:
-                    with open(log_path, "r", encoding="utf-8", errors="replace") as source:
-                        lines = source.readlines()[-500:]
-                except OSError:
-                    lines = ["Ошибка чтения файла логов."]
-                logs_payload.append(
-                    {
-                        "name": log_name,
-                        "content": "".join(lines).strip(),
-                        "humanized_content": "\n".join(_humanize_log_line(line) for line in lines if line.strip()),
-                        "is_selected": log_name == selected_log,
-                    }
-                )
+        if access_granted:
+            logs_payload = _get_unified_logs(limit=500)
 
         return render_template(
             "site_logs.html",
             access_granted=access_granted,
             logs_payload=logs_payload,
             available_logs=available_logs,
-            selected_log=selected_log,
             log_lines_limit=500,
         )
 
@@ -2715,30 +2703,12 @@ def register_routes(app):
         if not session.get("logs_access_granted"):
             return jsonify({"ok": False, "error": "forbidden"}), 403
 
-        log_name = request.args.get("log_name", "").strip()
-        logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
-        if not log_name:
-            return jsonify({"ok": False, "error": "missing_log_name"}), 400
-        if ".." in log_name or "/" in log_name or "\\" in log_name:
-            return jsonify({"ok": False, "error": "invalid_log_name"}), 400
-
-        log_path = os.path.join(logs_dir, log_name)
-        if not os.path.isfile(log_path):
-            return jsonify({"ok": False, "error": "not_found"}), 404
-
-        try:
-            with open(log_path, "r", encoding="utf-8", errors="replace") as source:
-                raw_lines = [line.strip() for line in source.readlines()[-200:] if line.strip()]
-        except OSError:
-            return jsonify({"ok": False, "error": "read_failed"}), 500
-
-        humanized_lines = [_humanize_log_line(line) for line in raw_lines]
+        unified_payload = _get_unified_logs(limit=200)
         return jsonify(
             {
                 "ok": True,
-                "log_name": log_name,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "items": humanized_lines,
+                "items": [item["humanized"] for item in unified_payload],
             }
         )
 
