@@ -553,14 +553,20 @@
     .mobile-fab-trigger {
         width: 56px;
         height: 56px;
-        border: none;
+        padding: 0;
         border-radius: 999px;
         overflow: hidden;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        color: #ffffff;
+        background: #eff6ff;
+        color: #1d4ed8;
         font-size: 24px;
         font-weight: 700;
         box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
+        border: 1px solid #cbd5e1;
+    }
+
+    .mobile-fab-trigger-has-avatar {
+        border: none;
+        background: transparent;
     }
 
     .mobile-fab-trigger-avatar {
