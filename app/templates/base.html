@@ -50,7 +50,7 @@
     </header>
 
     <div class="mobile-fab-nav" id="mobile-fab-nav">
-        <button class="mobile-fab-trigger {% if current_user.avatar_filename %}mobile-fab-trigger-has-avatar{% else %}mobile-fab-trigger-no-avatar{% endif %}" type="button" id="mobile-fab-trigger" aria-expanded="false" aria-controls="mobile-fab-panel">
+        <button class="mobile-fab-trigger {% if current_user.avatar_filename %}mobile-fab-trigger-has-avatar{% else %}mobile-fab-trigger-no-avatar{% endif %}" type="button" id="mobile-fab-trigger" aria-expanded="false" aria-controls="mobile-fab-panel" data-settings-url="{{ url_for('account_settings') }}">
             {% if current_user.avatar_filename %}
             <img src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.avatar_filename) }}" alt="Аватар" class="mobile-fab-trigger-avatar js-avatar-image" data-fallback-letter="{{ (current_user.username[:1] if current_user.username else '?')|upper }}">
             {% else %}
@@ -62,8 +62,6 @@
             {% set is_shootings_page = request.endpoint in ['shootings', 'shootings_upcoming', 'shootings_archive', 'shootings_add', 'shooting_detail', 'shooting_edit'] %}
             {% set is_scenarios_page = request.endpoint in ['scenarios', 'scenarios_upcoming', 'scenarios_archive', 'scenarios_add', 'scenario_detail', 'scenario_edit'] %}
             {% set is_photo_projects_page = request.endpoint in ['planner.photo_projects', 'planner.photo_project_detail', 'planner.create_photo_project', 'planner.edit_photo_project', 'planner.create_photo_project_booking', 'planner.edit_photo_project_booking', 'planner.photo_project_booking_detail'] %}
-            {% set is_settings_page = request.endpoint in ['account_settings', 'update_account_avatar', 'remove_account_avatar', 'update_account_password', 'start_account_2fa_setup', 'disable_account_2fa', 'logout_device_session'] %}
-
             <a href="{{ url_for('index') }}" class="mobile-fab-link {% if is_home_page %}mobile-fab-link-active{% endif %}">Главная</a>
             <a href="{{ url_for('budget') }}" class="mobile-fab-link {% if is_budget_page %}mobile-fab-link-active{% endif %}">Бюджет</a>
             <a href="{{ url_for('planner.schedule') }}" class="mobile-fab-link {% if is_schedule_page %}mobile-fab-link-active{% endif %}">График</a>
@@ -71,7 +69,6 @@
             <a href="{{ url_for('shootings') }}" class="mobile-fab-link {% if is_shootings_page %}mobile-fab-link-active{% endif %}">Съёмки</a>
             <a href="{{ url_for('planner.photo_projects') }}" class="mobile-fab-link {% if is_photo_projects_page %}mobile-fab-link-active{% endif %}">Фотопроекты</a>
             <a href="{{ url_for('scenarios') }}" class="mobile-fab-link {% if is_scenarios_page %}mobile-fab-link-active{% endif %}">Сценарии</a>
-            <a href="{{ url_for('account_settings') }}" class="mobile-fab-link mobile-fab-link-settings {% if is_settings_page %}mobile-fab-link-active{% endif %}">⚙ Настройки</a>
             <a href="{{ url_for('logout') }}" class="mobile-fab-link mobile-fab-link-danger">Выйти</a>
         </div>
     </div>
@@ -434,8 +431,17 @@
             const mobileFabPanel = document.getElementById("mobile-fab-panel");
             if (mobileFabTrigger && mobileFabPanel) {
                 mobileFabTrigger.addEventListener("click", function () {
-                    const isOpen = mobileFabPanel.classList.toggle("mobile-fab-panel-open");
-                    mobileFabTrigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                    const isOpen = mobileFabPanel.classList.contains("mobile-fab-panel-open");
+                    if (isOpen) {
+                        const settingsUrl = mobileFabTrigger.dataset.settingsUrl;
+                        if (settingsUrl) {
+                            window.location.href = settingsUrl;
+                            return;
+                        }
+                    }
+
+                    const nextOpen = mobileFabPanel.classList.toggle("mobile-fab-panel-open");
+                    mobileFabTrigger.setAttribute("aria-expanded", nextOpen ? "true" : "false");
                 });
 
                 document.addEventListener("click", function (event) {
