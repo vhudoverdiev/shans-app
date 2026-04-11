@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 from flask import Flask
-from flask import request, session, abort, jsonify
+from flask import request, session, abort, jsonify, redirect, url_for, flash
 from flask_login import LoginManager
 
 from config import Config
@@ -130,5 +130,15 @@ def create_app():
         if request_token != session_token:
             abort(400, description="CSRF token mismatch")
         return None
+
+    @app.errorhandler(413)
+    def handle_request_entity_too_large(_error):
+        if request.path.startswith("/account/settings/avatar"):
+            flash("Файл слишком большой для загрузки. Уменьшите размер изображения и попробуйте снова.", "danger")
+            return redirect(url_for("account_settings"))
+        return (
+            jsonify({"status": "error", "message": "Payload too large"}),
+            413,
+        )
 
     return app

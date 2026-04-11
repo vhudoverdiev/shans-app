@@ -152,6 +152,40 @@ a {
     height: 64px;
 }
 
+.account-avatar-edit-wrap {
+    cursor: pointer;
+}
+
+.account-avatar-edit-btn {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: scale(0.9);
+    z-index: 2;
+}
+
+.account-avatar-edit-btn-visible,
+.account-avatar-preview-wrap:hover .account-avatar-edit-btn,
+.account-avatar-preview-wrap:focus-within .account-avatar-edit-btn {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
 .account-avatar-remove-form {
     position: absolute;
     inset: 0;
@@ -233,6 +267,16 @@ a {
     top: 84px;
     z-index: 20;
     backdrop-filter: blur(8px);
+}
+
+.account-avatar-hidden-form {
+    max-width: 0;
+    max-height: 0;
+    overflow: hidden;
+}
+
+.account-tab-link-logs {
+    display: inline-flex;
 }
 
 .account-nav {
