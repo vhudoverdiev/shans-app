@@ -101,10 +101,12 @@ from app.models import (
     update_scenario,
     update_shooting,
     get_user_by_id,
+    get_system_password,
     set_user_avatar_filename,
     set_user_last_login_ip,
     set_user_otp,
     set_user_password_hash,
+    set_system_password,
 )
 from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
@@ -1187,6 +1189,7 @@ def register_routes(app):
         return redirect(url_for("account_settings"))
 
     @app.route("/account/settings/avatar/remove", methods=["POST"])
+    @app.route("/account/settings/avatar/delete", methods=["POST"])
     @login_required
     def remove_account_avatar():
         upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
@@ -1231,6 +1234,34 @@ def register_routes(app):
         set_user_password_hash(current_user.id, generate_password_hash(new_password))
         flash("Пароль успешно обновлён.", "success")
         return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/system-password", methods=["POST"])
+    @login_required
+    def update_system_password():
+        current_system_password = request.form.get("current_system_password", "").strip()
+        new_system_password = request.form.get("new_system_password", "").strip()
+        confirm_system_password = request.form.get("confirm_system_password", "").strip()
+        stored_system_password = get_system_password().strip()
+
+        if stored_system_password and not hmac.compare_digest(current_system_password, stored_system_password):
+            flash("Текущий пароль системы указан неверно.", "danger")
+            return redirect(url_for("account_settings", tab="import"))
+
+        if len(new_system_password) < 4:
+            flash("Пароль системы должен содержать минимум 4 символа.", "danger")
+            return redirect(url_for("account_settings", tab="import"))
+
+        if new_system_password != confirm_system_password:
+            flash("Подтверждение пароля системы не совпадает.", "danger")
+            return redirect(url_for("account_settings", tab="import"))
+
+        if stored_system_password and hmac.compare_digest(new_system_password, stored_system_password):
+            flash("Новый пароль системы должен отличаться от текущего.", "danger")
+            return redirect(url_for("account_settings", tab="import"))
+
+        set_system_password(new_system_password)
+        flash("Пароль системы успешно обновлён.", "success")
+        return redirect(url_for("account_settings", tab="import"))
 
     @app.route("/account/settings/2fa/disable", methods=["POST"])
     @login_required
@@ -2323,7 +2354,7 @@ def register_routes(app):
 
             if action == "unlock":
                 password = request.form.get("password", "").strip()
-                import_password = Config.IMPORT_CENTER_PASSWORD
+                import_password = get_system_password().strip()
                 if import_password and hmac.compare_digest(password, import_password):
                     access_granted = True
                     flash("Доступ к разделу импорта открыт.", "success")
@@ -2332,7 +2363,7 @@ def register_routes(app):
                 return render_template("import_center.html", access_granted=access_granted)
 
             password = request.form.get("password", "").strip()
-            import_password = Config.IMPORT_CENTER_PASSWORD
+            import_password = get_system_password().strip()
             if not import_password or not hmac.compare_digest(password, import_password):
                 flash("Неверный пароль. Для каждого входа нужно подтверждение.", "error")
                 return redirect(url_for("import_center"))
@@ -2488,7 +2519,7 @@ def register_routes(app):
         if request.method == "POST":
             action = request.form.get("action", "").strip()
             password = request.form.get("password", "").strip()
-            import_password = Config.IMPORT_CENTER_PASSWORD
+            import_password = get_system_password().strip()
 
             if not import_password or not hmac.compare_digest(password, import_password):
                 flash("Неверный пароль.", "error")

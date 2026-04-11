@@ -77,6 +77,29 @@ def set_user_last_login_ip(user_id, ip_address):
     conn.close()
 
 
+def get_system_password():
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT value FROM app_settings WHERE key = 'system_password'"
+    ).fetchone()
+    conn.close()
+    return (row["value"] if row else "") or ""
+
+
+def set_system_password(new_password):
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value)
+        VALUES ('system_password', ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (new_password,),
+    )
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # BUDGET
 # =========================================================
