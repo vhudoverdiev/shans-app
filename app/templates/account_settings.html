@@ -12,11 +12,18 @@
 
     <div class="card account-hero-card">
         <div class="account-profile-line account-profile-main-line">
-            <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
+            <div class="account-avatar-preview-wrap" id="avatar-preview-wrap">
+                <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
+                    {% if avatar_url %}
+                    <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
+                    {% else %}
+                    <span id="avatar-preview-letter">{{ avatar_letter }}</span>
+                    {% endif %}
+                </div>
                 {% if avatar_url %}
-                <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
-                {% else %}
-                <span id="avatar-preview-letter">{{ avatar_letter }}</span>
+                <form method="post" action="{{ url_for('remove_account_avatar') }}" class="account-avatar-remove-form" id="account-avatar-remove-form">
+                    <button type="submit" class="btn btn-danger btn-small account-avatar-remove-btn">Удалить</button>
+                </form>
                 {% endif %}
             </div>
             <div class="account-profile-userline">
@@ -61,11 +68,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                </form>
-
-                <form method="post" action="{{ url_for('remove_account_avatar') }}" class="inline-form account-inline-form account-inline-form-spaced">
-                    <button type="submit" class="btn btn-secondary">Удалить аватарку</button>
+                    <button type="submit" class="btn btn-primary" id="avatar-save-btn" hidden>Сохранить аватарку</button>
                 </form>
             </div>
 
@@ -220,6 +223,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const cropZoom = document.getElementById("avatar-crop-zoom");
     const cropPreview = document.getElementById("avatar-crop-preview");
     const croppedAvatarDataInput = document.getElementById("cropped_avatar_data");
+    const avatarSaveBtn = document.getElementById("avatar-save-btn");
+    const avatarRemoveForm = document.getElementById("account-avatar-remove-form");
     let cropState = null;
 
     function drawCropPreview() {
@@ -289,10 +294,26 @@ document.addEventListener("DOMContentLoaded", function () {
         return true;
     }
 
+    function resetAvatarCrop() {
+        cropState = null;
+        if (croppedAvatarDataInput) {
+            croppedAvatarDataInput.value = "";
+        }
+        if (cropLayout) {
+            cropLayout.hidden = true;
+        }
+        if (avatarSaveBtn) {
+            avatarSaveBtn.hidden = true;
+        }
+    }
+
     if (avatarInput) {
         avatarInput.addEventListener("change", function () {
             const file = avatarInput.files && avatarInput.files[0];
-            if (!file) return;
+            if (!file) {
+                resetAvatarCrop();
+                return;
+            }
             if (selectedFileLabel) {
                 selectedFileLabel.textContent = "Выбран файл: " + file.name;
             }
@@ -302,20 +323,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (selectedFileLabel) {
                     selectedFileLabel.textContent = "Файл не выбран";
                 }
-                if (cropLayout) {
-                    cropLayout.hidden = true;
-                }
-                if (croppedAvatarDataInput) {
-                    croppedAvatarDataInput.value = "";
-                }
+                resetAvatarCrop();
                 return;
             }
-            if (croppedAvatarDataInput) {
-                croppedAvatarDataInput.value = "";
-            }
-            if (cropLayout) {
-                cropLayout.hidden = true;
-            }
+            resetAvatarCrop();
             if (cropImage) {
                 const reader = new FileReader();
                 reader.onload = function (event) {
@@ -345,6 +356,14 @@ document.addEventListener("DOMContentLoaded", function () {
             cropState.offsetX = (frameSize - width) / 2;
             cropState.offsetY = (frameSize - height) / 2;
             syncCropImage();
+            if (cropLayout) {
+                cropLayout.hidden = false;
+                cropLayout.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+            if (avatarSaveBtn) {
+                avatarSaveBtn.hidden = false;
+            }
+            exportCroppedData();
         });
     }
 
@@ -353,6 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!cropState) return;
             cropState.zoom = Number(cropZoom.value || "1");
             syncCropImage();
+            exportCroppedData();
         });
     }
 
@@ -376,6 +396,7 @@ document.addEventListener("DOMContentLoaded", function () {
             cropState.offsetX += deltaX;
             cropState.offsetY += deltaY;
             syncCropImage();
+            exportCroppedData();
         });
         cropFrame.addEventListener("pointerup", function () {
             isDragging = false;
@@ -389,21 +410,18 @@ document.addEventListener("DOMContentLoaded", function () {
         avatarForm.addEventListener("submit", function (event) {
             const hasFile = avatarInput && avatarInput.files && avatarInput.files[0];
             if (!hasFile) return;
-            const hasPreparedCrop = croppedAvatarDataInput && croppedAvatarDataInput.value.startsWith("data:image/");
-            if (!hasPreparedCrop) {
+            if (!exportCroppedData()) {
                 event.preventDefault();
-                if (cropLayout) {
-                    cropLayout.hidden = false;
-                    cropLayout.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                }
-                if (!exportCroppedData()) {
-                    alert("Подготовка обрезки не удалась. Проверьте выбранный файл.");
-                    return;
-                }
-                alert("Проверьте предпросмотр и нажмите «Сохранить изменения» ещё раз.");
-                return;
+                alert("Подготовка обрезки не удалась. Проверьте выбранный файл.");
             }
-            exportCroppedData();
+        });
+    }
+
+    if (avatarRemoveForm) {
+        avatarRemoveForm.addEventListener("submit", function (event) {
+            if (!window.confirm("Удалить текущую аватарку?")) {
+                event.preventDefault();
+            }
         });
     }
 

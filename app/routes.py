@@ -2470,6 +2470,85 @@ def register_routes(app):
 
         return render_template("import_center.html", access_granted=access_granted)
 
+    @app.route("/log", methods=["GET", "POST"])
+    @login_required
+    def site_logs():
+        if _is_mobile_request():
+            flash("Раздел логов доступен только на ПК-версии.", "error")
+            return redirect(url_for("index"))
+
+        access_granted = False
+        logs_payload = []
+        available_logs = []
+        logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
+
+        if os.path.isdir(logs_dir):
+            available_logs = sorted(
+                [name for name in os.listdir(logs_dir) if name.endswith(".log")]
+            )
+
+        if request.method == "POST":
+            action = request.form.get("action", "").strip()
+            password = request.form.get("password", "").strip()
+            import_password = Config.IMPORT_CENTER_PASSWORD
+
+            if not import_password or not hmac.compare_digest(password, import_password):
+                flash("Неверный пароль.", "error")
+                return render_template(
+                    "site_logs.html",
+                    access_granted=False,
+                    logs_payload=[],
+                    available_logs=available_logs,
+                    selected_log="",
+                    log_lines_limit=500,
+                )
+
+            access_granted = True
+            selected_log = request.form.get("log_name", "").strip()
+            if action == "unlock":
+                selected_log = available_logs[0] if available_logs else ""
+
+            if selected_log and selected_log not in available_logs:
+                flash("Запрошенный файл логов не найден.", "error")
+                selected_log = available_logs[0] if available_logs else ""
+
+            for log_name in available_logs:
+                log_path = os.path.join(logs_dir, log_name)
+                lines = []
+                try:
+                    with open(log_path, "r", encoding="utf-8", errors="replace") as source:
+                        lines = source.readlines()[-500:]
+                except OSError:
+                    lines = ["Ошибка чтения файла логов."]
+                logs_payload.append(
+                    {
+                        "name": log_name,
+                        "content": "".join(lines).strip(),
+                        "is_selected": log_name == selected_log,
+                    }
+                )
+
+            if not logs_payload:
+                flash("Файлы логов не найдены.", "error")
+
+            return render_template(
+                "site_logs.html",
+                access_granted=access_granted,
+                logs_payload=logs_payload,
+                available_logs=available_logs,
+                selected_log=selected_log,
+                log_lines_limit=500,
+            )
+
+        return render_template(
+            "site_logs.html",
+            access_granted=access_granted,
+            logs_payload=[],
+            available_logs=available_logs,
+            selected_log="",
+            log_lines_limit=500,
+        )
+
     @app.route("/car/manage", methods=["GET", "POST"])
     @login_required
     def car_manage():
