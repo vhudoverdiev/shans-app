@@ -343,3 +343,71 @@ def build_photo_project_excel(project, bookings):
     wb.save(output)
     output.seek(0)
     return output
+
+
+def build_scenarios_excel(scenarios, report_title):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Сценарии"
+
+    title_fill = PatternFill("solid", fgColor="14532D")
+    section_fill = PatternFill("solid", fgColor="DCFCE7")
+    header_fill = PatternFill("solid", fgColor="BBF7D0")
+    odd_row_fill = PatternFill("solid", fgColor="F0FDF4")
+    even_row_fill = PatternFill("solid", fgColor="FFFFFF")
+
+    white_bold_font = Font(color="FFFFFF", bold=True, size=14)
+    bold_font = Font(bold=True)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin = Side(style="thin", color="D1D5DB")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    ws.merge_cells("A1:C1")
+    ws["A1"] = report_title
+    ws["A1"].fill = title_fill
+    ws["A1"].font = white_bold_font
+    ws["A1"].alignment = center
+
+    ws.merge_cells("A3:C3")
+    ws["A3"] = f"Всего записей: {len(scenarios)}"
+    ws["A3"].fill = section_fill
+    ws["A3"].font = bold_font
+    ws["A3"].alignment = left
+
+    headers = ["Название", "Дата съёмки", "Сценарий"]
+    headers_row = 5
+    for col_index, header in enumerate(headers, start=1):
+        cell = ws.cell(row=headers_row, column=col_index)
+        cell.value = header
+        cell.font = bold_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+
+    data_row = headers_row + 1
+    for index, item in enumerate(scenarios):
+        row_fill = odd_row_fill if index % 2 == 0 else even_row_fill
+        values = [
+            item.get("title") or "—",
+            item.get("shooting_date_display") or item.get("shooting_date") or "—",
+            item.get("scenario_text") or "—",
+        ]
+
+        for col_index, value in enumerate(values, start=1):
+            cell = ws.cell(row=data_row, column=col_index, value=value)
+            cell.border = border
+            cell.alignment = left
+            cell.fill = row_fill
+
+        data_row += 1
+
+    column_widths = {1: 28, 2: 18, 3: 70}
+    for col_index, width in column_widths.items():
+        ws.column_dimensions[get_column_letter(col_index)].width = width
+
+    ws.freeze_panes = "A6"
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="car-page">
+    <div class="car-tab-bar">
+        <a href="{{ url_for('scenarios_upcoming') }}" class="car-tab-link">Активные</a>
+        <a href="{{ url_for('scenarios_add') }}" class="car-tab-link">Добавить сценарий</a>
+        <a href="{{ url_for('scenarios_archive') }}" class="car-tab-link">Архив</a>
+    </div>
+
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">Редактирование сценария</div>
+            <div class="car-form-head-text">Обнови название, дату съёмки и текст сценария</div>
+        </div>
+
+        <form method="POST" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group">
+                    <label for="title">Название</label>
+                    <input id="title" name="title" type="text" class="form-input" value="{{ scenario.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="shooting_date">Дата съёмки</label>
+                    <input id="shooting_date" name="shooting_date" type="date" class="form-input" value="{{ scenario.shooting_date }}" required>
+                </div>
+
+                <div class="form-group car-form-full">
+                    <label for="scenario_text">Сценарий</label>
+                    <textarea id="scenario_text" name="scenario_text" class="form-input car-textarea" maxlength="700" rows="10">{{ scenario.scenario_text }}</textarea>
+                </div>
+            </div>
+
+            <div class="car-form-actions">
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
