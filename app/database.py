@@ -129,6 +129,25 @@ def init_db():
     _add_column_if_not_exists(cursor, "users", "avatar_filename", "TEXT")
     _add_column_if_not_exists(cursor, "users", "last_login_ip", "TEXT")
 
+    # =========================================================
+    # APP SETTINGS
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS app_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL DEFAULT ''
+        )
+    """)
+    default_import_password = (Config.IMPORT_CENTER_PASSWORD or "").strip()
+    existing_import_password = cursor.execute(
+        "SELECT value FROM app_settings WHERE key = 'system_password'"
+    ).fetchone()
+    if not existing_import_password:
+        cursor.execute(
+            "INSERT INTO app_settings (key, value) VALUES (?, ?)",
+            ("system_password", default_import_password),
+        )
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
