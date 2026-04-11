@@ -56,7 +56,7 @@
 
         <div class="planner-month-grid planner-month-grid-scroll" data-next-month-url="{{ url_for('planner.schedule', view='month', date=next_date) }}" data-prev-month-url="{{ url_for('planner.schedule', view='month', date=prev_date) }}">
             {% for cell in month_cells %}
-            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if not cell.is_past and cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if not cell.is_past and cell.has_range_task %}planner-day-card-range{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
+            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if not cell.is_past and cell.has_scenario_task %}planner-day-card-scenario{% elif not cell.is_past and cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if not cell.is_past and cell.has_range_task %}planner-day-card-range{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
                 <div class="planner-day-card-head">
                     <strong class="planner-day-date">{{ cell.date.day }} {{ cell.month_short }} <span class="planner-day-weekday">({{ cell.weekday_short }})</span></strong>
                     {% if not cell.is_past and cell.tasks %}<span class="planner-day-count {% if cell.has_important %}planner-day-count-important{% elif cell.has_photo_or_shooting %}planner-day-count-photo{% endif %}">{{ cell.tasks|length }}</span>{% endif %}
@@ -129,7 +129,7 @@
                         </td>
                         <td>
                             {% if task.task_type == 'Съёмка' and task.shooting_id %}
-                            <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
+                            <a class="btn btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
                             {% elif task.task_type == 'Сценарий' and task.scenario_id %}
                             <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('scenario_detail', scenario_id=task.scenario_id) }}">Открыть сценарий</a>
                             {% else %}

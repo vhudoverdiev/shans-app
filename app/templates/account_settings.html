@@ -8,17 +8,89 @@
             <h1 class="page-title">Настройки аккаунта</h1>
         </div>
     </div>
+
     <div class="card">
         <div class="account-profile-line">
-            <div class="header-avatar">{{ avatar_letter }}</div>
+            <div class="header-avatar account-avatar-preview">
+                {% if avatar_url %}
+                <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image">
+                {% else %}
+                {{ avatar_letter }}
+                {% endif %}
+            </div>
             <div>
                 <div class="stat-label">Пользователь</div>
                 <div class="stat-value">{{ current_user.username }}</div>
             </div>
         </div>
-        <p>Двухфакторная защита:
+
+        <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form">
+            <div class="form-group">
+                <label for="avatar_file">Заменить аватарку</label>
+                <input type="file" id="avatar_file" name="avatar_file" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Обновить аватарку</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Смена пароля</h2>
+        <form method="post" action="{{ url_for('update_account_password') }}" class="form-block account-settings-form">
+            <div class="form-group">
+                <label for="current_password">Текущий пароль</label>
+                <input type="password" id="current_password" name="current_password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password">Новый пароль</label>
+                <input type="password" id="new_password" name="new_password" class="form-input" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Подтвердите новый пароль</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Поменять пароль</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Двухэтапная Google-аутентификация (2FA)</h2>
+        <p>
+            Статус:
             <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong>
         </p>
+
+        {% if otp_enabled %}
+        <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form">
+            <div class="form-group">
+                <label for="disable_2fa_password">Пароль аккаунта</label>
+                <input type="password" id="disable_2fa_password" name="password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="disable_2fa_otp">Код Google Authenticator</label>
+                <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Отключить 2FA</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form">
+            <div class="form-group">
+                <label for="enable_2fa_password">Пароль аккаунта</label>
+                <input type="password" id="enable_2fa_password" name="password" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Импорт данных</h2>
+        <p>Инструмент импорта перенесён сюда из верхней панели.</p>
+        <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Сессия</h2>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Выйти из аккаунта</a>
     </div>
 </section>
 {% endblock %}

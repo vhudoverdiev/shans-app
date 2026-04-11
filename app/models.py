@@ -47,6 +47,26 @@ def set_user_otp(user_id, otp_secret, otp_enabled=True):
     conn.close()
 
 
+def set_user_password_hash(user_id, password_hash):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (password_hash, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def set_user_avatar_filename(user_id, avatar_filename):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE users SET avatar_filename = ? WHERE id = ?",
+        (avatar_filename, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # BUDGET
 # =========================================================

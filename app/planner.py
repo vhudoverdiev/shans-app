@@ -892,6 +892,9 @@ def build_schedule_context(selected_date: date, current_view: str):
                 "has_photo_or_shooting": any(
                     item["task_type"] in {"Фотопроект", "Съёмка", "Сценарий"} for item in tasks_by_date.get(day_key, [])
                 ),
+                "has_scenario_task": any(
+                    item["task_type"] == "Сценарий" for item in tasks_by_date.get(day_key, [])
+                ),
                 "has_range_task": any(
                     item["range_end_date"] and item["status"] == "planned" for item in tasks_by_date.get(day_key, [])
                 ),

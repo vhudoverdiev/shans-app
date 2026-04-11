@@ -1,7 +1,9 @@
 from datetime import datetime, date
 from io import BytesIO
 import hmac
+import os
 import re
+import secrets
 
 from flask import (
     current_app,
@@ -19,6 +21,8 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 from openpyxl import load_workbook
 
 from app.auth import (
@@ -96,7 +100,9 @@ from app.models import (
     update_scenario,
     update_shooting,
     get_user_by_id,
+    set_user_avatar_filename,
     set_user_otp,
+    set_user_password_hash,
 )
 from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
@@ -800,6 +806,14 @@ def register_routes(app):
     def _build_avatar_letter(username: str) -> str:
         return (username or "?").strip()[:1].upper() or "?"
 
+    def _build_avatar_url(user_row) -> str | None:
+        if not user_row:
+            return None
+        avatar_filename = (user_row.get("avatar_filename") or "").strip()
+        if not avatar_filename:
+            return None
+        return url_for("static", filename=f"uploads/avatars/{avatar_filename}")
+
     @app.route("/")
     @login_required
     def index():
@@ -863,6 +877,7 @@ def register_routes(app):
     @app.route("/setup-2fa", methods=["GET", "POST"])
     def setup_2fa():
         pending_user_id = session.get("pending_otp_user_id")
+        from_settings = bool(session.get("otp_setup_from_settings"))
         if not pending_user_id:
             flash("Сначала войдите в систему.", "danger")
             return redirect(url_for("login"))
@@ -871,6 +886,7 @@ def register_routes(app):
         if not user_row:
             session.pop("pending_otp_user_id", None)
             session.pop("pending_otp_remember", None)
+            session.pop("otp_setup_from_settings", None)
             flash("Пользователь не найден.", "danger")
             return redirect(url_for("login"))
 
@@ -902,10 +918,13 @@ def register_routes(app):
             remember_me = bool(session.get("pending_otp_remember"))
             session.pop("pending_otp_user_id", None)
             session.pop("pending_otp_remember", None)
+            session.pop("otp_setup_from_settings", None)
             authenticated_user = load_user_from_db(user_row["id"])
             login_user(authenticated_user, remember=remember_me)
             log_audit(current_app, "user_login_2fa_setup_completed", username=user_row["username"])
             flash("Google Authenticator подключён. Теперь вход защищён 2FA.", "success")
+            if from_settings:
+                return redirect(url_for("account_settings"))
             return redirect(url_for("index"))
 
         return render_template(
@@ -916,6 +935,26 @@ def register_routes(app):
             qr_url=qr_url,
         )
 
+    @app.route("/account/settings/2fa/setup", methods=["POST"])
+    @login_required
+    def start_account_2fa_setup():
+        password = request.form.get("password", "").strip()
+        user_row = get_user_by_id(current_user.id)
+        if not user_row:
+            flash("Пользователь не найден.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if not check_password_hash(user_row.get("password_hash", ""), password):
+            flash("Неверный пароль.", "danger")
+            return redirect(url_for("account_settings"))
+
+        pending_secret = generate_totp_secret()
+        set_user_otp(current_user.id, pending_secret, otp_enabled=False)
+        session["pending_otp_user_id"] = current_user.id
+        session["pending_otp_remember"] = 1 if current_user.is_authenticated else 0
+        session["otp_setup_from_settings"] = 1
+        return redirect(url_for("setup_2fa"))
+
     @app.route("/account/settings")
     @login_required
     def account_settings():
@@ -923,8 +962,102 @@ def register_routes(app):
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
+            avatar_url=_build_avatar_url(user_row),
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
         )
+
+    @app.route("/account/settings/avatar", methods=["POST"])
+    @login_required
+    def update_account_avatar():
+        avatar_file = request.files.get("avatar_file")
+        if not avatar_file or not avatar_file.filename:
+            flash("Выберите изображение для аватарки.", "danger")
+            return redirect(url_for("account_settings"))
+
+        original_filename = secure_filename(avatar_file.filename)
+        _, file_ext = os.path.splitext(original_filename.lower())
+        allowed_ext = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+        if file_ext not in allowed_ext:
+            flash("Разрешены только PNG/JPG/JPEG/WEBP/GIF.", "danger")
+            return redirect(url_for("account_settings"))
+
+        avatar_file.seek(0, os.SEEK_END)
+        file_size = avatar_file.tell()
+        avatar_file.seek(0)
+        if file_size > 3 * 1024 * 1024:
+            flash("Файл слишком большой. Максимум 3 МБ.", "danger")
+            return redirect(url_for("account_settings"))
+
+        upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
+        os.makedirs(upload_dir, exist_ok=True)
+        new_filename = f"user_{current_user.id}_{secrets.token_hex(8)}{file_ext}"
+        target_path = os.path.join(upload_dir, new_filename)
+        avatar_file.save(target_path)
+
+        user_row = get_user_by_id(current_user.id)
+        previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
+        if previous_filename and previous_filename != new_filename:
+            previous_path = os.path.join(upload_dir, previous_filename)
+            if os.path.exists(previous_path):
+                os.remove(previous_path)
+
+        set_user_avatar_filename(current_user.id, new_filename)
+        flash("Аватарка обновлена.", "success")
+        return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/password", methods=["POST"])
+    @login_required
+    def update_account_password():
+        current_password = request.form.get("current_password", "").strip()
+        new_password = request.form.get("new_password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+
+        user_row = get_user_by_id(current_user.id)
+        if not user_row:
+            flash("Пользователь не найден.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if not check_password_hash(user_row.get("password_hash", ""), current_password):
+            flash("Текущий пароль указан неверно.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if len(new_password) < 8:
+            flash("Новый пароль должен содержать минимум 8 символов.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if new_password != confirm_password:
+            flash("Подтверждение пароля не совпадает.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if current_password == new_password:
+            flash("Новый пароль должен отличаться от текущего.", "danger")
+            return redirect(url_for("account_settings"))
+
+        set_user_password_hash(current_user.id, generate_password_hash(new_password))
+        flash("Пароль успешно обновлён.", "success")
+        return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/2fa/disable", methods=["POST"])
+    @login_required
+    def disable_account_2fa():
+        user_row = get_user_by_id(current_user.id)
+        password = request.form.get("password", "").strip()
+        otp_code = request.form.get("otp_code", "").strip()
+        if not user_row:
+            flash("Пользователь не найден.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if not check_password_hash(user_row.get("password_hash", ""), password):
+            flash("Неверный пароль.", "danger")
+            return redirect(url_for("account_settings"))
+
+        if user_row.get("otp_enabled") and not verify_totp_code(user_row.get("otp_secret"), otp_code):
+            flash("Неверный код Google Authenticator.", "danger")
+            return redirect(url_for("account_settings"))
+
+        set_user_otp(current_user.id, "", otp_enabled=False)
+        flash("2FA отключена для аккаунта.", "success")
+        return redirect(url_for("account_settings"))
 
     @app.route("/logout")
     @login_required
