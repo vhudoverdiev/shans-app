@@ -11,10 +11,6 @@
 
     <div class="car-tab-bar shootings-mobile-tab-bar shootings-mobile-tab-bar-archive">
         <a href="{{ url_for('scenarios_upcoming') }}" class="car-tab-link {% if active_tab == 'upcoming' %}car-tab-link-active{% endif %}">Активные</a>
-        <a href="{{ url_for('scenarios_add') }}" class="car-tab-link shootings-add-tab {% if active_tab == 'add' %}car-tab-link-active{% endif %}">
-            <span class="mobile-text-hidden">Добавить сценарий</span>
-            <span class="mobile-text-only">+добавить</span>
-        </a>
         <a href="{{ url_for('scenarios_archive') }}" class="car-tab-link {% if active_tab == 'archive' %}car-tab-link-active{% endif %}">Архив</a>
     </div>
 

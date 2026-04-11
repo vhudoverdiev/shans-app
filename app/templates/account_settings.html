@@ -52,23 +52,31 @@
                         <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
                     </div>
 
-                    <div class="avatar-crop-layout" id="avatar-crop-layout" hidden>
-                        <div class="avatar-crop-stage">
-                            <div class="avatar-crop-frame" id="avatar-crop-frame">
-                                <img src="" alt="Обрезка аватара" id="avatar-crop-image">
+                    <div class="avatar-crop-modal" id="avatar-crop-modal" hidden>
+                        <div class="avatar-crop-modal-backdrop"></div>
+                        <div class="avatar-crop-modal-card" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-modal-title">
+                            <div class="avatar-crop-modal-title" id="avatar-crop-modal-title">Обрезка аватарки</div>
+                            <div class="avatar-crop-layout" id="avatar-crop-layout">
+                                <div class="avatar-crop-stage">
+                                    <div class="avatar-crop-frame" id="avatar-crop-frame">
+                                        <img src="" alt="Обрезка аватара" id="avatar-crop-image">
+                                    </div>
+                                    <div class="avatar-crop-controls">
+                                        <label for="avatar-crop-zoom" class="form-hint">Масштаб</label>
+                                        <input type="range" id="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
+                                    </div>
+                                </div>
+                                <div class="avatar-crop-preview-wrap">
+                                    <div class="avatar-crop-preview-title">Предпросмотр после сохранения</div>
+                                    <canvas class="avatar-crop-preview" id="avatar-crop-preview" width="220" height="220"></canvas>
+                                </div>
                             </div>
-                            <div class="avatar-crop-controls">
-                                <label for="avatar-crop-zoom" class="form-hint">Масштаб</label>
-                                <input type="range" id="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
+                            <div class="avatar-crop-modal-actions">
+                                <button type="button" class="btn btn-secondary" id="avatar-crop-cancel-btn">Отмена</button>
+                                <button type="submit" class="btn btn-primary" id="avatar-save-btn">Сохранить аватарку</button>
                             </div>
-                        </div>
-                        <div class="avatar-crop-preview-wrap">
-                            <div class="avatar-crop-preview-title">Предпросмотр после сохранения</div>
-                            <canvas class="avatar-crop-preview" id="avatar-crop-preview" width="220" height="220"></canvas>
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary" id="avatar-save-btn" hidden>Сохранить аватарку</button>
                 </form>
             </div>
 
@@ -247,13 +255,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const avatarInput = document.getElementById("avatar_file");
     const selectedFileLabel = document.getElementById("avatar-file-selected");
     const avatarForm = document.getElementById("avatar-upload-form");
-    const cropLayout = document.getElementById("avatar-crop-layout");
+    const cropModal = document.getElementById("avatar-crop-modal");
     const cropFrame = document.getElementById("avatar-crop-frame");
     const cropImage = document.getElementById("avatar-crop-image");
     const cropZoom = document.getElementById("avatar-crop-zoom");
     const cropPreview = document.getElementById("avatar-crop-preview");
     const croppedAvatarDataInput = document.getElementById("cropped_avatar_data");
-    const avatarSaveBtn = document.getElementById("avatar-save-btn");
+    const avatarCropCancelBtn = document.getElementById("avatar-crop-cancel-btn");
     let cropState = null;
 
     function drawCropPreview() {
@@ -328,11 +336,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (croppedAvatarDataInput) {
             croppedAvatarDataInput.value = "";
         }
-        if (cropLayout) {
-            cropLayout.hidden = true;
+        if (cropModal) {
+            cropModal.hidden = true;
         }
-        if (avatarSaveBtn) {
-            avatarSaveBtn.hidden = true;
+        if (cropZoom) {
+            cropZoom.value = "1";
         }
     }
 
@@ -385,12 +393,8 @@ document.addEventListener("DOMContentLoaded", function () {
             cropState.offsetX = (frameSize - width) / 2;
             cropState.offsetY = (frameSize - height) / 2;
             syncCropImage();
-            if (cropLayout) {
-                cropLayout.hidden = false;
-                cropLayout.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            }
-            if (avatarSaveBtn) {
-                avatarSaveBtn.hidden = false;
+            if (cropModal) {
+                cropModal.hidden = false;
             }
             exportCroppedData();
         });
@@ -442,6 +446,26 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!exportCroppedData()) {
                 event.preventDefault();
                 alert("Подготовка обрезки не удалась. Проверьте выбранный файл.");
+            }
+        });
+    }
+
+    if (avatarCropCancelBtn) {
+        avatarCropCancelBtn.addEventListener("click", function () {
+            if (avatarInput) {
+                avatarInput.value = "";
+            }
+            if (selectedFileLabel) {
+                selectedFileLabel.textContent = "Файл не выбран";
+            }
+            resetAvatarCrop();
+        });
+    }
+
+    if (cropModal) {
+        cropModal.addEventListener("click", function (event) {
+            if (event.target.classList.contains("avatar-crop-modal-backdrop")) {
+                resetAvatarCrop();
             }
         });
     }
