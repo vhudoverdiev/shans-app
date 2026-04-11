@@ -112,6 +112,19 @@
         grid-template-columns: 1fr;
     }
 
+    .avatar-crop-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .avatar-crop-frame {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .avatar-crop-preview-wrap {
+        max-width: 220px;
+    }
+
     .card {
         border-radius: 16px;
         padding: 14px;
@@ -565,6 +578,13 @@
         color: #b91c1c;
         border-color: #fecaca;
         background: #fef2f2;
+    }
+
+    .mobile-fab-link-settings {
+        border: 1px solid #c7d7ff;
+        background: linear-gradient(135deg, #eef2ff, #dbeafe);
+        color: #1d4ed8;
+        box-shadow: 0 8px 22px rgba(37, 99, 235, 0.16);
     }
     .notifications-table {
         min-width: 0;

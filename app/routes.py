@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, date
 from io import BytesIO
 import hmac
@@ -814,6 +815,44 @@ def register_routes(app):
             return None
         return url_for("static", filename=f"uploads/avatars/{avatar_filename}")
 
+    def _detect_device_and_browser(user_agent_string: str | None):
+        ua = (user_agent_string or "").lower()
+
+        os_name = "Неизвестная ОС"
+        if "android" in ua:
+            os_name = "Android"
+        elif "iphone" in ua or "ipad" in ua or "ios" in ua:
+            os_name = "iOS"
+        elif "windows" in ua:
+            os_name = "Windows"
+        elif "mac os x" in ua or "macintosh" in ua:
+            os_name = "macOS"
+        elif "linux" in ua:
+            os_name = "Linux"
+
+        if any(token in ua for token in ["mobile", "iphone", "android"]):
+            device_type = "Смартфон"
+        elif "ipad" in ua or "tablet" in ua:
+            device_type = "Планшет"
+        else:
+            device_type = "ПК"
+
+        browser = "Неизвестный браузер"
+        browser_patterns = [
+            ("Edge", r"edg/([0-9\.]+)"),
+            ("Opera", r"opr/([0-9\.]+)"),
+            ("Chrome", r"chrome/([0-9\.]+)"),
+            ("Firefox", r"firefox/([0-9\.]+)"),
+            ("Safari", r"version/([0-9\.]+).*safari"),
+        ]
+        for browser_name, pattern in browser_patterns:
+            match = re.search(pattern, ua)
+            if match:
+                browser = f"{browser_name} {match.group(1).split('.')[0]}"
+                break
+
+        return f"{device_type} · {os_name}", browser
+
     @app.route("/")
     @login_required
     def index():
@@ -961,7 +1000,14 @@ def register_routes(app):
         )
         qr_url = f"https://quickchart.io/qr?text={otp_uri}&size=220"
 
+        generated_codes = session.get("pending_setup_recovery_codes", [])
+
         if request.method == "POST":
+            if request.form.get("finish_setup") == "1":
+                target = "account_settings" if from_settings else "index"
+                session.pop("pending_setup_recovery_codes", None)
+                return redirect(url_for(target))
+
             otp_code = request.form.get("otp_code", "").strip()
             if not verify_totp_code(otp_secret, otp_code):
                 flash("Код не подошёл. Проверьте код в Google Authenticator.", "danger")
@@ -981,10 +1027,20 @@ def register_routes(app):
             authenticated_user = load_user_from_db(user_row["id"])
             login_user(authenticated_user, remember=remember_me)
             log_audit(current_app, "user_login_2fa_setup_completed", username=user_row["username"])
-            flash("Google Authenticator подключён. Теперь вход защищён 2FA.", "success")
-            if from_settings:
-                return redirect(url_for("account_settings"))
-            return redirect(url_for("index"))
+            recovery_codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper() for _ in range(8)]
+            session["account_recovery_codes"] = recovery_codes
+            session["pending_setup_recovery_codes"] = recovery_codes
+            flash("Google Authenticator подключён. Сохраните резервные коды восстановления.", "success")
+            return render_template(
+                "setup_2fa.html",
+                user=user_row,
+                otp_secret=otp_secret,
+                otp_uri=otp_uri,
+                qr_url=qr_url,
+                setup_complete=True,
+                recovery_codes=recovery_codes,
+                from_settings=from_settings,
+            )
 
         return render_template(
             "setup_2fa.html",
@@ -992,6 +1048,9 @@ def register_routes(app):
             otp_secret=otp_secret,
             otp_uri=otp_uri,
             qr_url=qr_url,
+            setup_complete=False,
+            recovery_codes=generated_codes,
+            from_settings=from_settings,
         )
 
     @app.route("/account/settings/2fa/setup", methods=["POST"])
@@ -1018,11 +1077,11 @@ def register_routes(app):
     @login_required
     def account_settings():
         user_row = get_user_by_id(current_user.id)
-        security_preferences = session.get("account_security_preferences", {})
         login_history = session.get("account_login_history", [])
+        device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
         current_entry = {
-            "device": (request.user_agent.platform or "Неизвестное устройство").capitalize(),
-            "browser": request.user_agent.browser or "Неизвестный браузер",
+            "device": device_name,
+            "browser": browser_name,
             "ip": request.headers.get("X-Forwarded-For", request.remote_addr or "—"),
             "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
             "current": True,
@@ -1039,38 +1098,58 @@ def register_routes(app):
             avatar_letter=_build_avatar_letter(current_user.username),
             avatar_url=_build_avatar_url(user_row),
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
-            security_preferences=security_preferences,
             login_history=login_history,
-            recovery_codes=recovery_codes,
+            recovery_codes=recovery_codes[:8],
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])
     @login_required
     def update_account_avatar():
+        cropped_avatar_data = request.form.get("cropped_avatar_data", "").strip()
         avatar_file = request.files.get("avatar_file")
-        if not avatar_file or not avatar_file.filename:
-            flash("Выберите изображение для аватарки.", "danger")
-            return redirect(url_for("account_settings"))
+        file_ext = ""
 
-        original_filename = secure_filename(avatar_file.filename)
-        _, file_ext = os.path.splitext(original_filename.lower())
-        allowed_ext = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
-        if file_ext not in allowed_ext:
-            flash("Разрешены только PNG/JPG/JPEG/WEBP/GIF.", "danger")
-            return redirect(url_for("account_settings"))
+        if cropped_avatar_data.startswith("data:image/"):
+            try:
+                header, encoded = cropped_avatar_data.split(",", 1)
+                if "image/png" not in header and "image/jpeg" not in header and "image/webp" not in header:
+                    raise ValueError("unsupported format")
+                raw_bytes = base64.b64decode(encoded)
+                if len(raw_bytes) > 3 * 1024 * 1024:
+                    flash("Файл слишком большой. Максимум 3 МБ.", "danger")
+                    return redirect(url_for("account_settings"))
+                file_ext = ".png" if "image/png" in header else ".jpg"
+            except Exception:
+                flash("Не удалось обработать обрезанное изображение.", "danger")
+                return redirect(url_for("account_settings"))
+        else:
+            if not avatar_file or not avatar_file.filename:
+                flash("Выберите изображение для аватарки.", "danger")
+                return redirect(url_for("account_settings"))
 
-        avatar_file.seek(0, os.SEEK_END)
-        file_size = avatar_file.tell()
-        avatar_file.seek(0)
-        if file_size > 3 * 1024 * 1024:
-            flash("Файл слишком большой. Максимум 3 МБ.", "danger")
-            return redirect(url_for("account_settings"))
+            original_filename = secure_filename(avatar_file.filename)
+            _, file_ext = os.path.splitext(original_filename.lower())
+            allowed_ext = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+            if file_ext not in allowed_ext:
+                flash("Разрешены только PNG/JPG/JPEG/WEBP/GIF.", "danger")
+                return redirect(url_for("account_settings"))
+
+            avatar_file.seek(0, os.SEEK_END)
+            file_size = avatar_file.tell()
+            avatar_file.seek(0)
+            if file_size > 3 * 1024 * 1024:
+                flash("Файл слишком большой. Максимум 3 МБ.", "danger")
+                return redirect(url_for("account_settings"))
 
         upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
         os.makedirs(upload_dir, exist_ok=True)
         new_filename = f"user_{current_user.id}_{secrets.token_hex(8)}{file_ext}"
         target_path = os.path.join(upload_dir, new_filename)
-        avatar_file.save(target_path)
+        if cropped_avatar_data.startswith("data:image/"):
+            with open(target_path, "wb") as image_file:
+                image_file.write(raw_bytes)
+        else:
+            avatar_file.save(target_path)
 
         user_row = get_user_by_id(current_user.id)
         previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
@@ -1149,44 +1228,6 @@ def register_routes(app):
 
         set_user_otp(current_user.id, "", otp_enabled=False)
         flash("2FA отключена для аккаунта.", "success")
-        return redirect(url_for("account_settings"))
-
-    @app.route("/account/settings/security/options", methods=["POST"])
-    @login_required
-    def update_account_security_options():
-        channel = request.form.get("two_factor_channel", "app").strip().lower()
-        recovery_email = request.form.get("recovery_email", "").strip()
-        recovery_phone = request.form.get("recovery_phone", "").strip()
-        allowed_channels = {"email", "sms", "app"}
-        if channel not in allowed_channels:
-            flash("Выберите корректный способ 2FA.", "danger")
-            return redirect(url_for("account_settings"))
-        if recovery_email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", recovery_email):
-            flash("Укажите корректный email для восстановления.", "danger")
-            return redirect(url_for("account_settings"))
-        if recovery_phone and not re.match(r"^\+?[0-9\- ()]{10,20}$", recovery_phone):
-            flash("Укажите корректный номер телефона.", "danger")
-            return redirect(url_for("account_settings"))
-
-        session["account_security_preferences"] = {
-            "two_factor_channel": channel,
-            "recovery_email": recovery_email,
-            "recovery_phone": recovery_phone,
-        }
-        flash("Параметры безопасности сохранены.", "success")
-        return redirect(url_for("account_settings"))
-
-    @app.route("/account/settings/recovery-codes", methods=["POST"])
-    @login_required
-    def regenerate_recovery_codes():
-        user_row = get_user_by_id(current_user.id)
-        password = request.form.get("password", "").strip()
-        if not user_row or not check_password_hash(user_row.get("password_hash", ""), password):
-            flash("Для генерации кодов введите корректный пароль.", "danger")
-            return redirect(url_for("account_settings"))
-        codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper() for _ in range(8)]
-        session["account_recovery_codes"] = codes
-        flash("Новые резервные коды сгенерированы. Сохраните их в безопасном месте.", "success")
         return redirect(url_for("account_settings"))
 
     @app.route("/account/settings/logout-all", methods=["POST"])

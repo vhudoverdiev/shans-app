@@ -6,7 +6,7 @@
     <div class="page-header account-settings-header">
         <div>
             <h1 class="page-title">Настройки аккаунта</h1>
-            <p class="account-settings-subtitle">Управляйте профилем и безопасностью в одном месте.</p>
+            <p class="account-settings-subtitle">Профессиональная настройка профиля и безопасности.</p>
         </div>
     </div>
 
@@ -23,7 +23,6 @@
                 <div class="stat-label">Пользователь</div>
                 <div class="stat-value">{{ current_user.username }}</div>
             </div>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Выйти</a>
         </div>
 
         <div class="account-nav" role="tablist" aria-label="Разделы настроек">
@@ -34,14 +33,33 @@
 
     <div class="account-tab-content account-tab-content-active" data-account-panel="profile">
         <div class="account-grid account-grid-two">
-            <div class="card account-card">
-                <h2 class="section-title">Профиль пользователя</h2>
+            <div class="card account-card account-card-glow">
+                <h2 class="section-title">Фото профиля</h2>
                 <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form" id="avatar-upload-form">
                     <div class="form-group">
-                        <label for="avatar_file">Фото профиля</label>
+                        <label for="avatar_file">Выберите изображение</label>
                         <input type="file" id="avatar_file" name="avatar_file" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
                         <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
+                        <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data">
                     </div>
+
+                    <div class="avatar-crop-layout" id="avatar-crop-layout" hidden>
+                        <div class="avatar-crop-stage">
+                            <div class="avatar-crop-frame" id="avatar-crop-frame">
+                                <img id="avatar-crop-image" alt="Обрезка изображения">
+                            </div>
+                            <div class="avatar-crop-controls">
+                                <label for="avatar_zoom">Масштаб</label>
+                                <input type="range" min="1" max="3" step="0.01" value="1" id="avatar_zoom">
+                                <small class="form-hint">Перетаскивайте фото мышкой/пальцем для точного кадра.</small>
+                            </div>
+                        </div>
+                        <div class="avatar-crop-preview-wrap">
+                            <div class="avatar-crop-preview-title">Предпросмотр</div>
+                            <canvas id="avatar-crop-preview" class="avatar-crop-preview" width="220" height="220"></canvas>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
 
@@ -52,7 +70,7 @@
 
             <div class="card account-card">
                 <h2 class="section-title">Импорт данных</h2>
-                <p class="muted-text">Инструмент импорта перенесён сюда из верхней панели.</p>
+                <p class="muted-text">Переносите данные из таблиц и файлов в пару кликов.</p>
                 <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
             </div>
         </div>
@@ -60,7 +78,7 @@
 
     <div class="account-tab-content" data-account-panel="security">
         <div class="account-grid">
-            <div class="card account-card">
+            <div class="card account-card account-card-glow">
                 <h2 class="section-title">Смена пароля</h2>
                 <form method="post" action="{{ url_for('update_account_password') }}" class="form-block account-settings-form" id="password-form">
                     <div class="form-group">
@@ -80,27 +98,8 @@
             </div>
 
             <div class="card account-card">
-                <h2 class="section-title">Двухфакторная аутентификация</h2>
-                <p>Текущий статус Google Authenticator: <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong></p>
-                <form method="post" action="{{ url_for('update_account_security_options') }}" class="form-block account-settings-form">
-                    <div class="form-group">
-                        <label for="two_factor_channel">Основной канал 2FA</label>
-                        <select id="two_factor_channel" name="two_factor_channel" class="form-input" required>
-                            <option value="app" {% if security_preferences.get('two_factor_channel', 'app') == 'app' %}selected{% endif %}>Приложение-аутентификатор</option>
-                            <option value="email" {% if security_preferences.get('two_factor_channel') == 'email' %}selected{% endif %}>Email</option>
-                            <option value="sms" {% if security_preferences.get('two_factor_channel') == 'sms' %}selected{% endif %}>SMS</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="recovery_email">Email для восстановления</label>
-                        <input type="email" id="recovery_email" name="recovery_email" class="form-input" value="{{ security_preferences.get('recovery_email', '') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="recovery_phone">Телефон для восстановления</label>
-                        <input type="tel" id="recovery_phone" name="recovery_phone" class="form-input" value="{{ security_preferences.get('recovery_phone', '') }}" placeholder="+7 (___) ___-__-__">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                </form>
+                <h2 class="section-title">Google Authenticator</h2>
+                <p>Текущий статус: <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong></p>
 
                 {% if otp_enabled %}
                 <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
@@ -122,6 +121,18 @@
                     </div>
                     <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
                 </form>
+                {% endif %}
+
+                {% if recovery_codes %}
+                <div class="account-inline-form-spaced">
+                    <h3 class="section-subtitle">Резервные коды</h3>
+                    <p class="muted-text">Сохраните коды в надёжном месте. Они помогут восстановить доступ.</p>
+                    <div class="account-codes-grid">
+                        {% for code in recovery_codes %}
+                        <div class="account-code-item">{{ code }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
                 {% endif %}
             </div>
 
@@ -153,83 +164,191 @@
                     <button type="submit" class="btn btn-danger">Выйти со всех устройств</button>
                 </form>
             </div>
-
-            <div class="card account-card">
-                <h2 class="section-title">Резервные коды восстановления</h2>
-                <form method="post" action="{{ url_for('regenerate_recovery_codes') }}" class="form-block account-settings-form">
-                    <div class="form-group">
-                        <label for="recovery_password">Пароль для генерации кодов</label>
-                        <input type="password" id="recovery_password" name="password" class="form-input" required>
-                    </div>
-                    <button type="submit" class="btn btn-secondary">Сгенерировать новые коды</button>
-                </form>
-                {% if recovery_codes %}
-                <div class="account-codes-grid">
-                    {% for code in recovery_codes %}
-                    <div class="account-code-item">{{ code }}</div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="muted-text">Коды ещё не сгенерированы.</p>
-                {% endif %}
-            </div>
         </div>
     </div>
 </section>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const tabButtons = document.querySelectorAll(".account-tab-btn");
-        const tabPanels = document.querySelectorAll(".account-tab-content");
+document.addEventListener("DOMContentLoaded", function () {
+    const tabButtons = document.querySelectorAll(".account-tab-btn");
+    const tabPanels = document.querySelectorAll(".account-tab-content");
 
-        tabButtons.forEach(function (button) {
-            button.addEventListener("click", function () {
-                const target = button.dataset.accountTab;
-                tabButtons.forEach(function (btn) { btn.classList.remove("btn-tab-active"); });
-                tabPanels.forEach(function (panel) { panel.classList.remove("account-tab-content-active"); });
+    function activateTab(target) {
+        tabButtons.forEach(function (btn) { btn.classList.toggle("btn-tab-active", btn.dataset.accountTab === target); });
+        tabPanels.forEach(function (panel) { panel.classList.toggle("account-tab-content-active", panel.dataset.accountPanel === target); });
+    }
 
-                button.classList.add("btn-tab-active");
-                const panel = document.querySelector('[data-account-panel="' + target + '"]');
-                if (panel) panel.classList.add("account-tab-content-active");
-            });
+    tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            activateTab(button.dataset.accountTab);
         });
-
-        const avatarInput = document.getElementById("avatar_file");
-        const previewBox = document.getElementById("avatar-preview-box");
-        if (avatarInput && previewBox) {
-            avatarInput.addEventListener("change", function () {
-                const file = avatarInput.files && avatarInput.files[0];
-                if (!file) return;
-                if (file.size > 3 * 1024 * 1024) {
-                    alert("Файл больше 3 МБ. Выберите другое изображение.");
-                    avatarInput.value = "";
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    previewBox.innerHTML = '<img src="' + event.target.result + '" alt="Предпросмотр" class="header-avatar-image">';
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        const passwordForm = document.getElementById("password-form");
-        if (passwordForm) {
-            passwordForm.addEventListener("submit", function (event) {
-                const newPassword = document.getElementById("new_password");
-                const confirmPassword = document.getElementById("confirm_password");
-                if (!newPassword || !confirmPassword) return;
-                if (newPassword.value.length < 8) {
-                    event.preventDefault();
-                    alert("Новый пароль должен содержать минимум 8 символов.");
-                    return;
-                }
-                if (newPassword.value !== confirmPassword.value) {
-                    event.preventDefault();
-                    alert("Подтверждение пароля не совпадает.");
-                }
-            });
-        }
     });
+
+    if (window.matchMedia("(max-width: 768px)").matches) {
+        activateTab("profile");
+    }
+
+    const avatarInput = document.getElementById("avatar_file");
+    const previewBox = document.getElementById("avatar-preview-box");
+    const cropLayout = document.getElementById("avatar-crop-layout");
+    const cropImage = document.getElementById("avatar-crop-image");
+    const cropFrame = document.getElementById("avatar-crop-frame");
+    const zoomInput = document.getElementById("avatar_zoom");
+    const previewCanvas = document.getElementById("avatar-crop-preview");
+    const hiddenCroppedData = document.getElementById("cropped_avatar_data");
+    const avatarForm = document.getElementById("avatar-upload-form");
+
+    const cropState = {
+        img: null,
+        scale: 1,
+        x: 0,
+        y: 0,
+        dragging: false,
+        startX: 0,
+        startY: 0,
+    };
+
+    function clampPosition() {
+        if (!cropState.img || !cropFrame) return;
+        const frameSize = cropFrame.clientWidth;
+        const scaledW = cropState.img.width * cropState.scale;
+        const scaledH = cropState.img.height * cropState.scale;
+        const minX = Math.min(0, frameSize - scaledW);
+        const minY = Math.min(0, frameSize - scaledH);
+        cropState.x = Math.max(minX, Math.min(0, cropState.x));
+        cropState.y = Math.max(minY, Math.min(0, cropState.y));
+    }
+
+    function renderCrop() {
+        if (!cropState.img || !cropImage || !previewCanvas || !cropFrame) return;
+        clampPosition();
+
+        cropImage.style.transform = "translate(" + cropState.x + "px, " + cropState.y + "px) scale(" + cropState.scale + ")";
+
+        const ctx = previewCanvas.getContext("2d");
+        const size = previewCanvas.width;
+        ctx.clearRect(0, 0, size, size);
+
+        const frameSize = cropFrame.clientWidth;
+        const factor = size / frameSize;
+        const sx = (-cropState.x / cropState.scale) * factor;
+        const sy = (-cropState.y / cropState.scale) * factor;
+        const sw = (frameSize / cropState.scale) * factor;
+        const sh = (frameSize / cropState.scale) * factor;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(cropState.img, sx, sy, sw, sh, 0, 0, size, size);
+        ctx.restore();
+
+        hiddenCroppedData.value = previewCanvas.toDataURL("image/png");
+
+        if (previewBox) {
+            previewBox.innerHTML = '<img src="' + hiddenCroppedData.value + '" alt="Предпросмотр" class="header-avatar-image">';
+        }
+    }
+
+    function startCropForFile(file) {
+        if (!file || !cropLayout || !cropImage) return;
+        if (file.size > 3 * 1024 * 1024) {
+            alert("Файл больше 3 МБ. Выберите другое изображение.");
+            avatarInput.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const image = new Image();
+            image.onload = function () {
+                cropState.img = image;
+                cropState.scale = 1;
+                cropState.x = 0;
+                cropState.y = 0;
+                zoomInput.value = "1";
+                cropImage.src = event.target.result;
+                cropLayout.hidden = false;
+                requestAnimationFrame(renderCrop);
+            };
+            image.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (avatarInput) {
+        avatarInput.addEventListener("change", function () {
+            const file = avatarInput.files && avatarInput.files[0];
+            if (!file) return;
+            startCropForFile(file);
+        });
+    }
+
+    if (zoomInput) {
+        zoomInput.addEventListener("input", function () {
+            cropState.scale = Number(zoomInput.value || "1");
+            renderCrop();
+        });
+    }
+
+    function onDragStart(event) {
+        if (!cropState.img) return;
+        cropState.dragging = true;
+        const point = event.touches ? event.touches[0] : event;
+        cropState.startX = point.clientX - cropState.x;
+        cropState.startY = point.clientY - cropState.y;
+    }
+
+    function onDragMove(event) {
+        if (!cropState.dragging || !cropState.img) return;
+        if (event.cancelable) event.preventDefault();
+        const point = event.touches ? event.touches[0] : event;
+        cropState.x = point.clientX - cropState.startX;
+        cropState.y = point.clientY - cropState.startY;
+        renderCrop();
+    }
+
+    function onDragEnd() {
+        cropState.dragging = false;
+    }
+
+    if (cropFrame) {
+        cropFrame.addEventListener("mousedown", onDragStart);
+        window.addEventListener("mousemove", onDragMove, { passive: false });
+        window.addEventListener("mouseup", onDragEnd);
+
+        cropFrame.addEventListener("touchstart", onDragStart, { passive: true });
+        window.addEventListener("touchmove", onDragMove, { passive: false });
+        window.addEventListener("touchend", onDragEnd, { passive: true });
+    }
+
+    if (avatarForm) {
+        avatarForm.addEventListener("submit", function (event) {
+            if (!hiddenCroppedData.value) {
+                event.preventDefault();
+                alert("Выберите файл и обрежьте фото перед сохранением.");
+            }
+        });
+    }
+
+    const passwordForm = document.getElementById("password-form");
+    if (passwordForm) {
+        passwordForm.addEventListener("submit", function (event) {
+            const newPassword = document.getElementById("new_password");
+            const confirmPassword = document.getElementById("confirm_password");
+            if (!newPassword || !confirmPassword) return;
+            if (newPassword.value.length < 8) {
+                event.preventDefault();
+                alert("Новый пароль должен содержать минимум 8 символов.");
+                return;
+            }
+            if (newPassword.value !== confirmPassword.value) {
+                event.preventDefault();
+                alert("Подтверждение пароля не совпадает.");
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
