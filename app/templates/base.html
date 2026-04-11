@@ -55,6 +55,7 @@
         <div class="mobile-fab-panel" id="mobile-fab-panel">
             {% set is_car_page = request.endpoint in ['car', 'car_manage', 'car_done_edit', 'car_planned_edit', 'car_planned_complete', 'car_notifications'] %}
             {% set is_shootings_page = request.endpoint in ['shootings', 'shootings_upcoming', 'shootings_archive', 'shootings_add', 'shooting_detail', 'shooting_edit'] %}
+            {% set is_scenarios_page = request.endpoint in ['scenarios', 'scenarios_upcoming', 'scenarios_archive', 'scenarios_add', 'scenario_detail', 'scenario_edit'] %}
             {% set is_photo_projects_page = request.endpoint in ['planner.photo_projects', 'planner.photo_project_detail', 'planner.create_photo_project', 'planner.edit_photo_project', 'planner.create_photo_project_booking', 'planner.edit_photo_project_booking', 'planner.photo_project_booking_detail'] %}
 
             <a href="{{ url_for('index') }}" class="mobile-fab-link {% if is_home_page %}mobile-fab-link-active{% endif %}">Главная</a>
@@ -62,6 +63,7 @@
             <a href="{{ url_for('planner.schedule') }}" class="mobile-fab-link {% if is_schedule_page %}mobile-fab-link-active{% endif %}">График</a>
             <a href="{{ url_for('car') }}" class="mobile-fab-link {% if is_car_page %}mobile-fab-link-active{% endif %}">Машина</a>
             <a href="{{ url_for('shootings') }}" class="mobile-fab-link {% if is_shootings_page %}mobile-fab-link-active{% endif %}">Съёмки</a>
+            <a href="{{ url_for('scenarios') }}" class="mobile-fab-link {% if is_scenarios_page %}mobile-fab-link-active{% endif %}">Сценарии</a>
             <a href="{{ url_for('planner.photo_projects') }}" class="mobile-fab-link {% if is_photo_projects_page %}mobile-fab-link-active{% endif %}">Фотопроекты</a>
             <a href="{{ url_for('logout') }}" class="mobile-fab-link mobile-fab-link-danger">Выйти</a>
         </div>

@@ -1415,3 +1415,159 @@ def delete_shooting(shooting_id):
 
     conn.commit()
     conn.close()
+
+
+# =========================================================
+# SCENARIOS
+# =========================================================
+
+def _prepare_scenario(row):
+    if not row:
+        return None
+
+    scenario = dict(row)
+    scenario["shooting_date_display"] = _format_date_display(
+        scenario.get("shooting_date")
+    )
+    shooting_date = scenario.get("shooting_date")
+    scenario["is_archive"] = bool(shooting_date and shooting_date < date.today().isoformat())
+    return scenario
+
+
+def create_scenario(title, shooting_date, scenario_text):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO scenarios (
+            title,
+            shooting_date,
+            scenario_text
+        )
+        VALUES (?, ?, ?)
+        """,
+        (title, shooting_date, scenario_text),
+    )
+    conn.commit()
+    scenario_id = cursor.lastrowid
+    conn.close()
+    return scenario_id
+
+
+def get_upcoming_scenarios():
+    conn = get_connection()
+    cursor = conn.cursor()
+    today = date.today().isoformat()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM scenarios
+        WHERE shooting_date >= ?
+        ORDER BY shooting_date ASC, id DESC
+        """,
+        (today,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [_prepare_scenario(row) for row in rows]
+
+
+def get_archived_scenarios():
+    conn = get_connection()
+    cursor = conn.cursor()
+    today = date.today().isoformat()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM scenarios
+        WHERE shooting_date < ?
+        ORDER BY shooting_date DESC, id DESC
+        """,
+        (today,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [_prepare_scenario(row) for row in rows]
+
+
+def get_nearest_scenario():
+    conn = get_connection()
+    cursor = conn.cursor()
+    today = date.today().isoformat()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM scenarios
+        WHERE shooting_date >= ?
+        ORDER BY shooting_date ASC, id DESC
+        LIMIT 1
+        """,
+        (today,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return _prepare_scenario(row)
+
+
+def get_scenarios_count():
+    conn = get_connection()
+    cursor = conn.cursor()
+    today = date.today().isoformat()
+
+    cursor.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM scenarios
+        WHERE shooting_date >= ?
+        """,
+        (today,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return row["total"] if row else 0
+
+
+def get_scenario_by_id(scenario_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT *
+        FROM scenarios
+        WHERE id = ?
+        """,
+        (scenario_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return _prepare_scenario(row)
+
+
+def update_scenario(scenario_id, title, shooting_date, scenario_text):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE scenarios
+        SET
+            title = ?,
+            shooting_date = ?,
+            scenario_text = ?
+        WHERE id = ?
+        """,
+        (title, shooting_date, scenario_text, scenario_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_scenario(scenario_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM scenarios WHERE id = ?", (scenario_id,))
+    conn.commit()
+    conn.close()

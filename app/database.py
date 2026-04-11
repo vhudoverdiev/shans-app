@@ -91,6 +91,20 @@ def init_db():
     _add_column_if_not_exists(cursor, "shootings", "duration_hours", "REAL NOT NULL DEFAULT 1")
     _add_column_if_not_exists(cursor, "shootings", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     # =========================================================
+    # SCENARIOS
+    # =========================================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS scenarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            shooting_date TEXT NOT NULL,
+            scenario_text TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    _add_column_if_not_exists(cursor, "scenarios", "scenario_text", "TEXT")
+    _add_column_if_not_exists(cursor, "scenarios", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    # =========================================================
     # USERS
     # =========================================================
     cursor.execute("""
