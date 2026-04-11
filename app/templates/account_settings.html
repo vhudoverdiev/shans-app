@@ -392,13 +392,19 @@ document.addEventListener("DOMContentLoaded", function () {
         avatarInput.click();
     }
     if (avatarEditBtn) {
-        avatarEditBtn.addEventListener("click", triggerAvatarFileSelect);
+        avatarEditBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            triggerAvatarFileSelect();
+        });
     }
     if (avatarPreviewWrap) {
         avatarPreviewWrap.addEventListener("click", function (event) {
             if (avatarHasImage) return;
             const isRemoveAction = event.target.closest && event.target.closest("#account-avatar-remove-form");
+            const isEditAction = event.target.closest && event.target.closest("#account-avatar-edit-btn");
             if (isRemoveAction) return;
+            if (isEditAction) return;
             triggerAvatarFileSelect();
         });
     }
