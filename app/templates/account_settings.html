@@ -41,25 +41,7 @@
                         <label for="avatar_file" class="avatar-file-label">Выберите файл</label>
                         <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
                         <div class="avatar-file-selected" id="avatar-file-selected">Файл не выбран</div>
-                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ. После выбора сможете обрезать фото и посмотреть предпросмотр.</small>
-                        <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data">
-                    </div>
-
-                    <div class="avatar-crop-layout" id="avatar-crop-layout" hidden>
-                        <div class="avatar-crop-stage">
-                            <div class="avatar-crop-frame" id="avatar-crop-frame">
-                                <img id="avatar-crop-image" alt="Обрезка изображения">
-                            </div>
-                            <div class="avatar-crop-controls">
-                                <label for="avatar_zoom">Масштаб</label>
-                                <input type="range" min="1" max="3" step="0.01" value="1" id="avatar_zoom">
-                                <small class="form-hint">Перетаскивайте фото мышкой/пальцем для точного кадра.</small>
-                            </div>
-                        </div>
-                        <div class="avatar-crop-preview-wrap">
-                            <div class="avatar-crop-preview-title">Предпросмотр</div>
-                            <canvas id="avatar-crop-preview" class="avatar-crop-preview" width="220" height="220"></canvas>
-                        </div>
+                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
@@ -191,10 +173,12 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const accountTabStorageKey = "account_settings_active_tab";
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
 
     function activateTab(target) {
+        if (!target) return;
         tabButtons.forEach(function (btn) { btn.classList.toggle("btn-tab-active", btn.dataset.accountTab === target); });
         tabPanels.forEach(function (panel) { panel.classList.toggle("account-tab-content-active", panel.dataset.accountPanel === target); });
     }
@@ -202,102 +186,16 @@ document.addEventListener("DOMContentLoaded", function () {
     tabButtons.forEach(function (button) {
         button.addEventListener("click", function () {
             activateTab(button.dataset.accountTab);
+            localStorage.setItem(accountTabStorageKey, button.dataset.accountTab);
         });
     });
 
-    if (window.matchMedia("(max-width: 768px)").matches) {
-        activateTab("profile");
-    }
+    const tabFromUrl = new URLSearchParams(window.location.search).get("tab");
+    const tabFromStorage = localStorage.getItem(accountTabStorageKey);
+    activateTab(tabFromUrl || tabFromStorage || "profile");
 
     const avatarInput = document.getElementById("avatar_file");
     const selectedFileLabel = document.getElementById("avatar-file-selected");
-    const previewBox = document.getElementById("avatar-preview-box");
-    const cropLayout = document.getElementById("avatar-crop-layout");
-    const cropImage = document.getElementById("avatar-crop-image");
-    const cropFrame = document.getElementById("avatar-crop-frame");
-    const zoomInput = document.getElementById("avatar_zoom");
-    const previewCanvas = document.getElementById("avatar-crop-preview");
-    const hiddenCroppedData = document.getElementById("cropped_avatar_data");
-    const avatarForm = document.getElementById("avatar-upload-form");
-
-    const cropState = {
-        img: null,
-        scale: 1,
-        x: 0,
-        y: 0,
-        dragging: false,
-        startX: 0,
-        startY: 0,
-    };
-
-    function clampPosition() {
-        if (!cropState.img || !cropFrame) return;
-        const frameSize = cropFrame.clientWidth;
-        const scaledW = cropState.img.width * cropState.scale;
-        const scaledH = cropState.img.height * cropState.scale;
-        const minX = Math.min(0, frameSize - scaledW);
-        const minY = Math.min(0, frameSize - scaledH);
-        cropState.x = Math.max(minX, Math.min(0, cropState.x));
-        cropState.y = Math.max(minY, Math.min(0, cropState.y));
-    }
-
-    function renderCrop() {
-        if (!cropState.img || !cropImage || !previewCanvas || !cropFrame) return;
-        clampPosition();
-
-        cropImage.style.transform = "translate(" + cropState.x + "px, " + cropState.y + "px) scale(" + cropState.scale + ")";
-
-        const ctx = previewCanvas.getContext("2d");
-        const size = previewCanvas.width;
-        ctx.clearRect(0, 0, size, size);
-
-        const frameSize = cropFrame.clientWidth;
-        const factor = size / frameSize;
-        const sx = (-cropState.x / cropState.scale) * factor;
-        const sy = (-cropState.y / cropState.scale) * factor;
-        const sw = (frameSize / cropState.scale) * factor;
-        const sh = (frameSize / cropState.scale) * factor;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(cropState.img, sx, sy, sw, sh, 0, 0, size, size);
-        ctx.restore();
-
-        hiddenCroppedData.value = previewCanvas.toDataURL("image/png");
-
-        if (previewBox) {
-            previewBox.innerHTML = '<img src="' + hiddenCroppedData.value + '" alt="Предпросмотр" class="header-avatar-image">';
-        }
-    }
-
-    function startCropForFile(file) {
-        if (!file || !cropLayout || !cropImage) return;
-        if (file.size > 3 * 1024 * 1024) {
-            alert("Файл больше 3 МБ. Выберите другое изображение.");
-            avatarInput.value = "";
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            const image = new Image();
-            image.onload = function () {
-                cropState.img = image;
-                cropState.scale = 1;
-                cropState.x = 0;
-                cropState.y = 0;
-                zoomInput.value = "1";
-                cropImage.src = event.target.result;
-                cropLayout.hidden = false;
-                requestAnimationFrame(renderCrop);
-            };
-            image.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
 
     if (avatarInput) {
         avatarInput.addEventListener("change", function () {
@@ -306,53 +204,12 @@ document.addEventListener("DOMContentLoaded", function () {
             if (selectedFileLabel) {
                 selectedFileLabel.textContent = "Выбран файл: " + file.name;
             }
-            startCropForFile(file);
-        });
-    }
-
-    if (zoomInput) {
-        zoomInput.addEventListener("input", function () {
-            cropState.scale = Number(zoomInput.value || "1");
-            renderCrop();
-        });
-    }
-
-    function onDragStart(event) {
-        if (!cropState.img) return;
-        cropState.dragging = true;
-        const point = event.touches ? event.touches[0] : event;
-        cropState.startX = point.clientX - cropState.x;
-        cropState.startY = point.clientY - cropState.y;
-    }
-
-    function onDragMove(event) {
-        if (!cropState.dragging || !cropState.img) return;
-        if (event.cancelable) event.preventDefault();
-        const point = event.touches ? event.touches[0] : event;
-        cropState.x = point.clientX - cropState.startX;
-        cropState.y = point.clientY - cropState.startY;
-        renderCrop();
-    }
-
-    function onDragEnd() {
-        cropState.dragging = false;
-    }
-
-    if (cropFrame) {
-        cropFrame.addEventListener("mousedown", onDragStart);
-        window.addEventListener("mousemove", onDragMove, { passive: false });
-        window.addEventListener("mouseup", onDragEnd);
-
-        cropFrame.addEventListener("touchstart", onDragStart, { passive: true });
-        window.addEventListener("touchmove", onDragMove, { passive: false });
-        window.addEventListener("touchend", onDragEnd, { passive: true });
-    }
-
-    if (avatarForm) {
-        avatarForm.addEventListener("submit", function (event) {
-            if (!hiddenCroppedData.value) {
-                event.preventDefault();
-                alert("Выберите файл и обрежьте фото перед сохранением.");
+            if (file.size > 3 * 1024 * 1024) {
+                alert("Файл больше 3 МБ. Выберите другое изображение.");
+                avatarInput.value = "";
+                if (selectedFileLabel) {
+                    selectedFileLabel.textContent = "Файл не выбран";
+                }
             }
         });
     }
