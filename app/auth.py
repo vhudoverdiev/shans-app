@@ -123,6 +123,29 @@ def register_failed_login(username, ip_address):
     conn.close()
 
 
+
+
+def clear_failed_logins_for_username(username: str) -> int:
+    """
+    Удаляет все записи неудачных попыток входа для указанного логина.
+    Возвращает количество удалённых строк.
+    """
+    normalized_username = (username or "").strip()
+    if not normalized_username:
+        return 0
+
+    conn = get_connection()
+    cursor = conn.execute(
+        "DELETE FROM login_attempts WHERE username = ?",
+        (normalized_username,),
+    )
+    conn.commit()
+    deleted_rows = cursor.rowcount if cursor.rowcount is not None else 0
+    conn.close()
+    if deleted_rows:
+        logger.info("Cleared %s failed login attempts for username=%s", deleted_rows, normalized_username)
+    return deleted_rows
+
 def clear_failed_logins(username, ip_address):
     conn = get_connection()
     conn.execute(
