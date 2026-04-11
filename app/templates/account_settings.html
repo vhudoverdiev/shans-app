@@ -9,6 +9,10 @@
             <p class="account-settings-subtitle">Профессиональная настройка профиля и безопасности.</p>
         </div>
     </div>
+    <div class="account-inline-notice" id="account-inline-notice" role="status" aria-live="polite" hidden>
+        <span class="account-inline-notice-icon" aria-hidden="true">⚠</span>
+        <span id="account-inline-notice-text"></span>
+    </div>
 
     <div class="card account-hero-card">
         <div class="account-profile-line account-profile-main-line">
@@ -253,7 +257,29 @@ document.addEventListener("DOMContentLoaded", function () {
     const cropPreview = document.getElementById("avatar-crop-preview");
     const croppedAvatarDataInput = document.getElementById("cropped_avatar_data");
     const avatarCropCancelBtn = document.getElementById("avatar-crop-cancel-btn");
+    const accountInlineNotice = document.getElementById("account-inline-notice");
+    const accountInlineNoticeText = document.getElementById("account-inline-notice-text");
     let cropState = null;
+    let noticeTimeoutId = null;
+
+    function showInlineNotice(message) {
+        if (!accountInlineNotice || !accountInlineNoticeText) return;
+        if (noticeTimeoutId) {
+            window.clearTimeout(noticeTimeoutId);
+        }
+        accountInlineNoticeText.textContent = message;
+        accountInlineNotice.hidden = false;
+        accountInlineNotice.classList.add("account-inline-notice-show");
+        noticeTimeoutId = window.setTimeout(function () {
+            accountInlineNotice.classList.remove("account-inline-notice-show");
+            accountInlineNotice.hidden = true;
+        }, 3600);
+    }
+
+    function lockPageScroll(isLocked) {
+        document.documentElement.classList.toggle("avatar-crop-scroll-locked", Boolean(isLocked));
+        document.body.classList.toggle("avatar-crop-scroll-locked", Boolean(isLocked));
+    }
 
     function getFrameSize() {
         if (!cropFrame) return 320;
@@ -356,6 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (cropModal) {
             cropModal.hidden = true;
         }
+        lockPageScroll(false);
         if (cropZoom) {
             cropZoom.value = "1";
         }
@@ -369,7 +396,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             if (file.size > 3 * 1024 * 1024) {
-                alert("Файл больше 3 МБ. Выберите другое изображение.");
+                showInlineNotice("Файл слишком большой — максимум 3 МБ. Выберите изображение поменьше.");
                 avatarInput.value = "";
                 resetAvatarCrop();
                 return;
@@ -413,6 +440,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (cropModal) {
                 cropModal.hidden = false;
             }
+            lockPageScroll(true);
             const frameSize = getFrameSize();
             cropState = {
                 imageLoaded: true,
@@ -440,6 +468,12 @@ document.addEventListener("DOMContentLoaded", function () {
             syncCropImage();
             exportCroppedData();
         });
+        cropZoom.addEventListener("touchstart", function (event) {
+            event.stopPropagation();
+        }, { passive: true });
+        cropZoom.addEventListener("touchmove", function (event) {
+            event.preventDefault();
+        }, { passive: false });
     }
 
     if (cropFrame) {
