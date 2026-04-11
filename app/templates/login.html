@@ -7,7 +7,29 @@
     <div class="login-card">
         <h1 class="login-title">Вход в систему</h1>
 
+        {% if login_stage == "otp" %}
         <form method="POST" class="form-block">
+            <input type="hidden" name="stage" value="otp">
+
+            <div class="form-group">
+                <label>Пользователь</label>
+                <input type="text" class="form-input" value="{{ pending_username }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="otp_code">Код Google Authenticator</label>
+                <input type="text" id="otp_code" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6 цифр" autocomplete="one-time-code" required>
+                <small class="form-hint">Введите код из приложения Google Authenticator.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-wide">
+                Подтвердить вход
+            </button>
+        </form>
+        {% else %}
+        <form method="POST" class="form-block">
+            <input type="hidden" name="stage" value="credentials">
+
             <div class="form-group">
                 <label for="username">Логин</label>
                 <input type="text" id="username" name="username" class="form-input" autocomplete="username" required>
@@ -40,14 +62,15 @@
 
             <div class="form-group">
                 <label for="otp_code">Код Google Authenticator</label>
-                <input type="text" id="otp_code" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6 цифр" autocomplete="one-time-code">
-                <small class="form-hint">Нужен только если Google Authenticator уже подключён в настройках аккаунта.</small>
+                <input type="text" id="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="Доступно на следующем шаге" disabled>
+                <small class="form-hint">Поле станет доступно после успешной проверки логина и пароля.</small>
             </div>
 
             <button type="submit" class="btn btn-primary btn-wide">
                 Войти
             </button>
         </form>
+        {% endif %}
     </div>
 </div>
 
