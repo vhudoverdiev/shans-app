@@ -301,7 +301,23 @@ def _humanize_log_line(raw_line: str) -> str:
     return f"{prefix} — {base}".strip(" —")
 
 
-def _get_unified_logs(limit: int = 250) -> list[dict]:
+def _parse_datetime_local(value: str) -> datetime | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    for fmt in ("%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _get_unified_logs(
+    limit: int = 250,
+    start_dt: datetime | None = None,
+    end_dt: datetime | None = None,
+) -> list[dict]:
     logs_dir = os.path.abspath(os.path.join(current_app.root_path, "..", "logs"))
     if not os.path.isdir(logs_dir):
         return []
@@ -327,6 +343,10 @@ def _get_unified_logs(limit: int = 250) -> list[dict]:
                     timestamp_value = datetime.strptime(timestamp_text, "%Y-%m-%d %H:%M:%S,%f")
                 except ValueError:
                     timestamp_value = datetime.min
+            if start_dt and timestamp_value < start_dt:
+                continue
+            if end_dt and timestamp_value > end_dt:
+                continue
             merged_items.append(
                 {
                     "timestamp": timestamp_value,
@@ -2689,10 +2709,7 @@ def register_routes(app):
 
             session["logs_access_granted"] = True
             access_granted = True
-            logs_payload = _get_unified_logs(limit=500)
-
-            if not logs_payload:
-                flash("Файлы логов не найдены.", "error")
+            logs_payload = []
 
             return render_template(
                 "site_logs.html",
@@ -2716,11 +2733,28 @@ def register_routes(app):
         if not session.get("logs_access_granted"):
             return jsonify({"ok": False, "error": "forbidden"}), 403
 
-        unified_payload = _get_unified_logs(limit=200)
+        start_raw = request.args.get("start", "")
+        end_raw = request.args.get("end", "")
+        start_dt = _parse_datetime_local(start_raw) if start_raw else None
+        end_dt = _parse_datetime_local(end_raw) if end_raw else None
+
+        if start_raw and not start_dt:
+            return jsonify({"ok": False, "error": "invalid_start_datetime"}), 400
+        if end_raw and not end_dt:
+            return jsonify({"ok": False, "error": "invalid_end_datetime"}), 400
+        if start_dt and end_dt and start_dt > end_dt:
+            return jsonify({"ok": False, "error": "invalid_range"}), 400
+
+        limit = 0 if (start_dt or end_dt) else 200
+        unified_payload = _get_unified_logs(limit=limit, start_dt=start_dt, end_dt=end_dt)
         return jsonify(
             {
                 "ok": True,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "period": {
+                    "start": start_dt.strftime("%Y-%m-%d %H:%M") if start_dt else "",
+                    "end": end_dt.strftime("%Y-%m-%d %H:%M") if end_dt else "",
+                },
                 "items": [item["humanized"] for item in unified_payload],
             }
         )

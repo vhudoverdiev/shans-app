@@ -31,8 +31,18 @@
     {% else %}
         <div class="card import-center-card">
             <h2 class="section-title">Журнал действий пользователя</h2>
-            <p class="muted import-center-hint">Показываются только события, которые совершали пользователи на сайте.</p>
-            <p class="muted import-center-hint" id="logs-last-update"></p>
+            <p class="muted import-center-hint">Выберите период, чтобы посмотреть логи за конкретные дату и время.</p>
+            <form id="logs-filter-form" class="form-block import-center-form">
+                <div class="form-group">
+                    <label for="logs-start-dt">Начало периода</label>
+                    <input id="logs-start-dt" type="datetime-local" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="logs-end-dt">Конец периода</label>
+                    <input id="logs-end-dt" type="datetime-local" class="form-input">
+                </div>
+                <button type="submit" class="btn btn-primary">Показать логи за период</button>
+            </form>
         </div>
 
         <div class="card import-center-card">
@@ -43,7 +53,7 @@
                         <div class="site-log-row">{{ log.humanized }}</div>
                     {% endfor %}
                 {% else %}
-                    <div class="site-log-row">Лог пока пуст.</div>
+                    <div class="site-log-row">Выберите дату и время, чтобы загрузить логи.</div>
                 {% endif %}
             </div>
         </div>
@@ -54,7 +64,9 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const humanContainer = document.getElementById("human-log-container");
-    const lastUpdateNode = document.getElementById("logs-last-update");
+    const filterForm = document.getElementById("logs-filter-form");
+    const startInput = document.getElementById("logs-start-dt");
+    const endInput = document.getElementById("logs-end-dt");
     if (!humanContainer) return;
 
     function scrollLogsToBottom() {
@@ -63,18 +75,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function refreshLogs() {
         try {
-            const response = await fetch("/log/stream", {
+            const params = new URLSearchParams();
+            if (startInput && startInput.value) params.set("start", startInput.value);
+            if (endInput && endInput.value) params.set("end", endInput.value);
+            const query = params.toString();
+            const response = await fetch(`/log/stream${query ? `?${query}` : ""}`, {
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             });
-            if (!response.ok) return;
             const payload = await response.json();
-            if (!payload.ok || !Array.isArray(payload.items)) return;
+            if (!response.ok || !payload.ok || !Array.isArray(payload.items)) {
+                const errorRow = document.createElement("div");
+                errorRow.className = "site-log-row";
+                errorRow.textContent = "Не удалось загрузить логи. Проверьте период и попробуйте снова.";
+                humanContainer.innerHTML = "";
+                humanContainer.appendChild(errorRow);
+                return;
+            }
 
             humanContainer.innerHTML = "";
             if (payload.items.length === 0) {
                 const emptyRow = document.createElement("div");
                 emptyRow.className = "site-log-row";
-                emptyRow.textContent = "Лог пока пуст.";
+                emptyRow.textContent = "За выбранный период логов нет.";
                 humanContainer.appendChild(emptyRow);
             } else {
                 payload.items.forEach(function (line) {
@@ -84,17 +106,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     humanContainer.appendChild(row);
                 });
             }
-            if (lastUpdateNode && payload.updated_at) {
-                lastUpdateNode.textContent = `Последнее обновление: ${payload.updated_at}`;
-            }
             scrollLogsToBottom();
         } catch (error) {
             console.error("Не удалось обновить логи", error);
         }
     }
 
-    scrollLogsToBottom();
-    window.setInterval(refreshLogs, 180000);
+    if (filterForm) {
+        filterForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            refreshLogs();
+        });
+    }
 });
 </script>
 {% endif %}
