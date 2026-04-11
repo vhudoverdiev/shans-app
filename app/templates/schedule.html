@@ -106,7 +106,7 @@
                 </thead>
                 <tbody>
                     {% for task in day_tasks %}
-                    <tr class="{% if task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка', 'Сценарий'] or task.is_important %}planner-task-row-photo{% endif %}">
+                    <tr class="{% if task.task_type == 'Сценарий' %}planner-task-row-scenario{% elif task.range_end_date and task.status == 'planned' %}planner-task-row-range{% elif task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}planner-task-row-photo{% endif %}">
                         <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
                         <td>
                             {{ task.title }}
