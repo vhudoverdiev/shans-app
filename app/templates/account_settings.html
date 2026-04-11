@@ -265,17 +265,34 @@ document.addEventListener("DOMContentLoaded", function () {
     const avatarCropCancelBtn = document.getElementById("avatar-crop-cancel-btn");
     let cropState = null;
 
+    function getFrameSize() {
+        if (!cropFrame) return 320;
+        return cropFrame.clientWidth || cropFrame.offsetWidth || 320;
+    }
+
+    function getCropSourceRect() {
+        if (!cropState) return null;
+        const frameSize = getFrameSize();
+        if (!frameSize || !cropState.scale) return null;
+        const sourceWidth = frameSize / cropState.scale;
+        const sourceHeight = frameSize / cropState.scale;
+        const sourceX = Math.max(0, -cropState.offsetX / cropState.scale);
+        const sourceY = Math.max(0, -cropState.offsetY / cropState.scale);
+        return {
+            sourceX,
+            sourceY,
+            sourceWidth: Math.min(sourceWidth, cropState.naturalWidth - sourceX),
+            sourceHeight: Math.min(sourceHeight, cropState.naturalHeight - sourceY),
+        };
+    }
+
     function drawCropPreview() {
         if (!cropState || !cropPreview || !cropImage || !cropState.imageLoaded) return;
+        const sourceRect = getCropSourceRect();
+        if (!sourceRect) return;
         const ctx = cropPreview.getContext("2d");
         if (!ctx) return;
         const size = cropPreview.width;
-        const sourceX = Math.max(0, -cropState.offsetX / cropState.scale);
-        const sourceY = Math.max(0, -cropState.offsetY / cropState.scale);
-        const sourceSize = Math.min(
-            Math.min(cropState.naturalWidth, cropState.naturalHeight),
-            size / cropState.scale
-        );
 
         ctx.clearRect(0, 0, size, size);
         ctx.save();
@@ -285,10 +302,10 @@ document.addEventListener("DOMContentLoaded", function () {
         ctx.clip();
         ctx.drawImage(
             cropImage,
-            sourceX,
-            sourceY,
-            sourceSize,
-            sourceSize,
+            sourceRect.sourceX,
+            sourceRect.sourceY,
+            sourceRect.sourceWidth,
+            sourceRect.sourceHeight,
             0,
             0,
             size,
@@ -299,7 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function syncCropImage() {
         if (!cropState || !cropImage || !cropFrame) return;
-        const frameSize = cropFrame.clientWidth;
+        const frameSize = getFrameSize();
         const minScale = Math.max(frameSize / cropState.naturalWidth, frameSize / cropState.naturalHeight);
         const zoomMultiplier = cropState.zoom;
         cropState.scale = minScale * zoomMultiplier;
@@ -315,24 +332,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function exportCroppedData() {
         if (!cropState || !cropImage || !cropFrame || !croppedAvatarDataInput) return false;
-        const frameSize = cropFrame.clientWidth;
+        const sourceRect = getCropSourceRect();
+        if (!sourceRect) return false;
         const canvas = document.createElement("canvas");
         canvas.width = 512;
         canvas.height = 512;
         const ctx = canvas.getContext("2d");
         if (!ctx) return false;
-        const sourceX = Math.max(0, -cropState.offsetX / cropState.scale);
-        const sourceY = Math.max(0, -cropState.offsetY / cropState.scale);
-        const sourceSize = Math.min(
-            Math.min(cropState.naturalWidth, cropState.naturalHeight),
-            frameSize / cropState.scale
-        );
         ctx.drawImage(
             cropImage,
-            sourceX,
-            sourceY,
-            sourceSize,
-            sourceSize,
+            sourceRect.sourceX,
+            sourceRect.sourceY,
+            sourceRect.sourceWidth,
+            sourceRect.sourceHeight,
             0,
             0,
             512,
@@ -382,7 +394,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cropImage) {
         cropImage.addEventListener("load", function () {
             if (!cropFrame) return;
-            const frameSize = cropFrame.clientWidth || 320;
+            if (cropModal) {
+                cropModal.hidden = false;
+            }
+            const frameSize = getFrameSize();
             cropState = {
                 imageLoaded: true,
                 naturalWidth: cropImage.naturalWidth,
@@ -398,9 +413,6 @@ document.addEventListener("DOMContentLoaded", function () {
             cropState.offsetX = (frameSize - width) / 2;
             cropState.offsetY = (frameSize - height) / 2;
             syncCropImage();
-            if (cropModal) {
-                cropModal.hidden = false;
-            }
             exportCroppedData();
         });
     }
