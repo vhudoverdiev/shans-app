@@ -1006,27 +1006,60 @@ def register_routes(app):
 
         os_name = "Неизвестная ОС"
         if "android" in ua:
-            os_name = "Android"
+            android_match = re.search(r"android\s+([0-9]+(?:\.[0-9]+)?)", ua)
+            android_version = android_match.group(1) if android_match else None
+            os_name = f"Android {android_version}" if android_version else "Android"
         elif "iphone" in ua or "ipad" in ua or "ios" in ua:
-            os_name = "iOS"
-        elif "windows" in ua:
-            os_name = "Windows"
+            ios_match = re.search(r"os\s([0-9_]+)\slike mac os x", ua)
+            ios_version = ios_match.group(1).replace("_", ".") if ios_match else None
+            os_name = f"iOS {ios_version}" if ios_version else "iOS"
+        elif "windows nt" in ua:
+            windows_versions = {
+                "10.0": "11/10",
+                "6.3": "8.1",
+                "6.2": "8",
+                "6.1": "7",
+                "6.0": "Vista",
+                "5.1": "XP",
+            }
+            windows_match = re.search(r"windows nt ([0-9\.]+)", ua)
+            nt_version = windows_match.group(1) if windows_match else None
+            os_name = f"Windows {windows_versions.get(nt_version, nt_version or '').strip()}".strip()
         elif "mac os x" in ua or "macintosh" in ua:
-            os_name = "macOS"
+            mac_match = re.search(r"mac os x ([0-9_]+)", ua)
+            mac_version = mac_match.group(1).replace("_", ".") if mac_match else None
+            os_name = f"macOS {mac_version}" if mac_version else "macOS"
         elif "linux" in ua:
             os_name = "Linux"
 
+        device_type = "ПК"
+        device_model = None
         if any(token in ua for token in ["mobile", "iphone", "android"]):
             device_type = "Смартфон"
         elif "ipad" in ua or "tablet" in ua:
             device_type = "Планшет"
-        else:
-            device_type = "ПК"
+
+        if "iphone" in ua:
+            device_model = "iPhone"
+        elif "ipad" in ua:
+            device_model = "iPad"
+        elif "android" in ua:
+            android_device_match = re.search(r"android [^;]*;\s*([^;)\[]+)", ua)
+            if android_device_match:
+                raw_model = android_device_match.group(1).strip()
+                if raw_model and "build/" not in raw_model:
+                    cleaned_model = re.sub(r"\b(build|wv)\b.*", "", raw_model, flags=re.IGNORECASE).strip(" ;-")
+                    if cleaned_model and cleaned_model.lower() not in {"linux", "u", "android"}:
+                        device_model = cleaned_model.upper() if cleaned_model.islower() else cleaned_model
 
         browser = "Неизвестный браузер"
         browser_patterns = [
-            ("Edge", r"edg/([0-9\.]+)"),
+            ("Samsung Internet", r"samsungbrowser/([0-9\.]+)"),
+            ("Яндекс Браузер", r"yabrowser/([0-9\.]+)"),
+            ("Microsoft Edge", r"edg/([0-9\.]+)"),
             ("Opera", r"opr/([0-9\.]+)"),
+            ("Vivaldi", r"vivaldi/([0-9\.]+)"),
+            ("Brave", r"brave/([0-9\.]+)"),
             ("Chrome", r"chrome/([0-9\.]+)"),
             ("Firefox", r"firefox/([0-9\.]+)"),
             ("Safari", r"version/([0-9\.]+).*safari"),
@@ -1037,7 +1070,11 @@ def register_routes(app):
                 browser = f"{browser_name} {match.group(1).split('.')[0]}"
                 break
 
-        return f"{device_type} · {os_name}", browser
+        device = f"{device_type} · {os_name}"
+        if device_model:
+            device = f"{device} · {device_model}"
+
+        return device, browser
 
     def _get_request_ip() -> str:
         forwarded = request.headers.get("X-Forwarded-For", "")
