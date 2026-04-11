@@ -78,6 +78,34 @@ def create_admin_if_not_exists():
     conn.close()
 
 
+def disable_otp_for_username(username: str) -> bool:
+    """
+    Отключает 2FA для пользователя по логину.
+    Возвращает True, если настройки были изменены.
+    """
+    normalized_username = (username or "").strip()
+    if not normalized_username:
+        return False
+
+    conn = get_connection()
+    user = conn.execute(
+        "SELECT id, otp_enabled FROM users WHERE username = ?",
+        (normalized_username,),
+    ).fetchone()
+
+    if not user or not user.get("otp_enabled"):
+        conn.close()
+        return False
+
+    conn.execute(
+        "UPDATE users SET otp_enabled = 0 WHERE id = ?",
+        (user["id"],),
+    )
+    conn.commit()
+    conn.close()
+    logger.info("2FA disabled for username=%s", normalized_username)
+    return True
+
 def _utcnow_iso():
     return datetime.now(timezone.utc).isoformat()
 
@@ -94,6 +122,29 @@ def register_failed_login(username, ip_address):
     conn.commit()
     conn.close()
 
+
+
+
+def clear_failed_logins_for_username(username: str) -> int:
+    """
+    Удаляет все записи неудачных попыток входа для указанного логина.
+    Возвращает количество удалённых строк.
+    """
+    normalized_username = (username or "").strip()
+    if not normalized_username:
+        return 0
+
+    conn = get_connection()
+    cursor = conn.execute(
+        "DELETE FROM login_attempts WHERE username = ?",
+        (normalized_username,),
+    )
+    conn.commit()
+    deleted_rows = cursor.rowcount if cursor.rowcount is not None else 0
+    conn.close()
+    if deleted_rows:
+        logger.info("Cleared %s failed login attempts for username=%s", deleted_rows, normalized_username)
+    return deleted_rows
 
 def clear_failed_logins(username, ip_address):
     conn = get_connection()
