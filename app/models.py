@@ -77,6 +77,92 @@ def set_user_last_login_ip(user_id, ip_address):
     conn.close()
 
 
+def upsert_user_login_session(
+    session_key,
+    user_id,
+    device,
+    browser,
+    ip_address,
+    first_login_at,
+    last_seen_at,
+):
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO user_login_sessions (
+            session_key,
+            user_id,
+            device,
+            browser,
+            ip_address,
+            first_login_at,
+            last_seen_at,
+            is_active
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        ON CONFLICT(session_key) DO UPDATE SET
+            device = excluded.device,
+            browser = excluded.browser,
+            ip_address = excluded.ip_address,
+            last_seen_at = excluded.last_seen_at,
+            is_active = 1
+        """,
+        (
+            session_key,
+            user_id,
+            device,
+            browser,
+            ip_address,
+            first_login_at,
+            last_seen_at,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_user_login_sessions(user_id):
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT
+            session_key,
+            device,
+            browser,
+            ip_address,
+            first_login_at,
+            last_seen_at
+        FROM user_login_sessions
+        WHERE user_id = ? AND is_active = 1
+        ORDER BY datetime(last_seen_at) DESC, datetime(first_login_at) DESC
+        """,
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def deactivate_user_login_session(session_key):
+    conn = get_connection()
+    cursor = conn.execute(
+        "UPDATE user_login_sessions SET is_active = 0 WHERE session_key = ?",
+        (session_key,),
+    )
+    conn.commit()
+    conn.close()
+    return cursor.rowcount
+
+
+def deactivate_all_user_login_sessions(user_id):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE user_login_sessions SET is_active = 0 WHERE user_id = ?",
+        (user_id,),
+    )
+    conn.commit()
+    conn.close()
+
+
 def get_system_password():
     conn = get_connection()
     row = conn.execute(

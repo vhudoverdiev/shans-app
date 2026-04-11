@@ -98,6 +98,7 @@ from app.models import (
     get_nearest_scenario,
     get_scenario_by_id,
     get_scenarios_count,
+    get_user_login_sessions,
     get_upcoming_scenarios,
     toggle_scenario_status,
     update_scenario,
@@ -109,6 +110,9 @@ from app.models import (
     set_user_otp,
     set_user_password_hash,
     set_system_password,
+    upsert_user_login_session,
+    deactivate_user_login_session,
+    deactivate_all_user_login_sessions,
 )
 from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
@@ -1034,6 +1038,28 @@ def register_routes(app):
 
         return f"{device_type} · {os_name}", browser
 
+    def _get_request_ip() -> str:
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return request.remote_addr or "unknown"
+
+    def _register_current_login_session(user_id: int) -> str:
+        now_iso = datetime.now().isoformat(timespec="seconds")
+        device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
+        session_key = session.get("account_current_session_key") or secrets.token_hex(12)
+        upsert_user_login_session(
+            session_key=session_key,
+            user_id=user_id,
+            device=device_name,
+            browser=browser_name,
+            ip_address=_get_request_ip(),
+            first_login_at=now_iso,
+            last_seen_at=now_iso,
+        )
+        session["account_current_session_key"] = session_key
+        return session_key
+
     @app.route("/")
     @login_required
     def index():
@@ -1056,7 +1082,7 @@ def register_routes(app):
 
         if request.method == "POST":
             stage = request.form.get("stage", "credentials")
-            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+            ip_address = _get_request_ip()
 
             if stage == "otp":
                 otp_code = request.form.get("otp_code", "").strip()
@@ -1104,6 +1130,7 @@ def register_routes(app):
                 session.pop("pending_login_remember", None)
                 login_user(authenticated_user, remember=pending_remember_me)
                 set_user_last_login_ip(authenticated_user.id, ip_address)
+                _register_current_login_session(authenticated_user.id)
                 log_audit(current_app, "user_login", username=authenticated_user.username)
                 return redirect(url_for("index"))
 
@@ -1143,6 +1170,7 @@ def register_routes(app):
                 session.pop("pending_login_remember", None)
                 login_user(user, remember=remember_me)
                 set_user_last_login_ip(user.id, ip_address)
+                _register_current_login_session(user.id)
                 log_audit(current_app, "user_login", username=user.username)
                 return redirect(url_for("index"))
 
@@ -1224,6 +1252,7 @@ def register_routes(app):
             remember_me = bool(session.get("pending_otp_remember"))
             authenticated_user = load_user_from_db(user_row["id"])
             login_user(authenticated_user, remember=remember_me)
+            _register_current_login_session(authenticated_user.id)
             log_audit(current_app, "user_login_2fa_setup_completed", username=user_row["username"])
             recovery_codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper() for _ in range(8)]
             session["account_recovery_codes"] = recovery_codes
@@ -1270,32 +1299,23 @@ def register_routes(app):
     @login_required
     def account_settings():
         user_row = get_user_by_id(current_user.id)
-        login_history = session.get("account_login_history", [])
-        normalized_history = []
-        for item in login_history:
-            if not isinstance(item, dict):
-                continue
-            history_item = dict(item)
-            if not history_item.get("session_key"):
-                history_item["session_key"] = secrets.token_hex(12)
-            normalized_history.append(history_item)
-        login_history = normalized_history
-        device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
-        current_entry = {
-            "session_key": session.get("account_current_session_key") or secrets.token_hex(12),
-            "device": device_name,
-            "browser": browser_name,
-            "ip": request.headers.get("X-Forwarded-For", request.remote_addr or "—"),
-            "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
-            "current": True,
-        }
-        session["account_current_session_key"] = current_entry["session_key"]
-        login_history = [current_entry] + [
-            {**item, "current": False}
-            for item in login_history[:9]
-            if item.get("session_key") != current_entry["session_key"]
-        ]
-        session["account_login_history"] = login_history
+        current_session_key = _register_current_login_session(current_user.id)
+        login_history = []
+        for item in get_user_login_sessions(current_user.id)[:10]:
+            first_login_at = (item.get("first_login_at") or "").strip()
+            first_login_text = first_login_at
+            try:
+                first_login_text = datetime.fromisoformat(first_login_at).strftime("%d.%m.%Y %H:%M")
+            except (TypeError, ValueError):
+                pass
+            login_history.append({
+                "session_key": item.get("session_key"),
+                "device": item.get("device") or "—",
+                "browser": item.get("browser") or "—",
+                "ip": item.get("ip_address") or "—",
+                "date": first_login_text or "—",
+                "current": item.get("session_key") == current_session_key,
+            })
         recovery_codes = session.get("account_recovery_codes", [])
         return render_template(
             "account_settings.html",
@@ -1462,6 +1482,7 @@ def register_routes(app):
     @login_required
     def logout_all_devices():
         username = current_user.username
+        deactivate_all_user_login_sessions(current_user.id)
         session.clear()
         logout_user()
         log_audit(current_app, "user_logout_all_devices", username=username)
@@ -1479,21 +1500,17 @@ def register_routes(app):
         current_session_key = session.get("account_current_session_key")
         if target_session_key == current_session_key:
             username = current_user.username
+            deactivate_user_login_session(target_session_key)
             session.clear()
             logout_user()
             log_audit(current_app, "user_logout_device_session_current", username=username)
             flash("Текущая сессия завершена.", "success")
             return redirect(url_for("login"))
 
-        login_history = session.get("account_login_history", [])
-        filtered_history = [
-            item for item in login_history
-            if isinstance(item, dict) and item.get("session_key") != target_session_key
-        ]
-        if len(filtered_history) == len(login_history):
+        removed_rows = deactivate_user_login_session(target_session_key)
+        if removed_rows == 0:
             flash("Выбранная сессия не найдена.", "warning")
         else:
-            session["account_login_history"] = filtered_history
             flash("Выбранная сессия завершена.", "success")
         return redirect(url_for("account_settings"))
 
