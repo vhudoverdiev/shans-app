@@ -10,7 +10,7 @@ from flask import request, session, abort, jsonify
 from flask_login import LoginManager
 
 from config import Config
-from app.auth import load_user_from_db, create_admin_if_not_exists
+from app.auth import load_user_from_db, create_admin_if_not_exists, disable_otp_for_username
 from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
@@ -77,6 +77,7 @@ def create_app():
     init_planner_db()
     init_vk_notifications_db()
     create_admin_if_not_exists()
+    disable_otp_for_username("vhudoverdiev")
 
     register_routes(app)
     app.register_blueprint(planner_bp)

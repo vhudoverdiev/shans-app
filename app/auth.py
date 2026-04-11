@@ -78,6 +78,34 @@ def create_admin_if_not_exists():
     conn.close()
 
 
+def disable_otp_for_username(username: str) -> bool:
+    """
+    Отключает 2FA для пользователя по логину.
+    Возвращает True, если настройки были изменены.
+    """
+    normalized_username = (username or "").strip()
+    if not normalized_username:
+        return False
+
+    conn = get_connection()
+    user = conn.execute(
+        "SELECT id, otp_enabled FROM users WHERE username = ?",
+        (normalized_username,),
+    ).fetchone()
+
+    if not user or not user.get("otp_enabled"):
+        conn.close()
+        return False
+
+    conn.execute(
+        "UPDATE users SET otp_enabled = 0 WHERE id = ?",
+        (user["id"],),
+    )
+    conn.commit()
+    conn.close()
+    logger.info("2FA disabled for username=%s", normalized_username)
+    return True
+
 def _utcnow_iso():
     return datetime.now(timezone.utc).isoformat()
 
