@@ -102,6 +102,7 @@ from app.models import (
     update_shooting,
     get_user_by_id,
     set_user_avatar_filename,
+    set_user_last_login_ip,
     set_user_otp,
     set_user_password_hash,
 )
@@ -922,6 +923,7 @@ def register_routes(app):
                 session.pop("pending_login_user_id", None)
                 session.pop("pending_login_remember", None)
                 login_user(authenticated_user, remember=pending_remember_me)
+                set_user_last_login_ip(authenticated_user.id, ip_address)
                 log_audit(current_app, "user_login", username=authenticated_user.username)
                 return redirect(url_for("index"))
 
@@ -941,7 +943,12 @@ def register_routes(app):
             user = verify_user(username, password)
             if user:
                 db_user = get_user_by_id(user.id)
+                should_request_otp = False
                 if db_user and db_user.get("otp_enabled"):
+                    last_login_ip = (db_user.get("last_login_ip") or "").strip()
+                    should_request_otp = not last_login_ip or last_login_ip != ip_address
+
+                if should_request_otp:
                     session["pending_login_user_id"] = user.id
                     session["pending_login_remember"] = 1 if remember_me else 0
                     flash("Логин и пароль верны. Введите код Google Authenticator.", "info")
@@ -955,6 +962,7 @@ def register_routes(app):
                 session.pop("pending_login_user_id", None)
                 session.pop("pending_login_remember", None)
                 login_user(user, remember=remember_me)
+                set_user_last_login_ip(user.id, ip_address)
                 log_audit(current_app, "user_login", username=user.username)
                 return redirect(url_for("index"))
 
@@ -1066,14 +1074,9 @@ def register_routes(app):
     @app.route("/account/settings/2fa/setup", methods=["POST"])
     @login_required
     def start_account_2fa_setup():
-        password = request.form.get("password", "").strip()
         user_row = get_user_by_id(current_user.id)
         if not user_row:
             flash("Пользователь не найден.", "danger")
-            return redirect(url_for("account_settings"))
-
-        if not check_password_hash(user_row.get("password_hash", ""), password):
-            flash("Неверный пароль.", "danger")
             return redirect(url_for("account_settings"))
 
         pending_secret = generate_totp_secret()
@@ -1233,14 +1236,9 @@ def register_routes(app):
     @login_required
     def disable_account_2fa():
         user_row = get_user_by_id(current_user.id)
-        password = request.form.get("password", "").strip()
         otp_code = request.form.get("otp_code", "").strip()
         if not user_row:
             flash("Пользователь не найден.", "danger")
-            return redirect(url_for("account_settings"))
-
-        if not check_password_hash(user_row.get("password_hash", ""), password):
-            flash("Неверный пароль.", "danger")
             return redirect(url_for("account_settings"))
 
         if user_row.get("otp_enabled") and not verify_totp_code(user_row.get("otp_secret"), otp_code):

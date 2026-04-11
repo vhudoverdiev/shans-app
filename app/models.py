@@ -67,6 +67,16 @@ def set_user_avatar_filename(user_id, avatar_filename):
     conn.close()
 
 
+def set_user_last_login_ip(user_id, ip_address):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE users SET last_login_ip = ? WHERE id = ?",
+        (ip_address, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
 # =========================================================
 # BUDGET
 # =========================================================

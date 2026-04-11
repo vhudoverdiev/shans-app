@@ -79,15 +79,30 @@
                 <form method="post" action="{{ url_for('update_account_password') }}" class="form-block account-settings-form" id="password-form">
                     <div class="form-group">
                         <label for="current_password">Старый пароль</label>
-                        <input type="password" id="current_password" name="current_password" class="form-input" required>
+                        <div class="password-input-wrap">
+                            <input type="password" id="current_password" name="current_password" class="form-input" required>
+                            <button type="button" class="password-toggle" data-password-toggle="current_password" aria-label="Показать пароль">
+                                <span class="eye-icon"></span>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="new_password">Новый пароль</label>
-                        <input type="password" id="new_password" name="new_password" class="form-input" minlength="8" required>
+                        <div class="password-input-wrap">
+                            <input type="password" id="new_password" name="new_password" class="form-input" minlength="8" required>
+                            <button type="button" class="password-toggle" data-password-toggle="new_password" aria-label="Показать пароль">
+                                <span class="eye-icon"></span>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="confirm_password">Подтверждение</label>
-                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="8" required>
+                        <div class="password-input-wrap">
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="8" required>
+                            <button type="button" class="password-toggle" data-password-toggle="confirm_password" aria-label="Показать пароль">
+                                <span class="eye-icon"></span>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
@@ -100,10 +115,6 @@
                 {% if otp_enabled %}
                 <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
                     <div class="form-group">
-                        <label for="disable_2fa_password">Пароль аккаунта</label>
-                        <input type="password" id="disable_2fa_password" name="password" class="form-input" required>
-                    </div>
-                    <div class="form-group">
                         <label for="disable_2fa_otp">Код Google Authenticator</label>
                         <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
                     </div>
@@ -111,24 +122,8 @@
                 </form>
                 {% else %}
                 <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form account-inline-form-spaced">
-                    <div class="form-group">
-                        <label for="enable_2fa_password">Пароль аккаунта</label>
-                        <input type="password" id="enable_2fa_password" name="password" class="form-input" required>
-                    </div>
                     <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
                 </form>
-                {% endif %}
-
-                {% if otp_enabled and recovery_codes %}
-                <div class="account-inline-form-spaced">
-                    <h3 class="section-subtitle">Резервные коды</h3>
-                    <p class="muted-text">Сохраните коды в надёжном месте. Они помогут восстановить доступ.</p>
-                    <div class="account-codes-grid">
-                        {% for code in recovery_codes %}
-                        <div class="account-code-item">{{ code }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
                 {% endif %}
             </div>
 
@@ -170,7 +165,7 @@
                         </tbody>
                     </table>
                 </div>
-                <form method="post" action="{{ url_for('logout_all_devices') }}" class="inline-form account-inline-form-spaced">
+                <form method="post" action="{{ url_for('logout_all_devices') }}" class="inline-form account-inline-form-spaced account-logout-all-form">
                     <button type="submit" class="btn btn-danger">Выйти со всех устройств</button>
                 </form>
             </div>
@@ -408,6 +403,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const passwordForm = document.getElementById("password-form");
+    const passwordToggles = document.querySelectorAll("[data-password-toggle]");
+    passwordToggles.forEach(function (toggleButton) {
+        toggleButton.addEventListener("click", function () {
+            const targetId = toggleButton.getAttribute("data-password-toggle");
+            const passwordInput = targetId ? document.getElementById(targetId) : null;
+            if (!passwordInput) return;
+            const isHidden = passwordInput.type === "password";
+            passwordInput.type = isHidden ? "text" : "password";
+            toggleButton.classList.toggle("is-visible", isHidden);
+            toggleButton.setAttribute("aria-label", isHidden ? "Скрыть пароль" : "Показать пароль");
+        });
+    });
+
     if (passwordForm) {
         passwordForm.addEventListener("submit", function (event) {
             const newPassword = document.getElementById("new_password");

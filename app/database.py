@@ -127,6 +127,7 @@ def init_db():
     _add_column_if_not_exists(cursor, "users", "otp_secret", "TEXT")
     _add_column_if_not_exists(cursor, "users", "otp_enabled", "INTEGER NOT NULL DEFAULT 0")
     _add_column_if_not_exists(cursor, "users", "avatar_filename", "TEXT")
+    _add_column_if_not_exists(cursor, "users", "last_login_ip", "TEXT")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
