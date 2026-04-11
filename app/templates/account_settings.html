@@ -2,95 +2,234 @@
 {% block title %}Настройки аккаунта | Шанс{% endblock %}
 
 {% block content %}
-<section class="car-page">
-    <div class="page-header">
+<section class="account-settings-page" id="account-settings-page">
+    <div class="page-header account-settings-header">
         <div>
             <h1 class="page-title">Настройки аккаунта</h1>
+            <p class="account-settings-subtitle">Управляйте профилем и безопасностью в одном месте.</p>
         </div>
     </div>
 
-    <div class="card">
-        <div class="account-profile-line">
-            <div class="header-avatar account-avatar-preview">
+    <div class="card account-hero-card">
+        <div class="account-profile-line account-profile-main-line">
+            <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
                 {% if avatar_url %}
-                <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image">
+                <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
                 {% else %}
-                {{ avatar_letter }}
+                <span id="avatar-preview-letter">{{ avatar_letter }}</span>
                 {% endif %}
             </div>
             <div>
                 <div class="stat-label">Пользователь</div>
                 <div class="stat-value">{{ current_user.username }}</div>
             </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Выйти</a>
         </div>
 
-        <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form">
-            <div class="form-group">
-                <label for="avatar_file">Заменить аватарку</label>
-                <input type="file" id="avatar_file" name="avatar_file" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Обновить аватарку</button>
-        </form>
+        <div class="account-nav" role="tablist" aria-label="Разделы настроек">
+            <button type="button" class="btn btn-tab account-tab-btn btn-tab-active" data-account-tab="profile">Профиль</button>
+            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h2 class="section-title">Смена пароля</h2>
-        <form method="post" action="{{ url_for('update_account_password') }}" class="form-block account-settings-form">
-            <div class="form-group">
-                <label for="current_password">Текущий пароль</label>
-                <input type="password" id="current_password" name="current_password" class="form-input" required>
+    <div class="account-tab-content account-tab-content-active" data-account-panel="profile">
+        <div class="account-grid account-grid-two">
+            <div class="card account-card">
+                <h2 class="section-title">Профиль пользователя</h2>
+                <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form" id="avatar-upload-form">
+                    <div class="form-group">
+                        <label for="avatar_file">Фото профиля</label>
+                        <input type="file" id="avatar_file" name="avatar_file" class="form-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
+                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
+
+                <form method="post" action="{{ url_for('remove_account_avatar') }}" class="inline-form account-inline-form account-inline-form-spaced">
+                    <button type="submit" class="btn btn-secondary">Удалить аватарку</button>
+                </form>
             </div>
-            <div class="form-group">
-                <label for="new_password">Новый пароль</label>
-                <input type="password" id="new_password" name="new_password" class="form-input" minlength="8" required>
+
+            <div class="card account-card">
+                <h2 class="section-title">Импорт данных</h2>
+                <p class="muted-text">Инструмент импорта перенесён сюда из верхней панели.</p>
+                <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
             </div>
-            <div class="form-group">
-                <label for="confirm_password">Подтвердите новый пароль</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="8" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Поменять пароль</button>
-        </form>
+        </div>
     </div>
 
-    <div class="card">
-        <h2 class="section-title">Двухэтапная Google-аутентификация (2FA)</h2>
-        <p>
-            Статус:
-            <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong>
-        </p>
-
-        {% if otp_enabled %}
-        <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form">
-            <div class="form-group">
-                <label for="disable_2fa_password">Пароль аккаунта</label>
-                <input type="password" id="disable_2fa_password" name="password" class="form-input" required>
+    <div class="account-tab-content" data-account-panel="security">
+        <div class="account-grid">
+            <div class="card account-card">
+                <h2 class="section-title">Смена пароля</h2>
+                <form method="post" action="{{ url_for('update_account_password') }}" class="form-block account-settings-form" id="password-form">
+                    <div class="form-group">
+                        <label for="current_password">Старый пароль</label>
+                        <input type="password" id="current_password" name="current_password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">Новый пароль</label>
+                        <input type="password" id="new_password" name="new_password" class="form-input" minlength="8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Подтверждение</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" minlength="8" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
             </div>
-            <div class="form-group">
-                <label for="disable_2fa_otp">Код Google Authenticator</label>
-                <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
-            </div>
-            <button type="submit" class="btn btn-danger">Отключить 2FA</button>
-        </form>
-        {% else %}
-        <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form">
-            <div class="form-group">
-                <label for="enable_2fa_password">Пароль аккаунта</label>
-                <input type="password" id="enable_2fa_password" name="password" class="form-input" required>
-            </div>
-            <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
-        </form>
-        {% endif %}
-    </div>
 
-    <div class="card">
-        <h2 class="section-title">Импорт данных</h2>
-        <p>Инструмент импорта перенесён сюда из верхней панели.</p>
-        <a href="{{ url_for('import_center') }}" class="btn btn-secondary">Открыть импорт данных</a>
-    </div>
+            <div class="card account-card">
+                <h2 class="section-title">Двухфакторная аутентификация</h2>
+                <p>Текущий статус Google Authenticator: <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong></p>
+                <form method="post" action="{{ url_for('update_account_security_options') }}" class="form-block account-settings-form">
+                    <div class="form-group">
+                        <label for="two_factor_channel">Основной канал 2FA</label>
+                        <select id="two_factor_channel" name="two_factor_channel" class="form-input" required>
+                            <option value="app" {% if security_preferences.get('two_factor_channel', 'app') == 'app' %}selected{% endif %}>Приложение-аутентификатор</option>
+                            <option value="email" {% if security_preferences.get('two_factor_channel') == 'email' %}selected{% endif %}>Email</option>
+                            <option value="sms" {% if security_preferences.get('two_factor_channel') == 'sms' %}selected{% endif %}>SMS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="recovery_email">Email для восстановления</label>
+                        <input type="email" id="recovery_email" name="recovery_email" class="form-input" value="{{ security_preferences.get('recovery_email', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="recovery_phone">Телефон для восстановления</label>
+                        <input type="tel" id="recovery_phone" name="recovery_phone" class="form-input" value="{{ security_preferences.get('recovery_phone', '') }}" placeholder="+7 (___) ___-__-__">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
 
-    <div class="card">
-        <h2 class="section-title">Сессия</h2>
-        <a href="{{ url_for('logout') }}" class="btn btn-danger">Выйти из аккаунта</a>
+                {% if otp_enabled %}
+                <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
+                    <div class="form-group">
+                        <label for="disable_2fa_password">Пароль аккаунта</label>
+                        <input type="password" id="disable_2fa_password" name="password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="disable_2fa_otp">Код Google Authenticator</label>
+                        <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Отключить Google 2FA</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form account-inline-form-spaced">
+                    <div class="form-group">
+                        <label for="enable_2fa_password">Пароль аккаунта</label>
+                        <input type="password" id="enable_2fa_password" name="password" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Подключить Google Authenticator</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="card account-card">
+                <h2 class="section-title">История входов</h2>
+                <div class="table-wrapper account-login-history">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Устройство</th>
+                                <th>Браузер</th>
+                                <th>IP</th>
+                                <th>Дата входа</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in login_history %}
+                            <tr>
+                                <td>{{ item.device }}{% if item.current %} <span class="account-status-chip">Текущий</span>{% endif %}</td>
+                                <td>{{ item.browser }}</td>
+                                <td>{{ item.ip }}</td>
+                                <td>{{ item.date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <form method="post" action="{{ url_for('logout_all_devices') }}" class="inline-form account-inline-form-spaced">
+                    <button type="submit" class="btn btn-danger">Выйти со всех устройств</button>
+                </form>
+            </div>
+
+            <div class="card account-card">
+                <h2 class="section-title">Резервные коды восстановления</h2>
+                <form method="post" action="{{ url_for('regenerate_recovery_codes') }}" class="form-block account-settings-form">
+                    <div class="form-group">
+                        <label for="recovery_password">Пароль для генерации кодов</label>
+                        <input type="password" id="recovery_password" name="password" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Сгенерировать новые коды</button>
+                </form>
+                {% if recovery_codes %}
+                <div class="account-codes-grid">
+                    {% for code in recovery_codes %}
+                    <div class="account-code-item">{{ code }}</div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="muted-text">Коды ещё не сгенерированы.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabButtons = document.querySelectorAll(".account-tab-btn");
+        const tabPanels = document.querySelectorAll(".account-tab-content");
+
+        tabButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const target = button.dataset.accountTab;
+                tabButtons.forEach(function (btn) { btn.classList.remove("btn-tab-active"); });
+                tabPanels.forEach(function (panel) { panel.classList.remove("account-tab-content-active"); });
+
+                button.classList.add("btn-tab-active");
+                const panel = document.querySelector('[data-account-panel="' + target + '"]');
+                if (panel) panel.classList.add("account-tab-content-active");
+            });
+        });
+
+        const avatarInput = document.getElementById("avatar_file");
+        const previewBox = document.getElementById("avatar-preview-box");
+        if (avatarInput && previewBox) {
+            avatarInput.addEventListener("change", function () {
+                const file = avatarInput.files && avatarInput.files[0];
+                if (!file) return;
+                if (file.size > 3 * 1024 * 1024) {
+                    alert("Файл больше 3 МБ. Выберите другое изображение.");
+                    avatarInput.value = "";
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    previewBox.innerHTML = '<img src="' + event.target.result + '" alt="Предпросмотр" class="header-avatar-image">';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        const passwordForm = document.getElementById("password-form");
+        if (passwordForm) {
+            passwordForm.addEventListener("submit", function (event) {
+                const newPassword = document.getElementById("new_password");
+                const confirmPassword = document.getElementById("confirm_password");
+                if (!newPassword || !confirmPassword) return;
+                if (newPassword.value.length < 8) {
+                    event.preventDefault();
+                    alert("Новый пароль должен содержать минимум 8 символов.");
+                    return;
+                }
+                if (newPassword.value !== confirmPassword.value) {
+                    event.preventDefault();
+                    alert("Подтверждение пароля не совпадает.");
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -86,6 +86,32 @@
         width: 100%;
     }
 
+    .account-grid-two {
+        grid-template-columns: 1fr !important;
+    }
+
+    .account-hero-card {
+        position: static;
+    }
+
+    .account-profile-main-line .btn {
+        width: 100%;
+    }
+
+    .account-nav {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .account-tab-btn {
+        width: 100%;
+    }
+
+    .account-codes-grid {
+        grid-template-columns: 1fr;
+    }
+
     .card {
         border-radius: 16px;
         padding: 14px;
