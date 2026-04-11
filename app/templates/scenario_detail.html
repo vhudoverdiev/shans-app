@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="car-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">{{ scenario.title }}</h1>
+        </div>
+
+        <div class="page-actions">
+            <a href="{{ url_for('scenarios_archive' if scenario.is_archive else 'scenarios_upcoming') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+    <div class="stats-grid car-stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Дата съёмки</div>
+            <div class="stat-value">{{ scenario.shooting_date_display }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Статус</div>
+            <div class="stat-value">{% if scenario.is_archive %}В архиве{% else %}Активный{% endif %}</div>
+        </div>
+    </div>
+
+    <div class="card table-card shooting-detail-card">
+        <div class="table-header">
+            <h2 class="section-title">Сценарий</h2>
+        </div>
+
+        <div class="shooting-detail-grid">
+            <div class="shooting-detail-item shooting-detail-item-full">
+                <div class="shooting-detail-label">Текст</div>
+                <div class="shooting-detail-notes">{{ scenario.scenario_text or 'Сценарий пока не заполнен.' }}</div>
+            </div>
+        </div>
+
+        <div class="car-form-actions">
+            <a href="{{ url_for('scenario_edit', scenario_id=scenario.id) }}" class="btn btn-primary">Редактировать</a>
+            <form method="POST" action="{{ url_for('scenario_delete', scenario_id=scenario.id) }}" class="inline-form" onsubmit="return confirm('Удалить этот сценарий?');">
+                <button type="submit" class="btn btn-danger">Удалить</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

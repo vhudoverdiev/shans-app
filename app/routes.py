@@ -81,9 +81,17 @@ from app.models import (
     get_shooting_by_id,
     get_shootings_count,
     get_upcoming_shootings,
+    create_scenario,
+    delete_scenario,
+    get_archived_scenarios,
+    get_nearest_scenario,
+    get_scenario_by_id,
+    get_scenarios_count,
+    get_upcoming_scenarios,
+    update_scenario,
     update_shooting,
 )
-from app.utils import build_budget_excel, build_shootings_excel
+from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
 from app.planner import (
     create_task,
@@ -1445,6 +1453,222 @@ def register_routes(app):
 
         flash("Все архивные съёмки удалены.", "success")
         return redirect(url_for("shootings_archive"))
+
+    @app.route("/scenarios")
+    @login_required
+    def scenarios():
+        return redirect(url_for("scenarios_upcoming"))
+
+    @app.route("/scenarios/add", methods=["GET", "POST"])
+    @login_required
+    def scenarios_add():
+        form_data = {"title": "", "shooting_date": "", "scenario_text": ""}
+
+        if request.method == "POST":
+            title = request.form.get("title", "").strip()
+            shooting_date = request.form.get("shooting_date", "").strip()
+            scenario_text = request.form.get("scenario_text", "").strip()
+            form_data = {
+                "title": title,
+                "shooting_date": shooting_date,
+                "scenario_text": scenario_text,
+            }
+
+            if not title or not shooting_date:
+                flash("Заполните обязательные поля: название и дата съёмки.", "danger")
+                return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
+
+            try:
+                datetime.strptime(shooting_date, "%Y-%m-%d")
+            except ValueError:
+                flash("Укажи корректную дату съёмки.", "danger")
+                return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
+
+            if len(scenario_text) > 700:
+                flash("Текст сценария не должен превышать 700 символов.", "danger")
+                return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
+
+            scenario_id = create_scenario(title=title, shooting_date=shooting_date, scenario_text=scenario_text)
+            log_audit(current_app, "scenario_created", scenario_id=scenario_id, title=title)
+            flash("Сценарий успешно добавлен.", "success")
+            return redirect(url_for("scenarios_upcoming"))
+
+        return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
+
+    @app.route("/scenarios/upcoming")
+    @login_required
+    def scenarios_upcoming():
+        scenarios = get_upcoming_scenarios()
+        scenarios_count = get_scenarios_count()
+        nearest_scenario = get_nearest_scenario()
+        return render_template(
+            "scenarios_upcoming.html",
+            scenarios=scenarios,
+            scenarios_count=scenarios_count,
+            nearest_scenario=nearest_scenario,
+            active_tab="upcoming",
+        )
+
+    @app.route("/scenarios/archive")
+    @login_required
+    def scenarios_archive():
+        scenarios = get_archived_scenarios()
+        return render_template("scenarios_archive.html", scenarios=scenarios, active_tab="archive")
+
+    @app.route("/scenarios/export/<string:scope>")
+    @login_required
+    def scenarios_export(scope):
+        if scope == "archive":
+            scenarios = get_archived_scenarios()
+            report_title = "Архив сценариев"
+            file_name = "scenarios_archive.xlsx"
+        else:
+            scenarios = get_upcoming_scenarios()
+            report_title = "Активные сценарии"
+            file_name = "scenarios_active.xlsx"
+
+        excel_file = build_scenarios_excel(scenarios=scenarios, report_title=report_title)
+        return send_file(
+            excel_file,
+            as_attachment=True,
+            download_name=file_name,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    @app.route("/scenarios/<int:scenario_id>")
+    @login_required
+    def scenario_detail(scenario_id):
+        scenario = get_scenario_by_id(scenario_id)
+        if not scenario:
+            flash("Сценарий не найден.", "danger")
+            return redirect(url_for("scenarios_upcoming"))
+        return render_template("scenario_detail.html", scenario=scenario)
+
+    @app.route("/scenarios/<int:scenario_id>/edit", methods=["GET", "POST"])
+    @login_required
+    def scenario_edit(scenario_id):
+        scenario = get_scenario_by_id(scenario_id)
+        if not scenario:
+            flash("Сценарий не найден.", "danger")
+            return redirect(url_for("scenarios_upcoming"))
+
+        if request.method == "POST":
+            title = request.form.get("title", "").strip()
+            shooting_date = request.form.get("shooting_date", "").strip()
+            scenario_text = request.form.get("scenario_text", "").strip()
+
+            if not title or not shooting_date:
+                flash("Заполните обязательные поля: название и дата съёмки.", "danger")
+                return redirect(url_for("scenario_edit", scenario_id=scenario_id))
+
+            try:
+                datetime.strptime(shooting_date, "%Y-%m-%d")
+            except ValueError:
+                flash("Укажи корректную дату съёмки.", "danger")
+                return redirect(url_for("scenario_edit", scenario_id=scenario_id))
+
+            if len(scenario_text) > 700:
+                flash("Текст сценария не должен превышать 700 символов.", "danger")
+                return redirect(url_for("scenario_edit", scenario_id=scenario_id))
+
+            update_scenario(
+                scenario_id=scenario_id,
+                title=title,
+                shooting_date=shooting_date,
+                scenario_text=scenario_text,
+            )
+            log_audit(current_app, "scenario_updated", scenario_id=scenario_id)
+            flash("Сценарий обновлён.", "success")
+            return redirect(url_for("scenario_detail", scenario_id=scenario_id))
+
+        return render_template("scenario_edit.html", scenario=scenario)
+
+    @app.route("/scenarios/<int:scenario_id>/delete", methods=["POST"])
+    @login_required
+    def scenario_delete(scenario_id):
+        scenario = get_scenario_by_id(scenario_id)
+        if not scenario:
+            flash("Сценарий не найден.", "danger")
+            return redirect(url_for("scenarios_upcoming"))
+
+        delete_scenario(scenario_id)
+        log_audit(current_app, "scenario_deleted", scenario_id=scenario_id)
+        flash("Сценарий удалён.", "success")
+        return redirect(url_for("scenarios_upcoming"))
+
+    @app.route("/scenarios/upcoming/delete-selected", methods=["POST"])
+    @login_required
+    def scenarios_upcoming_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы один сценарий.", "warning")
+            return redirect(url_for("scenarios_upcoming"))
+
+        deleted_count = 0
+        for scenario_id in selected_ids:
+            scenario = get_scenario_by_id(scenario_id)
+            scenario_data = dict(scenario) if scenario else None
+            if not scenario_data or scenario_data.get("is_archive"):
+                continue
+            delete_scenario(scenario_id)
+            deleted_count += 1
+
+        if deleted_count == 0:
+            flash("Нет подходящих сценариев для удаления.", "warning")
+        else:
+            flash(f"Удалено сценариев: {deleted_count}.", "success")
+        return redirect(url_for("scenarios_upcoming"))
+
+    @app.route("/scenarios/upcoming/delete-all", methods=["POST"])
+    @login_required
+    def scenarios_upcoming_delete_all():
+        scenarios = get_upcoming_scenarios()
+        if not scenarios:
+            flash("Нет активных сценариев для удаления.", "warning")
+            return redirect(url_for("scenarios_upcoming"))
+
+        for scenario in scenarios:
+            delete_scenario(int(scenario["id"]))
+
+        flash("Все активные сценарии удалены.", "success")
+        return redirect(url_for("scenarios_upcoming"))
+
+    @app.route("/scenarios/archive/delete-selected", methods=["POST"])
+    @login_required
+    def scenarios_archive_delete_selected():
+        selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
+        if not selected_ids:
+            flash("Выбери хотя бы один архивный сценарий.", "warning")
+            return redirect(url_for("scenarios_archive"))
+
+        deleted_count = 0
+        for scenario_id in selected_ids:
+            scenario = get_scenario_by_id(scenario_id)
+            scenario_data = dict(scenario) if scenario else None
+            if not scenario_data or not scenario_data.get("is_archive"):
+                continue
+            delete_scenario(scenario_id)
+            deleted_count += 1
+
+        if deleted_count == 0:
+            flash("Нет подходящих архивных сценариев для удаления.", "warning")
+        else:
+            flash(f"Удалено архивных сценариев: {deleted_count}.", "success")
+        return redirect(url_for("scenarios_archive"))
+
+    @app.route("/scenarios/archive/delete-all", methods=["POST"])
+    @login_required
+    def scenarios_archive_delete_all():
+        scenarios = get_archived_scenarios()
+        if not scenarios:
+            flash("Нет архивных сценариев для удаления.", "warning")
+            return redirect(url_for("scenarios_archive"))
+
+        for scenario in scenarios:
+            delete_scenario(int(scenario["id"]))
+
+        flash("Все архивные сценарии удалены.", "success")
+        return redirect(url_for("scenarios_archive"))
 
     # =========================================================
     # CAR
