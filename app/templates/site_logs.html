@@ -33,15 +33,6 @@
         <div class="card import-center-card">
             <h2 class="section-title">Журналы событий</h2>
             <form method="post" class="form-block import-center-form">
-                <input type="hidden" name="action" value="view">
-                <div class="form-group">
-                    <label for="log_name">Файл логов</label>
-                    <select id="log_name" name="log_name" class="form-input" required>
-                        {% for log_name in available_logs %}
-                            <option value="{{ log_name }}" {% if log_name == selected_log %}selected{% endif %}>{{ log_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
                 <div class="form-group">
                     <label for="logs-password-repeat">Пароль подтверждения</label>
                     <input id="logs-password-repeat"
@@ -51,46 +42,37 @@
                            placeholder="Введите пароль ещё раз"
                            required>
                 </div>
-                <button type="submit" class="btn btn-primary">Открыть файл</button>
+                <button type="submit" class="btn btn-primary">Обновить журнал</button>
             </form>
-            <p class="muted import-center-hint">Показываются последние {{ log_lines_limit }} строк выбранного файла. Обновление каждые 5 секунд.</p>
+            <p class="muted import-center-hint">Показывается единый журнал из всех файлов логов. Обновление каждые 5 секунд.</p>
             <p class="muted import-center-hint" id="logs-last-update"></p>
         </div>
 
-        {% for log in logs_payload %}
-            {% if log.is_selected %}
-                <div class="card import-center-card">
-                    <h3 class="section-title">{{ log.name }} — понятный вид</h3>
-                    <div class="site-log-output-human" id="human-log-container">
-                        {% if log.humanized_content %}
-                            {% for line in log.humanized_content.split('\n') %}
-                                <div class="site-log-row">{{ line }}</div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="site-log-row">Лог пока пуст.</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card import-center-card">
-                    <h3 class="section-title">{{ log.name }} — исходный вид</h3>
-                    <pre class="site-log-output">{{ log.content if log.content else 'Лог пока пуст.' }}</pre>
-                </div>
-            {% endif %}
-        {% endfor %}
+        <div class="card import-center-card">
+            <h3 class="section-title">Единый журнал — понятный вид</h3>
+            <div class="site-log-output-human" id="human-log-container">
+                {% if logs_payload %}
+                    {% for log in logs_payload %}
+                        <div class="site-log-row">{{ log.humanized }}</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="site-log-row">Лог пока пуст.</div>
+                {% endif %}
+            </div>
+        </div>
     {% endif %}
 </section>
 
-{% if access_granted and selected_log %}
+{% if access_granted %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const selectedLog = {{ selected_log|tojson }};
     const humanContainer = document.getElementById("human-log-container");
     const lastUpdateNode = document.getElementById("logs-last-update");
-    if (!selectedLog || !humanContainer) return;
+    if (!humanContainer) return;
 
     async function refreshLogs() {
         try {
-            const response = await fetch(`/log/stream?log_name=${encodeURIComponent(selectedLog)}`, {
+            const response = await fetch("/log/stream", {
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             });
             if (!response.ok) return;

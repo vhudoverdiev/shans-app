@@ -36,6 +36,7 @@
             <button type="button" class="btn btn-tab account-tab-btn btn-tab-active" data-account-tab="profile">Профиль</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
+            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="logs">Логи</button>
         </div>
     </div>
 
@@ -48,8 +49,6 @@
                         <label for="avatar_file" class="avatar-file-label">Выберите файл</label>
                         <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif" required>
                         <input type="hidden" id="cropped_avatar_data" name="cropped_avatar_data" value="">
-                        <div class="avatar-file-selected" id="avatar-file-selected">Файл не выбран</div>
-                        <small class="form-hint">PNG/JPG/JPEG/WEBP/GIF, до 3 МБ.</small>
                     </div>
 
                     <div class="avatar-crop-modal" id="avatar-crop-modal" hidden>
@@ -227,13 +226,32 @@
             </div>
         </div>
     </div>
+
+    <div class="account-tab-content" data-account-panel="logs">
+        <div class="account-grid">
+            <div class="card account-card account-card-glow">
+                <h2 class="section-title">Логи активности</h2>
+                <p class="muted-text">Единый журнал действий пользователя на сайте в понятном формате.</p>
+                <div class="site-log-output-human">
+                    {% if unified_logs %}
+                        {% for item in unified_logs %}
+                            <div class="site-log-row">{{ item.humanized }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="site-log-row">Логи пока пусты.</div>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('site_logs') }}" class="btn btn-secondary">Открыть расширенный раздел логов</a>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const accountTabStorageKey = "account_settings_active_tab";
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
+    const allowedTabs = new Set(["profile", "security", "import", "logs"]);
 
     function activateTab(target) {
         if (!target) return;
@@ -244,16 +262,14 @@ document.addEventListener("DOMContentLoaded", function () {
     tabButtons.forEach(function (button) {
         button.addEventListener("click", function () {
             activateTab(button.dataset.accountTab);
-            localStorage.setItem(accountTabStorageKey, button.dataset.accountTab);
         });
     });
 
     const tabFromUrl = new URLSearchParams(window.location.search).get("tab");
-    const tabFromStorage = localStorage.getItem(accountTabStorageKey);
-    activateTab(tabFromUrl || tabFromStorage || "profile");
+    const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "profile";
+    activateTab(initialTab);
 
     const avatarInput = document.getElementById("avatar_file");
-    const selectedFileLabel = document.getElementById("avatar-file-selected");
     const avatarForm = document.getElementById("avatar-upload-form");
     const cropModal = document.getElementById("avatar-crop-modal");
     const cropFrame = document.getElementById("avatar-crop-frame");
@@ -269,11 +285,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const ctx = cropPreview.getContext("2d");
         if (!ctx) return;
         const size = cropPreview.width;
-        const scaledWidth = cropState.naturalWidth * cropState.scale;
-        const scaledHeight = cropState.naturalHeight * cropState.scale;
-        const sourceX = (-cropState.offsetX / scaledWidth) * cropState.naturalWidth;
-        const sourceY = (-cropState.offsetY / scaledHeight) * cropState.naturalHeight;
-        const sourceSize = (size / scaledWidth) * cropState.naturalWidth;
+        const sourceX = Math.max(0, -cropState.offsetX / cropState.scale);
+        const sourceY = Math.max(0, -cropState.offsetY / cropState.scale);
+        const sourceSize = Math.min(
+            Math.min(cropState.naturalWidth, cropState.naturalHeight),
+            size / cropState.scale
+        );
 
         ctx.clearRect(0, 0, size, size);
         ctx.save();
@@ -319,13 +336,22 @@ document.addEventListener("DOMContentLoaded", function () {
         canvas.height = 512;
         const ctx = canvas.getContext("2d");
         if (!ctx) return false;
-        const scaleFactor = 512 / frameSize;
+        const sourceX = Math.max(0, -cropState.offsetX / cropState.scale);
+        const sourceY = Math.max(0, -cropState.offsetY / cropState.scale);
+        const sourceSize = Math.min(
+            Math.min(cropState.naturalWidth, cropState.naturalHeight),
+            frameSize / cropState.scale
+        );
         ctx.drawImage(
             cropImage,
-            (-cropState.offsetX) * scaleFactor,
-            (-cropState.offsetY) * scaleFactor,
-            cropImage.width * scaleFactor,
-            cropImage.height * scaleFactor
+            sourceX,
+            sourceY,
+            sourceSize,
+            sourceSize,
+            0,
+            0,
+            512,
+            512
         );
         croppedAvatarDataInput.value = canvas.toDataURL("image/png");
         return true;
@@ -351,15 +377,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 resetAvatarCrop();
                 return;
             }
-            if (selectedFileLabel) {
-                selectedFileLabel.textContent = "Выбран файл: " + file.name;
-            }
             if (file.size > 3 * 1024 * 1024) {
                 alert("Файл больше 3 МБ. Выберите другое изображение.");
                 avatarInput.value = "";
-                if (selectedFileLabel) {
-                    selectedFileLabel.textContent = "Файл не выбран";
-                }
                 resetAvatarCrop();
                 return;
             }
@@ -454,9 +474,6 @@ document.addEventListener("DOMContentLoaded", function () {
         avatarCropCancelBtn.addEventListener("click", function () {
             if (avatarInput) {
                 avatarInput.value = "";
-            }
-            if (selectedFileLabel) {
-                selectedFileLabel.textContent = "Файл не выбран";
             }
             resetAvatarCrop();
         });
