@@ -251,7 +251,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
-    const allowedTabs = new Set(["profile", "security", "import", "logs"]);
+    const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
+    const allowedTabs = isMobileViewport
+        ? new Set(["profile", "security"])
+        : new Set(["profile", "security", "import", "logs"]);
 
     function activateTab(target) {
         if (!target) return;
