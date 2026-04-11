@@ -186,6 +186,7 @@ def _parse_selected_ids(raw_value: str) -> list[int]:
 
 
 AUDIT_EVENT_LABELS = {
+    "user_request": "Пользователь открыл страницу/выполнил запрос",
     "user_login": "Пользователь вошёл в систему",
     "user_logout": "Пользователь вышел из системы",
     "user_logout_all_devices": "Пользователь завершил все сессии",
@@ -269,6 +270,18 @@ def _humanize_log_line(raw_line: str) -> str:
             for key, value in kv_pairs.items()
             if key not in {"event", "user", "ip", "path", "method"}
         )
+        if event == "user_request":
+            endpoint = kv_pairs.get("endpoint", "unknown")
+            status = kv_pairs.get("status", "unknown")
+            query = kv_pairs.get("query", "-")
+            referer = kv_pairs.get("referrer", "-")
+            user_agent = kv_pairs.get("user_agent", "unknown").replace("_", " ")
+            sentence = (
+                f"Действие пользователя: endpoint={endpoint}, status={status}, method={method}, path={path}. "
+                f"Query: {query}. Referer: {referer}. User-Agent: {user_agent}. "
+                f"Пользователь: {user}. IP: {ip}."
+            )
+            return f"{prefix} — {sentence}".strip(" —")
         action = AUDIT_EVENT_LABELS.get(event, f"Событие: {event}") if event else "Событие системы"
         sentence = f"{action}. Пользователь: {user}. IP: {ip}."
         if method or path:
@@ -322,8 +335,10 @@ def _get_unified_logs(limit: int = 250) -> list[dict]:
                 }
             )
 
-    merged_items.sort(key=lambda item: item["timestamp"], reverse=True)
-    return merged_items[:limit]
+    merged_items.sort(key=lambda item: item["timestamp"])
+    if limit <= 0:
+        return merged_items
+    return merged_items[-limit:]
 
 
 def _build_car_notifications():

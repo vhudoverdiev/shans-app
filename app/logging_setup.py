@@ -36,13 +36,13 @@ def setup_logging(app):
     )
 
     technical_handler = RotatingFileHandler(
-        logs_dir / "technical.log", maxBytes=1_048_576, backupCount=5, encoding="utf-8"
+        logs_dir / "technical.log", maxBytes=5_242_880, backupCount=10, encoding="utf-8"
     )
     technical_handler.setLevel(logging.INFO)
     technical_handler.setFormatter(formatter)
 
     audit_handler = RotatingFileHandler(
-        logs_dir / "audit.log", maxBytes=1_048_576, backupCount=10, encoding="utf-8"
+        logs_dir / "audit.log", maxBytes=10_485_760, backupCount=20, encoding="utf-8"
     )
     audit_handler.setLevel(logging.INFO)
     audit_handler.setFormatter(formatter)
@@ -110,6 +110,8 @@ def log_import_result(app, import_type: str, rows_added: int, errors_count: int,
 
 
 def register_request_hooks(app):
+    ignored_audit_paths = {"/log/stream"}
+
     @app.before_request
     def track_request_rate():
         ip_address = _client_ip()
@@ -132,6 +134,20 @@ def register_request_hooks(app):
 
     @app.after_request
     def log_suspicious_statuses(response):
+        if request.path not in ignored_audit_paths:
+            safe_query = request.query_string.decode("utf-8", errors="replace")[:500]
+            user_agent = (request.user_agent.string or "unknown").replace(" ", "_")[:250]
+            referer = (request.referrer or "")[:300]
+            log_audit(
+                app,
+                "user_request",
+                endpoint=request.endpoint or "unknown",
+                status=response.status_code,
+                query=safe_query or "-",
+                referrer=referer or "-",
+                user_agent=user_agent,
+            )
+
         if response.status_code in SUSPICIOUS_STATUS_CODES or response.status_code >= 500:
             app.logger.warning(
                 "Suspicious HTTP response: status=%s method=%s path=%s user=%s ip=%s",
