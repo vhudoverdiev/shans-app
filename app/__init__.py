@@ -84,7 +84,8 @@ def create_app():
     register_routes(app)
     app.register_blueprint(planner_bp)
     _register_management_commands(app)
-    if os.getenv("WERKZEUG_RUN_MAIN") in {None, "true"}:
+    werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
+    if werkzeug_run_main in {"", "true", "1"}:
         start_vk_scheduler(app)
 
     app.jinja_env.filters["money"] = format_money
