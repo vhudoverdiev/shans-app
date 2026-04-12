@@ -123,17 +123,9 @@
         grid-template-columns: 1fr;
     }
 
-    .avatar-crop-layout {
-        grid-template-columns: 1fr;
-    }
-
     .avatar-crop-frame {
         width: 100%;
         max-width: 100%;
-    }
-
-    .avatar-crop-preview-wrap {
-        max-width: 220px;
     }
 
     .card {
