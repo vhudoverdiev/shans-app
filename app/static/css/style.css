@@ -413,8 +413,8 @@ a {
 }
 
 .avatar-crop-layout {
-    display: block;
-    margin: 10px 0 0;
+    width: min(100%, 320px);
+    margin: 10px auto 0;
 }
 
 .avatar-crop-modal[hidden] {
@@ -458,6 +458,7 @@ a {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
 }
 
 .avatar-crop-frame {
@@ -498,6 +499,7 @@ a {
 .avatar-crop-controls {
     display: grid;
     gap: 8px;
+    width: 100%;
 }
 
 #avatar-crop-zoom {
@@ -509,6 +511,7 @@ a {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    width: 100%;
 }
 
 .avatar-file-input {
