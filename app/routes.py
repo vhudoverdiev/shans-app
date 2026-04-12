@@ -17,6 +17,7 @@ from flask import (
     request,
     session,
     send_file,
+    send_from_directory,
     url_for,
 )
 from flask_login import (
@@ -991,6 +992,12 @@ def _collect_budget_categories(entries):
 
 
 def register_routes(app):
+    def _avatar_upload_dir() -> str:
+        return current_app.config["AVATAR_UPLOAD_DIR"]
+
+    def _avatar_public_url(filename: str) -> str:
+        return url_for("user_avatar_file", filename=filename)
+
     def _build_avatar_letter(username: str) -> str:
         return (username or "?").strip()[:1].upper() or "?"
 
@@ -1000,10 +1007,18 @@ def register_routes(app):
         avatar_filename = (user_row.get("avatar_filename") or "").strip()
         if not avatar_filename:
             return None
-        avatar_path = os.path.join(current_app.static_folder, "uploads", "avatars", avatar_filename)
+        avatar_path = os.path.join(_avatar_upload_dir(), avatar_filename)
         if not os.path.exists(avatar_path):
             return None
-        return url_for("static", filename=f"uploads/avatars/{avatar_filename}")
+        return _avatar_public_url(avatar_filename)
+
+    @app.route("/uploads/avatars/<path:filename>")
+    @login_required
+    def user_avatar_file(filename):
+        safe_filename = secure_filename(filename or "")
+        if not safe_filename or safe_filename != filename:
+            return ("", 404)
+        return send_from_directory(_avatar_upload_dir(), safe_filename, conditional=True)
 
     def _detect_device_and_browser(user_agent_string: str | None):
         ua = (user_agent_string or "").lower()
@@ -1472,7 +1487,7 @@ def register_routes(app):
                 flash("Файл слишком большой. Максимум 3 МБ.", "danger")
                 return redirect(url_for("account_settings"))
 
-        upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
+        upload_dir = _avatar_upload_dir()
         os.makedirs(upload_dir, exist_ok=True)
         new_filename = f"user_{current_user.id}_{secrets.token_hex(8)}{file_ext}"
         target_path = os.path.join(upload_dir, new_filename)
@@ -1497,7 +1512,7 @@ def register_routes(app):
     @app.route("/account/settings/avatar/delete", methods=["POST"])
     @login_required
     def remove_account_avatar():
-        upload_dir = os.path.join(current_app.static_folder, "uploads", "avatars")
+        upload_dir = _avatar_upload_dir()
         user_row = get_user_by_id(current_user.id)
         previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
         if previous_filename:
