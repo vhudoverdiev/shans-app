@@ -19,7 +19,7 @@
             <div class="account-avatar-preview-wrap account-avatar-edit-wrap {% if avatar_url %}account-avatar-preview-wrap-has-avatar{% endif %}" id="avatar-preview-wrap" data-has-avatar="{% if avatar_url %}1{% else %}0{% endif %}">
                 <div class="header-avatar account-avatar-preview" id="avatar-preview-box">
                     {% if avatar_url %}
-                    <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image" id="avatar-preview-image">
+                    <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image js-avatar-image" id="avatar-preview-image" data-fallback-letter="{{ avatar_letter }}">
                     {% else %}
                     <span id="avatar-preview-letter">{{ avatar_letter }}</span>
                     {% endif %}
@@ -153,12 +153,12 @@
                                 <td>
                                     {% if item.current %}
                                     <form method="post" action="{{ url_for('logout_device_session') }}" class="inline-form">
-                                        <input type="hidden" name="session_key" value="{{ item.session_key }}">
+                                        <input type="hidden" name="session_keys" value="{{ item.session_keys }}">
                                         <button type="submit" class="btn btn-danger btn-small">Выйти</button>
                                     </form>
                                     {% else %}
                                     <form method="post" action="{{ url_for('logout_device_session') }}" class="inline-form">
-                                        <input type="hidden" name="session_key" value="{{ item.session_key }}">
+                                        <input type="hidden" name="session_keys" value="{{ item.session_keys }}">
                                         <button type="submit" class="btn btn-secondary btn-small">Завершить</button>
                                     </form>
                                     {% endif %}

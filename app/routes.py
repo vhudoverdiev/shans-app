@@ -1,6 +1,7 @@
 import base64
 from datetime import datetime, date
 from io import BytesIO
+import hashlib
 import hmac
 import os
 import re
@@ -999,6 +1000,9 @@ def register_routes(app):
         avatar_filename = (user_row.get("avatar_filename") or "").strip()
         if not avatar_filename:
             return None
+        avatar_path = os.path.join(current_app.static_folder, "uploads", "avatars", avatar_filename)
+        if not os.path.exists(avatar_path):
+            return None
         return url_for("static", filename=f"uploads/avatars/{avatar_filename}")
 
     def _detect_device_and_browser(user_agent_string: str | None):
@@ -1085,7 +1089,8 @@ def register_routes(app):
     def _register_current_login_session(user_id: int) -> str:
         now_iso = datetime.now().isoformat(timespec="seconds")
         device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
-        session_key = session.get("account_current_session_key") or secrets.token_hex(12)
+        fingerprint_raw = f"{user_id}|{device_name}"
+        session_key = hashlib.sha256(fingerprint_raw.encode("utf-8")).hexdigest()[:24]
         upsert_user_login_session(
             session_key=session_key,
             user_id=user_id,
@@ -1364,21 +1369,59 @@ def register_routes(app):
     def account_settings():
         user_row = get_user_by_id(current_user.id)
         current_session_key = _register_current_login_session(current_user.id)
+        grouped_history = {}
+        for item in get_user_login_sessions(current_user.id):
+            device_name = (item.get("device") or "—").strip() or "—"
+            session_key = item.get("session_key")
+            if device_name not in grouped_history:
+                grouped_history[device_name] = {
+                    "session_keys": set(),
+                    "device": device_name,
+                    "browser": item.get("browser") or "—",
+                    "ip": item.get("ip_address") or "—",
+                    "first_login_at": (item.get("first_login_at") or "").strip(),
+                    "last_seen_at": (item.get("last_seen_at") or "").strip(),
+                    "current": False,
+                }
+
+            group = grouped_history[device_name]
+            if session_key:
+                group["session_keys"].add(session_key)
+            group["current"] = group["current"] or session_key == current_session_key
+
+            candidate_first_login = (item.get("first_login_at") or "").strip()
+            if (
+                candidate_first_login
+                and (not group["first_login_at"] or candidate_first_login < group["first_login_at"])
+            ):
+                group["first_login_at"] = candidate_first_login
+
+            candidate_last_seen = (item.get("last_seen_at") or "").strip()
+            if candidate_last_seen and candidate_last_seen > group["last_seen_at"]:
+                group["last_seen_at"] = candidate_last_seen
+                group["browser"] = item.get("browser") or "—"
+                group["ip"] = item.get("ip_address") or "—"
+
         login_history = []
-        for item in get_user_login_sessions(current_user.id)[:10]:
-            first_login_at = (item.get("first_login_at") or "").strip()
+        grouped_items = sorted(
+            grouped_history.values(),
+            key=lambda row: row.get("last_seen_at") or "",
+            reverse=True,
+        )[:10]
+        for item in grouped_items:
+            first_login_at = item.get("first_login_at") or ""
             first_login_text = first_login_at
             try:
                 first_login_text = datetime.fromisoformat(first_login_at).strftime("%d.%m.%Y %H:%M")
             except (TypeError, ValueError):
                 pass
             login_history.append({
-                "session_key": item.get("session_key"),
+                "session_keys": ",".join(sorted(item["session_keys"])),
                 "device": item.get("device") or "—",
                 "browser": item.get("browser") or "—",
-                "ip": item.get("ip_address") or "—",
+                "ip": item.get("ip") or "—",
                 "date": first_login_text or "—",
-                "current": item.get("session_key") == current_session_key,
+                "current": item.get("current", False),
             })
         recovery_codes = session.get("account_recovery_codes", [])
         return render_template(
@@ -1556,22 +1599,26 @@ def register_routes(app):
     @app.route("/account/settings/logout-device", methods=["POST"])
     @login_required
     def logout_device_session():
-        target_session_key = request.form.get("session_key", "").strip()
-        if not target_session_key:
+        session_keys_raw = request.form.get("session_keys", "").strip()
+        target_session_keys = [value.strip() for value in session_keys_raw.split(",") if value.strip()]
+        if not target_session_keys:
             flash("Сессия не найдена.", "danger")
             return redirect(url_for("account_settings"))
 
         current_session_key = session.get("account_current_session_key")
-        if target_session_key == current_session_key:
+        if current_session_key and current_session_key in target_session_keys:
             username = current_user.username
-            deactivate_user_login_session(target_session_key)
+            for session_key in target_session_keys:
+                deactivate_user_login_session(session_key)
             session.clear()
             logout_user()
             log_audit(current_app, "user_logout_device_session_current", username=username)
             flash("Текущая сессия завершена.", "success")
             return redirect(url_for("login"))
 
-        removed_rows = deactivate_user_login_session(target_session_key)
+        removed_rows = 0
+        for session_key in target_session_keys:
+            removed_rows += deactivate_user_login_session(session_key)
         if removed_rows == 0:
             flash("Выбранная сессия не найдена.", "warning")
         else:
