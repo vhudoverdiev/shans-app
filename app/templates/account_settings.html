@@ -272,8 +272,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function lockPageScroll(isLocked) {
-        document.documentElement.classList.toggle("avatar-crop-scroll-locked", Boolean(isLocked));
-        document.body.classList.toggle("avatar-crop-scroll-locked", Boolean(isLocked));
+        const shouldLock = Boolean(isLocked);
+        const scrollbarCompensation = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        document.documentElement.classList.toggle("avatar-crop-scroll-locked", shouldLock);
+        document.body.classList.toggle("avatar-crop-scroll-locked", shouldLock);
+        document.body.style.paddingRight = shouldLock && scrollbarCompensation ? scrollbarCompensation + "px" : "";
     }
 
     function getFrameSize() {
@@ -469,6 +472,11 @@ document.addEventListener("DOMContentLoaded", function () {
             isDragging = false;
         });
     }
+
+    window.addEventListener("resize", function () {
+        if (!cropState || !cropModal || cropModal.hidden) return;
+        syncCropImage();
+    });
 
     if (avatarForm) {
         avatarForm.addEventListener("submit", function (event) {
