@@ -62,10 +62,6 @@
                             <input type="range" id="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
                         </div>
                     </div>
-                    <div class="avatar-crop-preview-wrap">
-                        <div class="avatar-crop-preview-title">Предпросмотр после сохранения</div>
-                        <canvas class="avatar-crop-preview" id="avatar-crop-preview" width="256" height="256"></canvas>
-                    </div>
                 </div>
                 <div class="avatar-crop-modal-actions">
                     <button type="button" class="btn btn-secondary" id="avatar-crop-cancel-btn">Отмена</button>
@@ -254,7 +250,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const cropFrame = document.getElementById("avatar-crop-frame");
     const cropImage = document.getElementById("avatar-crop-image");
     const cropZoom = document.getElementById("avatar-crop-zoom");
-    const cropPreview = document.getElementById("avatar-crop-preview");
     const croppedAvatarDataInput = document.getElementById("cropped_avatar_data");
     const avatarCropCancelBtn = document.getElementById("avatar-crop-cancel-btn");
     const accountInlineNotice = document.getElementById("account-inline-notice");
@@ -302,36 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
-    function drawCropPreview() {
-        if (!cropState || !cropPreview || !cropImage || !cropState.imageLoaded) return;
-        const sourceRect = getCropSourceRect();
-        if (!sourceRect) return;
-        const ctx = cropPreview.getContext("2d");
-        if (!ctx) return;
-        const size = cropPreview.width;
-
-        ctx.clearRect(0, 0, size, size);
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(
-            cropImage,
-            sourceRect.sourceX,
-            sourceRect.sourceY,
-            sourceRect.sourceWidth,
-            sourceRect.sourceHeight,
-            0,
-            0,
-            size,
-            size
-        );
-        ctx.restore();
-    }
-
     function syncCropImage() {
         if (!cropState || !cropImage || !cropFrame) return;
         const frameSize = getFrameSize();
@@ -345,7 +310,6 @@ document.addEventListener("DOMContentLoaded", function () {
         cropImage.style.width = width + "px";
         cropImage.style.height = height + "px";
         cropImage.style.transform = "translate(" + cropState.offsetX + "px, " + cropState.offsetY + "px)";
-        drawCropPreview();
     }
 
     function exportCroppedData() {

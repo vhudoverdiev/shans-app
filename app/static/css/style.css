@@ -413,11 +413,8 @@ a {
 }
 
 .avatar-crop-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 220px;
-    gap: 16px;
+    display: block;
     margin: 10px 0 0;
-    align-items: start;
 }
 
 .avatar-crop-modal[hidden] {
@@ -505,28 +502,6 @@ a {
 
 #avatar-crop-zoom {
     touch-action: none;
-}
-
-.avatar-crop-preview-wrap {
-    border-radius: 16px;
-    border: 1px solid #dbe3f0;
-    padding: 12px;
-    background: #f8fbff;
-}
-
-.avatar-crop-preview-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #334155;
-    margin-bottom: 8px;
-}
-
-.avatar-crop-preview {
-    width: 100%;
-    height: auto;
-    border-radius: 999px;
-    border: 1px solid #d3deee;
-    background: #ffffff;
 }
 
 .avatar-crop-modal-actions {
