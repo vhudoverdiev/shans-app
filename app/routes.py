@@ -7,6 +7,7 @@ import os
 import re
 import secrets
 import shlex
+import shutil
 
 from flask import (
     current_app,
@@ -995,6 +996,9 @@ def register_routes(app):
     def _avatar_upload_dir() -> str:
         return current_app.config["AVATAR_UPLOAD_DIR"]
 
+    def _legacy_avatar_upload_dir() -> str:
+        return os.path.join(current_app.instance_path, "uploads", "avatars")
+
     def _avatar_public_url(filename: str) -> str:
         return url_for("user_avatar_file", filename=filename)
 
@@ -1008,6 +1012,12 @@ def register_routes(app):
         if not avatar_filename:
             return None
         avatar_path = os.path.join(_avatar_upload_dir(), avatar_filename)
+        if not os.path.exists(avatar_path):
+            legacy_avatar_path = os.path.join(_legacy_avatar_upload_dir(), avatar_filename)
+            if not os.path.exists(legacy_avatar_path):
+                return None
+            os.makedirs(_avatar_upload_dir(), exist_ok=True)
+            shutil.copy2(legacy_avatar_path, avatar_path)
         if not os.path.exists(avatar_path):
             return None
         return _avatar_public_url(avatar_filename)
