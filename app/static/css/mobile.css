@@ -94,6 +94,19 @@
         padding: 10px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.92);
+        align-items: center;
+    }
+
+    .account-avatar-preview-wrap {
+        flex: 0 0 64px;
+    }
+
+    .account-profile-userline {
+        min-width: 0;
+    }
+
+    .account-login-value {
+        word-break: break-word;
     }
 
     .account-profile-main-line .btn {
@@ -126,6 +139,31 @@
     .avatar-crop-frame {
         width: 100%;
         max-width: 100%;
+    }
+
+    .avatar-crop-modal {
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    .avatar-crop-modal-card {
+        width: 100%;
+        border-radius: 18px 18px 12px 12px;
+        padding: 14px;
+    }
+
+    .avatar-crop-modal-title {
+        font-size: 18px;
+    }
+
+    .avatar-crop-stage,
+    .avatar-crop-modal-actions {
+        width: 100%;
+    }
+
+    .avatar-crop-action-btn {
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .card {
