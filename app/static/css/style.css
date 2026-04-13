@@ -264,6 +264,10 @@ a {
     color: #64748b;
 }
 
+.account-settings-header {
+    margin-bottom: 14px;
+}
+
 .account-hero-card {
     position: static;
 }
@@ -459,11 +463,11 @@ a {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: min(100%, 320px);
+    width: min(100%, 380px);
 }
 
 .avatar-crop-frame {
-    width: min(100%, 320px);
+    width: min(100%, 380px);
     aspect-ratio: 1 / 1;
     border-radius: 20px;
     border: 1px solid #dbe4f2;
@@ -519,7 +523,7 @@ a {
 
 .avatar-crop-zoom-input {
     touch-action: none;
-    width: min(100%, 240px);
+    width: 100%;
     appearance: none;
     height: 8px;
     border-radius: 999px;
@@ -557,7 +561,7 @@ a {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    width: min(100%, 320px);
+    width: min(100%, 380px);
     margin-left: auto;
     margin-right: auto;
 }
