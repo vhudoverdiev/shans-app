@@ -1018,12 +1018,18 @@ def register_routes(app):
     def _build_avatar_url(user_row) -> str | None:
         if not user_row:
             return None
-        avatar_filename = (user_row.get("avatar_filename") or "").strip()
-        if not avatar_filename:
+        raw_avatar_filename = (user_row.get("avatar_filename") or "").strip()
+        if not raw_avatar_filename:
             return None
+        safe_avatar_filename = secure_filename(raw_avatar_filename)
+        if not safe_avatar_filename:
+            return None
+        avatar_filename = safe_avatar_filename
         avatar_path = os.path.join(_avatar_upload_dir(), avatar_filename)
         if not os.path.exists(avatar_path):
             legacy_avatar_path = _resolve_legacy_avatar_path(avatar_filename)
+            if not legacy_avatar_path and raw_avatar_filename != avatar_filename:
+                legacy_avatar_path = _resolve_legacy_avatar_path(raw_avatar_filename)
             if not legacy_avatar_path:
                 return None
             os.makedirs(_avatar_upload_dir(), exist_ok=True)
@@ -1036,7 +1042,7 @@ def register_routes(app):
     @login_required
     def user_avatar_file(filename):
         safe_filename = secure_filename(filename or "")
-        if not safe_filename or safe_filename != filename:
+        if not safe_filename:
             return ("", 404)
         avatar_path = os.path.join(_avatar_upload_dir(), safe_filename)
         if not os.path.exists(avatar_path):
