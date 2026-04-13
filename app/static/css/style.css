@@ -260,12 +260,12 @@ a {
 }
 
 .account-settings-subtitle {
-    margin: 8px 0 0;
+    margin: 4px 0 0;
     color: #64748b;
 }
 
 .account-settings-header {
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .account-hero-card {
