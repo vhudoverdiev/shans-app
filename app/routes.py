@@ -996,8 +996,18 @@ def register_routes(app):
     def _avatar_upload_dir() -> str:
         return current_app.config["AVATAR_UPLOAD_DIR"]
 
-    def _legacy_avatar_upload_dir() -> str:
-        return os.path.join(current_app.instance_path, "uploads", "avatars")
+    def _legacy_avatar_upload_dirs() -> tuple[str, ...]:
+        return (
+            os.path.join(current_app.instance_path, "uploads", "avatars"),
+            os.path.join(current_app.root_path, "static", "uploads", "avatars"),
+        )
+
+    def _resolve_legacy_avatar_path(filename: str) -> str | None:
+        for directory in _legacy_avatar_upload_dirs():
+            legacy_avatar_path = os.path.join(directory, filename)
+            if os.path.exists(legacy_avatar_path):
+                return legacy_avatar_path
+        return None
 
     def _avatar_public_url(filename: str) -> str:
         return url_for("user_avatar_file", filename=filename)
@@ -1013,8 +1023,8 @@ def register_routes(app):
             return None
         avatar_path = os.path.join(_avatar_upload_dir(), avatar_filename)
         if not os.path.exists(avatar_path):
-            legacy_avatar_path = os.path.join(_legacy_avatar_upload_dir(), avatar_filename)
-            if not os.path.exists(legacy_avatar_path):
+            legacy_avatar_path = _resolve_legacy_avatar_path(avatar_filename)
+            if not legacy_avatar_path:
                 return None
             os.makedirs(_avatar_upload_dir(), exist_ok=True)
             shutil.copy2(legacy_avatar_path, avatar_path)
@@ -1028,6 +1038,12 @@ def register_routes(app):
         safe_filename = secure_filename(filename or "")
         if not safe_filename or safe_filename != filename:
             return ("", 404)
+        avatar_path = os.path.join(_avatar_upload_dir(), safe_filename)
+        if not os.path.exists(avatar_path):
+            legacy_avatar_path = _resolve_legacy_avatar_path(safe_filename)
+            if legacy_avatar_path:
+                os.makedirs(_avatar_upload_dir(), exist_ok=True)
+                shutil.copy2(legacy_avatar_path, avatar_path)
         return send_from_directory(_avatar_upload_dir(), safe_filename, conditional=True)
 
     def _detect_device_and_browser(user_agent_string: str | None):

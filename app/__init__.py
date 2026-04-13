@@ -59,7 +59,7 @@ def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(Config)
     if not app.config.get("AVATAR_UPLOAD_DIR"):
-        app.config["AVATAR_UPLOAD_DIR"] = os.path.join(app.root_path, "static", "uploads", "avatars")
+        app.config["AVATAR_UPLOAD_DIR"] = os.path.join(app.instance_path, "uploads", "avatars")
     os.makedirs(app.config["AVATAR_UPLOAD_DIR"], exist_ok=True)
     setup_logging(app)
     register_request_hooks(app)
