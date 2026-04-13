@@ -1028,6 +1028,12 @@ def register_routes(app):
         safe_filename = secure_filename(filename or "")
         if not safe_filename or safe_filename != filename:
             return ("", 404)
+        avatar_path = os.path.join(_avatar_upload_dir(), safe_filename)
+        if not os.path.exists(avatar_path):
+            legacy_avatar_path = os.path.join(_legacy_avatar_upload_dir(), safe_filename)
+            if os.path.exists(legacy_avatar_path):
+                os.makedirs(_avatar_upload_dir(), exist_ok=True)
+                shutil.copy2(legacy_avatar_path, avatar_path)
         return send_from_directory(_avatar_upload_dir(), safe_filename, conditional=True)
 
     def _detect_device_and_browser(user_agent_string: str | None):
