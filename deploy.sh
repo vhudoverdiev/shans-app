@@ -6,6 +6,7 @@ BRANCH="${BRANCH:-main}"
 REMOTE="${REMOTE:-origin}"
 SERVICE="${SERVICE:-shans.service}"
 CLEAN_MODE="${CLEAN_MODE:-safe}" # safe|aggressive
+VERIFY_CLEAN="${VERIFY_CLEAN:-true}" # true|false
 
 log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -22,6 +23,7 @@ usage() {
   REMOTE=origin                # удалённый репозиторий
   SERVICE=shans.service        # systemd unit
   CLEAN_MODE=safe              # safe | aggressive
+  VERIFY_CLEAN=true            # true | false (проверка, что нет изменённых tracked-файлов)
 
 Пример:
   APP_DIR=/var/www/shans-app BRANCH=main SERVICE=shans.service ./deploy.sh
@@ -45,7 +47,7 @@ main() {
   require_cmd systemctl
 
   log "Старт деплоя"
-  log "APP_DIR=$APP_DIR, REMOTE=$REMOTE, BRANCH=$BRANCH, SERVICE=$SERVICE, CLEAN_MODE=$CLEAN_MODE"
+  log "APP_DIR=$APP_DIR, REMOTE=$REMOTE, BRANCH=$BRANCH, SERVICE=$SERVICE, CLEAN_MODE=$CLEAN_MODE, VERIFY_CLEAN=$VERIFY_CLEAN"
 
   if [[ ! -d "$APP_DIR/.git" ]]; then
     echo "Ошибка: $APP_DIR не является git-репозиторием" >&2
@@ -88,6 +90,16 @@ main() {
 
   log "service status"
   systemctl status "$SERVICE" --no-pager -l
+
+  if [[ "$VERIFY_CLEAN" == "true" ]]; then
+    log "Проверка tracked-изменений после деплоя"
+    if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+      echo "Ошибка: после деплоя есть изменённые tracked-файлы. Проверьте git status." >&2
+      git status --short
+      exit 1
+    fi
+    log "tracked-файлы чистые"
+  fi
 
   log "Деплой завершён: $before_head -> $after_head (remote: $remote_head)"
 }
