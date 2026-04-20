@@ -1493,8 +1493,8 @@ def register_routes(app):
                 if "image/png" not in header and "image/jpeg" not in header and "image/webp" not in header:
                     raise ValueError("unsupported format")
                 raw_bytes = base64.b64decode(encoded)
-                if len(raw_bytes) > 3 * 1024 * 1024:
-                    flash("Файл слишком большой. Максимум 3 МБ.", "danger")
+                if len(raw_bytes) > 10 * 1024 * 1024:
+                    flash("Файл слишком большой. Максимум 10 МБ.", "danger")
                     return redirect(url_for("account_settings"))
                 file_ext = ".png" if "image/png" in header else ".jpg"
             except Exception:
@@ -1515,8 +1515,8 @@ def register_routes(app):
             avatar_file.seek(0, os.SEEK_END)
             file_size = avatar_file.tell()
             avatar_file.seek(0)
-            if file_size > 3 * 1024 * 1024:
-                flash("Файл слишком большой. Максимум 3 МБ.", "danger")
+            if file_size > 10 * 1024 * 1024:
+                flash("Файл слишком большой. Максимум 10 МБ.", "danger")
                 return redirect(url_for("account_settings"))
 
         upload_dir = _avatar_upload_dir()
@@ -2334,8 +2334,8 @@ def register_routes(app):
                 flash("Укажи корректную дату съёмки.", "danger")
                 return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
 
-            if len(scenario_text) > 700:
-                flash("Текст сценария не должен превышать 700 символов.", "danger")
+            if len(scenario_text) > 2000:
+                flash("Текст сценария не должен превышать 2000 символов.", "danger")
                 return render_template("scenarios_add.html", form_data=form_data, active_tab="add")
 
             scenario_id = create_scenario(
@@ -2432,8 +2432,8 @@ def register_routes(app):
                 flash("Укажи корректную дату съёмки.", "danger")
                 return redirect(url_for("scenario_edit", scenario_id=scenario_id))
 
-            if len(scenario_text) > 700:
-                flash("Текст сценария не должен превышать 700 символов.", "danger")
+            if len(scenario_text) > 2000:
+                flash("Текст сценария не должен превышать 2000 символов.", "danger")
                 return redirect(url_for("scenario_edit", scenario_id=scenario_id))
 
             update_scenario(
