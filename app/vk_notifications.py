@@ -243,13 +243,14 @@ def send_vk_tomorrow_tasks_message(force: bool = False) -> tuple[bool, str]:
     except Exception as exc:
         return False, str(exc)
 
-    conn = get_connection()
-    conn.execute(
-        "UPDATE vk_notification_settings SET last_daily_sent_date = ? WHERE id = 1",
-        (now_local.date().isoformat(),),
-    )
-    conn.commit()
-    conn.close()
+    if not force:
+        conn = get_connection()
+        conn.execute(
+            "UPDATE vk_notification_settings SET last_daily_sent_date = ? WHERE id = 1",
+            (now_local.date().isoformat(),),
+        )
+        conn.commit()
+        conn.close()
     return True, "Уведомление отправлено в VK."
 
 

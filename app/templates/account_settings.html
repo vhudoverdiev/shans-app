@@ -379,8 +379,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 resetAvatarCrop();
                 return;
             }
-            if (file.size > 3 * 1024 * 1024) {
-                showInlineNotice("Файл слишком большой — максимум 3 МБ. Выберите изображение поменьше.");
+            if (file.size > 10 * 1024 * 1024) {
+                showInlineNotice("Файл слишком большой — максимум 10 МБ. Выберите изображение поменьше.");
                 avatarInput.value = "";
                 resetAvatarCrop();
                 return;
