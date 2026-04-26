@@ -151,7 +151,7 @@ def _vk_api(method: str, params: dict) -> dict:
     return payload.get("response", {})
 
 
-def _resolve_vk_user_id(access_token: str, profile_url: str) -> int:
+def _resolve_vk_user_id(profile_url: str) -> int:
     screen_name = _extract_screen_name(profile_url)
     if not screen_name:
         raise RuntimeError("Не указан адрес страницы VK.")
@@ -160,7 +160,6 @@ def _resolve_vk_user_id(access_token: str, profile_url: str) -> int:
         "utils.resolveScreenName",
         {
             "screen_name": screen_name,
-            "access_token": access_token,
             "v": _VK_API_VERSION,
         },
     )
@@ -171,7 +170,6 @@ def _resolve_vk_user_id(access_token: str, profile_url: str) -> int:
         "users.get",
         {
             "user_ids": screen_name,
-            "access_token": access_token,
             "v": _VK_API_VERSION,
         },
     )
@@ -229,7 +227,7 @@ def send_vk_tomorrow_tasks_message(force: bool = False) -> tuple[bool, str]:
     message_text = _build_tomorrow_tasks_text(now_local)
 
     try:
-        user_id = _resolve_vk_user_id(access_token, profile_url)
+        user_id = _resolve_vk_user_id(profile_url)
         _vk_api(
             "messages.send",
             {
@@ -241,7 +239,20 @@ def send_vk_tomorrow_tasks_message(force: bool = False) -> tuple[bool, str]:
             },
         )
     except Exception as exc:
-        return False, str(exc)
+        error_text = str(exc)
+        if "VK API error 38" in error_text:
+            return False, (
+                "VK API error 38: токен привязан к несуществующему/недоступному приложению. "
+                "Сгенерируй новый токен сообщества (group token) и обнови VK_ACCESS_TOKEN."
+            )
+        if "VK API error 5" in error_text:
+            return False, "VK API error 5: ошибка авторизации. Проверь корректность VK_ACCESS_TOKEN."
+        if "VK API error 901" in error_text:
+            return False, (
+                "VK API error 901: пользователь запретил сообщения от сообщества. "
+                "Напиши сообществу в VK первым и разреши сообщения."
+            )
+        return False, error_text
 
     if not force:
         conn = get_connection()
@@ -365,7 +376,7 @@ def diagnose_vk_notifications(check_remote: bool = False) -> dict:
 
     if check_remote and settings and diagnostics["token_present"] and diagnostics["profile_url"]:
         try:
-            user_id = _resolve_vk_user_id((settings["access_token"] or "").strip(), diagnostics["profile_url"])
+            user_id = _resolve_vk_user_id(diagnostics["profile_url"])
             diagnostics["remote_check_ok"] = True
             diagnostics["resolved_user_id"] = user_id
         except Exception as exc:

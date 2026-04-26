@@ -23,6 +23,8 @@ from app.vk_notifications import (
     start_vk_scheduler,
     diagnose_vk_notifications,
     send_vk_tomorrow_tasks_message,
+    get_vk_settings,
+    update_vk_settings,
 )
 
 
@@ -74,6 +76,29 @@ def _register_management_commands(app):
             click.echo(f"ok: {message}")
             return
         raise click.ClickException(message)
+
+    @app.cli.command("vk-set-config")
+    @click.option("--token", default=None, help="VK access token.")
+    @click.option("--profile-url", default=None, help="VK profile URL, e.g. https://vk.com/username")
+    @click.option("--timezone", default=None, help="Timezone, e.g. Europe/Moscow")
+    @click.option("--enabled/--disabled", default=None, help="Enable or disable VK notifications.")
+    def vk_set_config_cmd(token, profile_url, timezone, enabled):
+        current = get_vk_settings()
+        if not current:
+            raise click.ClickException("VK settings row not found.")
+
+        new_enabled = bool(current["is_enabled"]) if enabled is None else enabled
+        new_token = (current["access_token"] or "") if token is None else token
+        new_profile_url = (current["profile_url"] or "") if profile_url is None else profile_url
+        new_timezone = (current["timezone_name"] or "Europe/Moscow") if timezone is None else timezone
+
+        update_vk_settings(
+            is_enabled=new_enabled,
+            access_token=new_token,
+            profile_url=new_profile_url,
+            timezone_name=new_timezone,
+        )
+        click.echo("VK settings updated.")
 
 
 def create_app():
