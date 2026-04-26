@@ -217,8 +217,10 @@ def _build_tomorrow_tasks_text(now_local: datetime) -> str:
     for idx, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
         start_time = (task["start_time"] or "").strip()
-        time_part = start_time if start_time else "—"
-        lines.append(f"{idx}. {time_part} — {title}")
+        if start_time:
+            lines.append(f"{idx}. {start_time} {title}")
+        else:
+            lines.append(f"{idx}. {title}")
 
     lines.extend(["", f"Всего задач: {len(tasks)}"])
     return "\n".join(lines)
