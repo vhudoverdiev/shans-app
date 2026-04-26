@@ -43,9 +43,11 @@ cd shans-app
 ```bash
 flask --app app.py vk-diagnose
 flask --app app.py vk-diagnose --remote-check
+flask --app app.py vk-send-test
 ```
 
 `--remote-check` дополнительно проверяет токен/профиль через VK API и помогает быстро понять, что сломано (токен, ссылка профиля, время отправки, lock за текущий день).
+`vk-send-test` принудительно отправляет тестовое сообщение "Задачи на завтра" сразу (без ожидания 20:00).
 
 ## Деплой на сервер (main)
 
