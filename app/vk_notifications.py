@@ -151,28 +151,43 @@ def _vk_api(method: str, params: dict) -> dict:
     return payload.get("response", {})
 
 
-def _resolve_vk_user_id(profile_url: str) -> int:
+def _resolve_vk_user_id(profile_url: str, access_token: str | None = None) -> int:
     screen_name = _extract_screen_name(profile_url)
     if not screen_name:
         raise RuntimeError("Не указан адрес страницы VK.")
 
-    response = _vk_api(
-        "utils.resolveScreenName",
-        {
-            "screen_name": screen_name,
-            "v": _VK_API_VERSION,
-        },
-    )
+    resolve_params = {
+        "screen_name": screen_name,
+        "v": _VK_API_VERSION,
+    }
+    if (access_token or "").strip():
+        resolve_params["access_token"] = (access_token or "").strip()
+
+    try:
+        response = _vk_api("utils.resolveScreenName", resolve_params)
+    except RuntimeError as exc:
+        # Иногда токен не подходит для resolve-метода (например, VK API error 38).
+        # Делаем fallback на публичный вызов без токена.
+        if "VK API error 38" in str(exc):
+            response = _vk_api(
+                "utils.resolveScreenName",
+                {
+                    "screen_name": screen_name,
+                    "v": _VK_API_VERSION,
+                },
+            )
+        else:
+            raise
     if response and response.get("type") == "user" and response.get("object_id"):
         return int(response["object_id"])
 
-    users = _vk_api(
-        "users.get",
-        {
-            "user_ids": screen_name,
-            "v": _VK_API_VERSION,
-        },
-    )
+    users_params = {
+        "user_ids": screen_name,
+        "v": _VK_API_VERSION,
+    }
+    if (access_token or "").strip():
+        users_params["access_token"] = (access_token or "").strip()
+    users = _vk_api("users.get", users_params)
     if isinstance(users, list) and users:
         return int(users[0]["id"])
 
@@ -227,7 +242,7 @@ def send_vk_tomorrow_tasks_message(force: bool = False) -> tuple[bool, str]:
     message_text = _build_tomorrow_tasks_text(now_local)
 
     try:
-        user_id = _resolve_vk_user_id(profile_url)
+        user_id = _resolve_vk_user_id(profile_url, access_token=access_token)
         _vk_api(
             "messages.send",
             {
@@ -247,6 +262,11 @@ def send_vk_tomorrow_tasks_message(force: bool = False) -> tuple[bool, str]:
             )
         if "VK API error 5" in error_text:
             return False, "VK API error 5: ошибка авторизации. Проверь корректность VK_ACCESS_TOKEN."
+        if "VK API error 15" in error_text:
+            return False, (
+                "VK API error 15: access denied / token required. "
+                "Проверь, что передан именно токен сообщества с правом messages."
+            )
         if "VK API error 901" in error_text:
             return False, (
                 "VK API error 901: пользователь запретил сообщения от сообщества. "
@@ -376,7 +396,10 @@ def diagnose_vk_notifications(check_remote: bool = False) -> dict:
 
     if check_remote and settings and diagnostics["token_present"] and diagnostics["profile_url"]:
         try:
-            user_id = _resolve_vk_user_id(diagnostics["profile_url"])
+            user_id = _resolve_vk_user_id(
+                diagnostics["profile_url"],
+                access_token=(settings["access_token"] or "").strip(),
+            )
             diagnostics["remote_check_ok"] = True
             diagnostics["resolved_user_id"] = user_id
         except Exception as exc:

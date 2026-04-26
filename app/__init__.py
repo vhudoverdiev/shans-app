@@ -78,9 +78,9 @@ def _register_management_commands(app):
         raise click.ClickException(message)
 
     @app.cli.command("vk-set-config")
-    @click.option("--token", default=None, help="VK access token.")
-    @click.option("--profile-url", default=None, help="VK profile URL, e.g. https://vk.com/username")
-    @click.option("--timezone", default=None, help="Timezone, e.g. Europe/Moscow")
+    @click.option("-token", "--token", default=None, help="VK access token.")
+    @click.option("-profile-url", "--profile-url", default=None, help="VK profile URL, e.g. https://vk.com/username")
+    @click.option("-timezone", "--timezone", default=None, help="Timezone, e.g. Europe/Moscow")
     @click.option("--enabled/--disabled", default=None, help="Enable or disable VK notifications.")
     def vk_set_config_cmd(token, profile_url, timezone, enabled):
         current = get_vk_settings()
