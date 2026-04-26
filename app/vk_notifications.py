@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 from datetime import date, datetime, timedelta, timezone
@@ -14,9 +15,9 @@ from flask import current_app
 from app.database import get_connection
 
 _VK_API_VERSION = "5.199"
-_HARDCODED_VK_ACCESS_TOKEN = "vk1.a.-MluYBU8Y_UJZ6NmdrIzLAvBMidKS1ru4Olm1WVGyVq0Yz-SNLBK1F9IOiCg4UJsLsc4gs0kj-EBCGM7tzZkWcStS1MavY31Q6zrfbtG2JY-m3yeicLMVhrwSdFHIfLKaq2PlsnwQuRNbAtRvbaOOna56cn86uXCcdCMCtvd1bQzeKnmxip1s3_vzBesIbsRUOYqf0XAfTtcsdeXYtPFAg"
-_HARDCODED_VK_PROFILE_URL = "https://vk.com/hudoverdiev"
-_HARDCODED_TIMEZONE = "Europe/Moscow"
+_DEFAULT_VK_ACCESS_TOKEN = (os.getenv("VK_ACCESS_TOKEN") or "").strip()
+_DEFAULT_VK_PROFILE_URL = (os.getenv("VK_PROFILE_URL") or "").strip()
+_DEFAULT_TIMEZONE = (os.getenv("VK_TIMEZONE") or "Europe/Moscow").strip() or "Europe/Moscow"
 _DAILY_NOTIFICATION_HOUR = 20
 _DAILY_NOTIFICATION_MINUTE = 0
 _scheduler_lock = threading.Lock()
@@ -77,16 +78,7 @@ def init_vk_notifications_db():
             ) VALUES (1, 1, ?, ?, ?, NULL)
             """
             ,
-            (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
-        )
-    else:
-        cursor.execute(
-            """
-            UPDATE vk_notification_settings
-            SET is_enabled = 1, access_token = ?, profile_url = ?, timezone_name = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = 1
-            """,
-            (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
+            (_DEFAULT_VK_ACCESS_TOKEN, _DEFAULT_VK_PROFILE_URL, _DEFAULT_TIMEZONE),
         )
 
     conn.commit()
@@ -99,24 +91,32 @@ def get_vk_settings():
         """
         SELECT
             id,
-            1 AS is_enabled,
-            ? AS access_token,
-            ? AS profile_url,
-            ? AS timezone_name,
+            is_enabled,
+            access_token,
+            profile_url,
+            timezone_name,
             last_daily_sent_date,
             updated_at
         FROM vk_notification_settings
         WHERE id = 1
-        """,
-        (_HARDCODED_VK_ACCESS_TOKEN, _HARDCODED_VK_PROFILE_URL, _HARDCODED_TIMEZONE),
+        """
     ).fetchone()
     conn.close()
     return row
 
 
 def update_vk_settings(is_enabled: bool, access_token: str, profile_url: str, timezone_name: str):
-    # Настройки захардкожены, метод оставлен для обратной совместимости.
-    return None
+    conn = get_connection()
+    conn.execute(
+        """
+        UPDATE vk_notification_settings
+        SET is_enabled = ?, access_token = ?, profile_url = ?, timezone_name = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = 1
+        """,
+        (1 if is_enabled else 0, (access_token or "").strip(), (profile_url or "").strip(), (timezone_name or "").strip() or "Europe/Moscow"),
+    )
+    conn.commit()
+    conn.close()
 
 
 def _get_target_timezone():
@@ -326,3 +326,50 @@ def start_vk_scheduler(app):
     thread = threading.Thread(target=_scheduler_worker, args=(app,), daemon=True, name="vk-daily-scheduler")
     thread.start()
     app.logger.info("VK daily scheduler started")
+
+
+def diagnose_vk_notifications(check_remote: bool = False) -> dict:
+    settings = get_vk_settings()
+    tz = _get_target_timezone()
+    now_local = datetime.now(tz)
+    today_key = now_local.date().isoformat()
+
+    diagnostics = {
+        "settings_found": bool(settings),
+        "enabled": bool(settings["is_enabled"]) if settings else False,
+        "timezone": settings["timezone_name"] if settings and settings["timezone_name"] else "Europe/Moscow",
+        "now_local": now_local.isoformat(),
+        "send_time": f"{_DAILY_NOTIFICATION_HOUR:02d}:{_DAILY_NOTIFICATION_MINUTE:02d}",
+        "time_gate_open": (now_local.hour, now_local.minute) >= (_DAILY_NOTIFICATION_HOUR, _DAILY_NOTIFICATION_MINUTE),
+        "last_daily_sent_date": (settings["last_daily_sent_date"] if settings else None),
+        "already_sent_today": ((settings["last_daily_sent_date"] or "") == today_key) if settings else False,
+        "token_present": False,
+        "token_masked": "",
+        "profile_url": (settings["profile_url"] or "").strip() if settings else "",
+        "lock_exists_today": False,
+    }
+
+    if settings:
+        token = (settings["access_token"] or "").strip()
+        diagnostics["token_present"] = bool(token)
+        if token:
+            diagnostics["token_masked"] = f"{token[:6]}...{token[-4:]}" if len(token) > 12 else "***"
+
+    conn = get_connection()
+    lock_row = conn.execute(
+        "SELECT send_date FROM vk_daily_send_locks WHERE send_date = ?",
+        (today_key,),
+    ).fetchone()
+    conn.close()
+    diagnostics["lock_exists_today"] = bool(lock_row)
+
+    if check_remote and settings and diagnostics["token_present"] and diagnostics["profile_url"]:
+        try:
+            user_id = _resolve_vk_user_id((settings["access_token"] or "").strip(), diagnostics["profile_url"])
+            diagnostics["remote_check_ok"] = True
+            diagnostics["resolved_user_id"] = user_id
+        except Exception as exc:
+            diagnostics["remote_check_ok"] = False
+            diagnostics["remote_error"] = str(exc)
+
+    return diagnostics
