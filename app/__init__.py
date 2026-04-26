@@ -18,7 +18,12 @@ from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
 from app.logging_setup import setup_logging, register_request_hooks
-from app.vk_notifications import init_vk_notifications_db, start_vk_scheduler
+from app.vk_notifications import (
+    init_vk_notifications_db,
+    start_vk_scheduler,
+    diagnose_vk_notifications,
+    send_vk_tomorrow_tasks_message,
+)
 
 
 login_manager = LoginManager()
@@ -53,6 +58,22 @@ def _register_management_commands(app):
         conn.execute("SELECT 1")
         conn.close()
         click.echo("ok")
+
+    @app.cli.command("vk-diagnose")
+    @click.option("--remote-check", is_flag=True, default=False, help="Also validate token/profile through VK API.")
+    def vk_diagnose_cmd(remote_check):
+        data = diagnose_vk_notifications(check_remote=remote_check)
+        click.echo("VK notifications diagnostics:")
+        for key in sorted(data.keys()):
+            click.echo(f"- {key}: {data[key]}")
+
+    @app.cli.command("vk-send-test")
+    def vk_send_test_cmd():
+        ok, message = send_vk_tomorrow_tasks_message(force=True)
+        if ok:
+            click.echo(f"ok: {message}")
+            return
+        raise click.ClickException(message)
 
 
 def create_app():
