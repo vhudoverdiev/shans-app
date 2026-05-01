@@ -3110,9 +3110,12 @@ def register_routes(app):
             update_car_planned_service(
                 service_id=service_id,
                 service_name=service_name,
+                planned_cost=service.get("planned_cost"),
+                mileage=service.get("mileage"),
                 detail_description=detail_description,
                 work_kind=service["work_kind"],
                 period_type=period_type,
+                status=service.get("status") or "planned",
             )
 
             log_audit(current_app, "car_planned_updated", service_id=service_id)
