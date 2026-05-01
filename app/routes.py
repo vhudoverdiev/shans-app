@@ -1002,6 +1002,15 @@ def register_routes(app):
             os.path.join(current_app.root_path, "static", "uploads", "avatars"),
         )
 
+    def _all_avatar_storage_dirs() -> tuple[str, ...]:
+        primary_dir = _avatar_upload_dir()
+        fallback_dirs = _legacy_avatar_upload_dirs()
+        result = [primary_dir]
+        for directory in fallback_dirs:
+            if directory and directory not in result:
+                result.append(directory)
+        return tuple(result)
+
     def _resolve_legacy_avatar_path(filename: str) -> str | None:
         for directory in _legacy_avatar_upload_dirs():
             legacy_avatar_path = os.path.join(directory, filename)
@@ -1532,9 +1541,17 @@ def register_routes(app):
         user_row = get_user_by_id(current_user.id)
         previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
         if previous_filename and previous_filename != new_filename:
-            previous_path = os.path.join(upload_dir, previous_filename)
-            if os.path.exists(previous_path):
-                os.remove(previous_path)
+            for storage_dir in _all_avatar_storage_dirs():
+                previous_path = os.path.join(storage_dir, previous_filename)
+                if os.path.exists(previous_path):
+                    os.remove(previous_path)
+
+        for storage_dir in _all_avatar_storage_dirs():
+            os.makedirs(storage_dir, exist_ok=True)
+            storage_path = os.path.join(storage_dir, new_filename)
+            if storage_path == target_path:
+                continue
+            shutil.copy2(target_path, storage_path)
 
         set_user_avatar_filename(current_user.id, new_filename)
         flash("Аватарка обновлена.", "success")
@@ -1548,9 +1565,10 @@ def register_routes(app):
         user_row = get_user_by_id(current_user.id)
         previous_filename = (user_row.get("avatar_filename") if user_row else "") or ""
         if previous_filename:
-            previous_path = os.path.join(upload_dir, previous_filename)
-            if os.path.exists(previous_path):
-                os.remove(previous_path)
+            for storage_dir in _all_avatar_storage_dirs():
+                previous_path = os.path.join(storage_dir, previous_filename)
+                if os.path.exists(previous_path):
+                    os.remove(previous_path)
         set_user_avatar_filename(current_user.id, "")
         flash("Аватарка удалена.", "success")
         return redirect(url_for("account_settings"))
@@ -3078,7 +3096,7 @@ def register_routes(app):
         service = get_car_planned_service_by_id(service_id)
         if not service:
             flash("Планируемая работа не найдена.", "error")
-            return redirect(url_for("car"))
+            return redirect(url_for("car", tab="planned"))
 
         if request.method == "POST":
             service_name = request.form.get("service_name", "").strip()
@@ -3099,7 +3117,7 @@ def register_routes(app):
 
             log_audit(current_app, "car_planned_updated", service_id=service_id)
             flash("Планируемая работа обновлена.", "success")
-            return redirect(url_for("car"))
+            return redirect(url_for("car", tab="planned"))
 
         return render_template("car_planned_edit.html", service=service)
 
