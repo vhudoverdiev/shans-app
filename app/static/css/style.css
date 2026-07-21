@@ -561,6 +561,7 @@ a {
 
 .account-hero-card {
     position: static;
+    margin-top: 24px;
 }
 
 .account-avatar-hidden-form {
@@ -730,6 +731,10 @@ a {
     opacity: 0;
     transform: translateY(-8px);
     transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.account-inline-notice[hidden] {
+    display: none;
 }
 
 .account-inline-notice-show {
