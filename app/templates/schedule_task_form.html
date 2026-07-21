@@ -8,17 +8,18 @@
             <h1 class="page-title">{% if task %}Редактировать задачу{% else %}Добавить задачу{% endif %}</h1>
         </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" href="{{ url_for('planner.schedule', view='day', date=(task.task_date if task else initial_date)) }}">Назад</a>
+            <a class="btn btn-secondary" href="{{ url_for('planner.schedule', calendar=current_calendar, view='day', date=(task.task_date if task else initial_date)) }}">Назад</a>
         </div>
     </div>
 
     <div class="card edit-card car-form-card">
         <div class="car-form-head">
-            <div class="car-form-head-title">{% if task %}Карточка задачи{% else %}Новая задача{% endif %}</div>
+            <div class="car-form-head-title">{% if task %}Карточка задачи{% else %}Новая задача{% endif %} · {{ current_calendar_label }} график</div>
             <div class="car-form-head-text">{% if task %}Измени параметры задачи и сохрани изменения.{% else %}Заполни форму и добавь задачу в график.{% endif %}</div>
         </div>
 
         <form method="post" action="{% if task %}{{ url_for('planner.edit_schedule_task', task_id=task.id) }}{% else %}{{ url_for('planner.create_schedule_task') }}{% endif %}" class="form-block">
+            <input type="hidden" name="calendar_type" value="{{ current_calendar }}">
             {% if not task %}
             <input type="hidden" name="return_view" value="day">
             {% endif %}
@@ -63,7 +64,7 @@
 
             <div class="car-form-actions">
                 <button class="btn btn-primary" type="submit">{% if task %}Сохранить изменения{% else %}Сохранить задачу{% endif %}</button>
-                <a class="btn btn-secondary" href="{{ url_for('planner.schedule', view='day', date=(task.task_date if task else initial_date)) }}">Отмена</a>
+                <a class="btn btn-secondary" href="{{ url_for('planner.schedule', calendar=current_calendar, view='day', date=(task.task_date if task else initial_date)) }}">Отмена</a>
             </div>
         </form>
     </div>

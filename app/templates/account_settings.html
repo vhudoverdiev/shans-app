@@ -129,6 +129,27 @@
                 {% endif %}
             </div>
 
+            <div
+                class="card account-card account-push-card"
+                id="push-notifications-card"
+                data-config-url="{{ url_for('web_push_config') }}"
+                data-subscribe-url="{{ url_for('web_push_subscribe') }}"
+                data-unsubscribe-url="{{ url_for('web_push_unsubscribe') }}"
+                data-test-url="{{ url_for('web_push_test') }}"
+            >
+                <h2 class="section-title">Уведомления личного графика</h2>
+                <p class="muted-text account-push-description">
+                    В 10:00 — задачи на сегодня, в 20:00 — на завтра, при указанном времени — напоминание за 2 часа.
+                </p>
+                <p class="account-push-status" id="push-notifications-status" role="status" aria-live="polite">
+                    Проверяем поддержку уведомлений…
+                </p>
+                <div class="account-push-actions">
+                    <button type="button" class="btn btn-primary" id="push-notifications-toggle">Включить уведомления</button>
+                    <button type="button" class="btn btn-secondary" id="push-notifications-test" hidden>Прислать тестовое уведомление</button>
+                </div>
+            </div>
+
             <div class="card account-card">
                 <h2 class="section-title">История входов</h2>
                 <div class="table-wrapper account-login-history">
@@ -223,7 +244,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
-    const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
+    const isMobileViewport = window.matchMedia("(max-width: 768px) and (pointer: coarse)").matches;
     const allowedTabs = isMobileViewport
         ? new Set(["security"])
         : new Set(["security", "import"]);
@@ -576,4 +597,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+<script src="{{ url_for('static', filename='js/push-notifications.js') }}"></script>
 {% endblock %}

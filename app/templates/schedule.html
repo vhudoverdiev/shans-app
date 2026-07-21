@@ -6,8 +6,22 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">График</h1>
+            <p class="planner-calendar-caption">{{ current_calendar_label }} график</p>
         </div>
     </div>
+
+    <nav class="planner-calendar-switch" aria-label="Выбор графика">
+        <a
+            href="{{ url_for('planner.schedule', calendar='personal', view=current_view, date=selected_date.isoformat()) }}"
+            class="planner-calendar-switch-link {% if current_calendar == 'personal' %}planner-calendar-switch-link-active{% endif %}"
+            {% if current_calendar == 'personal' %}aria-current="page"{% endif %}
+        >Личный</a>
+        <a
+            href="{{ url_for('planner.schedule', calendar='work', view=current_view, date=selected_date.isoformat()) }}"
+            class="planner-calendar-switch-link {% if current_calendar == 'work' %}planner-calendar-switch-link-active{% endif %}"
+            {% if current_calendar == 'work' %}aria-current="page"{% endif %}
+        >Рабочий</a>
+    </nav>
 
     <div class="stats-grid car-stats-grid planner-mobile-stats">
         <div class="stat-card">
@@ -23,9 +37,9 @@
     <div class="card table-card">
         <div class="planner-toolbar">
             <div class="page-actions planner-nav-actions">
-                <a class="car-tab-link {% if is_today_selected %}car-tab-link-active{% endif %}" href="{{ url_for('planner.schedule', view=current_view) }}">Сегодня</a>
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=prev_date) }}">←</a>
-                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', view=current_view, date=next_date) }}">→</a>
+                <a class="car-tab-link {% if is_today_selected %}car-tab-link-active{% endif %}" href="{{ url_for('planner.schedule', calendar=current_calendar, view=current_view) }}">Сегодня</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', calendar=current_calendar, view=current_view, date=prev_date) }}">←</a>
+                <a class="btn btn-secondary btn-compact" href="{{ url_for('planner.schedule', calendar=current_calendar, view=current_view, date=next_date) }}">→</a>
             </div>
 
             <div class="planner-toolbar-title">
@@ -37,9 +51,9 @@
             </div>
 
             <div class="car-tab-bar">
-                <a href="{{ url_for('planner.schedule', view='day', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'day' %}car-tab-link-active{% endif %}">День</a>
-                <a href="{{ url_for('planner.schedule', view='month', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'month' %}car-tab-link-active{% endif %}">Месяц</a>
-                <a href="{{ url_for('planner.create_schedule_task', date=selected_date.isoformat()) }}" class="car-tab-link">Добавить задачу</a>
+                <a href="{{ url_for('planner.schedule', calendar=current_calendar, view='day', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'day' %}car-tab-link-active{% endif %}">День</a>
+                <a href="{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=selected_date.isoformat()) }}" class="car-tab-link {% if current_view == 'month' %}car-tab-link-active{% endif %}">Месяц</a>
+                <a href="{{ url_for('planner.create_schedule_task', calendar=current_calendar, date=selected_date.isoformat()) }}" class="car-tab-link">Добавить задачу</a>
             </div>
         </div>
     </div>
@@ -54,9 +68,9 @@
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
         </div>
 
-        <div class="planner-month-grid planner-month-grid-scroll" data-next-month-url="{{ url_for('planner.schedule', view='month', date=next_date) }}" data-prev-month-url="{{ url_for('planner.schedule', view='month', date=prev_date) }}">
+        <div class="planner-month-grid planner-month-grid-scroll" data-next-month-url="{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=next_date) }}" data-prev-month-url="{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=prev_date) }}">
             {% for cell in month_cells %}
-            <a href="{{ url_for('planner.schedule', view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if not cell.is_past and cell.has_scenario_task %}planner-day-card-scenario{% elif not cell.is_past and cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if not cell.is_past and cell.has_range_task %}planner-day-card-range{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
+            <a href="{{ url_for('planner.schedule', calendar=current_calendar, view='day', date=cell.date_key) }}" class="planner-day-card {% if not cell.is_current_month %}planner-day-card-muted{% endif %} {% if cell.is_today %}planner-day-card-today{% endif %} {% if cell.is_selected %}planner-day-card-selected{% endif %} {% if not cell.is_past and cell.has_scenario_task %}planner-day-card-scenario{% elif not cell.is_past and cell.has_photo_or_shooting %}planner-day-card-photo{% endif %} {% if not cell.is_past and cell.has_range_task %}planner-day-card-range{% endif %} {% if cell.is_weekend %}planner-day-card-weekend{% endif %} {% if cell.is_past %}planner-day-card-past{% endif %}">
                 <div class="planner-day-card-head">
                     <strong class="planner-day-date">{{ cell.date.day }} {{ cell.month_short }} <span class="planner-day-weekday">({{ cell.weekday_short }})</span></strong>
                     {% if not cell.is_past and cell.tasks %}<span class="planner-day-count {% if cell.has_important %}planner-day-count-important{% elif cell.has_photo_or_shooting %}planner-day-count-photo{% endif %}">{{ cell.tasks|length }}</span>{% endif %}
@@ -82,10 +96,12 @@
                 <form method="post" action="{{ url_for('planner.delete_schedule_tasks_selected') }}" class="inline-form bulk-delete-selected-form">
                     <input type="hidden" name="selected_ids" class="bulk-selected-ids">
                     <input type="hidden" name="task_date" value="{{ selected_date.isoformat() }}">
+                    <input type="hidden" name="calendar_type" value="{{ current_calendar }}">
                     <button type="submit" class="btn btn-secondary btn-small">Удалить выбранное</button>
                 </form>
                 <form method="post" action="{{ url_for('planner.delete_schedule_tasks_all') }}" class="inline-form bulk-delete-all-form">
                     <input type="hidden" name="task_date" value="{{ selected_date.isoformat() }}">
+                    <input type="hidden" name="calendar_type" value="{{ current_calendar }}">
                     <button type="submit" class="btn btn-danger btn-small">Удалить все</button>
                 </form>
             </div>
@@ -144,7 +160,7 @@
                                 <form method="post" action="{{ url_for('planner.move_schedule_task_next_day', task_id=task.id) }}" class="inline-form">
                                     <button class="icon-action-btn icon-edit" type="submit" title="Перенести на следующий день">⇢</button>
                                 </form>
-                                <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_schedule_task', task_id=task.id) }}" title="Изменить">✏</a>
+                                <a class="icon-action-btn icon-edit" href="{{ url_for('planner.edit_schedule_task', task_id=task.id, calendar=current_calendar) }}" title="Изменить">✏</a>
                                 <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" class="inline-form" onsubmit="return confirm('Удалить задачу?');">
                                     <button class="icon-action-btn icon-delete" type="submit" title="Удалить">🗑</button>
                                 </form>
@@ -168,8 +184,8 @@
         const calendarGrid = document.querySelector('.planner-month-grid-scroll');
         if (!calendarGrid) return;
 
-        const nextWeekUrl = "{{ url_for('planner.schedule', view='month', date=next_week_date) }}";
-        const prevWeekUrl = "{{ url_for('planner.schedule', view='month', date=prev_week_date) }}";
+        const nextWeekUrl = "{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=next_week_date) }}";
+        const prevWeekUrl = "{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=prev_week_date) }}";
 
         calendarGrid.addEventListener('wheel', function (event) {
             if (Math.abs(event.deltaY) < 8) return;

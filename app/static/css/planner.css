@@ -26,6 +26,50 @@
     margin-bottom:0;
 }
 
+.planner-calendar-caption{
+    margin:6px 0 0;
+    color:#6b7280;
+    font-size:14px;
+    font-weight:600;
+}
+
+.planner-calendar-switch{
+    width:min(100%, 360px);
+    margin:0 0 18px;
+    padding:5px;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;
+    border:1px solid #e1e7f0;
+    border-radius:16px;
+    background:#eaf0f9;
+}
+
+.planner-calendar-switch-link{
+    min-height:42px;
+    padding:0 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    color:#526077;
+    font-size:14px;
+    font-weight:700;
+    text-decoration:none;
+    transition:background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.planner-calendar-switch-link:hover{
+    color:#1d4ed8;
+    transform:translateY(-1px);
+}
+
+.planner-calendar-switch-link-active{
+    background:#fff;
+    color:#1d4ed8;
+    box-shadow:0 7px 18px rgba(37,99,235,.15);
+}
+
 .planner-toolbar{
     display:flex;
     align-items:center;
@@ -402,7 +446,7 @@
     background:rgba(250,204,21,.20);
 }
 
-@media (max-width: 1024px){
+@media (max-width: 1024px) and (pointer: coarse){
     .planner-layout,
     .photo-projects-grid{
         grid-template-columns:1fr;
@@ -417,7 +461,17 @@
     }
 }
 
-@media (max-width: 768px){
+@media (max-width: 768px) and (pointer: coarse){
+    .planner-calendar-switch{
+        width:100%;
+        margin-bottom:14px;
+    }
+
+    .planner-calendar-switch-link{
+        min-height:44px;
+        padding:0 10px;
+    }
+
     .planner-mobile-stats{
         display:none;
     }
@@ -791,36 +845,7 @@
     transform:translateY(-1px);
 }
 
-.planner-vk-form{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-}
-
-.planner-vk-toggle-row{
-    margin-top:4px;
-}
-
-.planner-vk-test-box{
-    margin-top:14px;
-    padding-top:14px;
-    border-top:1px solid #e5e7eb;
-}
-
-.planner-vk-test-title{
-    font-size:14px;
-    font-weight:700;
-    color:#111827;
-}
-
-.planner-vk-test-description{
-    margin-top:6px;
-    margin-bottom:10px;
-    font-size:13px;
-    color:#6b7280;
-}
-
-@media (max-width: 768px){
+@media (max-width: 768px) and (pointer: coarse){
     .planner-section-head,
     .photo-project-card-topline{
         align-items:flex-start;

@@ -1,16 +1,50 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru"{% if request.endpoint == 'login' %} class="login-centered-document"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Шанс">
     <title>{% block title %}Шанс{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css') }}">
+    <script>
+        (function () {
+            try {
+                const introKey = "shans-intro-seen-v1";
+                if (!window.sessionStorage.getItem(introKey)) {
+                    window.sessionStorage.setItem(introKey, "1");
+                    document.documentElement.classList.add("app-intro-pending");
+                    window.setTimeout(function () {
+                        document.documentElement.classList.remove("app-intro-pending");
+                    }, 3000);
+                }
+            } catch (error) {
+                // The application remains usable when browser storage is unavailable.
+            }
+        }());
+    </script>
+    <script src="{{ url_for('static', filename='js/intro-loader.js') }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
 </head>
 <body class="app-body">
+    <div class="app-intro" id="app-intro" aria-hidden="true">
+        <div class="app-intro-glow"></div>
+        <div class="app-intro-stage">
+            <span class="app-intro-orbit app-intro-orbit-outer"></span>
+            <span class="app-intro-orbit app-intro-orbit-inner"></span>
+            <div class="app-intro-logo">Ш</div>
+            <div class="app-intro-wordmark">Шанс</div>
+            <div class="app-intro-progress"><span></span></div>
+        </div>
+    </div>
+
     {% if current_user.is_authenticated %}
     <header class="site-header">
         <div class="site-header-inner">

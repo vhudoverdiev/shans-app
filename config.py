@@ -37,6 +37,10 @@ class Config:
 
     LOGIN_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("LOGIN_RATE_LIMIT_WINDOW_SECONDS", "900"))
     LOGIN_RATE_LIMIT_MAX_ATTEMPTS = int(os.getenv("LOGIN_RATE_LIMIT_MAX_ATTEMPTS", "5"))
+    WEB_PUSH_VAPID_SUBJECT = os.getenv(
+        "WEB_PUSH_VAPID_SUBJECT",
+        "mailto:notifications@shans.local",
+    )
 
     @classmethod
     def is_production(cls) -> bool:

@@ -11,12 +11,17 @@ from flask_login import login_required
 
 from app.database import get_connection
 from app.utils import build_photo_project_excel
-from app.vk_notifications import send_vk_tomorrow_tasks_message
 
 planner_bp = Blueprint("planner", __name__)
 
 TASK_TYPES = ["Личное", "Съёмка", "Сценарий", "Фотопроект", "Встреча", "Другое"]
 TASK_STATUSES = ["planned", "done", "cancelled"]
+CALENDAR_PERSONAL = "personal"
+CALENDAR_WORK = "work"
+CALENDAR_LABELS = {
+    CALENDAR_PERSONAL: "Личный",
+    CALENDAR_WORK: "Рабочий",
+}
 PROJECT_CITIES = ["Архангельск", "Северодвинск"]
 
 
@@ -36,6 +41,7 @@ def init_planner_db():
             is_important INTEGER NOT NULL DEFAULT 0,
             range_end_date TEXT,
             task_type TEXT NOT NULL DEFAULT 'Личное',
+            calendar_type TEXT NOT NULL DEFAULT 'personal',
             status TEXT NOT NULL DEFAULT 'planned',
             project_id INTEGER,
             booking_id INTEGER,
@@ -55,6 +61,22 @@ def init_planner_db():
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN is_important INTEGER NOT NULL DEFAULT 0")
     if "range_end_date" not in existing_columns:
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN range_end_date TEXT")
+    if "calendar_type" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN calendar_type TEXT NOT NULL DEFAULT 'personal'")
+
+    cursor.execute(
+        """
+        UPDATE schedule_tasks
+        SET calendar_type = 'personal'
+        WHERE calendar_type IS NULL OR calendar_type NOT IN ('personal', 'work')
+        """
+    )
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_schedule_tasks_calendar_date
+        ON schedule_tasks (calendar_type, task_date)
+        """
+    )
 
     cursor.execute(
         """
@@ -127,6 +149,10 @@ def _parse_date(value: Optional[str], default: Optional[date] = None) -> date:
         return datetime.strptime(value, "%Y-%m-%d").date()
     except ValueError:
         return default or date.today()
+
+
+def _normalize_calendar(value: Optional[str]) -> str:
+    return value if value in CALENDAR_LABELS else CALENDAR_PERSONAL
 
 
 def _month_name_ru(month_number: int) -> str:
@@ -366,14 +392,16 @@ def create_task(
     project_id: Optional[int] = None,
     booking_id: Optional[int] = None,
     shooting_id: Optional[int] = None,
+    calendar_type: str = CALENDAR_PERSONAL,
 ):
+    calendar_type = _normalize_calendar(calendar_type)
     conn = get_connection()
     conn.execute(
         """
         INSERT INTO schedule_tasks (
             title, description, task_date, start_time, end_time, is_important, range_end_date,
-            task_type, status, project_id, booking_id, shooting_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            task_type, calendar_type, status, project_id, booking_id, shooting_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title.strip(),
@@ -384,6 +412,7 @@ def create_task(
             1 if is_important else 0,
             range_end_date or None,
             task_type,
+            calendar_type,
             status,
             project_id,
             booking_id,
@@ -442,15 +471,24 @@ def delete_task(task_id: int):
 
 def replace_manual_schedule_tasks(tasks: List[Dict[str, object]]):
     conn = get_connection()
-    conn.execute("DELETE FROM schedule_tasks WHERE shooting_id IS NULL AND booking_id IS NULL AND scenario_id IS NULL")
+    conn.execute(
+        """
+        DELETE FROM schedule_tasks
+        WHERE calendar_type = ?
+          AND shooting_id IS NULL
+          AND booking_id IS NULL
+          AND scenario_id IS NULL
+        """,
+        (CALENDAR_PERSONAL,),
+    )
 
     for task in tasks:
         conn.execute(
             """
             INSERT INTO schedule_tasks (
                 title, description, task_date, start_time, end_time, is_important, range_end_date,
-                task_type, status, project_id, booking_id, shooting_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL)
+                task_type, calendar_type, status, project_id, booking_id, shooting_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL)
             """,
             (
                 str(task.get("title", "")).strip(),
@@ -461,6 +499,7 @@ def replace_manual_schedule_tasks(tasks: List[Dict[str, object]]):
                 1 if task.get("is_important") else 0,
                 str(task.get("range_end_date", "")).strip() or None,
                 str(task.get("task_type", "Личное")).strip() or "Личное",
+                CALENDAR_PERSONAL,
                 str(task.get("status", "planned")).strip() or "planned",
             ),
         )
@@ -484,24 +523,25 @@ def get_task(task_id: int):
     return row
 
 
-def get_tasks_for_range(date_from: str, date_to: str):
+def get_tasks_for_range(date_from: str, date_to: str, calendar_type: str = CALENDAR_PERSONAL):
+    calendar_type = _normalize_calendar(calendar_type)
     conn = get_connection()
     rows = conn.execute(
         """
         SELECT t.*, p.title AS project_title
         FROM schedule_tasks t
         LEFT JOIN photo_projects p ON p.id = t.project_id
-        WHERE t.task_date BETWEEN ? AND ?
+        WHERE t.calendar_type = ? AND t.task_date BETWEEN ? AND ?
         ORDER BY t.task_date ASC, COALESCE(t.start_time, '99:99') ASC, t.id DESC
         """,
-        (date_from, date_to),
+        (calendar_type, date_from, date_to),
     ).fetchall()
     conn.close()
     return rows
 
 
-def get_tasks_for_day(day_value: str):
-    return get_tasks_for_range(day_value, day_value)
+def get_tasks_for_day(day_value: str, calendar_type: str = CALENDAR_PERSONAL):
+    return get_tasks_for_range(day_value, day_value, calendar_type)
 
 
 def upsert_task_for_shooting(
@@ -540,19 +580,36 @@ def upsert_task_for_shooting(
             """
             UPDATE schedule_tasks
             SET title = ?, description = ?, task_date = ?, start_time = ?,
-                task_type = ?, project_id = NULL, booking_id = NULL
+                task_type = ?, calendar_type = ?, project_id = NULL, booking_id = NULL
             WHERE shooting_id = ?
             """,
-            (title, description, shooting_date, shooting_time or None, "Съёмка", shooting_id),
+            (
+                title,
+                description,
+                shooting_date,
+                shooting_time or None,
+                "Съёмка",
+                CALENDAR_PERSONAL,
+                shooting_id,
+            ),
         )
     else:
         conn.execute(
             """
             INSERT INTO schedule_tasks (
-                title, description, task_date, start_time, task_type, status, shooting_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                title, description, task_date, start_time, task_type, calendar_type, status, shooting_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (title, description, shooting_date, shooting_time or None, "Съёмка", "planned", shooting_id),
+            (
+                title,
+                description,
+                shooting_date,
+                shooting_time or None,
+                "Съёмка",
+                CALENDAR_PERSONAL,
+                "planned",
+                shooting_id,
+            ),
         )
 
     conn.commit()
@@ -585,19 +642,35 @@ def upsert_task_for_scenario(
             """
             UPDATE schedule_tasks
             SET title = ?, description = ?, task_date = ?, start_time = NULL,
-                task_type = ?, status = ?, project_id = NULL, booking_id = NULL, shooting_id = NULL
+                task_type = ?, calendar_type = ?, status = ?, project_id = NULL, booking_id = NULL, shooting_id = NULL
             WHERE scenario_id = ?
             """,
-            (clean_title, description, shooting_date, "Сценарий", schedule_status, scenario_id),
+            (
+                clean_title,
+                description,
+                shooting_date,
+                "Сценарий",
+                CALENDAR_PERSONAL,
+                schedule_status,
+                scenario_id,
+            ),
         )
     else:
         conn.execute(
             """
             INSERT INTO schedule_tasks (
-                title, description, task_date, start_time, task_type, status, scenario_id
-            ) VALUES (?, ?, ?, NULL, ?, ?, ?)
+                title, description, task_date, start_time, task_type, calendar_type, status, scenario_id
+            ) VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
             """,
-            (clean_title, description, shooting_date, "Сценарий", schedule_status, scenario_id),
+            (
+                clean_title,
+                description,
+                shooting_date,
+                "Сценарий",
+                CALENDAR_PERSONAL,
+                schedule_status,
+                scenario_id,
+            ),
         )
 
     conn.commit()
@@ -807,19 +880,38 @@ def upsert_task_for_booking(booking_id: int):
         conn.execute(
             """
             UPDATE schedule_tasks
-            SET title = ?, description = ?, task_date = ?, start_time = ?, task_type = ?, project_id = ?
+            SET title = ?, description = ?, task_date = ?, start_time = ?, task_type = ?, calendar_type = ?, project_id = ?
             WHERE booking_id = ?
             """,
-            (title, description, booking["booking_date"], booking["booking_time"], "Фотопроект", booking["project_id"], booking_id),
+            (
+                title,
+                description,
+                booking["booking_date"],
+                booking["booking_time"],
+                "Фотопроект",
+                CALENDAR_PERSONAL,
+                booking["project_id"],
+                booking_id,
+            ),
         )
     else:
         conn.execute(
             """
             INSERT INTO schedule_tasks (
-                title, description, task_date, start_time, task_type, status, project_id, booking_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                title, description, task_date, start_time, task_type, calendar_type, status, project_id, booking_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (title, description, booking["booking_date"], booking["booking_time"], "Фотопроект", "planned", booking["project_id"], booking_id),
+            (
+                title,
+                description,
+                booking["booking_date"],
+                booking["booking_time"],
+                "Фотопроект",
+                CALENDAR_PERSONAL,
+                "planned",
+                booking["project_id"],
+                booking_id,
+            ),
         )
 
     conn.commit()
@@ -850,9 +942,14 @@ def _next_date(selected_date: date, current_view: str, step: str = "period") -> 
     return first_next_month.replace(day=min(selected_date.day, monthrange(first_next_month.year, first_next_month.month)[1]))
 
 
-def build_schedule_context(selected_date: date, current_view: str):
+def build_schedule_context(
+    selected_date: date,
+    current_view: str,
+    calendar_type: str = CALENDAR_PERSONAL,
+):
     if current_view not in {"day", "month"}:
         current_view = "day"
+    calendar_type = _normalize_calendar(calendar_type)
 
     week_start = selected_date - timedelta(days=selected_date.weekday())
     week_end = week_start + timedelta(days=6)
@@ -868,7 +965,11 @@ def build_schedule_context(selected_date: date, current_view: str):
         calendar_start = month_start - timedelta(days=month_start.weekday())
         calendar_end = month_end + timedelta(days=(6 - month_end.weekday()))
 
-    tasks_in_grid = get_tasks_for_range(calendar_start.isoformat(), calendar_end.isoformat())
+    tasks_in_grid = get_tasks_for_range(
+        calendar_start.isoformat(),
+        calendar_end.isoformat(),
+        calendar_type,
+    )
     tasks_by_date = defaultdict(list)
     for task in tasks_in_grid:
         tasks_by_date[task["task_date"]].append(task)
@@ -904,7 +1005,7 @@ def build_schedule_context(selected_date: date, current_view: str):
         )
         current_day += timedelta(days=1)
 
-    day_tasks = get_tasks_for_day(selected_date.isoformat())
+    day_tasks = get_tasks_for_day(selected_date.isoformat(), calendar_type)
     for task in day_tasks:
         task["display_status"] = _task_display_status(task)
         task["display_status_label"] = _task_display_status_label(task)
@@ -917,6 +1018,9 @@ def build_schedule_context(selected_date: date, current_view: str):
         "selected_date": selected_date,
         "selected_date_label": _format_full_date_ru(selected_date.isoformat()),
         "current_view": current_view,
+        "current_calendar": calendar_type,
+        "current_calendar_label": CALENDAR_LABELS[calendar_type],
+        "calendar_labels": CALENDAR_LABELS,
         "month_title": f"{_month_name_ru(selected_date.month)} {selected_date.year}",
         "week_label": f"{week_start.strftime('%d.%m')} — {week_end.strftime('%d.%m')}",
         "month_cells": month_cells,
@@ -944,19 +1048,10 @@ def build_schedule_context(selected_date: date, current_view: str):
 @login_required
 def schedule():
     current_view = request.args.get("view", "day")
+    calendar_type = _normalize_calendar(request.args.get("calendar"))
     selected_date = _parse_date(request.args.get("date"), default=date.today())
-    context = build_schedule_context(selected_date, current_view)
+    context = build_schedule_context(selected_date, current_view, calendar_type)
     return render_template("schedule.html", **context)
-
-
-@planner_bp.route("/planner.schedule/vk-test-send", methods=["POST"])
-@login_required
-def test_vk_notification_send():
-    selected_date = _parse_date(request.form.get("selected_date"), default=date.today())
-    current_view = request.form.get("current_view", "day")
-    ok, message = send_vk_tomorrow_tasks_message(force=True)
-    flash(message, "success" if ok else "error")
-    return redirect(url_for("planner.schedule", date=selected_date.isoformat(), view=current_view))
 
 
 @planner_bp.route("/planner.schedule/task/create", methods=["GET", "POST"])
@@ -964,10 +1059,13 @@ def test_vk_notification_send():
 def create_schedule_task():
     if request.method == "GET":
         selected_date = _parse_date(request.args.get("date"), default=date.today())
+        calendar_type = _normalize_calendar(request.args.get("calendar"))
         return render_template(
             "schedule_task_form.html",
             task=None,
             initial_date=selected_date.isoformat(),
+            current_calendar=calendar_type,
+            current_calendar_label=CALENDAR_LABELS[calendar_type],
             task_types=TASK_TYPES,
             task_statuses=TASK_STATUSES,
             projects=[_serialize_project_row(project) for project in get_all_projects() if not _serialize_project_row(project)["is_archived"]],
@@ -981,18 +1079,31 @@ def create_schedule_task():
     range_end_date = request.form.get("range_end_date", "").strip()
     status = "planned"
     task_type = request.form.get("task_type", "Личное")
+    calendar_type = _normalize_calendar(request.form.get("calendar_type"))
     is_important = 1 if request.form.get("is_important", "no") == "yes" else 0
 
     if not title or not task_date:
         flash("Для задачи нужны название и дата.", "error")
-        return redirect(url_for("planner.schedule", date=task_date or date.today().isoformat()))
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task_date or date.today().isoformat(),
+                calendar=calendar_type,
+            )
+        )
 
     if task_form_mode == "range":
         range_start_date = _parse_date(task_date)
         range_finish_date = _parse_date(range_end_date, default=range_start_date)
         if range_finish_date < range_start_date:
             flash("Конечная дата не может быть раньше начальной.", "error")
-            return redirect(url_for("planner.create_schedule_task", date=task_date or date.today().isoformat()))
+            return redirect(
+                url_for(
+                    "planner.create_schedule_task",
+                    date=task_date or date.today().isoformat(),
+                    calendar=calendar_type,
+                )
+            )
         current_date = range_start_date
         created_count = 0
         while current_date <= range_finish_date:
@@ -1006,11 +1117,19 @@ def create_schedule_task():
                 status=status,
                 is_important=is_important,
                 range_end_date=range_finish_date.isoformat(),
+                calendar_type=calendar_type,
             )
             created_count += 1
             current_date += timedelta(days=1)
         flash(f"Добавлена протяжённая задача ({created_count} дн.).", "success")
-        return redirect(url_for("planner.schedule", date=task_date, view="day"))
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task_date,
+                view="day",
+                calendar=calendar_type,
+            )
+        )
 
     create_task(
         title=title,
@@ -1021,9 +1140,17 @@ def create_schedule_task():
         task_type=task_type,
         status=status,
         is_important=is_important,
+        calendar_type=calendar_type,
     )
     flash("Задача добавлена в график.", "success")
-    return redirect(url_for("planner.schedule", date=task_date, view=request.form.get("return_view", "month")))
+    return redirect(
+        url_for(
+            "planner.schedule",
+            date=task_date,
+            view=request.form.get("return_view", "month"),
+            calendar=calendar_type,
+        )
+    )
 
 
 @planner_bp.route("/planner.schedule/task/<int:task_id>/edit", methods=["GET", "POST"])
@@ -1033,6 +1160,7 @@ def edit_schedule_task(task_id: int):
     if not task:
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
+    calendar_type = _normalize_calendar(task.get("calendar_type"))
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
@@ -1048,7 +1176,13 @@ def edit_schedule_task(task_id: int):
 
         if not title or not task_date:
             flash("Для задачи нужны название и дата.", "error")
-            return redirect(url_for("planner.edit_schedule_task", task_id=task_id))
+            return redirect(
+                url_for(
+                    "planner.edit_schedule_task",
+                    task_id=task_id,
+                    calendar=calendar_type,
+                )
+            )
 
         if task_form_mode != "range":
             range_end_date = ""
@@ -1069,11 +1203,20 @@ def edit_schedule_task(task_id: int):
             range_end_date=range_end_date,
         )
         flash("Задача обновлена.", "success")
-        return redirect(url_for("planner.schedule", date=task_date, view="day"))
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task_date,
+                view="day",
+                calendar=calendar_type,
+            )
+        )
 
     return render_template(
         "schedule_task_form.html",
         task=task,
+        current_calendar=calendar_type,
+        current_calendar_label=CALENDAR_LABELS[calendar_type],
         task_types=TASK_TYPES,
         task_statuses=TASK_STATUSES,
         projects=[_serialize_project_row(project) for project in get_all_projects() if not _serialize_project_row(project)["is_archived"]],
@@ -1085,9 +1228,17 @@ def edit_schedule_task(task_id: int):
 def delete_schedule_task(task_id: int):
     task = get_task(task_id)
     if task:
+        calendar_type = _normalize_calendar(task.get("calendar_type"))
         delete_task(task_id)
         flash("Задача удалена.", "success")
-        return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task["task_date"],
+                view="day",
+                calendar=calendar_type,
+            )
+        )
     flash("Задача не найдена.", "error")
     return redirect(url_for("planner.schedule"))
 
@@ -1096,35 +1247,72 @@ def delete_schedule_task(task_id: int):
 @login_required
 def delete_schedule_tasks_selected():
     task_date = request.form.get("task_date", "").strip()
+    calendar_type = _normalize_calendar(request.form.get("calendar_type"))
     selected_ids = _parse_selected_ids(request.form.get("selected_ids", ""))
     if not selected_ids:
         flash("Выбери хотя бы одну задачу.", "warning")
-        return redirect(url_for("planner.schedule", date=task_date, view="day"))
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task_date,
+                view="day",
+                calendar=calendar_type,
+            )
+        )
 
+    deleted_count = 0
     for task_id in selected_ids:
-        delete_task(task_id)
+        task = get_task(task_id)
+        if task and _normalize_calendar(task.get("calendar_type")) == calendar_type:
+            delete_task(task_id)
+            deleted_count += 1
 
-    flash(f"Удалено задач: {len(selected_ids)}.", "success")
-    return redirect(url_for("planner.schedule", date=task_date, view="day"))
+    if deleted_count:
+        flash(f"Удалено задач: {deleted_count}.", "success")
+    else:
+        flash("Выбранные задачи в этом графике не найдены.", "warning")
+    return redirect(
+        url_for(
+            "planner.schedule",
+            date=task_date,
+            view="day",
+            calendar=calendar_type,
+        )
+    )
 
 
 @planner_bp.route("/planner.schedule/task/delete-all", methods=["POST"])
 @login_required
 def delete_schedule_tasks_all():
     task_date = request.form.get("task_date", "").strip()
+    calendar_type = _normalize_calendar(request.form.get("calendar_type"))
     if task_date:
-        tasks = get_tasks_for_day(task_date)
+        tasks = get_tasks_for_day(task_date, calendar_type)
         if not tasks:
             flash("На выбранный день нет задач для удаления.", "warning")
-            return redirect(url_for("planner.schedule", date=task_date, view="day"))
+            return redirect(
+                url_for(
+                    "planner.schedule",
+                    date=task_date,
+                    view="day",
+                    calendar=calendar_type,
+                )
+            )
 
         for task in tasks:
             delete_task(task["id"])
     else:
         flash("Не удалось определить дату для удаления задач.", "warning")
-        return redirect(url_for("planner.schedule", view="day"))
+        return redirect(url_for("planner.schedule", view="day", calendar=calendar_type))
     flash("Все задачи за выбранный день удалены.", "success")
-    return redirect(url_for("planner.schedule", date=task_date, view="day"))
+    return redirect(
+        url_for(
+            "planner.schedule",
+            date=task_date,
+            view="day",
+            calendar=calendar_type,
+        )
+    )
 
 
 @planner_bp.route("/planner.schedule/task/<int:task_id>/toggle", methods=["POST"])
@@ -1141,7 +1329,14 @@ def toggle_schedule_task(task_id: int):
         flash("Задача возвращена в запланированные.", "success")
     else:
         flash("Статус задачи не изменён.", "warning")
-    return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
+    return redirect(
+        url_for(
+            "planner.schedule",
+            date=task["task_date"],
+            view="day",
+            calendar=_normalize_calendar(task.get("calendar_type")),
+        )
+    )
 
 
 @planner_bp.route("/planner.schedule/task/<int:task_id>/move-next-day", methods=["POST"])
@@ -1159,7 +1354,14 @@ def move_schedule_task_next_day(task_id: int):
     conn.commit()
     conn.close()
     flash("Задача перенесена на следующий день.", "success")
-    return redirect(url_for("planner.schedule", date=task["task_date"], view="day"))
+    return redirect(
+        url_for(
+            "planner.schedule",
+            date=task["task_date"],
+            view="day",
+            calendar=_normalize_calendar(task.get("calendar_type")),
+        )
+    )
 
 
 @planner_bp.route("/photo-projects")

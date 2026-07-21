@@ -5,7 +5,7 @@
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) and (pointer: coarse) {
     .car-mobile-complete-btn {
         display: inline-flex;
         width: 100%;
@@ -348,7 +348,7 @@
     }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 420px) and (pointer: coarse) {
     .brand-title {
         font-size: 17px;
     }
@@ -411,7 +411,7 @@
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) and (pointer: coarse) {
     .budget-mobile-sections-nav {
         width: 100%;
         display: grid;
@@ -669,7 +669,7 @@
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (pointer: coarse) {
     .mobile-fab-nav {
         position: fixed;
         right: 12px;

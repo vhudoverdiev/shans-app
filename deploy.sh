@@ -1,107 +1,207 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/shans-app}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="${APP_DIR:-$SCRIPT_DIR}"
 BRANCH="${BRANCH:-main}"
 REMOTE="${REMOTE:-origin}"
 SERVICE="${SERVICE:-shans.service}"
-CLEAN_MODE="${CLEAN_MODE:-safe}" # safe|aggressive
-VERIFY_CLEAN="${VERIFY_CLEAN:-true}" # true|false
+VENV_DIR="${VENV_DIR:-$APP_DIR/venv}"
+BACKUP_DIR="${BACKUP_DIR:-$APP_DIR/backups}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:8000/health}"
+HEALTH_TIMEOUT_SECONDS="${HEALTH_TIMEOUT_SECONDS:-45}"
+RUN_TESTS="${RUN_TESTS:-1}"
+GUNICORN_VERSION="${GUNICORN_VERSION:-26.0.0}"
+
+BEFORE_HEAD=""
+UPDATED=0
+SERVICE_TOUCHED=0
 
 log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
 }
 
-usage() {
-  cat <<'USAGE'
-Использование:
-  ./deploy.sh
-
-Опциональные переменные окружения:
-  APP_DIR=/var/www/shans-app   # путь к репозиторию
-  BRANCH=main                  # ветка для деплоя
-  REMOTE=origin                # удалённый репозиторий
-  SERVICE=shans.service        # systemd unit
-  CLEAN_MODE=safe              # safe | aggressive
-  VERIFY_CLEAN=true            # true | false (проверка, что нет изменённых tracked-файлов)
-
-Пример:
-  APP_DIR=/var/www/shans-app BRANCH=main SERVICE=shans.service ./deploy.sh
-USAGE
+fail() {
+  printf 'Ошибка: %s\n' "$*" >&2
+  exit 1
 }
 
 require_cmd() {
-  command -v "$1" >/dev/null 2>&1 || {
-    echo "Ошибка: не найдена команда '$1'" >&2
-    exit 1
-  }
+  command -v "$1" >/dev/null 2>&1 || fail "не найдена команда '$1'"
+}
+
+systemctl_cmd() {
+  if [[ "$EUID" -eq 0 ]]; then
+    systemctl "$@"
+  else
+    sudo systemctl "$@"
+  fi
+}
+
+read_env_value() {
+  local key="$1"
+  local env_file="$2"
+  local value=""
+
+  if [[ -f "$env_file" ]]; then
+    value="$(grep -E "^[[:space:]]*${key}=" "$env_file" | tail -n 1 || true)"
+    value="${value#*=}"
+    value="${value%$'\r'}"
+    if [[ ${#value} -ge 2 ]]; then
+      if [[ "${value:0:1}" == '"' && "${value: -1}" == '"' ]]; then
+        value="${value:1:${#value}-2}"
+      elif [[ "${value:0:1}" == "'" && "${value: -1}" == "'" ]]; then
+        value="${value:1:${#value}-2}"
+      fi
+    fi
+  fi
+
+  printf '%s' "$value"
+}
+
+backup_database() {
+  local database_path="${DATABASE_NAME:-}"
+  local backup_path
+
+  if [[ -z "$database_path" ]]; then
+    database_path="$(read_env_value DATABASE_NAME "$APP_DIR/.env")"
+  fi
+  database_path="${database_path:-app.db}"
+
+  if [[ "$database_path" != /* ]]; then
+    database_path="$APP_DIR/$database_path"
+  fi
+
+  if [[ ! -f "$database_path" ]]; then
+    log "База данных пока не существует, резервная копия не требуется"
+    return
+  fi
+
+  mkdir -p "$BACKUP_DIR"
+  backup_path="$BACKUP_DIR/$(basename "$database_path").$(date '+%Y%m%d-%H%M%S').backup"
+  cp -p -- "$database_path" "$backup_path"
+  log "Резервная копия базы: $backup_path"
+}
+
+install_dependencies() {
+  "$VENV_DIR/bin/python" -m pip install \
+    --disable-pip-version-check \
+    -r requirements.txt \
+    "gunicorn==$GUNICORN_VERSION"
+}
+
+check_health() {
+  "$VENV_DIR/bin/python" - "$HEALTH_URL" <<'PY'
+import json
+import sys
+import urllib.request
+
+url = sys.argv[1]
+with urllib.request.urlopen(url, timeout=5) as response:
+    payload = json.load(response)
+if response.status != 200 or payload.get("status") != "ok":
+    raise SystemExit(1)
+PY
+}
+
+wait_for_health() {
+  local deadline=$((SECONDS + HEALTH_TIMEOUT_SECONDS))
+
+  while (( SECONDS < deadline )); do
+    if check_health >/dev/null 2>&1; then
+      log "Проверка $HEALTH_URL успешна"
+      return 0
+    fi
+    sleep 2
+  done
+
+  return 1
+}
+
+rollback_on_error() {
+  local exit_code="$1"
+  local line_number="$2"
+
+  trap - ERR
+  set +e
+  printf 'Ошибка деплоя в строке %s. Выполняется откат.\n' "$line_number" >&2
+
+  if [[ "$UPDATED" -eq 1 && -n "$BEFORE_HEAD" ]]; then
+    git reset --hard "$BEFORE_HEAD"
+    if [[ -x "$VENV_DIR/bin/python" ]]; then
+      install_dependencies
+    fi
+  fi
+
+  if [[ "$SERVICE_TOUCHED" -eq 1 ]]; then
+    systemctl_cmd restart "$SERVICE"
+  fi
+
+  printf 'Деплой отменён; предыдущая версия восстановлена.\n' >&2
+  exit "$exit_code"
 }
 
 main() {
-  if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-    usage
-    exit 0
-  fi
-
   require_cmd git
+  require_cmd python3
   require_cmd systemctl
-
-  log "Старт деплоя"
-  log "APP_DIR=$APP_DIR, REMOTE=$REMOTE, BRANCH=$BRANCH, SERVICE=$SERVICE, CLEAN_MODE=$CLEAN_MODE, VERIFY_CLEAN=$VERIFY_CLEAN"
-
-  if [[ ! -d "$APP_DIR/.git" ]]; then
-    echo "Ошибка: $APP_DIR не является git-репозиторием" >&2
-    exit 1
+  if [[ "$EUID" -ne 0 ]]; then
+    require_cmd sudo
   fi
 
+  [[ -d "$APP_DIR/.git" ]] || fail "$APP_DIR не является Git-репозиторием"
   cd "$APP_DIR"
 
-  local before_head after_head remote_head
-  before_head="$(git rev-parse --short HEAD)"
+  if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
+    git status --short >&2
+    fail "на сервере есть локальные изменения; деплой остановлен, чтобы не потерять их"
+  fi
 
-  log "Текущий branch до деплоя: $(git branch --show-current)"
-  log "Текущий HEAD до деплоя: $before_head"
+  systemctl_cmd cat "$SERVICE" >/dev/null
+  BEFORE_HEAD="$(git rev-parse HEAD)"
+  log "Текущая версия: ${BEFORE_HEAD:0:12}"
 
-  log "git fetch $REMOTE"
-  git fetch --prune "$REMOTE"
+  backup_database
 
-  log "checkout branch '$BRANCH'"
+  log "Получение $REMOTE/$BRANCH из GitHub"
+  git fetch --prune "$REMOTE" "$BRANCH"
   git checkout "$BRANCH"
+  git show-ref --verify --quiet "refs/remotes/$REMOTE/$BRANCH" \
+    || fail "ветка $REMOTE/$BRANCH не найдена"
+  git merge --ff-only "$REMOTE/$BRANCH"
 
-  remote_head="$(git rev-parse --short "$REMOTE/$BRANCH")"
-  log "Удалённый HEAD $REMOTE/$BRANCH: $remote_head"
-
-  log "reset --hard $REMOTE/$BRANCH"
-  git reset --hard "$REMOTE/$BRANCH"
-
-  if [[ "$CLEAN_MODE" == "aggressive" ]]; then
-    log "clean -fdx (агрессивно: удаляет игнорируемые файлы, включая .env)"
-    git clean -fdx
-  else
-    log "clean -fd (без удаления .env и других игнорируемых файлов)"
-    git clean -fd
+  if [[ "$(git rev-parse HEAD)" != "$BEFORE_HEAD" ]]; then
+    UPDATED=1
   fi
 
-  after_head="$(git rev-parse --short HEAD)"
-  log "HEAD после деплоя: $after_head"
-
-  log "restart service: $SERVICE"
-  systemctl restart "$SERVICE"
-
-  log "service status"
-  systemctl status "$SERVICE" --no-pager -l
-
-  if [[ "$VERIFY_CLEAN" == "true" ]]; then
-    log "Проверка tracked-изменений после деплоя"
-    if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
-      echo "Ошибка: после деплоя есть изменённые tracked-файлы. Проверьте git status." >&2
-      git status --short
-      exit 1
-    fi
-    log "tracked-файлы чистые"
+  if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+    log "Создание виртуального окружения"
+    python3 -m venv "$VENV_DIR"
   fi
 
-  log "Деплой завершён: $before_head -> $after_head (remote: $remote_head)"
+  log "Обновление зависимостей"
+  install_dependencies
+
+  log "Проверка Python-кода"
+  "$VENV_DIR/bin/python" -m compileall -q app
+
+  if [[ "$RUN_TESTS" == "1" ]]; then
+    log "Запуск тестов"
+    "$VENV_DIR/bin/python" -m unittest discover -s tests -q
+  fi
+
+  log "Перезапуск $SERVICE"
+  SERVICE_TOUCHED=1
+  systemctl_cmd restart "$SERVICE"
+  systemctl_cmd is-active --quiet "$SERVICE"
+
+  log "Проверка работоспособности"
+  wait_for_health
+
+  local after_head
+  after_head="$(git rev-parse HEAD)"
+  log "Деплой завершён: ${BEFORE_HEAD:0:12} -> ${after_head:0:12}"
 }
 
+trap 'rollback_on_error "$?" "$LINENO"' ERR
 main "$@"

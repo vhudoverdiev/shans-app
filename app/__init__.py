@@ -26,6 +26,11 @@ from app.vk_notifications import (
     get_vk_settings,
     update_vk_settings,
 )
+from app.web_push import (
+    init_web_push_db,
+    register_web_push_routes,
+    start_web_push_scheduler,
+)
 
 
 login_manager = LoginManager()
@@ -128,14 +133,17 @@ def create_app():
     init_db()
     init_planner_db()
     init_vk_notifications_db()
+    init_web_push_db()
     create_admin_if_not_exists()
 
     register_routes(app)
+    register_web_push_routes(app)
     app.register_blueprint(planner_bp)
     _register_management_commands(app)
     werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
     if werkzeug_run_main in {"", "true", "1"}:
         start_vk_scheduler(app)
+        start_web_push_scheduler(app)
 
     app.jinja_env.filters["money"] = format_money
 
