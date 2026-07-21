@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="$(readlink -f -- "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)"
 APP_DIR="${APP_DIR:-$SCRIPT_DIR}"
 BRANCH="${BRANCH:-main}"
 REMOTE="${REMOTE:-origin}"
@@ -12,6 +13,7 @@ HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:8000/health}"
 HEALTH_TIMEOUT_SECONDS="${HEALTH_TIMEOUT_SECONDS:-45}"
 RUN_TESTS="${RUN_TESTS:-1}"
 GUNICORN_VERSION="${GUNICORN_VERSION:-26.0.0}"
+DEPLOY_COMMAND_PATH="${DEPLOY_COMMAND_PATH:-/usr/local/bin/deploy}"
 
 BEFORE_HEAD=""
 UPDATED=0
@@ -36,6 +38,29 @@ systemctl_cmd() {
   else
     sudo systemctl "$@"
   fi
+}
+
+install_deploy_command() {
+  local current_target=""
+
+  if [[ -e "$DEPLOY_COMMAND_PATH" && ! -L "$DEPLOY_COMMAND_PATH" ]]; then
+    fail "$DEPLOY_COMMAND_PATH уже существует и не является символической ссылкой"
+  fi
+
+  if [[ -L "$DEPLOY_COMMAND_PATH" ]]; then
+    current_target="$(readlink -f -- "$DEPLOY_COMMAND_PATH" || true)"
+    if [[ -n "$current_target" && "$current_target" != "$SCRIPT_PATH" ]]; then
+      fail "$DEPLOY_COMMAND_PATH уже указывает на другой файл: $current_target"
+    fi
+  fi
+
+  if [[ "$EUID" -eq 0 ]]; then
+    ln -sfn -- "$SCRIPT_PATH" "$DEPLOY_COMMAND_PATH"
+  else
+    sudo ln -sfn -- "$SCRIPT_PATH" "$DEPLOY_COMMAND_PATH"
+  fi
+
+  log "Команда deploy установлена: $DEPLOY_COMMAND_PATH"
 }
 
 read_env_value() {
@@ -143,6 +168,7 @@ rollback_on_error() {
 
 main() {
   require_cmd git
+  require_cmd ln
   require_cmd python3
   require_cmd systemctl
   if [[ "$EUID" -ne 0 ]]; then
@@ -158,6 +184,7 @@ main() {
   fi
 
   systemctl_cmd cat "$SERVICE" >/dev/null
+  install_deploy_command
   BEFORE_HEAD="$(git rev-parse HEAD)"
   log "Текущая версия: ${BEFORE_HEAD:0:12}"
 

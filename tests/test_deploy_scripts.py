@@ -24,6 +24,9 @@ class DeployScriptTests(unittest.TestCase):
     def test_server_deploy_is_safe_and_verified(self):
         script = (PROJECT_ROOT / "deploy.sh").read_text(encoding="utf-8")
 
+        self.assertIn('readlink -f -- "${BASH_SOURCE[0]}"', script)
+        self.assertIn('/usr/local/bin/deploy', script)
+        self.assertIn('install_deploy_command', script)
         self.assertIn("git merge --ff-only", script)
         self.assertNotIn("git clean -fd", script)
         self.assertIn("backup_database", script)
