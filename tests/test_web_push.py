@@ -241,7 +241,7 @@ class WebPushSchedulingTests(unittest.TestCase):
 
 
 class WebPushAssetsTests(unittest.TestCase):
-    def test_vk_delivery_code_and_route_are_removed(self):
+    def test_web_push_coexists_with_vk_and_legacy_planner_controls_are_removed(self):
         app_package = PROJECT_ROOT / "app"
         app_factory = (app_package / "__init__.py").read_text(encoding="utf-8")
         planner = (app_package / "planner.py").read_text(encoding="utf-8")
@@ -249,9 +249,10 @@ class WebPushAssetsTests(unittest.TestCase):
             app_package / "static" / "css" / "planner.css"
         ).read_text(encoding="utf-8")
 
-        self.assertFalse((app_package / "vk_notifications.py").exists())
+        self.assertTrue((app_package / "vk_notifications.py").exists())
         self.assertFalse((app_package / "services" / "vk_notifier.py").exists())
-        self.assertNotIn("vk_notifications", app_factory)
+        self.assertIn("init_vk_notifications_db", app_factory)
+        self.assertIn("init_web_push_db", app_factory)
         self.assertNotIn("vk_notifications", planner)
         self.assertNotIn("/planner.schedule/vk-test-send", planner)
         self.assertNotIn(".planner-vk-", planner_styles)
