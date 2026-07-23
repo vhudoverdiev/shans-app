@@ -1,3 +1,4 @@
+import hashlib
 import os
 import secrets
 import shutil
@@ -18,14 +19,6 @@ from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
 from app.logging_setup import setup_logging, register_request_hooks
-from app.vk_notifications import (
-    init_vk_notifications_db,
-    start_vk_scheduler,
-    diagnose_vk_notifications,
-    send_vk_tomorrow_tasks_message,
-    get_vk_settings,
-    update_vk_settings,
-)
 from app.web_push import (
     init_web_push_db,
     register_web_push_routes,
@@ -34,6 +27,35 @@ from app.web_push import (
 
 
 login_manager = LoginManager()
+
+
+def build_static_asset_version(static_folder):
+    static_root = Path(static_folder)
+    digest = hashlib.sha256()
+    asset_paths = []
+
+    for directory_name in ("css", "js"):
+        directory = static_root / directory_name
+        if directory.is_dir():
+            asset_paths.extend(path for path in directory.rglob("*") if path.is_file())
+
+    for filename in (
+        "apple-touch-icon.png",
+        "logo.png",
+        "service-worker.js",
+        "site.webmanifest",
+    ):
+        path = static_root / filename
+        if path.is_file():
+            asset_paths.append(path)
+
+    for path in sorted(asset_paths, key=lambda item: item.relative_to(static_root).as_posix()):
+        digest.update(path.relative_to(static_root).as_posix().encode("utf-8"))
+        with path.open("rb") as asset_file:
+            for chunk in iter(lambda: asset_file.read(64 * 1024), b""):
+                digest.update(chunk)
+
+    return digest.hexdigest()[:12]
 
 
 def format_money(value):
@@ -66,49 +88,14 @@ def _register_management_commands(app):
         conn.close()
         click.echo("ok")
 
-    @app.cli.command("vk-diagnose")
-    @click.option("--remote-check", is_flag=True, default=False, help="Also validate token/profile through VK API.")
-    def vk_diagnose_cmd(remote_check):
-        data = diagnose_vk_notifications(check_remote=remote_check)
-        click.echo("VK notifications diagnostics:")
-        for key in sorted(data.keys()):
-            click.echo(f"- {key}: {data[key]}")
-
-    @app.cli.command("vk-send-test")
-    def vk_send_test_cmd():
-        ok, message = send_vk_tomorrow_tasks_message(force=True)
-        if ok:
-            click.echo(f"ok: {message}")
-            return
-        raise click.ClickException(message)
-
-    @app.cli.command("vk-set-config")
-    @click.option("-token", "--token", default=None, help="VK access token.")
-    @click.option("-profile-url", "--profile-url", default=None, help="VK profile URL, e.g. https://vk.com/username")
-    @click.option("-timezone", "--timezone", default=None, help="Timezone, e.g. Europe/Moscow")
-    @click.option("--enabled/--disabled", default=None, help="Enable or disable VK notifications.")
-    def vk_set_config_cmd(token, profile_url, timezone, enabled):
-        current = get_vk_settings()
-        if not current:
-            raise click.ClickException("VK settings row not found.")
-
-        new_enabled = bool(current["is_enabled"]) if enabled is None else enabled
-        new_token = (current["access_token"] or "") if token is None else token
-        new_profile_url = (current["profile_url"] or "") if profile_url is None else profile_url
-        new_timezone = (current["timezone_name"] or "Europe/Moscow") if timezone is None else timezone
-
-        update_vk_settings(
-            is_enabled=new_enabled,
-            access_token=new_token,
-            profile_url=new_profile_url,
-            timezone_name=new_timezone,
-        )
-        click.echo("VK settings updated.")
-
 
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(Config)
+    app.config["STATIC_ASSET_VERSION"] = (
+        os.getenv("STATIC_ASSET_VERSION", "").strip()
+        or build_static_asset_version(app.static_folder)
+    )
     if not app.config.get("AVATAR_UPLOAD_DIR"):
         app.config["AVATAR_UPLOAD_DIR"] = os.path.join(app.instance_path, "uploads", "avatars")
     os.makedirs(app.config["AVATAR_UPLOAD_DIR"], exist_ok=True)
@@ -132,7 +119,6 @@ def create_app():
 
     init_db()
     init_planner_db()
-    init_vk_notifications_db()
     init_web_push_db()
     create_admin_if_not_exists()
 
@@ -142,7 +128,6 @@ def create_app():
     _register_management_commands(app)
     werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
     if werkzeug_run_main in {"", "true", "1"}:
-        start_vk_scheduler(app)
         start_web_push_scheduler(app)
 
     app.jinja_env.filters["money"] = format_money

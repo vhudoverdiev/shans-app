@@ -16,14 +16,19 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("window.sessionStorage.getItem(introKey)", template)
         self.assertIn("}, 3000);", template)
         self.assertIn("onerror=\"document.documentElement.classList.remove('app-intro-pending')\"", template)
-        self.assertIn('class="app-intro" id="app-intro"', template)
-        self.assertIn("app-intro-logo\">Ш", template)
+        self.assertIn('class="app-intro" id="app-intro" aria-hidden="true" hidden', template)
+        self.assertIn('class="app-intro-logo"', template)
+        self.assertIn("filename='logo.png'", template)
+        self.assertIn('class="brand-badge"', template)
+        self.assertNotIn("app-intro-wordmark", template)
+        self.assertNotIn(">Шанс</div>", template)
         self.assertIn("filename='js/intro-loader.js'", template)
 
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
         self.assertIn('classList.contains("app-intro-pending")', script)
+        self.assertIn("intro.hidden = false", script)
         self.assertIn('classList.add("app-intro-running")', script)
         self.assertIn('classList.add("app-intro-leaving")', script)
         self.assertIn("intro.remove()", script)
@@ -33,6 +38,8 @@ class IntroLoaderTests(unittest.TestCase):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
 
         self.assertIn(".app-intro-logo", stylesheet)
+        self.assertIn(".app-intro[hidden]", stylesheet)
+        self.assertNotIn(".app-intro-wordmark", stylesheet)
         self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", stylesheet)
         self.assertIn("@keyframes app-intro-logo-in", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)

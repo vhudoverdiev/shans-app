@@ -2,15 +2,21 @@
     "use strict";
 
     const root = document.documentElement;
+    const intro = document.getElementById("app-intro");
+
     if (!root.classList.contains("app-intro-pending")) {
+        if (intro) {
+            intro.remove();
+        }
         return;
     }
 
-    const intro = document.getElementById("app-intro");
     if (!intro) {
         root.classList.remove("app-intro-pending");
         return;
     }
+
+    intro.hidden = false;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const visibleDuration = reducedMotion ? 160 : 1550;

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#eef3ff">
+    <title>Нет подключения | Шанс</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            padding: max(22px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+            background:
+                radial-gradient(circle at 50% 42%, rgba(219, 234, 254, 0.95) 0, rgba(238, 242, 255, 0.8) 29%, transparent 59%),
+                linear-gradient(145deg, #f8fbff 0%, #eef3ff 48%, #f7f5ff 100%);
+            color: #111827;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .offline-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 44%, rgba(219, 234, 254, 0.94) 0, rgba(238, 242, 255, 0.78) 28%, transparent 58%),
+                linear-gradient(145deg, #f8fbff 0%, #eef3ff 48%, #f7f5ff 100%);
+            opacity: 1;
+            transition: opacity 0.42s ease, visibility 0.42s ease;
+        }
+
+        .offline-loader.is-leaving {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .offline-loader-glow {
+            position: absolute;
+            width: min(86vw, 620px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.2), rgba(37, 99, 235, 0.06) 45%, transparent 70%);
+            filter: blur(10px);
+            animation: offline-glow 1.4s ease-out both;
+        }
+
+        .offline-loader-stage {
+            position: relative;
+            width: min(82vw, 360px);
+            min-height: 310px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            isolation: isolate;
+        }
+
+        .offline-logo {
+            position: relative;
+            z-index: 3;
+            width: clamp(92px, 10vw, 116px);
+            height: clamp(92px, 10vw, 116px);
+            border: 1px solid rgba(255, 255, 255, 0.62);
+            border-radius: 32%;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            box-shadow:
+                0 28px 54px rgba(37, 99, 235, 0.28),
+                0 10px 22px rgba(124, 58, 237, 0.18),
+                inset 0 1px 1px rgba(255, 255, 255, 0.42);
+            color: #fff;
+            animation: offline-logo-in 0.72s cubic-bezier(0.2, 0.82, 0.25, 1.18) 0.08s both;
+        }
+
+        .offline-logo img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .offline-logo::after {
+            content: "";
+            position: absolute;
+            inset: -40% auto -40% -65%;
+            width: 38%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
+            transform: skewX(-18deg);
+            animation: offline-shine 0.68s ease 0.62s both;
+        }
+
+        .offline-orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 1;
+            border: 1px solid rgba(79, 70, 229, 0.22);
+            border-radius: 50%;
+            opacity: 0;
+            transform: translate(-50%, -62%) scale(0.48);
+        }
+
+        .offline-orbit-outer {
+            width: 236px;
+            height: 236px;
+            animation: offline-orbit 1.18s cubic-bezier(0.2, 0.72, 0.2, 1) 0.2s both;
+        }
+
+        .offline-orbit-inner {
+            width: 174px;
+            height: 174px;
+            border-color: rgba(37, 99, 235, 0.28);
+            animation: offline-orbit 1.02s cubic-bezier(0.2, 0.72, 0.2, 1) 0.12s both;
+        }
+
+        .offline-progress {
+            position: relative;
+            z-index: 3;
+            width: 104px;
+            height: 3px;
+            margin-top: 18px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.13);
+            animation: offline-copy-in 0.35s ease-out 0.68s both;
+        }
+
+        .offline-progress span {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            animation: offline-progress 0.78s cubic-bezier(0.65, 0, 0.35, 1) 0.72s both;
+        }
+
+        .offline-card {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 470px);
+            padding: clamp(26px, 5vw, 42px);
+            border: 1px solid rgba(255, 255, 255, 0.82);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 26px 70px rgba(30, 64, 175, 0.14), 0 8px 24px rgba(15, 23, 42, 0.07);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(18px) scale(0.97);
+            backdrop-filter: blur(16px);
+        }
+
+        .offline-card[hidden] {
+            display: none;
+        }
+
+        .offline-card.is-visible {
+            animation: offline-card-in 0.58s cubic-bezier(0.2, 0.78, 0.2, 1) both;
+        }
+
+        .offline-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 22px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(145deg, #eff6ff, #eef2ff);
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+        }
+
+        .offline-icon svg {
+            width: 38px;
+            height: 38px;
+        }
+
+        .offline-title {
+            margin: 0;
+            color: #111827;
+            font-size: clamp(25px, 4vw, 32px);
+            line-height: 1.16;
+            letter-spacing: -0.035em;
+        }
+
+        .offline-description {
+            max-width: 370px;
+            margin: 15px auto 0;
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.55;
+        }
+
+        .offline-retry {
+            width: 100%;
+            min-height: 54px;
+            margin-top: 26px;
+            border: 0;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2563eb, #4f46e5 55%, #7c3aed);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        .offline-retry:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 17px 34px rgba(37, 99, 235, 0.3);
+        }
+
+        .offline-retry:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .offline-retry:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.25);
+            outline-offset: 3px;
+        }
+
+        .offline-retry:disabled {
+            cursor: wait;
+            opacity: 0.72;
+        }
+
+        .offline-retry-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .offline-retry.is-checking .offline-retry-icon {
+            animation: offline-spin 0.8s linear infinite;
+        }
+
+        .offline-status {
+            min-height: 22px;
+            margin: 15px 0 -4px;
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .offline-status[data-state="online"] {
+            color: #15803d;
+        }
+
+        @keyframes offline-logo-in {
+            from { opacity: 0; transform: translateY(14px) scale(0.72) rotate(-5deg); }
+            to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+        }
+
+        @keyframes offline-orbit {
+            0% { opacity: 0; transform: translate(-50%, -62%) scale(0.48); }
+            45% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -62%) scale(1.18); }
+        }
+
+        @keyframes offline-shine {
+            from { left: -65%; }
+            to { left: 135%; }
+        }
+
+        @keyframes offline-copy-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes offline-progress {
+            0% { transform: translateX(-105%); }
+            72% { transform: translateX(-12%); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes offline-glow {
+            0% { opacity: 0; transform: scale(0.76); }
+            55% { opacity: 1; }
+            100% { opacity: 0.72; transform: scale(1.06); }
+        }
+
+        @keyframes offline-card-in {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes offline-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding-right: max(12px, env(safe-area-inset-right));
+                padding-left: max(12px, env(safe-area-inset-left));
+            }
+
+            .offline-loader-stage {
+                min-height: 280px;
+            }
+
+            .offline-logo {
+                width: 96px;
+                height: 96px;
+                border-radius: 30px;
+                font-size: 46px;
+            }
+
+            .offline-orbit-outer {
+                width: 214px;
+                height: 214px;
+            }
+
+            .offline-orbit-inner {
+                width: 156px;
+                height: 156px;
+            }
+
+            .offline-card {
+                padding: 28px 22px 24px;
+                border-radius: 24px;
+            }
+
+            .offline-title {
+                font-size: 27px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-loader" id="offline-loader" aria-hidden="true">
+        <div class="offline-loader-glow"></div>
+        <div class="offline-loader-stage">
+            <span class="offline-orbit offline-orbit-outer"></span>
+            <span class="offline-orbit offline-orbit-inner"></span>
+            <div class="offline-logo">
+                <img src="/static/logo.png" alt="Логотип Шанс">
+            </div>
+            <div class="offline-progress"><span></span></div>
+        </div>
+    </div>
+
+    <main class="offline-card" id="offline-card" role="alert" hidden>
+        <div class="offline-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round">
+                <path d="M9 20c8.6-7.8 21.4-7.8 30 0"></path>
+                <path d="M15 27c5.2-4.6 12.8-4.6 18 0"></path>
+                <path d="M21.5 34a3.6 3.6 0 0 1 5 0"></path>
+                <path d="M8 8l32 32" stroke="#7c3aed"></path>
+            </svg>
+        </div>
+        <h1 class="offline-title">Отсутствует подключение к интернету</h1>
+        <p class="offline-description">Проверьте Wi‑Fi или мобильную сеть, затем повторите попытку.</p>
+        <button class="offline-retry" id="offline-retry" type="button">
+            <span class="offline-retry-icon" aria-hidden="true">↻</span>
+            <span id="offline-retry-label">Повторить попытку</span>
+        </button>
+        <p class="offline-status" id="offline-status" role="status" aria-live="polite"></p>
+    </main>
+
+    <noscript>
+        <p>Отсутствует подключение к интернету. Включите сеть и обновите страницу.</p>
+    </noscript>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const loader = document.getElementById("offline-loader");
+            const card = document.getElementById("offline-card");
+            const retryButton = document.getElementById("offline-retry");
+            const retryLabel = document.getElementById("offline-retry-label");
+            const status = document.getElementById("offline-status");
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            window.setTimeout(function () {
+                loader.classList.add("is-leaving");
+                card.hidden = false;
+                window.requestAnimationFrame(function () {
+                    card.classList.add("is-visible");
+                });
+                window.setTimeout(function () {
+                    loader.remove();
+                    document.body.style.overflow = "auto";
+                }, reducedMotion ? 20 : 430);
+            }, reducedMotion ? 160 : 1550);
+
+            function setStatus(message, state) {
+                status.textContent = message || "";
+                status.dataset.state = state || "offline";
+            }
+
+            retryButton.addEventListener("click", async function () {
+                retryButton.disabled = true;
+                retryButton.classList.add("is-checking");
+                retryLabel.textContent = "Проверяем соединение…";
+                setStatus("");
+
+                try {
+                    const response = await window.fetch("/health?offline_retry=" + Date.now(), {
+                        cache: "no-store",
+                        credentials: "same-origin",
+                    });
+                    if (!response.ok) {
+                        throw new Error("Server is unavailable");
+                    }
+                    setStatus("Соединение восстановлено. Загружаем сайт…", "online");
+                    window.setTimeout(function () {
+                        window.location.reload();
+                    }, reducedMotion ? 20 : 260);
+                } catch (_error) {
+                    setStatus("Интернет всё ещё недоступен. Проверьте подключение и попробуйте снова.");
+                    retryButton.disabled = false;
+                    retryButton.classList.remove("is-checking");
+                    retryLabel.textContent = "Повторить попытку";
+                }
+            });
+
+            window.addEventListener("online", function () {
+                setStatus("Соединение появилось. Нажмите «Повторить попытку».", "online");
+            });
+        }());
+    </script>
+</body>
+</html>

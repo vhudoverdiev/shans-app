@@ -9,12 +9,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Шанс">
     <title>{% block title %}Шанс{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css') }}">
+    {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png', v=static_asset_version) }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v=static_asset_version) }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css', v=static_asset_version) }}">
     <script>
         (function () {
             try {
@@ -31,16 +32,18 @@
             }
         }());
     </script>
-    <script src="{{ url_for('static', filename='js/intro-loader.js') }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
+    <script src="{{ url_for('static', filename='js/intro-loader.js', v=static_asset_version) }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
+    <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
 </head>
 <body class="app-body">
-    <div class="app-intro" id="app-intro" aria-hidden="true">
+    <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
         <div class="app-intro-glow"></div>
         <div class="app-intro-stage">
             <span class="app-intro-orbit app-intro-orbit-outer"></span>
             <span class="app-intro-orbit app-intro-orbit-inner"></span>
-            <div class="app-intro-logo">Ш</div>
-            <div class="app-intro-wordmark">Шанс</div>
+            <div class="app-intro-logo">
+                <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="Логотип Шанс">
+            </div>
             <div class="app-intro-progress"><span></span></div>
         </div>
     </div>
@@ -49,7 +52,9 @@
     <header class="site-header">
         <div class="site-header-inner">
             <a href="{{ url_for('index') }}" class="brand">
-                <span class="brand-badge">Ш</span>
+                <span class="brand-badge">
+                    <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="Логотип Шанс">
+                </span>
                 <span class="brand-text">
                     <span class="brand-title">Шанс</span>
                     <span class="brand-subtitle">Личная система управления</span>

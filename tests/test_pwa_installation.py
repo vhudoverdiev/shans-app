@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon.png"
+LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 
 
 class PwaInstallationTests(unittest.TestCase):
@@ -28,6 +29,7 @@ class PwaInstallationTests(unittest.TestCase):
             template,
         )
         self.assertIn("filename='apple-touch-icon.png'", template)
+        self.assertIn("filename='logo.png'", template)
         self.assertIn("filename='site.webmanifest'", template)
 
     def test_manifest_describes_standalone_shans_app(self):
@@ -54,7 +56,17 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(struct.unpack(">II", icon[16:24]), (180, 180))
         self.assertEqual(
             hashlib.sha256(icon).hexdigest(),
-            "b0e82a4374e9446255b03d3d93caaf17b092b1b886f26a170a346ce3215ab973",
+            "dcefbd4370367f35695488d16b4de627e82a85cc210122feaab36ac10f0dfb60",
+        )
+
+    def test_logo_asset_matches_the_supplied_source_image(self):
+        logo = LOGO.read_bytes()
+
+        self.assertEqual(logo[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", logo[16:24]), (1254, 1254))
+        self.assertEqual(
+            hashlib.sha256(logo).hexdigest(),
+            "4ae379a1088102a02eafd5b28ad21392eab9d8a19d3f50dce22649777c1c3de8",
         )
 
 

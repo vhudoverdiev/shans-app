@@ -597,5 +597,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
-<script src="{{ url_for('static', filename='js/push-notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/push-notifications.js', v=config.get('STATIC_ASSET_VERSION', 'dev')) }}"></script>
 {% endblock %}
