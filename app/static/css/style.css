@@ -576,6 +576,10 @@ a {
     flex-wrap: wrap;
 }
 
+.account-logout-btn {
+    display: none;
+}
+
 .account-tab-content {
     display: none;
 }
@@ -1281,6 +1285,11 @@ body.avatar-crop-scroll-locked {
     gap: 18px;
 }
 
+.dashboard-grid-mobile,
+.app-bottom-nav {
+    display: none;
+}
+
 .dashboard-card {
     display: block;
     text-decoration: none;
@@ -1309,6 +1318,68 @@ body.avatar-crop-scroll-locked {
     margin-bottom: 16px;
 }
 
+.dashboard-card-icon svg {
+    width: 27px;
+    height: 27px;
+}
+
+.dashboard-card-icon-blue {
+    color: #2563eb;
+    background: #dbeafe;
+}
+
+.dashboard-card-icon-purple {
+    color: #7c3aed;
+    background: #ede9fe;
+}
+
+.dashboard-card-icon-amber {
+    color: #d97706;
+    background: #fef3c7;
+}
+
+.dashboard-card-icon-rose {
+    color: #e11d48;
+    background: #ffe4e6;
+}
+
+.dashboard-card-icon-green {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.dashboard-card-icon-slate {
+    color: #475569;
+    background: #e2e8f0;
+}
+
+.dashboard-card-featured {
+    border-color: rgba(37, 99, 235, 0.24);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.dashboard-grid-mobile .dashboard-card,
+.hub-grid .dashboard-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card-arrow {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    background: #eff6ff;
+    font-size: 20px;
+    font-weight: 700;
+}
+
 .dashboard-card-title {
     font-size: 20px;
     font-weight: 700;
@@ -1320,6 +1391,38 @@ body.avatar-crop-scroll-locked {
     font-size: 14px;
     line-height: 1.6;
     color: #64748b;
+}
+
+.dashboard-grid-mobile .dashboard-card-text,
+.hub-grid .dashboard-card-text {
+    padding-right: 44px;
+}
+
+.hub-page-header {
+    margin-bottom: 18px;
+}
+
+.hub-page-eyebrow {
+    margin: 0 0 6px;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hub-page-subtitle {
+    margin: 8px 0 0;
+    color: #64748b;
+    line-height: 1.55;
+}
+
+.hub-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hub-grid-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* =========================

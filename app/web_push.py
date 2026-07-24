@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from flask import current_app, jsonify, request
+from flask import current_app, has_app_context, jsonify, request
 from flask_login import current_user, login_required
 from pywebpush import WebPushException, webpush
 
@@ -366,6 +366,71 @@ def _build_declarative_payload(candidate: PushCandidate, app_origin: str) -> str
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
+def _vapid_subject_for_subscription(subscription) -> str:
+    configured_subject = str(
+        current_app.config.get("WEB_PUSH_VAPID_SUBJECT") or ""
+    ).strip()
+    parsed_subject = urlsplit(configured_subject)
+    mail_address = parsed_subject.path.lower()
+    has_valid_configured_subject = (
+        (
+            parsed_subject.scheme == "https"
+            and bool(parsed_subject.netloc)
+            and not parsed_subject.username
+            and not parsed_subject.password
+        )
+        or (
+            parsed_subject.scheme == "mailto"
+            and "@" in mail_address
+            and not mail_address.endswith(".local")
+        )
+    )
+    if has_valid_configured_subject:
+        return configured_subject
+    return _normalize_origin(subscription["app_origin"])
+
+
+def _web_push_error_details(exc: WebPushException) -> tuple[int | None, str]:
+    response = getattr(exc, "response", None)
+    if response is None:
+        return None, ""
+
+    status_code = getattr(response, "status_code", None)
+    reason = ""
+    try:
+        response_payload = response.json()
+        if isinstance(response_payload, dict):
+            reason = str(
+                response_payload.get("reason")
+                or response_payload.get("message")
+                or ""
+            )
+    except (TypeError, ValueError):
+        pass
+
+    if not reason:
+        reason = str(getattr(response, "text", "") or "")
+    reason = " ".join(reason.split())[:160]
+    return status_code if isinstance(status_code, int) else None, reason
+
+
+def _log_web_push_error(exc: WebPushException, subscription) -> tuple[int | None, str]:
+    status_code, reason = _web_push_error_details(exc)
+    endpoint_host = urlsplit(subscription["endpoint"]).netloc
+    if has_app_context():
+        current_app.logger.warning(
+            "Web Push request rejected: status=%s reason=%s endpoint_host=%s",
+            status_code or "unknown",
+            reason or "unknown",
+            endpoint_host or "unknown",
+        )
+    return status_code, reason
+
+
+def _subscription_must_be_reset(status_code: int | None) -> bool:
+    return status_code in {401, 403, 404, 410}
+
+
 def _send_to_subscription(subscription, candidate: PushCandidate) -> None:
     payload = _build_declarative_payload(candidate, subscription["app_origin"])
     webpush(
@@ -379,8 +444,9 @@ def _send_to_subscription(subscription, candidate: PushCandidate) -> None:
         data=payload,
         vapid_private_key=_get_vapid_private_key(),
         vapid_claims={
-            "sub": current_app.config["WEB_PUSH_VAPID_SUBJECT"],
+            "sub": _vapid_subject_for_subscription(subscription),
         },
+        headers={"Urgency": "high"},
         ttl=3600,
         timeout=15,
     )
@@ -446,13 +512,21 @@ def deliver_candidate(candidate: PushCandidate, subscriptions=None) -> tuple[int
             _send_to_subscription(subscription, candidate)
             sent_count += 1
         except WebPushException as exc:
-            response = getattr(exc, "response", None)
-            if response is not None and response.status_code in {404, 410}:
+            status_code, _ = _log_web_push_error(exc, subscription)
+            if _subscription_must_be_reset(status_code):
                 _remove_expired_subscription(subscription_id)
+                if status_code not in {404, 410}:
+                    failed_count += 1
             else:
                 _release_delivery(candidate.key, subscription_id)
                 failed_count += 1
-        except Exception:
+        except Exception as exc:
+            if has_app_context():
+                current_app.logger.exception(
+                    "Web Push delivery failed before provider response: endpoint_host=%s error=%s",
+                    urlsplit(subscription["endpoint"]).netloc or "unknown",
+                    exc,
+                )
             _release_delivery(candidate.key, subscription_id)
             failed_count += 1
     return sent_count, failed_count
@@ -490,12 +564,21 @@ def send_test_notification(user_id: int, endpoint: str) -> tuple[bool, str]:
     try:
         _send_to_subscription(subscriptions[0], candidate)
     except WebPushException as exc:
-        response = getattr(exc, "response", None)
-        if response is not None and response.status_code in {404, 410}:
+        status_code, _ = _log_web_push_error(exc, subscriptions[0])
+        if _subscription_must_be_reset(status_code):
             _remove_expired_subscription(subscriptions[0]["id"])
-            return False, "Подписка устройства устарела. Включите уведомления заново."
+            return (
+                False,
+                "Подписка iPhone устарела. Нажмите «Включить уведомления», чтобы создать её заново.",
+            )
         return False, "Push-сервис временно недоступен. Попробуйте ещё раз."
-    except Exception:
+    except Exception as exc:
+        if has_app_context():
+            current_app.logger.exception(
+                "Web Push test failed before provider response: endpoint_host=%s error=%s",
+                urlsplit(subscriptions[0]["endpoint"]).netloc or "unknown",
+                exc,
+            )
         return False, "Не удалось отправить тестовое уведомление."
     return True, "Тестовое уведомление отправлено."
 
@@ -598,4 +681,20 @@ def register_web_push_routes(app) -> None:
         if not endpoint:
             return jsonify({"ok": False, "message": "Сначала включите уведомления."}), 400
         ok, message = send_test_notification(int(current_user.id), endpoint)
-        return jsonify({"ok": ok, "message": message}), 200 if ok else 502
+        reset_subscription = (
+            not ok
+            and not _get_subscriptions(
+                user_id=int(current_user.id),
+                endpoint=endpoint,
+            )
+        )
+        return (
+            jsonify(
+                {
+                    "ok": ok,
+                    "message": message,
+                    "resetSubscription": reset_subscription,
+                }
+            ),
+            200 if ok else 502,
+        )

@@ -17,7 +17,7 @@
         </p>
     </div>
 
-    <div class="dashboard-grid">
+    <div class="dashboard-grid dashboard-grid-desktop">
         <a href="{{ url_for('budget') }}" class="dashboard-card">
             <div class="dashboard-card-icon">Р</div>
             <div class="dashboard-card-title">Бюджет</div>
@@ -64,6 +64,51 @@
             <div class="dashboard-card-text">
                 Подготовка сценариев к съёмкам
             </div>
+        </a>
+    </div>
+
+    <div class="dashboard-grid dashboard-grid-mobile dashboard-primary-grid">
+        <a href="{{ url_for('planner.schedule') }}" class="dashboard-card dashboard-card-featured">
+            <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="16" rx="3"></rect>
+                    <path d="M8 3v4M16 3v4M3 10h18"></path>
+                    <path d="m9 15 2 2 4-4"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">График</div>
+            <div class="dashboard-card-text">
+                Личные задачи, планы и напоминания в одном календаре.
+            </div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('shootings_hub') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-purple" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="6" width="14" height="13" rx="3"></rect>
+                    <path d="m17 10 4-2v9l-4-2zM8 6l2-3h4l2 3"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Съёмки</div>
+            <div class="dashboard-card-text">
+                Фотопроекты, записи на съёмки и подготовка сценариев.
+            </div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('reports_hub') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-amber" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 20V10M12 20V4M19 20v-7"></path>
+                    <path d="M3 20h18"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Отчёт</div>
+            <div class="dashboard-card-text">
+                Финансовая сводка и информация по обслуживанию машины.
+            </div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
     </div>
 </div>

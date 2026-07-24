@@ -5,10 +5,13 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from cryptography.hazmat.primitives import serialization
+from flask import Flask
 from py_vapid import Vapid
+from pywebpush import WebPushException
 
 from config import Config
 from app.database import _dict_row_factory
@@ -17,10 +20,13 @@ from app.web_push import (
     PushCandidate,
     _build_declarative_payload,
     _generate_vapid_key_pair,
+    _get_subscriptions,
+    _send_to_subscription,
     collect_due_candidates,
     deliver_candidate,
     init_web_push_db,
     save_subscription,
+    send_test_notification,
 )
 
 
@@ -224,6 +230,72 @@ class WebPushSchedulingTests(unittest.TestCase):
 
         self.assertEqual(derived_public_key, public_key)
 
+    def test_apple_push_uses_app_origin_instead_of_local_vapid_subject(self):
+        candidate = PushCandidate(
+            key="test:1",
+            title="Шанс — тест",
+            body="Проверка",
+            navigate_path="/planner.schedule",
+            tag="test-1",
+        )
+        subscription = {
+            "endpoint": "https://web.push.apple.com/subscription/1",
+            "p256dh": "A" * 65,
+            "auth": "B" * 16,
+            "app_origin": "https://shans.example.test",
+        }
+        app = Flask(__name__)
+        app.config["WEB_PUSH_VAPID_SUBJECT"] = "mailto:notifications@shans.local"
+
+        with (
+            app.app_context(),
+            patch("app.web_push._get_vapid_private_key", return_value="private-key"),
+            patch("app.web_push.webpush") as webpush_mock,
+        ):
+            _send_to_subscription(subscription, candidate)
+
+        kwargs = webpush_mock.call_args.kwargs
+        self.assertEqual(
+            kwargs["vapid_claims"]["sub"],
+            "https://shans.example.test",
+        )
+        self.assertEqual(kwargs["headers"], {"Urgency": "high"})
+
+    def test_bad_vapid_token_removes_subscription_for_clean_resubscribe(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        response = SimpleNamespace(
+            status_code=403,
+            text='{"reason":"BadJwtToken"}',
+            json=lambda: {"reason": "BadJwtToken"},
+        )
+        app = Flask(__name__)
+
+        with (
+            app.app_context(),
+            patch(
+                "app.web_push._send_to_subscription",
+                side_effect=WebPushException("rejected", response=response),
+            ),
+        ):
+            ok, message = send_test_notification(
+                1,
+                self._subscription_payload()["endpoint"],
+            )
+
+        self.assertFalse(ok)
+        self.assertIn("Включить уведомления", message)
+        self.assertEqual(
+            _get_subscriptions(
+                user_id=1,
+                endpoint=self._subscription_payload()["endpoint"],
+            ),
+            [],
+        )
+
     def test_summary_message_builder_format(self):
         self._add_task("Проверка формата", "2026-07-22", "09:30")
 
@@ -288,6 +360,15 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn('addEventListener("push"', service_worker)
         self.assertIn("showNotification", service_worker)
         self.assertIn('addEventListener("notificationclick"', service_worker)
+
+    def test_client_recovers_from_changed_vapid_key_and_rejected_subscription(self):
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-notifications.js"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("subscriptionUsesPublicKey", push_client)
+        self.assertIn("payload.resetSubscription", push_client)
+        self.assertIn("discardLocalSubscription", push_client)
 
 
 if __name__ == "__main__":

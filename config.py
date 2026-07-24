@@ -39,7 +39,7 @@ class Config:
     LOGIN_RATE_LIMIT_MAX_ATTEMPTS = int(os.getenv("LOGIN_RATE_LIMIT_MAX_ATTEMPTS", "5"))
     WEB_PUSH_VAPID_SUBJECT = os.getenv(
         "WEB_PUSH_VAPID_SUBJECT",
-        "mailto:notifications@shans.local",
+        "",
     )
 
     @classmethod

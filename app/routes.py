@@ -1190,6 +1190,16 @@ def register_routes(app):
     def index():
         return render_template("index.html", username=current_user.username)
 
+    @app.route("/shootings-hub")
+    @login_required
+    def shootings_hub():
+        return render_template("shootings_hub.html")
+
+    @app.route("/reports")
+    @login_required
+    def reports_hub():
+        return render_template("reports_hub.html")
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if current_user.is_authenticated:

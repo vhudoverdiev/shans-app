@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Съёмки | Шанс{% endblock %}
+
+{% block content %}
+<section class="dashboard-page hub-page">
+    <div class="page-header hub-page-header">
+        <div>
+            <p class="hub-page-eyebrow">Творческий раздел</p>
+            <h1 class="page-title">Съёмки</h1>
+            <p class="hub-page-subtitle">Выберите нужный этап работы с проектом.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid hub-grid">
+        <a href="{{ url_for('planner.photo_projects') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Фотопроекты</div>
+            <div class="dashboard-card-text">Проекты, даты, города и электронные записи клиентов.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('shootings') }}" class="dashboard-card dashboard-card-featured">
+            <div class="dashboard-card-icon dashboard-card-icon-purple" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="6" width="14" height="13" rx="3"></rect>
+                    <path d="m17 10 4-2v9l-4-2zM8 6l2-3h4l2 3"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Съёмки</div>
+            <div class="dashboard-card-text">Предстоящие записи, архив и управление съёмочными днями.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('scenarios') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-rose" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path>
+                    <path d="M14 3v5h5M8 13h8M8 17h6"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Сценарии</div>
+            <div class="dashboard-card-text">Подготовка идей и сценариев для будущих съёмок.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+    </div>
+</section>
+{% endblock %}

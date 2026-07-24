@@ -44,6 +44,7 @@
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
             <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
         </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger account-logout-btn" id="account-logout-btn">Выйти из аккаунта</a>
     </div>
     <form method="post" action="{{ url_for('update_account_avatar') }}" enctype="multipart/form-data" class="form-block account-settings-form account-avatar-hidden-form" id="avatar-upload-form">
         <input type="file" id="avatar_file" name="avatar_file" class="avatar-file-input" accept="image/png,image/jpeg,image/webp,image/gif">

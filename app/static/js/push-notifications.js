@@ -62,9 +62,37 @@
         });
         const payload = await response.json().catch(function () { return {}; });
         if (!response.ok || payload.ok === false) {
-            throw new Error(payload.message || "Не удалось выполнить действие.");
+            const error = new Error(payload.message || "Не удалось выполнить действие.");
+            error.payload = payload;
+            throw error;
         }
         return payload;
+    }
+
+    function subscriptionUsesPublicKey(currentSubscription, expectedPublicKey) {
+        const currentKey = currentSubscription
+            && currentSubscription.options
+            && currentSubscription.options.applicationServerKey;
+        if (!currentKey || !expectedPublicKey) return true;
+
+        const currentBytes = new Uint8Array(currentKey);
+        const expectedBytes = urlBase64ToUint8Array(expectedPublicKey);
+        if (currentBytes.length !== expectedBytes.length) return false;
+        return currentBytes.every(function (value, index) {
+            return value === expectedBytes[index];
+        });
+    }
+
+    async function discardLocalSubscription() {
+        if (!subscription) return;
+        try {
+            await subscription.unsubscribe();
+        } catch (_error) {
+            // Даже при локальной ошибке старый endpoint нельзя продолжать показывать активным.
+        } finally {
+            subscription = null;
+            syncButtons();
+        }
     }
 
     async function initialize() {
@@ -85,10 +113,30 @@
         registration = await navigator.serviceWorker.register(config.serviceWorkerUrl, { scope: "/" });
         await navigator.serviceWorker.ready;
         subscription = await registration.pushManager.getSubscription();
+        let subscriptionKeyWasUpdated = false;
+
+        if (subscription && !subscriptionUsesPublicKey(subscription, publicKey)) {
+            const outdatedEndpoint = subscription.endpoint;
+            await discardLocalSubscription();
+            subscriptionKeyWasUpdated = true;
+            try {
+                await apiRequest(card.dataset.unsubscribeUrl, {
+                    endpoint: outdatedEndpoint,
+                });
+            } catch (error) {
+                // Локальная подписка уже удалена; сервер очистит её после следующего отказа push-сервиса.
+            }
+        }
         syncButtons();
 
         if (subscription) {
+            await apiRequest(card.dataset.subscribeUrl, {
+                subscription: subscription.toJSON(),
+                origin: window.location.origin,
+            });
             setStatus("Уведомления личного графика включены на этом устройстве.", "success");
+        } else if (subscriptionKeyWasUpdated) {
+            setStatus("Ключ уведомлений обновлён. Нажмите «Включить уведомления», чтобы восстановить подписку.", "info");
         } else if (!isStandaloneApp()) {
             setStatus("Откройте сайт через значок «Шанс» на экране домой, чтобы включить уведомления.", "info");
         } else if (Notification.permission === "denied") {
@@ -165,8 +213,12 @@
                 });
                 setStatus(result.message || "Тестовое уведомление отправлено.", "success");
             } catch (error) {
+                if (error && error.payload && error.payload.resetSubscription) {
+                    await discardLocalSubscription();
+                }
                 setStatus(error && error.message ? error.message : "Не удалось отправить уведомление.", "error");
             } finally {
+                syncButtons();
                 setBusy(false);
             }
         });
