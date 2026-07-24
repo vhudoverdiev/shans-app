@@ -62,6 +62,12 @@ def init_db():
     """
     conn = get_connection()
     cursor = conn.cursor()
+
+    # VK-доставка удалена из приложения. Удаляем сохранённые токены и
+    # служебные блокировки, чтобы старые настройки не могли ожить при откате.
+    cursor.execute("DROP TABLE IF EXISTS vk_daily_send_locks")
+    cursor.execute("DROP TABLE IF EXISTS vk_notification_settings")
+
     # =========================================================
     # SHOOTINGS
     # =========================================================
