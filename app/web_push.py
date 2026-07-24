@@ -345,7 +345,7 @@ def _build_declarative_payload(candidate: PushCandidate, app_origin: str) -> str
         "navigate": navigate_url,
         "silent": False,
         "tag": candidate.tag,
-        "icon": urljoin(f"{app_origin}/", "static/apple-touch-icon.png"),
+        "icon": urljoin(f"{app_origin}/", "static/logo.png"),
     }
     payload = {"web_push": 8030, "notification": notification}
     encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))

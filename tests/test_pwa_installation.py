@@ -8,7 +8,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
-APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon.png"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 
 
@@ -25,10 +24,9 @@ class PwaInstallationTests(unittest.TestCase):
             template,
         )
         self.assertIn(
-            'rel="apple-touch-icon" sizes="180x180"',
+            'rel="apple-touch-icon"',
             template,
         )
-        self.assertIn("filename='apple-touch-icon.png'", template)
         self.assertIn("filename='logo.png'", template)
         self.assertIn("filename='site.webmanifest'", template)
 
@@ -41,22 +39,12 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(manifest["start_url"], "/")
         self.assertIn(
             {
-                "src": "/static/apple-touch-icon.png",
-                "sizes": "180x180",
+                "src": "/static/logo.png",
+                "sizes": "1254x1254",
                 "type": "image/png",
                 "purpose": "any",
             },
             manifest["icons"],
-        )
-
-    def test_apple_touch_icon_is_180_pixel_png(self):
-        icon = APPLE_TOUCH_ICON.read_bytes()
-
-        self.assertEqual(icon[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", icon[16:24]), (180, 180))
-        self.assertEqual(
-            hashlib.sha256(icon).hexdigest(),
-            "dcefbd4370367f35695488d16b4de627e82a85cc210122feaab36ac10f0dfb60",
         )
 
     def test_logo_asset_matches_the_supplied_source_image(self):

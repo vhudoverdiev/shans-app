@@ -1,5 +1,5 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
-const DEFAULT_ICON_URL = "/static/apple-touch-icon.png";
+const DEFAULT_ICON_URL = "/static/logo.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
 const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v1`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
