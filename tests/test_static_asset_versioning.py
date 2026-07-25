@@ -27,6 +27,18 @@ class StaticAssetVersioningTests(unittest.TestCase):
         self.assertEqual(len(first_version), 12)
         self.assertNotEqual(first_version, second_version)
 
+    def test_asset_version_changes_when_favicon_changes(self):
+        with tempfile.TemporaryDirectory() as temp_directory:
+            static_root = Path(temp_directory)
+            favicon = static_root / "favicon.svg"
+            favicon.write_text("<svg><rect rx='12'/></svg>", encoding="utf-8")
+
+            first_version = build_static_asset_version(static_root)
+            favicon.write_text("<svg><rect rx='16'/></svg>", encoding="utf-8")
+            second_version = build_static_asset_version(static_root)
+
+        self.assertNotEqual(first_version, second_version)
+
     def test_templates_append_asset_version_to_css_and_javascript(self):
         base_template = BASE_TEMPLATE.read_text(encoding="utf-8")
         account_template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
@@ -45,6 +57,7 @@ class StaticAssetVersioningTests(unittest.TestCase):
                 base_template,
             )
         self.assertIn("filename='logo.png', v=static_asset_version", base_template)
+        self.assertIn("filename='favicon.svg', v=static_asset_version", base_template)
         self.assertIn(
             "filename='js/push-notifications.js', v=config.get('STATIC_ASSET_VERSION', 'dev')",
             account_template,

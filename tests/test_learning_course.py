@@ -9,13 +9,20 @@ from app.learning import (
     FINAL_PASS_SCORE,
     _course_state,
     _get_final_result,
+    _get_it_final_result,
+    _it_course_state,
     _save_day_result,
     _save_final_result,
+    _save_it_day_result,
+    _save_it_final_result,
     build_daily_quiz,
     build_final_quiz,
+    build_it_daily_quiz,
+    build_it_final_quiz,
     grade_quiz,
     init_learning_db,
 )
+from app.it_course_content import IT_LESSONS
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -107,18 +114,91 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(result["attempts"], 3)
         self.assertEqual(result["passed"], 1)
 
-    def test_study_hub_exposes_english_and_keeps_it_as_placeholder(self):
+    def test_study_hub_exposes_both_active_courses(self):
         study_source = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
         base_source = (TEMPLATES / "base.html").read_text(encoding="utf-8")
 
         self.assertIn(">IT<", study_source)
-        self.assertIn("Скоро", study_source)
+        self.assertIn("Фундамент IT на Python", study_source)
         self.assertIn("url_for('learning.english_course')", study_source)
-        self.assertNotIn("learning.it", study_source)
+        self.assertIn("url_for('learning.it_course')", study_source)
+        self.assertNotIn("Скоро", study_source)
         self.assertIn(
             ">Учёба</a>",
             base_source,
         )
+
+    def test_it_course_has_thirty_complete_daily_lessons(self):
+        self.assertEqual(len(IT_LESSONS), 30)
+        self.assertEqual(
+            [lesson["day"] for lesson in IT_LESSONS],
+            list(range(1, 31)),
+        )
+        for lesson in IT_LESSONS:
+            self.assertTrue(lesson["title"])
+            self.assertTrue(lesson["summary"])
+            self.assertEqual(len(lesson["lecture"]), 3)
+            self.assertEqual(len(lesson["terms"]), 6)
+            self.assertTrue(lesson["practice"])
+            self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
+
+    def test_every_it_daily_quiz_and_final_quiz_are_valid(self):
+        for day_number in range(1, 31):
+            questions = build_it_daily_quiz(day_number)
+            self.assertEqual(len(questions), 5)
+            for question in questions:
+                self.assertEqual(len(question["options"]), 4)
+                self.assertEqual(len(set(question["options"])), 4)
+                self.assertIn(
+                    question["correct_index"],
+                    range(len(question["options"])),
+                )
+
+        final_questions = build_it_final_quiz()
+        self.assertEqual(len(final_questions), 30)
+        self.assertEqual(
+            {question["day"] for question in final_questions},
+            set(range(1, 31)),
+        )
+
+    def test_it_progress_is_sequential_and_independent_from_english(self):
+        progress, passed_days, next_day = _it_course_state(17)
+        self.assertEqual(progress, {})
+        self.assertEqual(passed_days, set())
+        self.assertEqual(next_day, 1)
+
+        _save_it_day_result(17, 1, 2, False)
+        _save_it_day_result(17, 1, 5, True)
+        _save_it_day_result(17, 1, 3, False)
+        progress, passed_days, next_day = _it_course_state(17)
+
+        self.assertEqual(progress[1]["best_score"], 5)
+        self.assertEqual(progress[1]["attempts"], 3)
+        self.assertEqual(passed_days, {1})
+        self.assertEqual(next_day, 2)
+        self.assertEqual(_course_state(17), ({}, set(), 1))
+
+    def test_it_final_result_preserves_best_score_and_passed_state(self):
+        _save_it_final_result(19, 20, False)
+        _save_it_final_result(19, 28, True)
+        _save_it_final_result(19, 21, False)
+        result = _get_it_final_result(19)
+
+        self.assertEqual(result["best_score"], 28)
+        self.assertEqual(result["attempts"], 3)
+        self.assertEqual(result["passed"], 1)
+
+    def test_it_templates_explain_direction_and_daily_timing(self):
+        course_source = (TEMPLATES / "it_course.html").read_text(encoding="utf-8")
+        day_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        final_source = (TEMPLATES / "it_final.html").read_text(encoding="utf-8")
+
+        self.assertIn("Фундамент IT на Python", course_source)
+        self.assertIn("30 дней", course_source)
+        self.assertIn("15 минут", day_source)
+        self.assertIn("Словарь вакансий", day_source)
+        self.assertIn("Практика на 5 минут", day_source)
+        self.assertIn("30 вопросов", final_source)
 
 
 if __name__ == "__main__":

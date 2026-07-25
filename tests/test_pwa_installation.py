@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
+FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.svg"
 
 
 class PwaInstallationTests(unittest.TestCase):
@@ -46,6 +47,19 @@ class PwaInstallationTests(unittest.TestCase):
             },
             manifest["icons"],
         )
+
+    def test_browser_favicon_is_a_rounded_square(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        favicon = FAVICON.read_text(encoding="utf-8")
+
+        self.assertIn('rel="icon" type="image/svg+xml"', template)
+        self.assertIn(
+            "filename='favicon.svg', v=static_asset_version",
+            template,
+        )
+        self.assertIn('viewBox="0 0 512 512"', favicon)
+        self.assertIn('<rect x="8" y="8" width="496" height="496" rx="152"', favicon)
+        self.assertIn('fill="url(#favicon-gradient)"', favicon)
 
     def test_logo_asset_matches_the_supplied_source_image(self):
         logo = LOGO.read_bytes()

@@ -16,6 +16,7 @@ from pywebpush import WebPushException
 from config import Config
 from app.database import _dict_row_factory
 from app.schedule_notifications import build_personal_tasks_text
+from app.learning import init_learning_db
 from app.web_push import (
     PushCandidate,
     _build_declarative_payload,
@@ -57,6 +58,7 @@ class WebPushSchedulingTests(unittest.TestCase):
         )
         conn.commit()
         conn.close()
+        init_learning_db()
         init_web_push_db()
         self.moscow_timezone = timezone(timedelta(hours=3), name="Europe/Moscow")
 
@@ -134,6 +136,97 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(any(item.key == "summary:today:2026-07-21" for item in morning))
         self.assertFalse(any(item.key.startswith("summary:") for item in after_morning_window))
         self.assertTrue(any(item.key == "summary:tomorrow:2026-07-22" for item in evening))
+
+    def test_learning_reminder_is_daily_and_targets_only_the_user(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            2,
+            self._subscription_payload("https://push.example.test/subscription/2"),
+            "https://shans.example.test",
+        )
+        now_local = datetime(2026, 7, 21, 19, 0, tzinfo=self.moscow_timezone)
+        candidates = collect_due_candidates(now_local, user_ids={1, 2})
+        learning_candidates = [
+            item for item in candidates if item.key == "learning:daily:2026-07-21"
+        ]
+
+        self.assertEqual(len(learning_candidates), 2)
+        self.assertEqual({item.user_id for item in learning_candidates}, {1, 2})
+        self.assertTrue(all("English — день 1" in item.body for item in learning_candidates))
+        self.assertTrue(all("IT — день 1" in item.body for item in learning_candidates))
+        self.assertFalse(
+            any(
+                item.key.startswith("learning:")
+                for item in collect_due_candidates(
+                    datetime(2026, 7, 21, 19, 5, tzinfo=self.moscow_timezone),
+                    user_ids={1, 2},
+                )
+            )
+        )
+
+        candidate_for_user_1 = next(item for item in learning_candidates if item.user_id == 1)
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = deliver_candidate(candidate_for_user_1)
+
+        self.assertEqual(result, (1, 0))
+        send_mock.assert_called_once()
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
+        self.assertEqual(get_unread_push_notifications(1)[1], 1)
+        self.assertEqual(get_unread_push_notifications(2)[1], 0)
+
+    def test_learning_reminder_skips_course_test_attempted_today(self):
+        conn = self._connect()
+        conn.execute(
+            """
+            INSERT INTO english_course_progress (
+                user_id, day_number, best_score, attempts, passed, updated_at
+            ) VALUES (1, 1, 5, 1, 1, '2026-07-21 12:00:00')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO it_course_progress (
+                user_id, day_number, best_score, attempts, passed, updated_at
+            ) VALUES (1, 1, 2, 1, 0, '2026-07-21 12:00:00')
+            """
+        )
+        conn.commit()
+        conn.close()
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 19, 0, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+
+        self.assertFalse(any(item.key.startswith("learning:") for item in candidates))
+
+    def test_learning_reminder_only_lists_courses_not_attempted_today(self):
+        conn = self._connect()
+        conn.execute(
+            """
+            INSERT INTO english_course_progress (
+                user_id, day_number, best_score, attempts, passed, updated_at
+            ) VALUES (1, 1, 5, 1, 1, '2026-07-21 12:00:00')
+            """
+        )
+        conn.commit()
+        conn.close()
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 19, 0, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+        learning_candidate = next(
+            item for item in candidates if item.key.startswith("learning:")
+        )
+
+        self.assertNotIn("English", learning_candidate.body)
+        self.assertIn("IT — день 1", learning_candidate.body)
+        self.assertEqual(learning_candidate.navigate_path, "/study/it/day/1")
 
     def test_task_after_midnight_is_reminded_two_hours_before(self):
         task_id = self._add_task("Ночная поездка", "2026-07-22", "01:00")

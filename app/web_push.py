@@ -21,6 +21,7 @@ from app.schedule_notifications import build_personal_tasks_text
 
 _TIMEZONE_NAME = "Europe/Moscow"
 _SUMMARY_WINDOW = timedelta(minutes=5)
+_LEARNING_REMINDER_HOUR = 19
 _SCHEDULER_INTERVAL_SECONDS = 30
 _MAX_PUSH_PAYLOAD_BYTES = 3500
 _scheduler_lock = threading.Lock()
@@ -34,6 +35,7 @@ class PushCandidate:
     body: str
     navigate_path: str
     tag: str
+    user_id: int | None = None
 
 
 def _base64url(raw_value: bytes) -> str:
@@ -355,7 +357,160 @@ def _get_due_task_candidates(now_local: datetime) -> list[PushCandidate]:
     return candidates
 
 
-def collect_due_candidates(now_local: datetime | None = None) -> list[PushCandidate]:
+def _learning_course_reminder(
+    conn,
+    user_id: int,
+    course_key: str,
+    course_title: str,
+    now_local: datetime,
+) -> dict | None:
+    progress_table = f"{course_key}_course_progress"
+    final_table = f"{course_key}_final_results"
+    existing_tables = {
+        row["name"]
+        for row in conn.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table' AND name IN (?, ?)
+            """,
+            (progress_table, final_table),
+        ).fetchall()
+    }
+    if {progress_table, final_table} - existing_tables:
+        return None
+
+    local_day_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_day_start = local_day_start.astimezone(timezone.utc).replace(tzinfo=None)
+    utc_day_end = (local_day_start + timedelta(days=1)).astimezone(timezone.utc).replace(
+        tzinfo=None
+    )
+    timestamp_params = (
+        utc_day_start.strftime("%Y-%m-%d %H:%M:%S"),
+        utc_day_end.strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+    final_result = conn.execute(
+        f"""
+        SELECT passed, updated_at
+        FROM {final_table}
+        WHERE user_id = ?
+        """,
+        (user_id,),
+    ).fetchone()
+    if final_result and bool(final_result["passed"]):
+        return None
+
+    attempted_today = bool(
+        conn.execute(
+            f"""
+            SELECT 1
+            FROM {progress_table}
+            WHERE user_id = ?
+              AND updated_at >= ?
+              AND updated_at < ?
+            LIMIT 1
+            """,
+            (user_id, *timestamp_params),
+        ).fetchone()
+    )
+    if (
+        final_result
+        and final_result["updated_at"]
+        and timestamp_params[0] <= final_result["updated_at"] < timestamp_params[1]
+    ):
+        attempted_today = True
+    if attempted_today:
+        return None
+
+    passed_rows = conn.execute(
+        f"""
+        SELECT day_number
+        FROM {progress_table}
+        WHERE user_id = ? AND passed = 1
+        """,
+        (user_id,),
+    ).fetchall()
+    passed_days = {int(row["day_number"]) for row in passed_rows}
+    if len(passed_days) >= 30:
+        return {
+            "label": f"{course_title} — итоговый тест",
+            "navigate_path": f"/study/{course_key}/final",
+        }
+
+    next_day = next(day for day in range(1, 31) if day not in passed_days)
+    return {
+        "label": f"{course_title} — день {next_day}",
+        "navigate_path": f"/study/{course_key}/day/{next_day}",
+    }
+
+
+def _get_due_learning_candidates(
+    now_local: datetime,
+    user_ids,
+) -> list[PushCandidate]:
+    if not _summary_is_due(now_local, _LEARNING_REMINDER_HOUR):
+        return []
+
+    safe_user_ids = sorted({int(user_id) for user_id in user_ids})
+    if not safe_user_ids:
+        return []
+
+    candidates: list[PushCandidate] = []
+    conn = get_connection()
+    try:
+        for user_id in safe_user_ids:
+            reminders = [
+                reminder
+                for reminder in (
+                    _learning_course_reminder(
+                        conn,
+                        user_id,
+                        "english",
+                        "English",
+                        now_local,
+                    ),
+                    _learning_course_reminder(
+                        conn,
+                        user_id,
+                        "it",
+                        "IT",
+                        now_local,
+                    ),
+                )
+                if reminder
+            ]
+            if not reminders:
+                continue
+
+            labels = [reminder["label"] for reminder in reminders]
+            if len(labels) == 1:
+                body = f"Сегодня ещё не пройден тест: {labels[0]}."
+                navigate_path = reminders[0]["navigate_path"]
+            else:
+                body = "Сегодня ещё не пройдены тесты: " + " и ".join(labels) + "."
+                navigate_path = "/study"
+
+            notification_date = now_local.date().isoformat()
+            candidates.append(
+                PushCandidate(
+                    key=f"learning:daily:{notification_date}",
+                    title="Шанс — время учиться",
+                    body=body,
+                    navigate_path=navigate_path,
+                    tag=f"learning-daily-{notification_date}",
+                    user_id=user_id,
+                )
+            )
+    finally:
+        conn.close()
+    return candidates
+
+
+def collect_due_candidates(
+    now_local: datetime | None = None,
+    user_ids=None,
+) -> list[PushCandidate]:
     now_local = now_local or datetime.now(_get_timezone())
     if now_local.tzinfo is None:
         now_local = now_local.replace(tzinfo=_get_timezone())
@@ -386,6 +541,8 @@ def collect_due_candidates(now_local: datetime | None = None) -> list[PushCandid
         )
 
     candidates.extend(_get_due_task_candidates(now_local))
+    if user_ids is not None:
+        candidates.extend(_get_due_learning_candidates(now_local, user_ids))
     return candidates
 
 
@@ -634,6 +791,8 @@ def deliver_candidate(candidate: PushCandidate, subscriptions=None) -> tuple[int
         subscriptions_by_user.setdefault(user_id, []).append(subscription)
 
     for user_id, user_subscriptions in subscriptions_by_user.items():
+        if candidate.user_id is not None and user_id != candidate.user_id:
+            continue
         if not _reserve_user_delivery(candidate.key, user_id):
             continue
         delivered = False
@@ -685,7 +844,8 @@ def run_web_push_notification_cycle(
     if not subscriptions:
         return 0, 0, 0
 
-    candidates = collect_due_candidates(now_local)
+    user_ids = {int(subscription["user_id"]) for subscription in subscriptions}
+    candidates = collect_due_candidates(now_local, user_ids=user_ids)
     sent_count = 0
     failed_count = 0
     for candidate in candidates:

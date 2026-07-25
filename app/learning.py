@@ -871,6 +871,7 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
         )
         questions.append(
             {
+                "day": lesson["day"],
                 "prompt": f"Что означает термин «{term}»?",
                 "options": options,
                 "correct_index": correct_index,
@@ -901,6 +902,7 @@ def build_it_final_quiz() -> list[dict]:
         )
         questions.append(
             {
+                "day": lesson["day"],
                 "prompt": f"Что означает термин «{term}»?",
                 "options": options,
                 "correct_index": correct_index,

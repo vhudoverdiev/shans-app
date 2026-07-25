@@ -42,6 +42,7 @@ def build_static_asset_version(static_folder):
             asset_paths.extend(path for path in directory.rglob("*") if path.is_file())
 
     for filename in (
+        "favicon.svg",
         "logo.png",
         "service-worker.js",
         "site.webmanifest",
