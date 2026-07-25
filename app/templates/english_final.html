@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}English — итоговый тест | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page lesson-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_course') }}">← К программе курса</a>
+
+    <div class="learning-hero final-hero">
+        <div>
+            <p class="learning-kicker">Финальная проверка</p>
+            <h1>Итоговый тест English</h1>
+            <p>{{ total_questions }} вопросов по материалам всех 30 дней. Для завершения курса нужно набрать минимум {{ pass_score }} балла.</p>
+        </div>
+        <div class="final-hero-mark" aria-hidden="true">★</div>
+    </div>
+
+    {% if score is not none %}
+    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" role="status">
+        <div class="quiz-result-score">{{ score }} / {{ total_questions }}</div>
+        <div>
+            <h2>{% if passed %}Курс завершён!{% else %}Попробуйте ещё раз{% endif %}</h2>
+            <p>
+                {% if passed %}
+                Вы успешно прошли 30-дневную программу и итоговую проверку.
+                {% else %}
+                Повторите слова из сложных вопросов. Лучший результат сохраняется.
+                {% endif %}
+            </p>
+        </div>
+    </section>
+
+    <div class="quiz-feedback-list final-feedback-list">
+        {% for item in feedback %}
+        <article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}">
+            <strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong>
+            <span>{{ item.explanation }}</span>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if final_result %}
+    <div class="final-best-score">Лучший результат: <strong>{{ final_result.best_score }} / {{ total_questions }}</strong> · попыток: {{ final_result.attempts }}</div>
+    {% endif %}
+
+    <section class="lesson-section quiz-section">
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">30 вопросов</p>
+                <h2>{% if score is not none %}Пройти ещё раз{% else %}Начать тест{% endif %}</h2>
+            </div>
+            <span>Выберите один ответ</span>
+        </div>
+
+        <form method="post" class="quiz-form final-quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            {% for question in questions %}
+            {% set question_index = loop.index0 %}
+            <fieldset class="quiz-question">
+                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
+                <div class="quiz-options">
+                    {% for option in question.options %}
+                    <label class="quiz-option">
+                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
+                        <span>{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary quiz-submit">Завершить тест</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

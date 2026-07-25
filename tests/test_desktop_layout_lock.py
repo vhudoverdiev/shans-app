@@ -8,6 +8,7 @@ RESPONSIVE_STYLESHEETS = (
     PROJECT_ROOT / "app" / "static" / "css" / "style.css",
     PROJECT_ROOT / "app" / "static" / "css" / "mobile.css",
     PROJECT_ROOT / "app" / "static" / "css" / "planner.css",
+    PROJECT_ROOT / "app" / "static" / "css" / "learning.css",
 )
 
 

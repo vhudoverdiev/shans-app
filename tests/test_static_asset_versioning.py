@@ -35,8 +35,10 @@ class StaticAssetVersioningTests(unittest.TestCase):
             "css/style.css",
             "css/mobile.css",
             "css/planner.css",
+            "css/learning.css",
             "js/intro-loader.js",
             "js/offline-support.js",
+            "js/push-inbox.js",
         ):
             self.assertIn(
                 f"filename='{filename}', v=static_asset_version",

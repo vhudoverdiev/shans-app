@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css', v=static_asset_version) }}">
+    {% block extra_head %}{% endblock %}
     <script>
         (function () {
             try {
@@ -34,6 +36,7 @@
     </script>
     <script src="{{ url_for('static', filename='js/intro-loader.js', v=static_asset_version) }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
     <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/push-inbox.js', v=static_asset_version) }}" defer></script>
 </head>
 <body class="app-body{% if current_user.is_authenticated %} app-body-authenticated{% endif %}">
     <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
@@ -42,7 +45,9 @@
             <span class="app-intro-orbit app-intro-orbit-outer"></span>
             <span class="app-intro-orbit app-intro-orbit-inner"></span>
             <div class="app-intro-logo">
-                <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="Логотип Шанс">
+                <svg class="app-intro-logo-mark" viewBox="0 0 192 192" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M48 52Q48 48 52 48H65Q69 48 69 52V111L82 124H88V52Q88 48 92 48H100Q104 48 104 52V124H110L123 111V52Q123 48 127 48H140Q144 48 144 52V113Q144 124 137 131L117 151Q113 155 106 155H86Q79 155 75 151L55 131Q48 124 48 113Z"></path>
+                </svg>
             </div>
             <div class="app-intro-progress"><span></span></div>
         </div>
@@ -57,8 +62,10 @@
     {% set is_scenarios_page = request.endpoint in ['scenarios', 'scenarios_upcoming', 'scenarios_archive', 'scenarios_add', 'scenario_detail', 'scenario_edit'] %}
     {% set is_photo_projects_page = request.endpoint in ['planner.photo_projects', 'planner.photo_project_detail', 'planner.create_photo_project', 'planner.edit_photo_project', 'planner.create_photo_project_booking', 'planner.edit_photo_project_booking', 'planner.photo_project_booking_detail'] %}
     {% set is_shootings_section = request.endpoint == 'shootings_hub' or is_shootings_page or is_scenarios_page or is_photo_projects_page %}
+    {% set is_reports_section = request.endpoint == 'reports_hub' or is_budget_page or is_car_page %}
+    {% set is_study_section = request.endpoint is string and request.endpoint.startswith('learning.') %}
+    {% set is_workouts_section = request.endpoint is string and request.endpoint.startswith('workouts.') %}
     {% set is_account_page = request.endpoint == 'account_settings' %}
-    {% set is_mobile_home_section = is_home_page or request.endpoint == 'reports_hub' or is_budget_page or is_car_page %}
     <header class="site-header">
         <div class="site-header-inner">
             <a href="{{ url_for('index') }}" class="brand">
@@ -79,6 +86,7 @@
                 <a href="{{ url_for('index') }}" class="top-nav-link {% if is_home_page %}top-nav-link-active{% endif %}">Главная</a>
                 <a href="{{ url_for('budget') }}" class="top-nav-link {% if is_budget_page %}top-nav-link-active{% endif %}">Бюджет</a>
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link {% if is_schedule_page %}top-nav-link-active{% endif %}">График</a>
+                <a href="{{ url_for('learning.study_hub') }}" class="top-nav-link {% if is_study_section %}top-nav-link-active{% endif %}">Учёба</a>
             </nav>
 
             <div class="header-user-block">
@@ -114,13 +122,6 @@
 
     {% if current_user.is_authenticated %}
     <nav class="app-bottom-nav" aria-label="Основная навигация">
-        <a href="{{ url_for('index') }}" class="app-bottom-nav-link {% if is_mobile_home_section %}app-bottom-nav-link-active{% endif %}"{% if is_mobile_home_section %} aria-current="page"{% endif %}>
-            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="m3 11 9-8 9 8"></path>
-                <path d="M5 10v10h14V10M9 20v-6h6v6"></path>
-            </svg>
-            <span>Главная</span>
-        </a>
         <a href="{{ url_for('planner.schedule') }}" class="app-bottom-nav-link {% if is_schedule_page %}app-bottom-nav-link-active{% endif %}"{% if is_schedule_page %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="16" rx="3"></rect>
@@ -135,6 +136,26 @@
             </svg>
             <span>Съёмки</span>
         </a>
+        <a href="{{ url_for('reports_hub') }}" class="app-bottom-nav-link {% if is_reports_section %}app-bottom-nav-link-active{% endif %}"{% if is_reports_section %} aria-current="page"{% endif %}>
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 20V10M12 20V4M19 20v-7"></path>
+                <path d="M3 20h18"></path>
+            </svg>
+            <span>Отчёт</span>
+        </a>
+        <a href="{{ url_for('learning.study_hub') }}" class="app-bottom-nav-link {% if is_study_section %}app-bottom-nav-link-active{% endif %}"{% if is_study_section %} aria-current="page"{% endif %}>
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a3 3 0 0 1 3 3v15a3 3 0 0 0-3-3H6.5A2.5 2.5 0 0 0 4 20.5Z"></path>
+                <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H14v18a3 3 0 0 1 3-3h.5a2.5 2.5 0 0 1 2.5 2.5Z"></path>
+            </svg>
+            <span>Учёба</span>
+        </a>
+        <a href="{{ url_for('workouts.index') }}" class="app-bottom-nav-link {% if is_workouts_section %}app-bottom-nav-link-active{% endif %}"{% if is_workouts_section %} aria-current="page"{% endif %}>
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
+            </svg>
+            <span>Спорт</span>
+        </a>
         <a href="{{ url_for('account_settings') }}" class="app-bottom-nav-link {% if is_account_page %}app-bottom-nav-link-active{% endif %}"{% if is_account_page %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"></circle>
@@ -143,6 +164,40 @@
             <span>Аккаунт</span>
         </a>
     </nav>
+
+    <button
+        type="button"
+        class="mobile-push-inbox-trigger"
+        id="mobile-push-inbox-trigger"
+        aria-label="Открыть непрочитанные уведомления"
+        aria-controls="mobile-push-inbox-sheet"
+        aria-expanded="false"
+        data-inbox-url="{{ url_for('web_push_inbox') }}"
+        data-read-url="{{ url_for('web_push_inbox_read') }}"
+        hidden
+    >
+        <span class="mobile-push-inbox-trigger-ring" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+        </svg>
+        <span class="mobile-push-inbox-count" id="mobile-push-inbox-count" aria-hidden="true"></span>
+    </button>
+
+    <div class="mobile-push-inbox-sheet" id="mobile-push-inbox-sheet" hidden>
+        <button type="button" class="mobile-push-inbox-backdrop" data-push-inbox-close aria-label="Закрыть уведомления"></button>
+        <section class="mobile-push-inbox-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-push-inbox-title">
+            <div class="mobile-push-inbox-handle" aria-hidden="true"></div>
+            <div class="mobile-push-inbox-header">
+                <div>
+                    <div class="mobile-push-inbox-eyebrow">Личный график</div>
+                    <h2 id="mobile-push-inbox-title">Уведомления</h2>
+                </div>
+                <button type="button" class="mobile-push-inbox-close" data-push-inbox-close aria-label="Закрыть">×</button>
+            </div>
+            <div class="mobile-push-inbox-list" id="mobile-push-inbox-list"></div>
+        </section>
+    </div>
     {% endif %}
 
     <div class="confirm-modal" id="confirm-modal" hidden>
@@ -532,5 +587,6 @@
             });
         });
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

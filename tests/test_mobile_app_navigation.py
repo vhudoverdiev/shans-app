@@ -45,11 +45,12 @@ class MobileAppNavigationTests(unittest.TestCase):
             - mobile_grid.count('class="dashboard-card-title')
             - mobile_grid.count('class="dashboard-card-text')
             - mobile_grid.count('class="dashboard-card-arrow'),
-            3,
+            4,
         )
         self.assertIn("url_for('planner.schedule')", mobile_grid)
         self.assertIn("url_for('shootings_hub')", mobile_grid)
         self.assertIn("url_for('reports_hub')", mobile_grid)
+        self.assertIn("url_for('workouts.index')", mobile_grid)
 
     def test_mobile_hubs_group_existing_sections(self):
         shootings = (TEMPLATES / "shootings_hub.html").read_text(encoding="utf-8")
@@ -69,9 +70,17 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         self.assertNotIn("mobile-fab", base)
         self.assertNotIn("mobile-fab", mobile_styles)
-        self.assertEqual(base.count('class="app-bottom-nav-link '), 4)
-        for label in ("Главная", "График", "Съёмки", "Аккаунт"):
+        self.assertEqual(base.count('class="app-bottom-nav-link '), 6)
+        for label in ("График", "Съёмки", "Отчёт", "Учёба", "Спорт", "Аккаунт"):
             self.assertIn(f"<span>{label}</span>", base)
+        self.assertNotIn("<span>Главная</span>", base)
+        self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr));", mobile_styles)
+        self.assertIn("is_reports_section", base)
+        self.assertIn("url_for('reports_hub')", base)
+        self.assertIn("is_study_section", base)
+        self.assertIn("url_for('learning.study_hub')", base)
+        self.assertIn("is_workouts_section", base)
+        self.assertIn("url_for('workouts.index')", base)
         self.assertIn(
             "@media (max-width: 900px) and (pointer: coarse)",
             mobile_styles,
@@ -102,6 +111,50 @@ class MobileAppNavigationTests(unittest.TestCase):
         )
         self.assertIn("url_for('logout')", account)
         self.assertIn('id="account-logout-btn"', account)
+
+    def test_mobile_page_headers_hide_text_but_keep_page_actions(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            mobile_styles,
+            r"\.page-header\s*>\s*:not\(\.page-actions\)\s*\{\s*"
+            r"display:\s*none;",
+        )
+        self.assertRegex(
+            mobile_styles,
+            r"\.page-header\s*>\s*\.page-actions\s*\{[^}]*"
+            r"margin-bottom:\s*14px;",
+        )
+        self.assertNotRegex(
+            styles,
+            r"\.page-header\s*>\s*:not\(\.page-actions\)",
+        )
+
+    def test_mobile_blue_buttons_use_bottom_navigation_purple_theme(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "--mobile-action-gradient: linear-gradient(135deg, #2563eb, #7c3aed);",
+            mobile_styles,
+        )
+        for selector in (
+            ".app-body .btn-primary",
+            ".app-body .btn-tab-active",
+            ".app-body .car-tab-link-active",
+            ".app-body .budget-mobile-tab-btn-active",
+            ".app-body .shooting-nav-link-active",
+            ".app-body .app-bottom-nav-link-active",
+            ".app-body .planner-calendar-switch-link-active",
+            ".app-body .btn-secondary",
+        ):
+            self.assertIn(selector, mobile_styles)
+        self.assertIn(
+            "background: var(--mobile-action-gradient);",
+            mobile_styles,
+        )
+        self.assertNotIn("--mobile-action-gradient", styles)
 
 
 if __name__ == "__main__":

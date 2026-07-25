@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Учёба | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page">
+    <div class="learning-hero learning-hero-compact">
+        <div>
+            <p class="learning-kicker">Развитие каждый день</p>
+            <h1>Учёба</h1>
+            <p>Выберите направление и занимайтесь небольшими понятными шагами.</p>
+        </div>
+        <div class="learning-hero-mark" aria-hidden="true">30</div>
+    </div>
+
+    <div class="dashboard-grid study-direction-grid">
+        <a href="{{ url_for('learning.it_course') }}" class="dashboard-card dashboard-card-featured study-card-it">
+            <div class="dashboard-card-icon study-card-icon-it" aria-hidden="true">&lt;/&gt;</div>
+            <span class="study-card-badge study-card-badge-active">30 дней</span>
+            <div class="dashboard-card-title">IT</div>
+            <div class="dashboard-card-text">Фундамент IT на Python: от терминов в вакансиях до собственного веб-приложения.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('learning.english_course') }}" class="dashboard-card dashboard-card-featured study-card-english">
+            <div class="dashboard-card-icon study-card-icon-english" aria-hidden="true">EN</div>
+            <span class="study-card-badge study-card-badge-active">30 дней</span>
+            <div class="dashboard-card-title">English</div>
+            <div class="dashboard-card-text">Слова, предложения, короткие лекции и проверка знаний — по 30 минут в день.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+    </div>
+</section>
+{% endblock %}

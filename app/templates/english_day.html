@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}English — день {{ lesson.day }} | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page lesson-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_course') }}">← Все уроки</a>
+
+    <div class="learning-hero lesson-hero">
+        <div>
+            <p class="learning-kicker">День {{ lesson.day }} из 30</p>
+            <h1>{{ lesson.title }}</h1>
+            <p>Один урок рассчитан на 30 минут. Сначала познакомьтесь с материалом, затем проверьте себя.</p>
+        </div>
+        <div class="lesson-day-mark">{{ lesson.day }}</div>
+    </div>
+
+    <div class="lesson-timing-grid" aria-label="План занятия на 30 минут">
+        <div><strong>5 мин</strong><span>Повторение</span></div>
+        <div><strong>10 мин</strong><span>Новые слова</span></div>
+        <div><strong>10 мин</strong><span>Предложения</span></div>
+        <div><strong>5 мин</strong><span>Тест</span></div>
+    </div>
+
+    <section class="lesson-section">
+        <p class="learning-kicker">Мини-лекция</p>
+        <h2>Как заниматься сегодня</h2>
+        <p class="lesson-lecture">{{ lesson.focus }}</p>
+    </section>
+
+    <section class="lesson-section">
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">Словарь</p>
+                <h2>6 новых слов</h2>
+            </div>
+            <span>Прочитайте вслух 3 раза</span>
+        </div>
+        <div class="vocabulary-grid">
+            {% for english, russian in lesson.words %}
+            <article class="vocabulary-card">
+                <strong>{{ english }}</strong>
+                <span>{{ russian }}</span>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="lesson-section">
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">Практика</p>
+                <h2>Предложения</h2>
+            </div>
+            <span>Сначала попробуйте перевести сами</span>
+        </div>
+        <div class="phrase-list">
+            {% for english, russian in lesson.phrases %}
+            <article class="phrase-card">
+                <span class="phrase-language">EN</span>
+                <strong>{{ english }}</strong>
+                <span class="phrase-translation">{{ russian }}</span>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if score is not none %}
+    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" role="status">
+        <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
+        <div>
+            <h2>{% if passed %}Урок пройден{% else %}Стоит повторить материал{% endif %}</h2>
+            <p>
+                {% if passed %}
+                Отлично! Следующий день курса открыт.
+                {% else %}
+                Для прохождения нужно минимум {{ pass_score }} правильных ответа. Посмотрите объяснения и попробуйте ещё раз.
+                {% endif %}
+            </p>
+        </div>
+        {% if passed and next_day %}
+        <a class="btn btn-primary" href="{{ url_for('learning.english_day', day_number=next_day) }}">День {{ next_day }} →</a>
+        {% elif passed and course_finished %}
+        <a class="btn btn-primary" href="{{ url_for('learning.english_final') }}">Итоговый тест →</a>
+        {% endif %}
+    </section>
+
+    <div class="quiz-feedback-list">
+        {% for item in feedback %}
+        <article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}">
+            <strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong>
+            <span>{{ item.explanation }}</span>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <section class="lesson-section quiz-section" id="daily-test">
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">Проверка знаний</p>
+                <h2>{% if score is not none %}Пройти тест ещё раз{% else %}Тест дня{% endif %}</h2>
+            </div>
+            <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
+        </div>
+
+        <form method="post" class="quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            {% for question in questions %}
+            {% set question_index = loop.index0 %}
+            <fieldset class="quiz-question">
+                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
+                <div class="quiz-options">
+                    {% for option in question.options %}
+                    <label class="quiz-option">
+                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
+                        <span>{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

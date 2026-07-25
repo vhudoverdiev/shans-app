@@ -73,6 +73,14 @@ self.addEventListener("push", function (event) {
             silent: Boolean(notification.silent),
             data: { navigate: navigate },
         });
+
+        const windows = await self.clients.matchAll({
+            type: "window",
+            includeUncontrolled: true,
+        });
+        windows.forEach(function (windowClient) {
+            windowClient.postMessage({ type: "shans-push-received" });
+        });
     })());
 });
 

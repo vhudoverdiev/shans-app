@@ -119,7 +119,7 @@
                 <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
                     <div class="form-group">
                         <label for="disable_2fa_otp">Код</label>
-                        <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                        <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" readonly data-manual-focus required>
                     </div>
                     <button type="submit" class="btn btn-danger">Отключить</button>
                 </form>
@@ -138,16 +138,22 @@
                 data-unsubscribe-url="{{ url_for('web_push_unsubscribe') }}"
                 data-test-url="{{ url_for('web_push_test') }}"
             >
-                <h2 class="section-title">Уведомления личного графика</h2>
-                <p class="muted-text account-push-description">
+                <h2 class="section-title">
+                    <span class="account-push-mobile-only">Уведомления</span>
+                    <span class="account-push-desktop-only">Уведомления личного графика</span>
+                </h2>
+                <p class="muted-text account-push-description account-push-desktop-only">
                     В 10:00 — задачи на сегодня, в 20:00 — на завтра, при указанном времени — напоминание за 2 часа.
                 </p>
                 <p class="account-push-status" id="push-notifications-status" role="status" aria-live="polite">
                     Проверяем поддержку уведомлений…
                 </p>
                 <div class="account-push-actions">
-                    <button type="button" class="btn btn-primary" id="push-notifications-toggle">Включить уведомления</button>
-                    <button type="button" class="btn btn-secondary" id="push-notifications-test" hidden>Прислать тестовое уведомление</button>
+                    <button type="button" class="btn btn-primary" id="push-notifications-toggle">
+                        <span class="account-push-mobile-only" data-push-toggle-mobile-label>Включить</span>
+                        <span class="account-push-desktop-only" data-push-toggle-desktop-label>Включить уведомления</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary account-push-desktop-only" id="push-notifications-test" hidden>Прислать тестовое уведомление</button>
                 </div>
             </div>
 
@@ -246,9 +252,47 @@ document.addEventListener("DOMContentLoaded", function () {
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
     const isMobileViewport = window.matchMedia("(max-width: 768px) and (pointer: coarse)").matches;
+    const manualFocusInputs = document.querySelectorAll("[data-manual-focus]");
     const allowedTabs = isMobileViewport
         ? new Set(["security"])
         : new Set(["security", "import"]);
+
+    function enableManualInput(event) {
+        const input = event.currentTarget;
+        input.readOnly = false;
+        input.removeAttribute("readonly");
+    }
+
+    function dismissRestoredMobileInputFocus() {
+        if (!isMobileViewport) return;
+        const activeElement = document.activeElement;
+        if (
+            activeElement
+            && activeElement.matches("[data-manual-focus]")
+            && activeElement.readOnly
+        ) {
+            activeElement.blur();
+        }
+    }
+
+    manualFocusInputs.forEach(function (input) {
+        input.addEventListener("pointerdown", enableManualInput, { once: true });
+        input.addEventListener("touchstart", enableManualInput, { once: true, passive: true });
+        input.addEventListener("keydown", enableManualInput, { once: true });
+        if (!isMobileViewport) {
+            input.readOnly = false;
+            input.removeAttribute("readonly");
+        }
+    });
+
+    if (isMobileViewport) {
+        window.addEventListener("pageshow", function () {
+            window.requestAnimationFrame(dismissRestoredMobileInputFocus);
+        });
+        window.requestAnimationFrame(dismissRestoredMobileInputFocus);
+        window.setTimeout(dismissRestoredMobileInputFocus, 250);
+        window.setTimeout(dismissRestoredMobileInputFocus, 1000);
+    }
 
     function activateTab(target) {
         if (!target) return;

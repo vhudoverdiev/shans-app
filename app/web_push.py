@@ -93,6 +93,54 @@ def init_web_push_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_push_user_deliveries (
+                notification_key TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (notification_key, user_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO web_push_user_deliveries (
+                notification_key,
+                user_id,
+                sent_at
+            )
+            SELECT
+                deliveries.notification_key,
+                subscriptions.user_id,
+                MIN(deliveries.sent_at)
+            FROM web_push_deliveries AS deliveries
+            JOIN web_push_subscriptions AS subscriptions
+                ON subscriptions.id = deliveries.subscription_id
+            GROUP BY deliveries.notification_key, subscriptions.user_id
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_push_inbox (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                notification_key TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                navigate_path TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                read_at TEXT,
+                UNIQUE (user_id, notification_key)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_push_inbox_user_unread
+            ON web_push_inbox (user_id, read_at, id DESC)
+            """
+        )
 
         config_row = conn.execute("SELECT id FROM web_push_config WHERE id = 1").fetchone()
         if not config_row:
@@ -107,6 +155,12 @@ def init_web_push_db() -> None:
 
         conn.execute(
             "DELETE FROM web_push_deliveries WHERE sent_at < datetime('now', '-90 days')"
+        )
+        conn.execute(
+            "DELETE FROM web_push_user_deliveries WHERE sent_at < datetime('now', '-90 days')"
+        )
+        conn.execute(
+            "DELETE FROM web_push_inbox WHERE created_at < datetime('now', '-90 days')"
         )
         conn.commit()
     finally:
@@ -219,10 +273,10 @@ def _get_subscriptions(user_id: int | None = None, endpoint: str | None = None):
     try:
         return conn.execute(
             f"""
-            SELECT id, user_id, endpoint, p256dh, auth, app_origin
+            SELECT id, user_id, endpoint, p256dh, auth, app_origin, updated_at
             FROM web_push_subscriptions
             {where_sql}
-            ORDER BY id ASC
+            ORDER BY user_id ASC, updated_at DESC, id DESC
             """,
             tuple(params),
         ).fetchall()
@@ -452,16 +506,16 @@ def _send_to_subscription(subscription, candidate: PushCandidate) -> None:
     )
 
 
-def _reserve_delivery(notification_key: str, subscription_id: int) -> bool:
+def _reserve_user_delivery(notification_key: str, user_id: int) -> bool:
     conn = get_connection()
     try:
         cursor = conn.execute(
             """
-            INSERT OR IGNORE INTO web_push_deliveries (
-                notification_key, subscription_id
+            INSERT OR IGNORE INTO web_push_user_deliveries (
+                notification_key, user_id
             ) VALUES (?, ?)
             """,
-            (notification_key, subscription_id),
+            (notification_key, user_id),
         )
         conn.commit()
         return cursor.rowcount == 1
@@ -469,15 +523,15 @@ def _reserve_delivery(notification_key: str, subscription_id: int) -> bool:
         conn.close()
 
 
-def _release_delivery(notification_key: str, subscription_id: int) -> None:
+def _release_user_delivery(notification_key: str, user_id: int) -> None:
     conn = get_connection()
     try:
         conn.execute(
             """
-            DELETE FROM web_push_deliveries
-            WHERE notification_key = ? AND subscription_id = ?
+            DELETE FROM web_push_user_deliveries
+            WHERE notification_key = ? AND user_id = ?
             """,
-            (notification_key, subscription_id),
+            (notification_key, user_id),
         )
         conn.commit()
     finally:
@@ -500,35 +554,127 @@ def _remove_expired_subscription(subscription_id: int) -> None:
         conn.close()
 
 
+def _save_inbox_notification(user_id: int, candidate: PushCandidate) -> None:
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO web_push_inbox (
+                user_id,
+                notification_key,
+                title,
+                body,
+                navigate_path
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                candidate.key,
+                candidate.title,
+                candidate.body,
+                candidate.navigate_path,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_unread_push_notifications(user_id: int, limit: int = 20) -> tuple[list[dict], int]:
+    safe_limit = max(1, min(int(limit), 50))
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, title, body, navigate_path, created_at
+            FROM web_push_inbox
+            WHERE user_id = ? AND read_at IS NULL
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (user_id, safe_limit),
+        ).fetchall()
+        count_row = conn.execute(
+            """
+            SELECT COUNT(*) AS unread_count
+            FROM web_push_inbox
+            WHERE user_id = ? AND read_at IS NULL
+            """,
+            (user_id,),
+        ).fetchone()
+        return [dict(row) for row in rows], int(count_row["unread_count"] if count_row else 0)
+    finally:
+        conn.close()
+
+
+def mark_all_push_notifications_read(user_id: int) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            UPDATE web_push_inbox
+            SET read_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND read_at IS NULL
+            """,
+            (user_id,),
+        )
+        conn.commit()
+        return max(cursor.rowcount, 0)
+    finally:
+        conn.close()
+
+
 def deliver_candidate(candidate: PushCandidate, subscriptions=None) -> tuple[int, int]:
     subscriptions = subscriptions if subscriptions is not None else _get_subscriptions()
     sent_count = 0
     failed_count = 0
+    subscriptions_by_user: dict[int, list] = {}
     for subscription in subscriptions:
-        subscription_id = subscription["id"]
-        if not _reserve_delivery(candidate.key, subscription_id):
+        user_id = int(subscription["user_id"])
+        subscriptions_by_user.setdefault(user_id, []).append(subscription)
+
+    for user_id, user_subscriptions in subscriptions_by_user.items():
+        if not _reserve_user_delivery(candidate.key, user_id):
             continue
+        delivered = False
+        for subscription in user_subscriptions:
+            subscription_id = subscription["id"]
+            try:
+                _send_to_subscription(subscription, candidate)
+                sent_count += 1
+                delivered = True
+                break
+            except WebPushException as exc:
+                status_code, _ = _log_web_push_error(exc, subscription)
+                if _subscription_must_be_reset(status_code):
+                    _remove_expired_subscription(subscription_id)
+                    if status_code in {404, 410}:
+                        continue
+                break
+            except Exception as exc:
+                if has_app_context():
+                    current_app.logger.exception(
+                        "Web Push delivery failed before provider response: endpoint_host=%s error=%s",
+                        urlsplit(subscription["endpoint"]).netloc or "unknown",
+                        exc,
+                    )
+                break
+
+        if not delivered:
+            _release_user_delivery(candidate.key, user_id)
+            failed_count += 1
+            continue
+
         try:
-            _send_to_subscription(subscription, candidate)
-            sent_count += 1
-        except WebPushException as exc:
-            status_code, _ = _log_web_push_error(exc, subscription)
-            if _subscription_must_be_reset(status_code):
-                _remove_expired_subscription(subscription_id)
-                if status_code not in {404, 410}:
-                    failed_count += 1
-            else:
-                _release_delivery(candidate.key, subscription_id)
-                failed_count += 1
+            _save_inbox_notification(user_id, candidate)
         except Exception as exc:
             if has_app_context():
                 current_app.logger.exception(
-                    "Web Push delivery failed before provider response: endpoint_host=%s error=%s",
-                    urlsplit(subscription["endpoint"]).netloc or "unknown",
+                    "Web Push inbox persistence failed: user_id=%s notification_key=%s error=%s",
+                    user_id,
+                    candidate.key,
                     exc,
                 )
-            _release_delivery(candidate.key, subscription_id)
-            failed_count += 1
     return sent_count, failed_count
 
 
@@ -672,6 +818,37 @@ def register_web_push_routes(app) -> None:
             return jsonify({"ok": False, "message": "Подписка не передана."}), 400
         delete_subscription(int(current_user.id), endpoint)
         return jsonify({"ok": True, "message": "Уведомления отключены."})
+
+    @app.get("/api/push/inbox")
+    @login_required
+    def web_push_inbox():
+        notifications, unread_count = get_unread_push_notifications(
+            int(current_user.id)
+        )
+        response = jsonify(
+            {
+                "ok": True,
+                "unreadCount": unread_count,
+                "notifications": [
+                    {
+                        "id": item["id"],
+                        "title": item["title"],
+                        "body": item["body"],
+                        "navigatePath": item["navigate_path"],
+                        "createdAt": item["created_at"],
+                    }
+                    for item in notifications
+                ],
+            }
+        )
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @app.post("/api/push/inbox/read")
+    @login_required
+    def web_push_inbox_read():
+        marked_count = mark_all_push_notifications_read(int(current_user.id))
+        return jsonify({"ok": True, "markedCount": marked_count, "unreadCount": 0})
 
     @app.post("/api/push/test")
     @login_required

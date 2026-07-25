@@ -136,7 +136,14 @@ a {
     transform: skewX(-18deg);
 }
 
-.app-intro-logo img,
+.app-intro-logo-mark {
+    display: block;
+    width: 68%;
+    height: 68%;
+    overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(30, 41, 59, 0.14));
+}
+
 .brand-badge img {
     display: block;
     width: 100%;
@@ -636,6 +643,10 @@ a {
 
 .account-logout-all-form {
     margin-top: 16px;
+}
+
+.account-push-mobile-only {
+    display: none;
 }
 
 .account-push-description {
@@ -1287,6 +1298,11 @@ body.avatar-crop-scroll-locked {
 
 .dashboard-grid-mobile,
 .app-bottom-nav {
+    display: none;
+}
+
+.mobile-push-inbox-trigger,
+.mobile-push-inbox-sheet {
     display: none;
 }
 

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}English — 30 дней | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page">
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Учёба</a>
+
+    <div class="learning-hero">
+        <div>
+            <p class="learning-kicker">English · 30 минут в день</p>
+            <h1>Английский за 30 дней</h1>
+            <p>Начинаем с перевода самых полезных слов и предложений. Каждый следующий день открывается после успешного теста.</p>
+        </div>
+        <div class="learning-progress-summary">
+            <strong>{{ passed_count }} / 30</strong>
+            <span>дней завершено</span>
+        </div>
+    </div>
+
+    <div class="learning-progress-card">
+        <div class="learning-progress-copy">
+            <div>
+                <span>Ваш прогресс</span>
+                <strong>{{ progress_percent }}%</strong>
+            </div>
+            {% if next_day %}
+            <a class="btn btn-primary" href="{{ url_for('learning.english_day', day_number=next_day) }}">Продолжить: день {{ next_day }}</a>
+            {% else %}
+            <a class="btn btn-primary" href="{{ url_for('learning.english_final') }}">Перейти к итоговому тесту</a>
+            {% endif %}
+        </div>
+        <div class="learning-progress-track" role="progressbar" aria-label="Прогресс курса" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_percent }}">
+            <span style="width: {{ progress_percent }}%"></span>
+        </div>
+    </div>
+
+    <div class="learning-section-heading">
+        <div>
+            <p class="learning-kicker">Программа</p>
+            <h2>30 ежедневных уроков</h2>
+        </div>
+        <span>Лекция + практика + тест</span>
+    </div>
+
+    <div class="english-course-grid">
+        {% for lesson in lessons %}
+            {% if lesson.unlocked %}
+            <a href="{{ url_for('learning.english_day', day_number=lesson.day) }}" class="english-day-card{% if lesson.passed %} english-day-card-passed{% elif lesson.day == next_day %} english-day-card-current{% endif %}">
+            {% else %}
+            <div class="english-day-card english-day-card-locked" aria-disabled="true">
+            {% endif %}
+                <div class="english-day-card-top">
+                    <span class="english-day-number">День {{ lesson.day }}</span>
+                    {% if lesson.passed %}
+                    <span class="english-day-status english-day-status-passed" aria-label="Пройдено">✓</span>
+                    {% elif lesson.unlocked %}
+                    <span class="english-day-status">Начать</span>
+                    {% else %}
+                    <span class="english-day-status" aria-label="Закрыто">🔒</span>
+                    {% endif %}
+                </div>
+                <h3>{{ lesson.title }}</h3>
+                <p>6 слов · 2 предложения · 5 вопросов</p>
+                {% if lesson.passed %}
+                <span class="english-day-score">Лучший результат: {{ lesson.best_score }} / 5</span>
+                {% endif %}
+            {% if lesson.unlocked %}
+            </a>
+            {% else %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <section class="final-test-card{% if not final_unlocked %} final-test-card-locked{% endif %}">
+        <div class="final-test-icon" aria-hidden="true">★</div>
+        <div class="final-test-content">
+            <p class="learning-kicker">Финиш курса</p>
+            <h2>Итоговый тест</h2>
+            <p>30 вопросов по всем дням. Для успешного завершения нужно дать минимум 24 правильных ответа.</p>
+            {% if final_result %}
+            <span class="final-test-result">Лучший результат: {{ final_result.best_score }} / 30{% if final_result.passed %} · курс завершён{% endif %}</span>
+            {% endif %}
+        </div>
+        {% if final_unlocked %}
+        <a class="btn btn-primary" href="{{ url_for('learning.english_final') }}">Открыть тест</a>
+        {% else %}
+        <span class="final-test-lock">Откроется после 30-го дня</span>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

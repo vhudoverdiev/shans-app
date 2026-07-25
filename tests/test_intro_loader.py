@@ -19,6 +19,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn('class="app-intro" id="app-intro" aria-hidden="true" hidden', template)
         self.assertIn('class="app-intro-logo"', template)
         self.assertIn("filename='logo.png'", template)
+        self.assertIn('class="app-intro-logo-mark"', template)
         self.assertIn('class="brand-badge"', template)
         self.assertNotIn("app-intro-wordmark", template)
         self.assertNotIn(">Шанс</div>", template)
@@ -38,11 +39,25 @@ class IntroLoaderTests(unittest.TestCase):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
 
         self.assertIn(".app-intro-logo", stylesheet)
+        self.assertIn(".app-intro-logo-mark", stylesheet)
         self.assertIn(".app-intro[hidden]", stylesheet)
         self.assertNotIn(".app-intro-wordmark", stylesheet)
         self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", stylesheet)
         self.assertIn("@keyframes app-intro-logo-in", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)
+
+    def test_intro_logo_is_inline_and_cannot_fail_as_an_image_request(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        intro_logo = template.split('<div class="app-intro-logo">', 1)[1].split(
+            "</div>",
+            1,
+        )[0]
+
+        self.assertIn("<svg", intro_logo)
+        self.assertIn("<path", intro_logo)
+        self.assertNotIn("<img", intro_logo)
+        self.assertNotIn("src=", intro_logo)
+        self.assertNotIn("logo-intro.png", template)
 
 
 if __name__ == "__main__":

@@ -591,8 +591,99 @@
    MOBILE APP NAVIGATION
 ========================= */
 @media (max-width: 900px) and (pointer: coarse) {
+    .app-body {
+        --mobile-action-gradient: linear-gradient(135deg, #2563eb, #7c3aed);
+        --mobile-action-purple: #6d28d9;
+        --mobile-action-purple-dark: #5b21b6;
+        --mobile-action-soft: #f5f3ff;
+        --mobile-action-border: #ddd6fe;
+        --mobile-action-shadow: 0 9px 22px rgba(109, 40, 217, 0.28);
+    }
+
     .site-header {
         display: none !important;
+    }
+
+    .app-body .btn-primary,
+    .app-body .btn-tab-active,
+    .app-body .btn-tab.btn-tab-active:hover,
+    .app-body .car-tab-link-active,
+    .app-body .car-tab-link.car-tab-link-active:hover,
+    .app-body .budget-mobile-tab-btn-active,
+    .app-body .shooting-nav-link-active,
+    .app-body .app-bottom-nav-link-active {
+        border-color: var(--mobile-action-purple);
+        background: var(--mobile-action-gradient);
+        color: #ffffff;
+        box-shadow: var(--mobile-action-shadow);
+    }
+
+    .app-body .btn-secondary,
+    .app-body .btn-tab:not(.btn-tab-active),
+    .app-body .car-tab-link:not(.car-tab-link-active),
+    .app-body .shooting-nav-link:not(.shooting-nav-link-active) {
+        border-color: var(--mobile-action-border);
+        background: var(--mobile-action-soft);
+        color: var(--mobile-action-purple);
+    }
+
+    .app-body .btn-tab:not(.btn-tab-active):hover,
+    .app-body .car-tab-link:not(.car-tab-link-active):hover,
+    .app-body .shooting-nav-link:not(.shooting-nav-link-active):hover {
+        border-color: #c4b5fd;
+        background: #ede9fe;
+        color: var(--mobile-action-purple-dark);
+    }
+
+    .app-body .planner-calendar-switch-link:hover,
+    .app-body .planner-calendar-switch-link-active {
+        color: var(--mobile-action-purple);
+    }
+
+    .app-body .planner-calendar-switch-link-active {
+        box-shadow: 0 7px 18px rgba(109, 40, 217, 0.18);
+    }
+
+    .app-body .planner-day-card-today,
+    .app-body .planner-day-card-weekend.planner-day-card-today {
+        border-color: rgba(124, 58, 237, 0.58);
+        background: rgba(124, 58, 237, 0.13);
+    }
+
+    .app-body .avatar-file-label,
+    .app-body .account-avatar-edit-btn {
+        background: var(--mobile-action-gradient);
+        box-shadow: var(--mobile-action-shadow);
+    }
+
+    .app-body .car-tab-link:not(.car-tab-link-active) .car-tab-count,
+    .app-body .shooting-nav-link:not(.shooting-nav-link-active) .shooting-nav-count {
+        background: #ede9fe;
+        color: var(--mobile-action-purple-dark);
+    }
+
+    .account-push-mobile-only {
+        display: inline;
+    }
+
+    .account-push-desktop-only {
+        display: none !important;
+    }
+
+    .account-push-status:not([data-state="error"]):not([data-state="info"]) {
+        display: none;
+    }
+
+    .page-header {
+        margin: 0;
+    }
+
+    .page-header > :not(.page-actions) {
+        display: none;
+    }
+
+    .page-header > .page-actions {
+        margin-bottom: 14px;
     }
 
     .app-body-authenticated .page-shell {
@@ -651,7 +742,7 @@
         bottom: max(9px, env(safe-area-inset-bottom));
         z-index: 260;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 4px;
         padding: 7px;
         border: 1px solid rgba(203, 213, 225, 0.78);
@@ -684,8 +775,8 @@
 
     .app-bottom-nav-link-active {
         color: #ffffff;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        box-shadow: 0 9px 22px rgba(37, 99, 235, 0.28);
+        background: var(--mobile-action-gradient);
+        box-shadow: var(--mobile-action-shadow);
     }
 
     .app-bottom-nav-icon {
@@ -702,5 +793,273 @@
         line-height: 1.1;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .mobile-push-inbox-trigger {
+        position: fixed;
+        right: max(16px, env(safe-area-inset-right));
+        bottom: calc(91px + env(safe-area-inset-bottom));
+        z-index: 275;
+        width: 56px;
+        height: 56px;
+        border: 1px solid rgba(255, 255, 255, 0.68);
+        border-radius: 19px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background: var(--mobile-action-gradient);
+        color: #ffffff;
+        box-shadow: 0 14px 34px rgba(91, 33, 182, 0.38);
+        -webkit-tap-highlight-color: transparent;
+        animation: mobile-push-inbox-arrived 1.8s ease-in-out infinite;
+    }
+
+    .mobile-push-inbox-trigger[hidden],
+    .mobile-push-inbox-sheet[hidden] {
+        display: none !important;
+    }
+
+    .mobile-push-inbox-trigger:active {
+        transform: scale(0.94);
+    }
+
+    .mobile-push-inbox-trigger > svg {
+        position: relative;
+        z-index: 2;
+        width: 26px;
+        height: 26px;
+    }
+
+    .mobile-push-inbox-trigger-ring {
+        position: absolute;
+        inset: -6px;
+        border: 2px solid rgba(124, 58, 237, 0.28);
+        border-radius: 24px;
+        animation: mobile-push-inbox-ring 1.8s ease-out infinite;
+    }
+
+    .mobile-push-inbox-count {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        z-index: 3;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        border: 3px solid #ffffff;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 850;
+        line-height: 1;
+        box-shadow: 0 5px 13px rgba(220, 38, 38, 0.28);
+    }
+
+    .mobile-push-inbox-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 420;
+        display: block;
+    }
+
+    .mobile-push-inbox-backdrop {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.46);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    .mobile-push-inbox-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: min(74dvh, 680px);
+        overflow: auto;
+        padding: 10px 18px calc(22px + env(safe-area-inset-bottom));
+        border: 1px solid rgba(221, 214, 254, 0.92);
+        border-bottom: 0;
+        border-radius: 30px 30px 0 0;
+        background:
+            radial-gradient(circle at 90% 0%, rgba(124, 58, 237, 0.12), transparent 34%),
+            rgba(255, 255, 255, 0.98);
+        box-shadow: 0 -24px 60px rgba(15, 23, 42, 0.2);
+        transform: translateY(105%);
+        transition: transform 0.2s ease;
+        overscroll-behavior: contain;
+    }
+
+    .mobile-push-inbox-sheet-open .mobile-push-inbox-backdrop {
+        opacity: 1;
+    }
+
+    .mobile-push-inbox-sheet-open .mobile-push-inbox-panel {
+        transform: translateY(0);
+    }
+
+    .mobile-push-inbox-handle {
+        width: 44px;
+        height: 5px;
+        margin: 0 auto 14px;
+        border-radius: 999px;
+        background: #d8dce7;
+    }
+
+    .mobile-push-inbox-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .mobile-push-inbox-eyebrow {
+        margin-bottom: 3px;
+        color: var(--mobile-action-purple);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .mobile-push-inbox-header h2 {
+        margin: 0;
+        color: #111827;
+        font-size: 25px;
+        line-height: 1.15;
+    }
+
+    .mobile-push-inbox-close {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        border: 0;
+        border-radius: 14px;
+        background: #f3f0ff;
+        color: var(--mobile-action-purple-dark);
+        font-size: 27px;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .mobile-push-inbox-list {
+        display: grid;
+        gap: 11px;
+    }
+
+    .mobile-push-inbox-item {
+        display: grid;
+        grid-template-columns: 45px minmax(0, 1fr);
+        gap: 12px;
+        padding: 15px;
+        border: 1px solid #e7e3f5;
+        border-radius: 20px;
+        background: linear-gradient(145deg, #ffffff, #faf9ff);
+        box-shadow: 0 10px 28px rgba(51, 42, 82, 0.08);
+    }
+
+    .mobile-push-inbox-item-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--mobile-action-gradient);
+        color: #ffffff;
+        font-size: 21px;
+        font-weight: 850;
+        box-shadow: 0 8px 18px rgba(109, 40, 217, 0.22);
+    }
+
+    .mobile-push-inbox-item-content {
+        min-width: 0;
+    }
+
+    .mobile-push-inbox-item h3 {
+        margin: 1px 0 5px;
+        color: #172033;
+        font-size: 15px;
+        line-height: 1.25;
+    }
+
+    .mobile-push-inbox-item p {
+        margin: 0;
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.45;
+        white-space: pre-line;
+    }
+
+    .mobile-push-inbox-item-footer {
+        min-height: 22px;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .mobile-push-inbox-item-footer time {
+        color: #8a94a6;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .mobile-push-inbox-item-footer a {
+        color: var(--mobile-action-purple);
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .mobile-push-inbox-open {
+        overflow: hidden;
+    }
+
+    @keyframes mobile-push-inbox-arrived {
+        0%,
+        100% {
+            box-shadow: 0 14px 34px rgba(91, 33, 182, 0.34);
+        }
+        50% {
+            box-shadow: 0 17px 42px rgba(91, 33, 182, 0.52);
+        }
+    }
+
+    @keyframes mobile-push-inbox-ring {
+        0% {
+            opacity: 0.9;
+            transform: scale(0.82);
+        }
+        75%,
+        100% {
+            opacity: 0;
+            transform: scale(1.18);
+        }
+    }
+}
+
+@media (max-width: 900px) and (pointer: coarse) and (prefers-reduced-motion: reduce) {
+    .mobile-push-inbox-trigger,
+    .mobile-push-inbox-trigger-ring {
+        animation: none;
+    }
+
+    .mobile-push-inbox-backdrop,
+    .mobile-push-inbox-panel {
+        transition: none;
     }
 }

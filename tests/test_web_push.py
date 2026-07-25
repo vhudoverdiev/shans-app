@@ -24,7 +24,9 @@ from app.web_push import (
     _send_to_subscription,
     collect_due_candidates,
     deliver_candidate,
+    get_unread_push_notifications,
     init_web_push_db,
+    mark_all_push_notifications_read,
     save_subscription,
     send_test_notification,
 )
@@ -89,9 +91,9 @@ class WebPushSchedulingTests(unittest.TestCase):
         conn.close()
         return task_id
 
-    def _subscription_payload(self):
+    def _subscription_payload(self, endpoint="https://push.example.test/subscription/1"):
         return {
-            "endpoint": "https://push.example.test/subscription/1",
+            "endpoint": endpoint,
             "keys": {
                 "p256dh": "A" * 65,
                 "auth": "B" * 16,
@@ -153,10 +155,15 @@ class WebPushSchedulingTests(unittest.TestCase):
 
         self.assertFalse(any(candidate.key.startswith("task:") for candidate in candidates))
 
-    def test_successful_delivery_is_reserved_once_per_device(self):
+    def test_successful_delivery_is_reserved_once_per_user(self):
         save_subscription(
             1,
             self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            1,
+            self._subscription_payload("https://push.example.test/subscription/2"),
             "https://shans.example.test",
         )
         candidate = PushCandidate(
@@ -174,6 +181,82 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(first_result, (1, 0))
         self.assertEqual(second_result, (0, 0))
         send_mock.assert_called_once()
+        self.assertEqual(
+            send_mock.call_args.args[0]["endpoint"],
+            "https://push.example.test/subscription/2",
+        )
+        notifications, unread_count = get_unread_push_notifications(1)
+        self.assertEqual(unread_count, 1)
+        self.assertEqual(len(notifications), 1)
+        self.assertEqual(notifications[0]["title"], candidate.title)
+        self.assertEqual(notifications[0]["body"], candidate.body)
+
+        self.assertEqual(mark_all_push_notifications_read(1), 1)
+        self.assertEqual(get_unread_push_notifications(1), ([], 0))
+
+    def test_existing_device_delivery_is_migrated_to_user_deduplication(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        subscription = _get_subscriptions(user_id=1)[0]
+        notification_key = "summary:tomorrow:2026-07-22"
+        conn = self._connect()
+        conn.execute(
+            """
+            INSERT INTO web_push_deliveries (notification_key, subscription_id)
+            VALUES (?, ?)
+            """,
+            (notification_key, subscription["id"]),
+        )
+        conn.execute(
+            "DELETE FROM web_push_user_deliveries WHERE notification_key = ?",
+            (notification_key,),
+        )
+        conn.commit()
+        conn.close()
+
+        init_web_push_db()
+        candidate = PushCandidate(
+            key=notification_key,
+            title="Шанс — личный график",
+            body="Задачи на завтра",
+            navigate_path="/planner.schedule?calendar=personal",
+            tag="summary-tomorrow",
+        )
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = deliver_candidate(candidate)
+
+        self.assertEqual(result, (0, 0))
+        send_mock.assert_not_called()
+
+    def test_same_candidate_is_delivered_once_to_each_different_user(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            2,
+            self._subscription_payload("https://push.example.test/subscription/2"),
+            "https://shans.example.test",
+        )
+        candidate = PushCandidate(
+            key="summary:today:2026-07-21",
+            title="Шанс — личный график",
+            body="Задачи на сегодня",
+            navigate_path="/planner.schedule?calendar=personal",
+            tag="summary-today",
+        )
+
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = deliver_candidate(candidate)
+
+        self.assertEqual(result, (2, 0))
+        self.assertEqual(send_mock.call_count, 2)
+        self.assertEqual(get_unread_push_notifications(1)[1], 1)
+        self.assertEqual(get_unread_push_notifications(2)[1], 1)
 
     def test_failed_delivery_is_released_for_retry(self):
         save_subscription(
@@ -191,12 +274,30 @@ class WebPushSchedulingTests(unittest.TestCase):
 
         with patch("app.web_push._send_to_subscription", side_effect=RuntimeError("offline")):
             failed_result = deliver_candidate(candidate)
+        self.assertEqual(get_unread_push_notifications(1), ([], 0))
         with patch("app.web_push._send_to_subscription") as retry_mock:
             retry_result = deliver_candidate(candidate)
 
         self.assertEqual(failed_result, (0, 1))
         self.assertEqual(retry_result, (1, 0))
+        self.assertEqual(get_unread_push_notifications(1)[1], 1)
         retry_mock.assert_called_once()
+
+    def test_test_notification_is_not_added_to_inbox(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+
+        with patch("app.web_push._send_to_subscription"):
+            ok, _message = send_test_notification(
+                1,
+                self._subscription_payload()["endpoint"],
+            )
+
+        self.assertTrue(ok)
+        self.assertEqual(get_unread_push_notifications(1), ([], 0))
 
     def test_payload_is_declarative_and_has_absolute_navigation_url(self):
         candidate = PushCandidate(
@@ -339,18 +440,30 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertNotIn("/planner.schedule/vk-test-send", planner)
         self.assertNotIn(".planner-vk-", planner_styles)
 
-    def test_account_settings_contains_toggle_and_test_controls(self):
+    def test_account_settings_contains_compact_mobile_notification_toggle(self):
         template = (
             PROJECT_ROOT / "app" / "templates" / "account_settings.html"
         ).read_text(encoding="utf-8")
-        stylesheet = (
-            PROJECT_ROOT / "app" / "static" / "css" / "style.css"
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-notifications.js"
+        ).read_text(encoding="utf-8")
+        mobile_styles = (
+            PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
         ).read_text(encoding="utf-8")
 
+        self.assertIn('<span class="account-push-mobile-only">Уведомления</span>', template)
         self.assertIn('id="push-notifications-toggle"', template)
-        self.assertIn('id="push-notifications-test"', template)
+        self.assertIn("data-push-toggle-mobile-label>Включить</span>", template)
+        self.assertIn('id="push-notifications-status"', template)
         self.assertIn("push-notifications.js", template)
-        self.assertIn('.account-push-actions .btn[hidden]', stylesheet)
+        self.assertIn('id="push-notifications-test"', template)
+        self.assertIn("account-push-desktop-only", template)
+        self.assertIn(".account-push-desktop-only", mobile_styles)
+        self.assertIn(
+            '.account-push-status:not([data-state="error"]):not([data-state="info"])',
+            mobile_styles,
+        )
+        self.assertIn('enabled ? "Выключить" : "Включить"', push_client)
 
     def test_service_worker_handles_push_and_notification_click(self):
         service_worker = (
@@ -359,7 +472,31 @@ class WebPushAssetsTests(unittest.TestCase):
 
         self.assertIn('addEventListener("push"', service_worker)
         self.assertIn("showNotification", service_worker)
+        self.assertIn("shans-push-received", service_worker)
         self.assertIn('addEventListener("notificationclick"', service_worker)
+
+    def test_mobile_push_inbox_only_uses_push_api(self):
+        base_template = (
+            PROJECT_ROOT / "app" / "templates" / "base.html"
+        ).read_text(encoding="utf-8")
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-inbox.js"
+        ).read_text(encoding="utf-8")
+        push_module = (
+            PROJECT_ROOT / "app" / "web_push.py"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('id="mobile-push-inbox-trigger"', base_template)
+        self.assertIn('id="mobile-push-inbox-sheet"', base_template)
+        self.assertIn("js/push-inbox.js", base_template)
+        self.assertIn("data-inbox-url", base_template)
+        self.assertIn("data-read-url", base_template)
+        self.assertIn("shans-push-received", push_client)
+        self.assertIn('window.fetch(trigger.dataset.inboxUrl', push_client)
+        self.assertIn('window.fetch(trigger.dataset.readUrl', push_client)
+        self.assertIn('CREATE TABLE IF NOT EXISTS web_push_inbox', push_module)
+        self.assertIn('@app.get("/api/push/inbox")', push_module)
+        self.assertIn('@app.post("/api/push/inbox/read")', push_module)
 
     def test_client_recovers_from_changed_vapid_key_and_rejected_subscription(self):
         push_client = (

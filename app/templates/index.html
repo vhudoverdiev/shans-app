@@ -110,6 +110,19 @@
             </div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+
+        <a href="{{ url_for('workouts.index') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-purple" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Тренировки</div>
+            <div class="dashboard-card-text">
+                Планы занятий, результаты упражнений и динамика веса.
+            </div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
     </div>
 </div>
 {% endblock %}

@@ -5,6 +5,8 @@
     if (!card) return;
 
     const toggleButton = document.getElementById("push-notifications-toggle");
+    const toggleMobileLabel = document.querySelector("[data-push-toggle-mobile-label]");
+    const toggleDesktopLabel = document.querySelector("[data-push-toggle-desktop-label]");
     const testButton = document.getElementById("push-notifications-test");
     const statusText = document.getElementById("push-notifications-status");
     const csrfMeta = document.querySelector("meta[name='csrf-token']");
@@ -32,7 +34,12 @@
     function syncButtons() {
         const enabled = Boolean(subscription);
         if (toggleButton) {
-            toggleButton.textContent = enabled ? "Отключить уведомления" : "Включить уведомления";
+            if (toggleMobileLabel) {
+                toggleMobileLabel.textContent = enabled ? "Выключить" : "Включить";
+            }
+            if (toggleDesktopLabel) {
+                toggleDesktopLabel.textContent = enabled ? "Отключить уведомления" : "Включить уведомления";
+            }
             toggleButton.classList.toggle("btn-danger", enabled);
             toggleButton.classList.toggle("btn-primary", !enabled);
         }
