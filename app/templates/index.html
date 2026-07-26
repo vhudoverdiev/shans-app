@@ -87,6 +87,16 @@
             </div>
         </a>
         {% endif %}
+
+        {% if has_section_access('workouts') or has_section_access('nutrition') %}
+        <a href="{{ url_for('sport_hub') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🏋</div>
+            <div class="dashboard-card-title">Спорт</div>
+            <div class="dashboard-card-text">
+                Тренировки, питание и контроль прогресса
+            </div>
+        </a>
+        {% endif %}
     </div>
 
     <div class="dashboard-grid dashboard-grid-mobile dashboard-primary-grid">

@@ -102,23 +102,21 @@ SECTION_ENDPOINTS = {
         "learning.english_final",
     },
     "workouts": {
-        "workouts.workouts",
-        "workouts.workout_plan_detail",
-        "workouts.create_workout_plan",
-        "workouts.update_workout_plan",
-        "workouts.delete_workout_plan",
-        "workouts.add_workout_result",
-        "workouts.delete_workout_result",
-        "workouts.add_weight_entry",
-        "workouts.delete_weight_entry",
+        "workouts.index",
+        "workouts.plan_detail",
+        "workouts.update_plan",
+        "workouts.create_result",
+        "workouts.remove_result",
+        "workouts.save_weight",
+        "workouts.remove_weight",
     },
     "nutrition": {
-        "nutrition.nutrition",
-        "nutrition.update_nutrition_profile",
-        "nutrition.add_nutrition_entry",
-        "nutrition.delete_nutrition_entry",
-        "nutrition.add_custom_food",
-        "nutrition.delete_custom_food",
+        "nutrition.index",
+        "nutrition.save_profile",
+        "nutrition.create_entry",
+        "nutrition.remove_entry",
+        "nutrition.create_custom_food",
+        "nutrition.remove_custom_food",
     },
 }
 
@@ -126,7 +124,7 @@ HOME_ENDPOINTS = {"index", "account_settings", "logout"}
 GROUPED_ENDPOINT_ACCESS = {
     "reports_hub": {"budget", "car"},
     "shootings_hub": {"shootings", "photo_projects", "scenarios"},
-    "learning.study_hub": {"study", "workouts", "nutrition"},
+    "sport_hub": {"workouts", "nutrition"},
 }
 SYSTEM_ENDPOINTS = {
     "login",
@@ -167,6 +165,18 @@ def normalize_username(value: str) -> str:
 def is_system_admin_user(user=None) -> bool:
     candidate = user or current_user
     return bool(getattr(candidate, "is_system_admin", False))
+
+
+def is_managed_user(user_id: int) -> bool:
+    conn = get_master_connection()
+    try:
+        row = conn.execute(
+            "SELECT data_database_name FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        return bool(row and (row.get("data_database_name") or "").strip())
+    finally:
+        conn.close()
 
 
 def get_user_permissions(user_id: int) -> set[str]:
@@ -214,6 +224,8 @@ def has_section_access(section_key: str) -> bool:
         return False
     if is_system_admin_user(current_user):
         return True
+    if not is_managed_user(int(current_user.id)):
+        return True
     return section_key in get_user_permissions(int(current_user.id))
 
 
@@ -224,6 +236,8 @@ def enforce_section_access():
     if not current_user.is_authenticated:
         return None
     if is_system_admin_user(current_user):
+        return None
+    if not is_managed_user(int(current_user.id)):
         return None
 
     grouped_sections = GROUPED_ENDPOINT_ACCESS.get(endpoint)
@@ -374,6 +388,7 @@ def get_managed_users() -> list[dict]:
             SELECT id, username, display_name, data_database_name, is_active
             FROM users
             WHERE COALESCE(is_system_admin, 0) = 0
+              AND COALESCE(TRIM(data_database_name), '') <> ''
             ORDER BY username COLLATE NOCASE ASC
             """
         ).fetchall()

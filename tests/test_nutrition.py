@@ -28,6 +28,7 @@ from app.nutrition import (
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+NUTRITION_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "nutrition.css"
 
 
 class TestUser(UserMixin):
@@ -141,6 +142,38 @@ class NutritionTests(unittest.TestCase):
         self.assertEqual(insight["protein_target"], 144)
         self.assertEqual(insight["protein_missing"], 54)
         self.assertIn("Для набора мышечной массы не хватает", insight["protein_message"])
+
+    def test_progress_insight_does_not_predict_weight_loss_without_food_entries(self):
+        profile = {
+            "weight_kg": 80,
+            "goal": "lose",
+        }
+        plan = {
+            "maintenance_calories": 2760,
+        }
+        summary = {
+            "calories": 0,
+            "protein": 0,
+        }
+
+        insight = build_nutrition_progress_insight(
+            profile,
+            plan,
+            summary,
+            is_today=True,
+        )
+
+        self.assertFalse(insight["has_food_entries"])
+        self.assertEqual(
+            insight["day_text"],
+            "Добавьте продукты сегодня, и прогноз веса появится.",
+        )
+        self.assertEqual(
+            insight["week_text"],
+            "Пока нет записей за день, недельный прогноз не рассчитывается.",
+        )
+        self.assertNotIn("сбросили", insight["day_text"])
+        self.assertNotIn("сбросите", insight["week_text"])
 
     def test_profile_is_updated_and_isolated_by_user(self):
         upsert_nutrition_profile(
@@ -306,6 +339,9 @@ class NutritionTests(unittest.TestCase):
         hub = (
             PROJECT_ROOT / "app" / "templates" / "study_hub.html"
         ).read_text(encoding="utf-8")
+        sport_hub = (
+            PROJECT_ROOT / "app" / "templates" / "sport_hub.html"
+        ).read_text(encoding="utf-8")
         base = (
             PROJECT_ROOT / "app" / "templates" / "base.html"
         ).read_text(encoding="utf-8")
@@ -313,9 +349,11 @@ class NutritionTests(unittest.TestCase):
             PROJECT_ROOT / "app" / "templates" / "nutrition.html"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("url_for('nutrition.index')", hub)
-        self.assertIn(">Питание<", hub)
+        self.assertNotIn("url_for('nutrition.index')", hub)
+        self.assertIn("url_for('nutrition.index')", sport_hub)
+        self.assertIn(">Питание<", sport_hub)
         self.assertIn("request.endpoint.startswith('nutrition.')", base)
+        self.assertIn("url_for('sport_hub')", base)
         self.assertIn("База продуктов", template)
         self.assertIn("Добавить продукт вручную", template)
         self.assertIn("Последние 14 дней", template)
@@ -323,6 +361,31 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("progress_insight.day_text", template)
         self.assertIn("progress_insight.protein_message", template)
         self.assertNotIn("autofocus", template)
+
+    def test_nutrition_desktop_theme_uses_blue_accents(self):
+        styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn("--nutrition-blue: #2563eb;", styles)
+        self.assertIn("--nutrition-blue-dark: #1d4ed8;", styles)
+        self.assertIn(
+            "linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #3b82f6 100%)",
+            styles,
+        )
+        self.assertIn("background: linear-gradient(90deg, #2563eb, #3b82f6);", styles)
+        self.assertIn("background: var(--nutrition-blue-soft);", styles)
+        for old_accent in (
+            "#047857",
+            "#0f9f83",
+            "#14b8a6",
+            "#059669",
+            "#10b981",
+            "#6d28d9",
+            "#7c3aed",
+            "#8b5cf6",
+            "rgba(5, 150, 105",
+            "rgba(139, 92, 246",
+        ):
+            self.assertNotIn(old_accent, styles)
 
     def test_database_uses_snapshot_nutrients_for_diary_entries(self):
         food = get_food_catalog(1)[0]

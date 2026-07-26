@@ -13,13 +13,11 @@
         (function () {
             try {
                 const introKey = "shans-intro-seen-v1";
-                if (!window.sessionStorage.getItem(introKey)) {
-                    window.sessionStorage.setItem(introKey, "1");
-                    document.documentElement.classList.add("app-intro-pending");
-                    window.setTimeout(function () {
-                        document.documentElement.classList.remove("app-intro-pending");
-                    }, 3000);
-                }
+                document.documentElement.classList.add("app-intro-pending");
+                window.sessionStorage.setItem(introKey, "1");
+                window.setTimeout(function () {
+                    document.documentElement.classList.remove("app-intro-pending");
+                }, 3000);
             } catch (error) {
                 // The application remains usable when browser storage is unavailable.
             }
@@ -50,9 +48,7 @@
             <span class="app-intro-orbit app-intro-orbit-outer"></span>
             <span class="app-intro-orbit app-intro-orbit-inner"></span>
             <div class="app-intro-logo">
-                <svg class="app-intro-logo-mark" viewBox="0 0 192 192" aria-hidden="true" focusable="false">
-                    <path fill="currentColor" d="M48 52Q48 48 52 48H65Q69 48 69 52V111L82 124H88V52Q88 48 92 48H100Q104 48 104 52V124H110L123 111V52Q123 48 127 48H140Q144 48 144 52V113Q144 124 137 131L117 151Q113 155 106 155H86Q79 155 75 151L55 131Q48 124 48 113Z"></path>
-                </svg>
+                <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="" class="app-intro-logo-mark" aria-hidden="true">
             </div>
             <div class="app-intro-progress"><span></span></div>
         </div>
@@ -71,7 +67,9 @@
     {% set is_study_section = request.endpoint is string and request.endpoint.startswith('learning.') %}
     {% set is_workouts_section = request.endpoint is string and request.endpoint.startswith('workouts.') %}
     {% set is_nutrition_section = request.endpoint is string and request.endpoint.startswith('nutrition.') %}
-    {% set is_development_section = is_study_section or is_workouts_section or is_nutrition_section %}
+    {% set is_sport_section = request.endpoint == 'sport_hub' or is_workouts_section or is_nutrition_section %}
+    {% set is_development_section = is_study_section %}
+    {% set is_mobile_development_section = is_development_section or is_sport_section %}
     {% set is_account_page = request.endpoint == 'account_settings' %}
     <header class="site-header">
         <div class="site-header-inner">
@@ -97,8 +95,11 @@
                 {% if has_section_access('schedule') %}
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link {% if is_schedule_page %}top-nav-link-active{% endif %}">График</a>
                 {% endif %}
-                {% if has_section_access('study') or has_section_access('workouts') or has_section_access('nutrition') %}
+                {% if has_section_access('study') %}
                 <a href="{{ url_for('learning.study_hub') }}" class="top-nav-link {% if is_development_section %}top-nav-link-active{% endif %}">Развитие</a>
+                {% endif %}
+                {% if has_section_access('workouts') or has_section_access('nutrition') %}
+                <a href="{{ url_for('sport_hub') }}" class="top-nav-link {% if is_sport_section %}top-nav-link-active{% endif %}">Спорт</a>
                 {% endif %}
             </nav>
 
@@ -163,7 +164,7 @@
         </a>
         {% endif %}
         {% if has_section_access('study') or has_section_access('workouts') or has_section_access('nutrition') %}
-        <a href="{{ url_for('learning.study_hub') }}" class="app-bottom-nav-link {% if is_development_section %}app-bottom-nav-link-active{% endif %}"{% if is_development_section %} aria-current="page"{% endif %}>
+        <a href="{{ url_for('learning.study_hub') if has_section_access('study') else url_for('sport_hub') }}" class="app-bottom-nav-link {% if is_mobile_development_section %}app-bottom-nav-link-active{% endif %}"{% if is_mobile_development_section %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M4 19V9M4 19h16"></path>
                 <path d="m8 15 3-3 3 2 5-7"></path>

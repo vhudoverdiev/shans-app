@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from werkzeug.security import generate_password_hash
+
 from app import create_app
 from app.access_control import (
     ManagedUserForm,
@@ -124,6 +126,34 @@ class UserManagementTests(unittest.TestCase):
             budget_response = client.get("/budget")
             self.assertEqual(budget_response.status_code, 302)
             self.assertEqual(budget_response.headers["Location"], "/")
+
+    def test_existing_non_managed_account_keeps_full_section_access(self):
+        conn = get_master_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO users (
+                    username, display_name, password_hash, otp_secret,
+                    otp_enabled, is_system_admin, is_active
+                )
+                VALUES (?, ?, ?, '', 0, 0, 1)
+                """,
+                (
+                    "legacy",
+                    "Legacy",
+                    generate_password_hash("LegacyPass-2026"),
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        legacy_id = self._user_id("legacy")
+        with self.app.test_client() as client:
+            self._login_client(client, legacy_id)
+            response = client.get("/budget")
+
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == "__main__":

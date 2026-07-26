@@ -13,7 +13,7 @@ class IntroLoaderTests(unittest.TestCase):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn('const introKey = "shans-intro-seen-v1"', template)
-        self.assertIn("window.sessionStorage.getItem(introKey)", template)
+        self.assertIn('document.documentElement.classList.add("app-intro-pending")', template)
         self.assertIn("}, 3000);", template)
         self.assertIn("onerror=\"document.documentElement.classList.remove('app-intro-pending')\"", template)
         self.assertIn('class="app-intro" id="app-intro" aria-hidden="true" hidden', template)
@@ -73,17 +73,17 @@ class IntroLoaderTests(unittest.TestCase):
             r"\.app-intro-stage\s*\{\s*transform:\s*translateY\(clamp\(-24px,\s*-2\.2dvh,\s*-16px\)\);",
         )
 
-    def test_intro_logo_is_inline_and_cannot_fail_as_an_image_request(self):
+    def test_intro_logo_uses_the_exact_header_logo_asset(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
         intro_logo = template.split('<div class="app-intro-logo">', 1)[1].split(
             "</div>",
             1,
         )[0]
 
-        self.assertIn("<svg", intro_logo)
-        self.assertIn("<path", intro_logo)
-        self.assertNotIn("<img", intro_logo)
-        self.assertNotIn("src=", intro_logo)
+        self.assertIn("<img", intro_logo)
+        self.assertIn("filename='logo.png'", intro_logo)
+        self.assertNotIn("<svg", intro_logo)
+        self.assertNotIn("<path", intro_logo)
         self.assertNotIn("logo-intro.png", template)
 
 

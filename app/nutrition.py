@@ -559,14 +559,28 @@ def build_nutrition_progress_insight(
     if not profile or not plan:
         return None
 
-    calorie_delta = float(plan["maintenance_calories"]) - float(summary["calories"])
-    daily_weight_delta = round(calorie_delta / CALORIES_PER_KG, 4)
-    weekly_weight_delta = round(daily_weight_delta * 7, 4)
     day_label = "сегодня" if is_today else "за выбранный день"
-    daily_action = "сбросили" if daily_weight_delta >= 0 else "набрали"
-    weekly_action = "сбросите" if weekly_weight_delta >= 0 else "наберёте"
+    has_food_entries = float(summary["calories"]) > 0
     protein_target = round(float(profile["weight_kg"]) * PROTEIN_TARGETS_BY_GOAL.get(profile["goal"], 1.4), 1)
     protein_missing = max(0, round(protein_target - float(summary["protein"]), 1))
+
+    if has_food_entries:
+        calorie_delta = float(plan["maintenance_calories"]) - float(summary["calories"])
+        daily_weight_delta = round(calorie_delta / CALORIES_PER_KG, 4)
+        weekly_weight_delta = round(daily_weight_delta * 7, 4)
+        daily_action = "сбросили" if daily_weight_delta >= 0 else "набрали"
+        weekly_action = "сбросите" if weekly_weight_delta >= 0 else "наберёте"
+        day_text = (
+            f"За {day_label} вы {daily_action} "
+            f"{_format_weight_delta(daily_weight_delta)} кг."
+        )
+        week_text = (
+            f"Если каждый день будет примерно так же, за неделю вы {weekly_action} "
+            f"{_format_weight_delta(weekly_weight_delta)} кг."
+        )
+    else:
+        day_text = f"Добавьте продукты {day_label}, и прогноз веса появится."
+        week_text = "Пока нет записей за день, недельный прогноз не рассчитывается."
 
     protein_message = "Белка на сегодня достаточно."
     if protein_missing > 0:
@@ -583,14 +597,9 @@ def build_nutrition_progress_insight(
             protein_message = f"До дневного ориентира осталось примерно {protein_missing:g} г белка."
 
     return {
-        "day_text": (
-            f"За {day_label} вы {daily_action} "
-            f"{_format_weight_delta(daily_weight_delta)} кг."
-        ),
-        "week_text": (
-            f"Если каждый день будет примерно так же, за неделю вы {weekly_action} "
-            f"{_format_weight_delta(weekly_weight_delta)} кг."
-        ),
+        "day_text": day_text,
+        "week_text": week_text,
+        "has_food_entries": has_food_entries,
         "protein_target": protein_target,
         "protein_missing": protein_missing,
         "protein_message": protein_message,

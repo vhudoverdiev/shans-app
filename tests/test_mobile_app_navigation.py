@@ -22,7 +22,7 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         self.assertIsNotNone(desktop_grid)
         body = desktop_grid.group("body")
-        self.assertEqual(body.count('class="dashboard-card"'), 7)
+        self.assertEqual(body.count('class="dashboard-card"'), 8)
         for endpoint in (
             "budget",
             "car",
@@ -31,9 +31,11 @@ class MobileAppNavigationTests(unittest.TestCase):
             "planner.photo_projects",
             "scenarios",
             "learning.study_hub",
+            "sport_hub",
         ):
             self.assertIn(f"url_for('{endpoint}')", body)
         self.assertIn('<div class="dashboard-card-title">Учёба</div>', body)
+        self.assertIn('<div class="dashboard-card-title">Спорт</div>', body)
 
     def test_mobile_dashboard_has_only_requested_sections(self):
         source = (TEMPLATES / "index.html").read_text(encoding="utf-8")
@@ -59,14 +61,18 @@ class MobileAppNavigationTests(unittest.TestCase):
     def test_mobile_hubs_group_existing_sections(self):
         shootings = (TEMPLATES / "shootings_hub.html").read_text(encoding="utf-8")
         reports = (TEMPLATES / "reports_hub.html").read_text(encoding="utf-8")
+        sport = (TEMPLATES / "sport_hub.html").read_text(encoding="utf-8")
         routes = (PROJECT_ROOT / "app" / "routes.py").read_text(encoding="utf-8")
 
         for endpoint in ("planner.photo_projects", "shootings", "scenarios"):
             self.assertIn(f"url_for('{endpoint}')", shootings)
         for endpoint in ("budget", "car"):
             self.assertIn(f"url_for('{endpoint}')", reports)
+        for endpoint in ("workouts.index", "nutrition.index"):
+            self.assertIn(f"url_for('{endpoint}')", sport)
         self.assertIn('@app.route("/shootings-hub")', routes)
         self.assertIn('@app.route("/reports")', routes)
+        self.assertIn('@app.route("/sport")', routes)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
@@ -87,8 +93,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("url_for('learning.study_hub')", base)
         self.assertIn("is_workouts_section", base)
         self.assertIn("is_nutrition_section", base)
+        self.assertIn("is_sport_section", base)
+        self.assertIn("url_for('sport_hub')", base)
         self.assertIn(
-            "{% set is_development_section = is_study_section or is_workouts_section or is_nutrition_section %}",
+            "{% set is_mobile_development_section = is_development_section or is_sport_section %}",
             base,
         )
         self.assertIn(
@@ -109,7 +117,11 @@ class MobileAppNavigationTests(unittest.TestCase):
         )
         self.assertRegex(
             styles,
-            r"\.account-logout-btn\s*\{\s*display:\s*none;",
+            r"\.account-logout-btn\s*\{\s*display:\s*none\s*!important;",
+        )
+        self.assertRegex(
+            styles,
+            r"\.account-settings-page\s+\.account-push-card\s*\{\s*display:\s*none;",
         )
         self.assertRegex(
             mobile_styles,
@@ -117,7 +129,11 @@ class MobileAppNavigationTests(unittest.TestCase):
         )
         self.assertRegex(
             mobile_styles,
-            r"\.account-logout-btn\s*\{[^}]*display:\s*inline-flex;",
+            r"\.account-logout-btn\s*\{[^}]*display:\s*inline-flex\s*!important;",
+        )
+        self.assertRegex(
+            mobile_styles,
+            r"\.account-settings-page\s+\.account-push-card\s*\{\s*display:\s*block;",
         )
         self.assertIn("url_for('logout')", account)
         self.assertIn('id="account-logout-btn"', account)

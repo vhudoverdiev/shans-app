@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Спорт | Шанс{% endblock %}
+
+{% block content %}
+<section class="dashboard-page hub-page">
+    <div class="page-header hub-page-header">
+        <div>
+            <p class="hub-page-eyebrow">Здоровье и прогресс</p>
+            <h1 class="page-title">Спорт</h1>
+            <p class="hub-page-subtitle">Тренировки, питание, вес и ежедневная динамика в отдельных разделах.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid hub-grid hub-grid-compact">
+        {% if has_section_access('workouts') %}
+        <a href="{{ url_for('workouts.index') }}" class="dashboard-card dashboard-card-featured">
+            <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Тренировки</div>
+            <div class="dashboard-card-text">Планы занятий, результаты упражнений, расписание и график изменения веса.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endif %}
+
+        {% if has_section_access('nutrition') %}
+        <a href="{{ url_for('nutrition.index') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 3v7a3 3 0 0 0 3 3V3"></path>
+                    <path d="M8.5 13v8"></path>
+                    <path d="M15 3v18"></path>
+                    <path d="M15 3c3 1 4 4 4 7v2h-4"></path>
+                </svg>
+            </div>
+            <div class="dashboard-card-title">Питание</div>
+            <div class="dashboard-card-text">Калории, БЖУ, дневник рациона, личные цели и база продуктов.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

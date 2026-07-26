@@ -33,6 +33,7 @@ from app.planner import (
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+WORKOUTS_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "workouts.css"
 
 
 class TestUser(UserMixin):
@@ -437,6 +438,9 @@ class WorkoutsTests(unittest.TestCase):
         development_hub = (
             PROJECT_ROOT / "app" / "templates" / "study_hub.html"
         ).read_text(encoding="utf-8")
+        sport_hub = (
+            PROJECT_ROOT / "app" / "templates" / "sport_hub.html"
+        ).read_text(encoding="utf-8")
         desktop_grid, mobile_grid = index.split(
             '<div class="dashboard-grid dashboard-grid-mobile dashboard-primary-grid">',
             1,
@@ -449,11 +453,33 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("url_for('learning.study_hub')", desktop_grid)
         self.assertIn("url_for('learning.study_hub')", mobile_grid)
         self.assertIn("url_for('learning.study_hub')", top_nav)
+        self.assertIn("url_for('sport_hub')", top_nav)
         self.assertIn("url_for('learning.study_hub')", bottom_nav)
         self.assertIn("<span>Развитие</span>", bottom_nav)
         self.assertNotIn("<span>Спорт</span>", bottom_nav)
-        self.assertIn("url_for('workouts.index')", development_hub)
+        self.assertNotIn("url_for('workouts.index')", development_hub)
+        self.assertIn("url_for('workouts.index')", sport_hub)
         self.assertIn("is_development_section", base)
+        self.assertIn("is_sport_section", base)
+
+    def test_workouts_desktop_theme_uses_blue_accents(self):
+        styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn("--workout-blue: #2563eb;", styles)
+        self.assertIn("--workout-purple: #1d4ed8;", styles)
+        self.assertIn("linear-gradient(135deg, var(--workout-blue), var(--workout-purple))", styles)
+        self.assertIn("background: #eff6ff;", styles)
+        self.assertIn("border: 1px solid #bfdbfe;", styles)
+        for purple_value in (
+            "#7c3aed",
+            "#9333ea",
+            "#6d28d9",
+            "#5b21b6",
+            "#8b5cf6",
+            "rgba(124, 58, 237",
+            "rgba(91, 33, 182",
+        ):
+            self.assertNotIn(purple_value, styles)
 
 
 if __name__ == "__main__":

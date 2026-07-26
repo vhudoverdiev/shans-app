@@ -2,6 +2,31 @@
     "use strict";
 
     const STORAGE_KEY = "shans.courseAudio.enabled";
+    const VOICE_PREFERENCES = {
+        ru: [
+            "microsoft svetlana online",
+            "microsoft dmitry online",
+            "google русский",
+            "google russian",
+            "yandex",
+            "alena",
+            "svetlana",
+            "dmitry",
+            "milena",
+        ],
+        en: [
+            "microsoft aria online",
+            "microsoft jenny online",
+            "microsoft guy online",
+            "google us english",
+            "google uk english female",
+            "google uk english male",
+            "samantha",
+            "ava",
+            "allison",
+            "daniel",
+        ],
+    };
     const speech = window.speechSynthesis;
     const controller = document.querySelector("[data-course-audio]");
     const dataNode = document.getElementById("course-audio-segments");
@@ -56,12 +81,76 @@
         return speech.getVoices ? speech.getVoices() : [];
     }
 
+    function normalizeVoiceName(value) {
+        return String(value || "").toLowerCase();
+    }
+
+    function voiceScore(voice, lang) {
+        const targetLang = String(lang || "ru-RU").toLowerCase();
+        const targetPrefix = targetLang.slice(0, 2);
+        const voiceLang = String(voice.lang || "").toLowerCase();
+        const voiceName = normalizeVoiceName(`${voice.name} ${voice.voiceURI}`);
+        let score = 0;
+
+        if (voiceLang === targetLang) score += 80;
+        if (voiceLang.startsWith(targetPrefix)) score += 45;
+        if (voice.localService === false) score += 18;
+        if (voice.default) score += 6;
+        if (voiceName.includes("natural")) score += 20;
+        if (voiceName.includes("online")) score += 16;
+        if (voiceName.includes("neural")) score += 16;
+        if (voiceName.includes("premium")) score += 10;
+
+        (VOICE_PREFERENCES[targetPrefix] || []).forEach((keyword, index) => {
+            if (voiceName.includes(keyword)) {
+                score += 120 - index * 6;
+            }
+        });
+
+        return score;
+    }
+
     function pickVoice(lang) {
         const voices = getVoices();
-        const exact = voices.find((voice) => voice.lang === lang);
-        if (exact) return exact;
         const prefix = String(lang).slice(0, 2).toLowerCase();
-        return voices.find((voice) => String(voice.lang).toLowerCase().startsWith(prefix)) || null;
+        return voices
+            .filter((voice) => String(voice.lang || "").toLowerCase().startsWith(prefix))
+            .sort((left, right) => voiceScore(right, lang) - voiceScore(left, lang))[0] || null;
+    }
+
+    function getProsody(lang) {
+        if (String(lang || "").startsWith("en")) {
+            return {
+                rate: 0.86,
+                pitch: 1.02,
+                volume: 0.98,
+                pauseAfter: 360,
+            };
+        }
+
+        return {
+            rate: 0.92,
+            pitch: 1.04,
+            volume: 1,
+            pauseAfter: 460,
+        };
+    }
+
+    function getSegmentPause(segment) {
+        const text = String(segment.text || "");
+        const prosody = getProsody(segment.lang);
+
+        if (/^(День|Словарь|Предложения|Практика|Разбор кода)\b/i.test(text)) {
+            return prosody.pauseAfter + 260;
+        }
+        if (/[!?…]$/.test(text)) {
+            return prosody.pauseAfter + 180;
+        }
+        if (text.length < 22) {
+            return Math.max(220, prosody.pauseAfter - 120);
+        }
+
+        return prosody.pauseAfter;
     }
 
     function syncEnabledState() {
@@ -96,9 +185,11 @@
 
     function buildUtterance(segment) {
         const utterance = new SpeechSynthesisUtterance(segment.text);
+        const prosody = getProsody(segment.lang);
         utterance.lang = segment.lang;
-        utterance.rate = segment.lang.startsWith("en") ? 0.84 : 0.95;
-        utterance.pitch = 1;
+        utterance.rate = prosody.rate;
+        utterance.pitch = prosody.pitch;
+        utterance.volume = prosody.volume;
         const voice = pickVoice(segment.lang);
         if (voice) {
             utterance.voice = voice;
@@ -125,7 +216,9 @@
         const utterance = buildUtterance(segment);
 
         utterance.onend = function () {
-            speakNext(index + 1);
+            window.setTimeout(function () {
+                speakNext(index + 1);
+            }, getSegmentPause(segment));
         };
         utterance.onerror = function () {
             setPlaying(false);

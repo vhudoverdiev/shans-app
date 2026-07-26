@@ -671,6 +671,10 @@
         display: inline;
     }
 
+    .account-settings-page .account-push-card {
+        display: block;
+    }
+
     .account-push-desktop-only {
         display: none !important;
     }
@@ -735,7 +739,7 @@
     }
 
     .account-logout-btn {
-        display: inline-flex;
+        display: inline-flex !important;
         width: 100%;
         margin-top: 16px;
     }

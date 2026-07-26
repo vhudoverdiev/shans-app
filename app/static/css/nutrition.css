@@ -1,4 +1,8 @@
 .nutrition-page {
+    --nutrition-blue: #2563eb;
+    --nutrition-blue-dark: #1d4ed8;
+    --nutrition-blue-soft: #eff6ff;
+    --nutrition-blue-border: #bfdbfe;
     width: min(1180px, 100%);
     margin: 0 auto;
     padding: 6px 0 48px;
@@ -9,7 +13,7 @@
     display: inline-flex;
     align-items: center;
     margin-bottom: 16px;
-    color: #6d28d9;
+    color: var(--nutrition-blue);
     font-size: 14px;
     font-weight: 750;
     text-decoration: none;
@@ -24,13 +28,13 @@
     overflow: hidden;
     min-height: 260px;
     padding: 42px 48px;
-    border: 1px solid rgba(52, 211, 153, 0.34);
+    border: 1px solid rgba(96, 165, 250, 0.36);
     border-radius: 32px;
     color: #ffffff;
     background:
         radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.22), transparent 28%),
-        linear-gradient(135deg, #047857 0%, #0f9f83 52%, #14b8a6 100%);
-    box-shadow: 0 24px 55px rgba(5, 150, 105, 0.2);
+        linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #3b82f6 100%);
+    box-shadow: 0 24px 55px rgba(37, 99, 235, 0.2);
 }
 
 .nutrition-hero::after {
@@ -53,7 +57,7 @@
 .nutrition-section-label {
     display: block;
     margin: 0 0 8px;
-    color: #047857;
+    color: var(--nutrition-blue-dark);
     font-size: 12px;
     font-weight: 850;
     letter-spacing: 0.1em;
@@ -61,7 +65,7 @@
 }
 
 .nutrition-hero .nutrition-kicker {
-    color: #d1fae5;
+    color: #dbeafe;
 }
 
 .nutrition-hero h1 {
@@ -122,8 +126,8 @@
     grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
     gap: 32px;
     padding: 34px;
-    border-color: rgba(16, 185, 129, 0.28);
-    background: linear-gradient(145deg, #ffffff, #f0fdf4);
+    border-color: rgba(96, 165, 250, 0.28);
+    background: linear-gradient(145deg, #ffffff, #eff6ff);
 }
 
 .nutrition-onboarding-copy h2,
@@ -156,8 +160,8 @@
     display: grid;
     place-items: center;
     border-radius: 18px;
-    color: #6d28d9;
-    background: #f1effe;
+    color: var(--nutrition-blue);
+    background: var(--nutrition-blue-soft);
     font-size: 22px;
     font-weight: 800;
     text-decoration: none;
@@ -202,8 +206,8 @@
     min-height: 30px;
     padding: 6px 11px;
     border-radius: 999px;
-    color: #047857;
-    background: #d1fae5;
+    color: var(--nutrition-blue-dark);
+    background: #dbeafe;
     font-size: 11px;
     font-weight: 850;
     letter-spacing: 0.03em;
@@ -259,8 +263,8 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #059669, #14b8a6);
-    box-shadow: 0 0 14px rgba(5, 150, 105, 0.28);
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    box-shadow: 0 0 14px rgba(37, 99, 235, 0.24);
     transition: width 300ms ease;
 }
 
@@ -310,8 +314,8 @@
 }
 
 .nutrition-progress-insight .nutrition-protein-ok {
-    border-color: #bbf7d0;
-    background: linear-gradient(145deg, #f0fdf4, #ffffff);
+    border-color: #bfdbfe;
+    background: linear-gradient(145deg, #eff6ff, #ffffff);
 }
 
 .nutrition-macro-grid {
@@ -335,7 +339,7 @@
     position: absolute;
     inset: 0 auto 0 0;
     width: 4px;
-    background: #8b5cf6;
+    background: var(--nutrition-blue);
 }
 
 .nutrition-macro-fat::before {
@@ -343,7 +347,7 @@
 }
 
 .nutrition-macro-carbs::before {
-    background: #10b981;
+    background: #3b82f6;
 }
 
 .nutrition-macro strong {
@@ -410,8 +414,8 @@
 .nutrition-field input:focus,
 .nutrition-field select:focus,
 .nutrition-search input:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .nutrition-primary-button,
@@ -424,7 +428,7 @@
     border: 0;
     border-radius: 15px;
     color: #ffffff;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    background: linear-gradient(135deg, var(--nutrition-blue), var(--nutrition-blue-dark));
     box-shadow: none;
     font: inherit;
     font-weight: 800;
@@ -437,8 +441,8 @@
 }
 
 .nutrition-secondary-button {
-    color: #6d28d9;
-    background: #f1effe;
+    color: var(--nutrition-blue);
+    background: var(--nutrition-blue-soft);
     box-shadow: none;
 }
 
@@ -468,7 +472,7 @@
 
 .nutrition-profile-details summary {
     padding: 17px 0 0;
-    color: #6d28d9;
+    color: var(--nutrition-blue);
     font-weight: 800;
     cursor: pointer;
 }
@@ -683,13 +687,13 @@
 }
 
 .nutrition-history-day-active {
-    border-color: rgba(5, 150, 105, 0.4);
-    background: #ecfdf5;
-    box-shadow: 0 7px 18px rgba(5, 150, 105, 0.1);
+    border-color: rgba(37, 99, 235, 0.38);
+    background: var(--nutrition-blue-soft);
+    box-shadow: 0 7px 18px rgba(37, 99, 235, 0.1);
 }
 
 .nutrition-text-link {
-    color: #6d28d9;
+    color: var(--nutrition-blue);
     font-size: 13px;
     font-weight: 800;
     text-decoration: none;
@@ -717,8 +721,8 @@
     display: grid;
     place-items: center;
     border-radius: 10px;
-    color: #047857;
-    background: #d1fae5;
+    color: var(--nutrition-blue-dark);
+    background: #dbeafe;
     font-size: 12px;
     font-weight: 850;
 }

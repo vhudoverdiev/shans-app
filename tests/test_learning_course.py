@@ -121,8 +121,9 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(result["attempts"], 3)
         self.assertEqual(result["passed"], 1)
 
-    def test_development_hub_exposes_courses_and_workouts(self):
+    def test_development_hub_exposes_only_courses_and_sport_is_separate(self):
         study_source = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
+        sport_source = (TEMPLATES / "sport_hub.html").read_text(encoding="utf-8")
         base_source = (TEMPLATES / "base.html").read_text(encoding="utf-8")
 
         self.assertIn("<h1>Развитие</h1>", study_source)
@@ -130,15 +131,15 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("Фундамент IT на Python", study_source)
         self.assertIn("url_for('learning.english_course')", study_source)
         self.assertIn("url_for('learning.it_course')", study_source)
-        self.assertIn("url_for('workouts.index')", study_source)
-        self.assertIn('<div class="dashboard-card-title">Спорт</div>', study_source)
-        self.assertIn("url_for('nutrition.index')", study_source)
-        self.assertIn('<div class="dashboard-card-title">Питание</div>', study_source)
-        self.assertNotIn("Скоро", study_source)
-        self.assertIn(
-            ">Развитие</a>",
-            base_source,
-        )
+        self.assertNotIn("url_for('workouts.index')", study_source)
+        self.assertNotIn("url_for('nutrition.index')", study_source)
+        self.assertIn('<h1 class="page-title">Спорт</h1>', sport_source)
+        self.assertIn("url_for('workouts.index')", sport_source)
+        self.assertIn("url_for('nutrition.index')", sport_source)
+        self.assertIn('<div class="dashboard-card-title">Тренировки</div>', sport_source)
+        self.assertIn('<div class="dashboard-card-title">Питание</div>', sport_source)
+        self.assertIn(">Развитие</a>", base_source)
+        self.assertIn(">Спорт</a>", base_source)
 
     def test_learning_theme_is_blue_on_desktop_and_keeps_purple_touch_palette(self):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
@@ -268,6 +269,13 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("speakSingle", script_source)
         self.assertIn("ru-RU", script_source)
         self.assertIn("en-US", learning_source)
+        self.assertIn("VOICE_PREFERENCES", script_source)
+        self.assertIn("voiceScore", script_source)
+        self.assertIn("getProsody", script_source)
+        self.assertIn("getSegmentPause", script_source)
+        self.assertIn("window.setTimeout(function ()", script_source)
+        self.assertIn("microsoft aria online", script_source)
+        self.assertIn("microsoft svetlana online", script_source)
 
     def test_every_daily_lesson_has_audio_segments(self):
         for lesson in ENGLISH_LESSONS:

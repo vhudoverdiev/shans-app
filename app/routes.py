@@ -1208,6 +1208,11 @@ def register_routes(app):
     def reports_hub():
         return render_template("reports_hub.html")
 
+    @app.route("/sport")
+    @login_required
+    def sport_hub():
+        return render_template("sport_hub.html")
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if current_user.is_authenticated:
