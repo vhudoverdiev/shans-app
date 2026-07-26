@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
-FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.svg"
+FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.png"
 
 
 class PwaInstallationTests(unittest.TestCase):
@@ -50,16 +50,20 @@ class PwaInstallationTests(unittest.TestCase):
 
     def test_browser_favicon_is_a_rounded_square(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
-        favicon = FAVICON.read_text(encoding="utf-8")
+        favicon = FAVICON.read_bytes()
 
-        self.assertIn('rel="icon" type="image/svg+xml"', template)
+        self.assertIn('rel="icon" type="image/png"', template)
         self.assertIn(
-            "filename='favicon.svg', v=static_asset_version",
+            "filename='favicon.png', v=static_asset_version",
             template,
         )
-        self.assertIn('viewBox="0 0 512 512"', favicon)
-        self.assertIn('<rect x="8" y="8" width="496" height="496" rx="152"', favicon)
-        self.assertIn('fill="url(#favicon-gradient)"', favicon)
+        self.assertEqual(favicon[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", favicon[16:24]), (512, 512))
+        self.assertEqual(favicon[25], 6)
+        self.assertEqual(
+            hashlib.sha256(favicon).hexdigest(),
+            "b9e52a3974c9797f87040414b7a286b9b60dda9e5d28d7b56f8e1139463edca1",
+        )
 
     def test_logo_asset_matches_the_supplied_source_image(self):
         logo = LOGO.read_bytes()

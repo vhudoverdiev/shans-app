@@ -9,15 +9,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Шанс">
     <title>{% block title %}Шанс{% endblock %}</title>
-    {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg', v=static_asset_version) }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png', v=static_asset_version) }}">
-    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css', v=static_asset_version) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css', v=static_asset_version) }}">
-    {% block extra_head %}{% endblock %}
     <script>
         (function () {
             try {
@@ -34,6 +25,20 @@
             }
         }());
     </script>
+    <style>
+        html.app-intro-pending body {
+            visibility: hidden;
+        }
+    </style>
+    {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png', v=static_asset_version) }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png', v=static_asset_version) }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css', v=static_asset_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css', v=static_asset_version) }}">
+    {% block extra_head %}{% endblock %}
     <script src="{{ url_for('static', filename='js/intro-loader.js', v=static_asset_version) }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
     <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/push-inbox.js', v=static_asset_version) }}" defer></script>
@@ -65,6 +70,8 @@
     {% set is_reports_section = request.endpoint == 'reports_hub' or is_budget_page or is_car_page %}
     {% set is_study_section = request.endpoint is string and request.endpoint.startswith('learning.') %}
     {% set is_workouts_section = request.endpoint is string and request.endpoint.startswith('workouts.') %}
+    {% set is_nutrition_section = request.endpoint is string and request.endpoint.startswith('nutrition.') %}
+    {% set is_development_section = is_study_section or is_workouts_section or is_nutrition_section %}
     {% set is_account_page = request.endpoint == 'account_settings' %}
     <header class="site-header">
         <div class="site-header-inner">
@@ -84,9 +91,15 @@
 
             <nav class="top-nav" id="top-nav-menu">
                 <a href="{{ url_for('index') }}" class="top-nav-link {% if is_home_page %}top-nav-link-active{% endif %}">Главная</a>
+                {% if has_section_access('budget') %}
                 <a href="{{ url_for('budget') }}" class="top-nav-link {% if is_budget_page %}top-nav-link-active{% endif %}">Бюджет</a>
+                {% endif %}
+                {% if has_section_access('schedule') %}
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link {% if is_schedule_page %}top-nav-link-active{% endif %}">График</a>
-                <a href="{{ url_for('learning.study_hub') }}" class="top-nav-link {% if is_study_section %}top-nav-link-active{% endif %}">Учёба</a>
+                {% endif %}
+                {% if has_section_access('study') or has_section_access('workouts') or has_section_access('nutrition') %}
+                <a href="{{ url_for('learning.study_hub') }}" class="top-nav-link {% if is_development_section %}top-nav-link-active{% endif %}">Развитие</a>
+                {% endif %}
             </nav>
 
             <div class="header-user-block">
@@ -122,6 +135,7 @@
 
     {% if current_user.is_authenticated %}
     <nav class="app-bottom-nav" aria-label="Основная навигация">
+        {% if has_section_access('schedule') %}
         <a href="{{ url_for('planner.schedule') }}" class="app-bottom-nav-link {% if is_schedule_page %}app-bottom-nav-link-active{% endif %}"{% if is_schedule_page %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="16" rx="3"></rect>
@@ -129,6 +143,8 @@
             </svg>
             <span>График</span>
         </a>
+        {% endif %}
+        {% if has_section_access('shootings') or has_section_access('photo_projects') or has_section_access('scenarios') %}
         <a href="{{ url_for('shootings_hub') }}" class="app-bottom-nav-link {% if is_shootings_section %}app-bottom-nav-link-active{% endif %}"{% if is_shootings_section %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="6" width="14" height="13" rx="3"></rect>
@@ -136,6 +152,8 @@
             </svg>
             <span>Съёмки</span>
         </a>
+        {% endif %}
+        {% if has_section_access('budget') or has_section_access('car') %}
         <a href="{{ url_for('reports_hub') }}" class="app-bottom-nav-link {% if is_reports_section %}app-bottom-nav-link-active{% endif %}"{% if is_reports_section %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M5 20V10M12 20V4M19 20v-7"></path>
@@ -143,19 +161,17 @@
             </svg>
             <span>Отчёт</span>
         </a>
-        <a href="{{ url_for('learning.study_hub') }}" class="app-bottom-nav-link {% if is_study_section %}app-bottom-nav-link-active{% endif %}"{% if is_study_section %} aria-current="page"{% endif %}>
+        {% endif %}
+        {% if has_section_access('study') or has_section_access('workouts') or has_section_access('nutrition') %}
+        <a href="{{ url_for('learning.study_hub') }}" class="app-bottom-nav-link {% if is_development_section %}app-bottom-nav-link-active{% endif %}"{% if is_development_section %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a3 3 0 0 1 3 3v15a3 3 0 0 0-3-3H6.5A2.5 2.5 0 0 0 4 20.5Z"></path>
-                <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H14v18a3 3 0 0 1 3-3h.5a2.5 2.5 0 0 1 2.5 2.5Z"></path>
+                <path d="M4 19V9M4 19h16"></path>
+                <path d="m8 15 3-3 3 2 5-7"></path>
+                <path d="M16 7h3v3"></path>
             </svg>
-            <span>Учёба</span>
+            <span>Развитие</span>
         </a>
-        <a href="{{ url_for('workouts.index') }}" class="app-bottom-nav-link {% if is_workouts_section %}app-bottom-nav-link-active{% endif %}"{% if is_workouts_section %} aria-current="page"{% endif %}>
-            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
-            </svg>
-            <span>Спорт</span>
-        </a>
+        {% endif %}
         <a href="{{ url_for('account_settings') }}" class="app-bottom-nav-link {% if is_account_page %}app-bottom-nav-link-active{% endif %}"{% if is_account_page %} aria-current="page"{% endif %}>
             <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"></circle>

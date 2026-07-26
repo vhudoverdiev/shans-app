@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Учёба | Шанс{% endblock %}
+{% block title %}Развитие | Шанс{% endblock %}
 
 {% block content %}
 <section class="learning-page">
     <div class="learning-hero learning-hero-compact">
         <div>
             <p class="learning-kicker">Развитие каждый день</p>
-            <h1>Учёба</h1>
-            <p>Выберите направление и занимайтесь небольшими понятными шагами.</p>
+            <h1>Развитие</h1>
+            <p>Учитесь, тренируйтесь и следите за питанием в одном месте.</p>
         </div>
         <div class="learning-hero-mark" aria-hidden="true">30</div>
     </div>
@@ -27,6 +27,33 @@
             <span class="study-card-badge study-card-badge-active">30 дней</span>
             <div class="dashboard-card-title">English</div>
             <div class="dashboard-card-text">Слова, предложения, короткие лекции и проверка знаний — по 30 минут в день.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('workouts.index') }}" class="dashboard-card dashboard-card-featured study-card-workouts">
+            <div class="dashboard-card-icon study-card-icon-workouts" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
+                </svg>
+            </div>
+            <span class="study-card-badge study-card-badge-active">Прогресс</span>
+            <div class="dashboard-card-title">Спорт</div>
+            <div class="dashboard-card-text">Планы тренировок, результаты упражнений и динамика веса в одном месте.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <a href="{{ url_for('nutrition.index') }}" class="dashboard-card dashboard-card-featured study-card-nutrition">
+            <div class="dashboard-card-icon study-card-icon-nutrition" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 3v7a3 3 0 0 0 3 3V3"></path>
+                    <path d="M8.5 13v8"></path>
+                    <path d="M15 3v18"></path>
+                    <path d="M15 3c3 1 4 4 4 7v2h-4"></path>
+                </svg>
+            </div>
+            <span class="study-card-badge study-card-badge-active">Дневник</span>
+            <div class="dashboard-card-title">Питание</div>
+            <div class="dashboard-card-text">Калории и БЖУ, цели по весу, история рациона и большая база продуктов.</div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
     </div>

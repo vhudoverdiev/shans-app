@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="learning-page">
-    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Учёба</a>
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
 
     <div class="learning-hero">
         <div>
@@ -70,6 +70,27 @@
             {% else %}
             </div>
             {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="learning-section-heading learning-future-heading">
+        <div>
+            <p class="learning-kicker">Дальше</p>
+            <h2>Продолжение после 30-го дня</h2>
+        </div>
+        <span>Пока не открыто</span>
+    </div>
+
+    <div class="english-course-grid learning-future-grid">
+        {% for lesson in locked_future_lessons %}
+        <div class="english-day-card english-day-card-locked english-day-card-future" aria-disabled="true">
+            <div class="english-day-card-top">
+                <span class="english-day-number">День {{ lesson.day }}</span>
+                <span class="english-day-status" aria-label="Пока не открыто">🔒</span>
+            </div>
+            <h3>{{ lesson.title }}</h3>
+            <p>Пока не открыто</p>
+        </div>
         {% endfor %}
     </div>
 

@@ -1,6 +1,11 @@
+from contextlib import contextmanager
+from contextvars import ContextVar
+from pathlib import Path
 import sqlite3
 
 from config import Config
+
+_database_override = ContextVar("database_override", default=None)
 
 
 class DictRow(dict):
@@ -27,11 +32,70 @@ def _dict_row_factory(cursor, row):
     return DictRow(data, row)
 
 
-def get_connection():
+def _master_database_name():
+    return Config.DATABASE_NAME
+
+
+def get_master_connection():
+    conn = sqlite3.connect(_master_database_name())
+    conn.row_factory = _dict_row_factory
+    return conn
+
+
+def _active_user_database_name():
+    try:
+        from flask import has_request_context
+        from flask_login import current_user
+    except RuntimeError:
+        return None
+
+    if not has_request_context() or not current_user.is_authenticated:
+        return None
+
+    user_id = getattr(current_user, "id", None)
+    if not user_id:
+        return None
+
+    conn = get_master_connection()
+    try:
+        row = conn.execute(
+            "SELECT data_database_name FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return None
+    finally:
+        conn.close()
+
+    database_name = (row.get("data_database_name") if row else "") or ""
+    if not database_name:
+        return None
+    return database_name
+
+
+@contextmanager
+def use_database(database_name):
+    token = _database_override.set(database_name)
+    try:
+        yield
+    finally:
+        _database_override.reset(token)
+
+
+def get_connection(database_name=None):
     """
     Создаёт подключение к SQLite и включает доступ к колонкам по имени.
     """
-    conn = sqlite3.connect(Config.DATABASE_NAME)
+    active_database = (
+        database_name
+        or _database_override.get()
+        or _active_user_database_name()
+        or _master_database_name()
+    )
+    active_path = Path(active_database)
+    if active_path.parent and str(active_path.parent) not in {"", "."}:
+        active_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(active_path))
     conn.row_factory = _dict_row_factory
     return conn
 
@@ -55,12 +119,12 @@ def _add_column_if_not_exists(cursor, table_name, column_name, column_definition
         )
 
 
-def init_db():
+def init_db(database_name=None):
     """
     Создаёт таблицы приложения и выполняет мягкие миграции
     для уже существующей базы.
     """
-    conn = get_connection()
+    conn = get_connection(database_name)
     cursor = conn.cursor()
 
     # VK-доставка удалена из приложения. Удаляем сохранённые токены и
@@ -134,6 +198,19 @@ def init_db():
     _add_column_if_not_exists(cursor, "users", "otp_enabled", "INTEGER NOT NULL DEFAULT 0")
     _add_column_if_not_exists(cursor, "users", "avatar_filename", "TEXT")
     _add_column_if_not_exists(cursor, "users", "last_login_ip", "TEXT")
+    _add_column_if_not_exists(cursor, "users", "display_name", "TEXT")
+    _add_column_if_not_exists(cursor, "users", "data_database_name", "TEXT")
+    _add_column_if_not_exists(cursor, "users", "created_by_user_id", "INTEGER")
+    _add_column_if_not_exists(cursor, "users", "is_system_admin", "INTEGER NOT NULL DEFAULT 0")
+    _add_column_if_not_exists(cursor, "users", "is_active", "INTEGER NOT NULL DEFAULT 1")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_section_permissions (
+            user_id INTEGER NOT NULL,
+            section_key TEXT NOT NULL,
+            PRIMARY KEY (user_id, section_key)
+        )
+    """)
 
     # =========================================================
     # APP SETTINGS

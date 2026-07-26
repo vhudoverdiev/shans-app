@@ -384,8 +384,8 @@
                 <path d="M8 8l32 32" stroke="#7c3aed"></path>
             </svg>
         </div>
-        <h1 class="offline-title">Отсутствует подключение к интернету</h1>
-        <p class="offline-description">Проверьте Wi‑Fi или мобильную сеть, затем повторите попытку.</p>
+        <h1 class="offline-title" id="offline-title">Отсутствует подключение к интернету</h1>
+        <p class="offline-description" id="offline-description">Проверьте Wi‑Fi или мобильную сеть, затем повторите попытку.</p>
         <button class="offline-retry" id="offline-retry" type="button">
             <span class="offline-retry-icon" aria-hidden="true">↻</span>
             <span id="offline-retry-label">Повторить попытку</span>
@@ -403,10 +403,23 @@
 
             const loader = document.getElementById("offline-loader");
             const card = document.getElementById("offline-card");
+            const title = document.getElementById("offline-title");
+            const description = document.getElementById("offline-description");
             const retryButton = document.getElementById("offline-retry");
             const retryLabel = document.getElementById("offline-retry-label");
             const status = document.getElementById("offline-status");
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const params = new URLSearchParams(window.location.search);
+            const reason = params.get("reason");
+            const rawReturnPath = params.get("return") || "/";
+            const returnPath = rawReturnPath.startsWith("/") && !rawReturnPath.startsWith("//")
+                ? rawReturnPath
+                : "/";
+
+            if (reason === "weak") {
+                title.textContent = "Слабое подключение к интернету";
+                description.textContent = "Соединение есть, но сайт отвечает слишком долго. Проверьте сеть и повторите попытку.";
+            }
 
             window.setTimeout(function () {
                 loader.classList.add("is-leaving");
@@ -431,23 +444,31 @@
                 retryLabel.textContent = "Проверяем соединение…";
                 setStatus("");
 
+                const controller = new AbortController();
+                const timeoutId = window.setTimeout(function () {
+                    controller.abort();
+                }, 4500);
+
                 try {
                     const response = await window.fetch("/health?offline_retry=" + Date.now(), {
                         cache: "no-store",
                         credentials: "same-origin",
+                        signal: controller.signal,
                     });
                     if (!response.ok) {
                         throw new Error("Server is unavailable");
                     }
                     setStatus("Соединение восстановлено. Загружаем сайт…", "online");
                     window.setTimeout(function () {
-                        window.location.reload();
+                        window.location.assign(returnPath);
                     }, reducedMotion ? 20 : 260);
                 } catch (_error) {
                     setStatus("Интернет всё ещё недоступен. Проверьте подключение и попробуйте снова.");
                     retryButton.disabled = false;
                     retryButton.classList.remove("is-checking");
                     retryLabel.textContent = "Повторить попытку";
+                } finally {
+                    window.clearTimeout(timeoutId);
                 }
             });
 

@@ -123,7 +123,13 @@
                 <tbody>
                     {% for task in day_tasks %}
                     <tr>
-                        <td class="bulk-col"><input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись"></td>
+                        <td class="bulk-col">
+                            {% if task.workout_plan_id %}
+                            <span class="planner-workout-marker" title="Управляется планом тренировки" aria-label="Плановая тренировка">🏋️</span>
+                            {% else %}
+                            <input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись">
+                            {% endif %}
+                        </td>
                         <td>
                             {% if task.task_type == 'Сценарий' or (task.range_end_date and task.status == 'planned') or task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}
                             <span class="planner-task-alert-icon" aria-hidden="true" title="Важная задача">❗</span>
@@ -147,7 +153,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if task.task_type == 'Съёмка' and task.shooting_id %}
+                            {% if task.workout_plan_id %}
+                            <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('workouts.plan_detail', plan_id=task.workout_plan_id) }}">Открыть тренировку</a>
+                            {% elif task.task_type == 'Съёмка' and task.shooting_id %}
                             <a class="btn btn-small planner-shooting-open-btn" href="{{ url_for('shooting_detail', shooting_id=task.shooting_id) }}">Открыть съёмку</a>
                             {% elif task.task_type == 'Сценарий' and task.scenario_id %}
                             <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('scenario_detail', scenario_id=task.scenario_id) }}">Открыть сценарий</a>
@@ -157,6 +165,9 @@
                         </td>
                         <td>
                             <div class="table-actions-icon">
+                                {% if task.workout_plan_id %}
+                                <a class="icon-action-btn icon-edit" href="{{ url_for('workouts.plan_detail', plan_id=task.workout_plan_id) }}" title="Открыть план">↗</a>
+                                {% else %}
                                 <form method="post" action="{{ url_for('planner.move_schedule_task_next_day', task_id=task.id) }}" class="inline-form">
                                     <button class="icon-action-btn icon-edit" type="submit" title="Перенести на следующий день">⇢</button>
                                 </form>
@@ -164,6 +175,7 @@
                                 <form method="post" action="{{ url_for('planner.delete_schedule_task', task_id=task.id) }}" class="inline-form" onsubmit="return confirm('Удалить задачу?');">
                                     <button class="icon-action-btn icon-delete" type="submit" title="Удалить">🗑</button>
                                 </form>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

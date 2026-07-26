@@ -18,6 +18,7 @@
     </div>
 
     <div class="dashboard-grid dashboard-grid-desktop">
+        {% if has_section_access('budget') %}
         <a href="{{ url_for('budget') }}" class="dashboard-card">
             <div class="dashboard-card-icon">Р</div>
             <div class="dashboard-card-title">Бюджет</div>
@@ -25,7 +26,9 @@
                 Обзор доходов, расходов и текущего баланса.
             </div>
         </a>
+        {% endif %}
 
+        {% if has_section_access('car') %}
         <a href="{{ url_for('car') }}" class="dashboard-card">
             <div class="dashboard-card-icon">🚗</div>
             <div class="dashboard-card-title">Машина</div>
@@ -33,7 +36,9 @@
                 Volkswagen Polo 2018
             </div>
         </a>
+        {% endif %}
 
+        {% if has_section_access('schedule') %}
         <a href="{{ url_for('planner.schedule') }}" class="dashboard-card">
             <div class="dashboard-card-icon">🗓</div>
             <div class="dashboard-card-title">График</div>
@@ -41,7 +46,9 @@
                 Общее планирование дел
             </div>
         </a>
+        {% endif %}
 
+        {% if has_section_access('shootings') %}
         <a href="{{ url_for('shootings') }}" class="dashboard-card">
             <div class="dashboard-card-icon">🎬</div>
             <div class="dashboard-card-title">Съёмки</div>
@@ -49,7 +56,9 @@
                 Запись на съёмку
             </div>
         </a>
+        {% endif %}
 
+        {% if has_section_access('photo_projects') %}
         <a href="{{ url_for('planner.photo_projects') }}" class="dashboard-card">
             <div class="dashboard-card-icon">📷</div>
             <div class="dashboard-card-title">Фотопроекты</div>
@@ -57,7 +66,9 @@
                 Электронная запись
             </div>
         </a>
+        {% endif %}
 
+        {% if has_section_access('scenarios') %}
         <a href="{{ url_for('scenarios') }}" class="dashboard-card">
             <div class="dashboard-card-icon">📝</div>
             <div class="dashboard-card-title">Сценарии</div>
@@ -65,9 +76,21 @@
                 Подготовка сценариев к съёмкам
             </div>
         </a>
+        {% endif %}
+
+        {% if has_section_access('study') %}
+        <a href="{{ url_for('learning.study_hub') }}" class="dashboard-card">
+            <div class="dashboard-card-icon">🎓</div>
+            <div class="dashboard-card-title">Учёба</div>
+            <div class="dashboard-card-text">
+                Курсы IT и English с ежедневными уроками
+            </div>
+        </a>
+        {% endif %}
     </div>
 
     <div class="dashboard-grid dashboard-grid-mobile dashboard-primary-grid">
+        {% if has_section_access('schedule') %}
         <a href="{{ url_for('planner.schedule') }}" class="dashboard-card dashboard-card-featured">
             <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -82,7 +105,9 @@
             </div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
 
+        {% if has_section_access('shootings') or has_section_access('photo_projects') or has_section_access('scenarios') %}
         <a href="{{ url_for('shootings_hub') }}" class="dashboard-card">
             <div class="dashboard-card-icon dashboard-card-icon-purple" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -96,7 +121,9 @@
             </div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
 
+        {% if has_section_access('budget') or has_section_access('car') %}
         <a href="{{ url_for('reports_hub') }}" class="dashboard-card">
             <div class="dashboard-card-icon dashboard-card-icon-amber" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -110,19 +137,22 @@
             </div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
 
-        <a href="{{ url_for('workouts.index') }}" class="dashboard-card">
+        {% if has_section_access('study') %}
+        <a href="{{ url_for('learning.study_hub') }}" class="dashboard-card">
             <div class="dashboard-card-icon dashboard-card-icon-purple" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10"></path>
                 </svg>
             </div>
-            <div class="dashboard-card-title">Тренировки</div>
+            <div class="dashboard-card-title">Учёба</div>
             <div class="dashboard-card-text">
-                Планы занятий, результаты упражнений и динамика веса.
+                Курсы IT и English с ежедневными уроками.
             </div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

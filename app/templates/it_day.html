@@ -22,12 +22,34 @@
         <div><strong>5 минут</strong><span>Тест</span></div>
     </div>
 
+    <section class="course-audio-controller" data-course-audio>
+        <div class="course-audio-copy">
+            <p class="learning-kicker">Озвучка</p>
+            <h2>Слушать урок</h2>
+            <p>Озвучивается весь текст урока: тема, лекция, термины и практическое задание.</p>
+        </div>
+        <div class="course-audio-actions">
+            <button type="button" class="course-audio-toggle" data-course-audio-toggle aria-pressed="false">Включить озвучку</button>
+            <button type="button" class="course-audio-play" data-course-audio-play disabled>Озвучить урок</button>
+            <button type="button" class="course-audio-stop" data-course-audio-stop hidden>Стоп</button>
+        </div>
+        <div class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></div>
+    </section>
+
+    <script type="application/json" id="course-audio-segments">{{ audio_segments|tojson }}</script>
+
     <section class="lesson-section it-lecture-section">
         <p class="learning-kicker">Лекция</p>
         <h2>Разбираем тему простыми словами</h2>
         <div class="it-lecture-copy">
-            {% for paragraph in lesson.lecture %}
-            <p>{{ paragraph }}</p>
+            {% for point in lecture_points %}
+            <article class="it-lecture-point">
+                <p>{{ point.text }}</p>
+                <details class="it-more-details">
+                    <summary>Подробнее</summary>
+                    <p>{{ point.detail }}</p>
+                </details>
+            </article>
             {% endfor %}
         </div>
     </section>
@@ -41,10 +63,25 @@
             <span>Термин → смысл → пример в контексте</span>
         </div>
         <div class="it-term-grid">
-            {% for term, definition in lesson.terms %}
+            {% for term in term_cards %}
             <article class="it-term-card">
-                <strong>{{ term }}</strong>
-                <span>{{ definition }}</span>
+                <div class="course-pronounce-line">
+                    <strong>{{ term.term }}</strong>
+                    {% if term.is_english %}
+                    <button
+                        type="button"
+                        class="course-pronounce-button"
+                        data-course-pronounce="{{ term.term }}"
+                        data-course-pronounce-lang="en-US"
+                        aria-label="Произнести термин {{ term.term }}"
+                    >🔊</button>
+                    {% endif %}
+                </div>
+                <span>{{ term.definition }}</span>
+                <details class="it-more-details">
+                    <summary>Подробнее</summary>
+                    <p>{{ term.detail }}</p>
+                </details>
             </article>
             {% endfor %}
         </div>
@@ -131,4 +168,9 @@
         </form>
     </section>
 </section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

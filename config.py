@@ -41,6 +41,7 @@ class Config:
         "WEB_PUSH_VAPID_SUBJECT",
         "",
     )
+    TELEGRAM_PUSH_SECRET = os.getenv("TELEGRAM_PUSH_SECRET", "").strip()
 
     @classmethod
     def is_production(cls) -> bool:

@@ -7,10 +7,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = PROJECT_ROOT / "app" / "templates"
 STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
 MOBILE_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+NUTRITION_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "nutrition.css"
 
 
 class MobileAppNavigationTests(unittest.TestCase):
-    def test_desktop_dashboard_keeps_original_six_cards(self):
+    def test_desktop_dashboard_includes_study_card(self):
         source = (TEMPLATES / "index.html").read_text(encoding="utf-8")
         desktop_grid = re.search(
             r'<div class="dashboard-grid dashboard-grid-desktop">(?P<body>.*?)'
@@ -21,7 +22,7 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         self.assertIsNotNone(desktop_grid)
         body = desktop_grid.group("body")
-        self.assertEqual(body.count('class="dashboard-card"'), 6)
+        self.assertEqual(body.count('class="dashboard-card"'), 7)
         for endpoint in (
             "budget",
             "car",
@@ -29,8 +30,10 @@ class MobileAppNavigationTests(unittest.TestCase):
             "shootings",
             "planner.photo_projects",
             "scenarios",
+            "learning.study_hub",
         ):
             self.assertIn(f"url_for('{endpoint}')", body)
+        self.assertIn('<div class="dashboard-card-title">Учёба</div>', body)
 
     def test_mobile_dashboard_has_only_requested_sections(self):
         source = (TEMPLATES / "index.html").read_text(encoding="utf-8")
@@ -50,7 +53,8 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("url_for('planner.schedule')", mobile_grid)
         self.assertIn("url_for('shootings_hub')", mobile_grid)
         self.assertIn("url_for('reports_hub')", mobile_grid)
-        self.assertIn("url_for('workouts.index')", mobile_grid)
+        self.assertIn("url_for('learning.study_hub')", mobile_grid)
+        self.assertIn('<div class="dashboard-card-title">Учёба</div>', mobile_grid)
 
     def test_mobile_hubs_group_existing_sections(self):
         shootings = (TEMPLATES / "shootings_hub.html").read_text(encoding="utf-8")
@@ -70,17 +74,23 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         self.assertNotIn("mobile-fab", base)
         self.assertNotIn("mobile-fab", mobile_styles)
-        self.assertEqual(base.count('class="app-bottom-nav-link '), 6)
-        for label in ("График", "Съёмки", "Отчёт", "Учёба", "Спорт", "Аккаунт"):
+        self.assertEqual(base.count('class="app-bottom-nav-link '), 5)
+        for label in ("График", "Съёмки", "Отчёт", "Развитие", "Аккаунт"):
             self.assertIn(f"<span>{label}</span>", base)
+        self.assertNotIn("<span>Учёба</span>", base)
+        self.assertNotIn("<span>Спорт</span>", base)
         self.assertNotIn("<span>Главная</span>", base)
-        self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr));", mobile_styles)
+        self.assertIn("grid-template-columns: repeat(5, minmax(0, 1fr));", mobile_styles)
         self.assertIn("is_reports_section", base)
         self.assertIn("url_for('reports_hub')", base)
         self.assertIn("is_study_section", base)
         self.assertIn("url_for('learning.study_hub')", base)
         self.assertIn("is_workouts_section", base)
-        self.assertIn("url_for('workouts.index')", base)
+        self.assertIn("is_nutrition_section", base)
+        self.assertIn(
+            "{% set is_development_section = is_study_section or is_workouts_section or is_nutrition_section %}",
+            base,
+        )
         self.assertIn(
             "@media (max-width: 900px) and (pointer: coarse)",
             mobile_styles,
@@ -154,7 +164,51 @@ class MobileAppNavigationTests(unittest.TestCase):
             "background: var(--mobile-action-gradient);",
             mobile_styles,
         )
+        self.assertIn("--mobile-action-shadow: none;", mobile_styles)
+        no_mobile_button_glow = mobile_styles.split(
+            "@media (max-width: 900px) and (pointer: coarse) {",
+            1,
+        )[1]
+        self.assertIn(".app-body .app-bottom-nav-link-active", no_mobile_button_glow)
+        self.assertIn(".app-body .shooting-nav-link-active", no_mobile_button_glow)
+        self.assertIn(".app-body .btn-tab-active", no_mobile_button_glow)
+        self.assertIn("box-shadow: none !important;", no_mobile_button_glow)
+        self.assertIn("filter: none !important;", no_mobile_button_glow)
+        self.assertIn(
+            ".app-body .planner-calendar-switch-link-active {\n        box-shadow: none;",
+            mobile_styles,
+        )
+        self.assertIn(
+            ".app-bottom-nav-link-active {\n        color: #ffffff;\n        background: var(--mobile-action-gradient);\n        box-shadow: none;",
+            mobile_styles,
+        )
         self.assertNotIn("--mobile-action-gradient", styles)
+
+    def test_button_styles_do_not_add_square_glow(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+        nutrition_styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+
+        for selector in (
+            ".top-nav-link-active",
+            ".btn-primary",
+            ".btn-tab-active",
+            ".avatar-file-label",
+        ):
+            block = re.search(rf"{re.escape(selector)}\s*\{{(?P<body>.*?)\}}", styles, re.DOTALL)
+            self.assertIsNotNone(block, selector)
+            self.assertIn("box-shadow: none;", block.group("body"))
+
+        self.assertNotIn("box-shadow: var(--mobile-action-shadow);", mobile_styles)
+        self.assertNotIn("rgba(109, 40, 217, 0.18)", mobile_styles)
+
+        primary_button_block = re.search(
+            r"\.nutrition-primary-button,\s*\.nutrition-secondary-button\s*\{(?P<body>.*?)\}",
+            nutrition_styles,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(primary_button_block)
+        self.assertIn("box-shadow: none;", primary_button_block.group("body"))
 
 
 if __name__ == "__main__":

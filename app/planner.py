@@ -7,14 +7,14 @@ from typing import Dict, List, Optional
 import re
 
 from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from app.database import get_connection
 from app.utils import build_photo_project_excel
 
 planner_bp = Blueprint("planner", __name__)
 
-TASK_TYPES = ["Личное", "Съёмка", "Сценарий", "Фотопроект", "Встреча", "Другое"]
+TASK_TYPES = ["Личное", "Тренировка", "Съёмка", "Сценарий", "Фотопроект", "Встреча", "Другое"]
 TASK_STATUSES = ["planned", "done", "cancelled"]
 CALENDAR_PERSONAL = "personal"
 CALENDAR_WORK = "work"
@@ -47,6 +47,8 @@ def init_planner_db():
             booking_id INTEGER,
             shooting_id INTEGER,
             scenario_id INTEGER,
+            workout_plan_id INTEGER,
+            workout_user_id INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """
@@ -63,6 +65,10 @@ def init_planner_db():
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN range_end_date TEXT")
     if "calendar_type" not in existing_columns:
         cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN calendar_type TEXT NOT NULL DEFAULT 'personal'")
+    if "workout_plan_id" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN workout_plan_id INTEGER")
+    if "workout_user_id" not in existing_columns:
+        cursor.execute("ALTER TABLE schedule_tasks ADD COLUMN workout_user_id INTEGER")
 
     cursor.execute(
         """
@@ -75,6 +81,13 @@ def init_planner_db():
         """
         CREATE INDEX IF NOT EXISTS idx_schedule_tasks_calendar_date
         ON schedule_tasks (calendar_type, task_date)
+        """
+    )
+    cursor.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_tasks_workout_occurrence
+        ON schedule_tasks (workout_plan_id, task_date)
+        WHERE workout_plan_id IS NOT NULL
         """
     )
 
@@ -478,6 +491,7 @@ def replace_manual_schedule_tasks(tasks: List[Dict[str, object]]):
           AND shooting_id IS NULL
           AND booking_id IS NULL
           AND scenario_id IS NULL
+          AND workout_plan_id IS NULL
         """,
         (CALENDAR_PERSONAL,),
     )
@@ -523,25 +537,56 @@ def get_task(task_id: int):
     return row
 
 
-def get_tasks_for_range(date_from: str, date_to: str, calendar_type: str = CALENDAR_PERSONAL):
+def _current_planner_user_id() -> int | None:
+    try:
+        return int(current_user.id)
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
+def _task_is_visible_to_user(task, user_id: int | None) -> bool:
+    workout_user_id = task.get("workout_user_id") if task else None
+    return workout_user_id is None or (
+        user_id is not None and int(workout_user_id) == user_id
+    )
+
+
+def get_tasks_for_range(
+    date_from: str,
+    date_to: str,
+    calendar_type: str = CALENDAR_PERSONAL,
+    user_id: int | None = None,
+):
     calendar_type = _normalize_calendar(calendar_type)
     conn = get_connection()
+    workout_owner_clause = ""
+    parameters: list[object] = [calendar_type, date_from, date_to]
+    if user_id is not None:
+        workout_owner_clause = (
+            "AND (t.workout_user_id IS NULL OR t.workout_user_id = ?)"
+        )
+        parameters.append(int(user_id))
     rows = conn.execute(
-        """
+        f"""
         SELECT t.*, p.title AS project_title
         FROM schedule_tasks t
         LEFT JOIN photo_projects p ON p.id = t.project_id
         WHERE t.calendar_type = ? AND t.task_date BETWEEN ? AND ?
+        {workout_owner_clause}
         ORDER BY t.task_date ASC, COALESCE(t.start_time, '99:99') ASC, t.id DESC
         """,
-        (calendar_type, date_from, date_to),
+        tuple(parameters),
     ).fetchall()
     conn.close()
     return rows
 
 
-def get_tasks_for_day(day_value: str, calendar_type: str = CALENDAR_PERSONAL):
-    return get_tasks_for_range(day_value, day_value, calendar_type)
+def get_tasks_for_day(
+    day_value: str,
+    calendar_type: str = CALENDAR_PERSONAL,
+    user_id: int | None = None,
+):
+    return get_tasks_for_range(day_value, day_value, calendar_type, user_id)
 
 
 def upsert_task_for_shooting(
@@ -946,6 +991,7 @@ def build_schedule_context(
     selected_date: date,
     current_view: str,
     calendar_type: str = CALENDAR_PERSONAL,
+    user_id: int | None = None,
 ):
     if current_view not in {"day", "month"}:
         current_view = "day"
@@ -969,6 +1015,7 @@ def build_schedule_context(
         calendar_start.isoformat(),
         calendar_end.isoformat(),
         calendar_type,
+        user_id,
     )
     tasks_by_date = defaultdict(list)
     for task in tasks_in_grid:
@@ -1005,7 +1052,7 @@ def build_schedule_context(
         )
         current_day += timedelta(days=1)
 
-    day_tasks = get_tasks_for_day(selected_date.isoformat(), calendar_type)
+    day_tasks = get_tasks_for_day(selected_date.isoformat(), calendar_type, user_id)
     for task in day_tasks:
         task["display_status"] = _task_display_status(task)
         task["display_status_label"] = _task_display_status_label(task)
@@ -1050,7 +1097,26 @@ def schedule():
     current_view = request.args.get("view", "day")
     calendar_type = _normalize_calendar(request.args.get("calendar"))
     selected_date = _parse_date(request.args.get("date"), default=date.today())
-    context = build_schedule_context(selected_date, current_view, calendar_type)
+    user_id = _current_planner_user_id()
+    if calendar_type == CALENDAR_PERSONAL and user_id is not None:
+        from app.workouts import sync_workout_plan_schedule
+
+        if current_view == "month":
+            sync_start = selected_date.replace(day=1) - timedelta(days=7)
+            sync_end = selected_date.replace(
+                day=monthrange(selected_date.year, selected_date.month)[1]
+            ) + timedelta(days=7)
+        else:
+            sync_start = selected_date - timedelta(days=35)
+            sync_end = selected_date + timedelta(days=35)
+        sync_workout_plan_schedule(user_id, sync_start, sync_end)
+
+    context = build_schedule_context(
+        selected_date,
+        current_view,
+        calendar_type,
+        user_id,
+    )
     return render_template("schedule.html", **context)
 
 
@@ -1157,9 +1223,14 @@ def create_schedule_task():
 @login_required
 def edit_schedule_task(task_id: int):
     task = get_task(task_id)
-    if not task:
+    if not task or not _task_is_visible_to_user(task, _current_planner_user_id()):
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
+    if task.get("workout_plan_id"):
+        flash("Расписание этой тренировки меняется в её плане.", "info")
+        return redirect(
+            url_for("workouts.plan_detail", plan_id=task["workout_plan_id"])
+        )
     calendar_type = _normalize_calendar(task.get("calendar_type"))
 
     if request.method == "POST":
@@ -1227,8 +1298,18 @@ def edit_schedule_task(task_id: int):
 @login_required
 def delete_schedule_task(task_id: int):
     task = get_task(task_id)
-    if task:
+    if task and _task_is_visible_to_user(task, _current_planner_user_id()):
         calendar_type = _normalize_calendar(task.get("calendar_type"))
+        if task.get("workout_plan_id"):
+            flash("Плановую тренировку можно убрать через настройки плана.", "warning")
+            return redirect(
+                url_for(
+                    "planner.schedule",
+                    date=task["task_date"],
+                    view="day",
+                    calendar=calendar_type,
+                )
+            )
         delete_task(task_id)
         flash("Задача удалена.", "success")
         return redirect(
@@ -1263,7 +1344,12 @@ def delete_schedule_tasks_selected():
     deleted_count = 0
     for task_id in selected_ids:
         task = get_task(task_id)
-        if task and _normalize_calendar(task.get("calendar_type")) == calendar_type:
+        if (
+            task
+            and _task_is_visible_to_user(task, _current_planner_user_id())
+            and not task.get("workout_plan_id")
+            and _normalize_calendar(task.get("calendar_type")) == calendar_type
+        ):
             delete_task(task_id)
             deleted_count += 1
 
@@ -1287,7 +1373,11 @@ def delete_schedule_tasks_all():
     task_date = request.form.get("task_date", "").strip()
     calendar_type = _normalize_calendar(request.form.get("calendar_type"))
     if task_date:
-        tasks = get_tasks_for_day(task_date, calendar_type)
+        tasks = get_tasks_for_day(
+            task_date,
+            calendar_type,
+            _current_planner_user_id(),
+        )
         if not tasks:
             flash("На выбранный день нет задач для удаления.", "warning")
             return redirect(
@@ -1299,8 +1389,24 @@ def delete_schedule_tasks_all():
                 )
             )
 
-        for task in tasks:
+        deletable_tasks = [
+            task for task in tasks if not task.get("workout_plan_id")
+        ]
+        for task in deletable_tasks:
             delete_task(task["id"])
+        if not deletable_tasks:
+            flash(
+                "Плановые тренировки управляются в разделе «Тренировки».",
+                "warning",
+            )
+            return redirect(
+                url_for(
+                    "planner.schedule",
+                    date=task_date,
+                    view="day",
+                    calendar=calendar_type,
+                )
+            )
     else:
         flash("Не удалось определить дату для удаления задач.", "warning")
         return redirect(url_for("planner.schedule", view="day", calendar=calendar_type))
@@ -1319,7 +1425,7 @@ def delete_schedule_tasks_all():
 @login_required
 def toggle_schedule_task(task_id: int):
     task = get_task(task_id)
-    if not task:
+    if not task or not _task_is_visible_to_user(task, _current_planner_user_id()):
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
     new_status = toggle_task_status(task_id)
@@ -1343,9 +1449,19 @@ def toggle_schedule_task(task_id: int):
 @login_required
 def move_schedule_task_next_day(task_id: int):
     task = get_task(task_id)
-    if not task:
+    if not task or not _task_is_visible_to_user(task, _current_planner_user_id()):
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
+    if task.get("workout_plan_id"):
+        flash("День плановой тренировки меняется в её плане.", "warning")
+        return redirect(
+            url_for(
+                "planner.schedule",
+                date=task["task_date"],
+                view="day",
+                calendar=_normalize_calendar(task.get("calendar_type")),
+            )
+        )
 
     current_date = _parse_date(task["task_date"])
     next_day = (current_date + timedelta(days=1)).isoformat()

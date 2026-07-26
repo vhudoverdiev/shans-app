@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from app.database import get_connection
+from app.database import get_connection, get_master_connection
 
 
 # =========================================================
@@ -18,7 +18,7 @@ def get_current_year():
 # =========================================================
 
 def get_user_by_username(username):
-    conn = get_connection()
+    conn = get_master_connection()
     user = conn.execute(
         "SELECT * FROM users WHERE username = ?",
         (username,)
@@ -28,7 +28,7 @@ def get_user_by_username(username):
 
 
 def get_user_by_id(user_id):
-    conn = get_connection()
+    conn = get_master_connection()
     user = conn.execute(
         "SELECT * FROM users WHERE id = ?",
         (user_id,)
@@ -38,7 +38,7 @@ def get_user_by_id(user_id):
 
 
 def set_user_otp(user_id, otp_secret, otp_enabled=True):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "UPDATE users SET otp_secret = ?, otp_enabled = ? WHERE id = ?",
         (otp_secret, 1 if otp_enabled else 0, user_id),
@@ -48,7 +48,7 @@ def set_user_otp(user_id, otp_secret, otp_enabled=True):
 
 
 def set_user_password_hash(user_id, password_hash):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "UPDATE users SET password_hash = ? WHERE id = ?",
         (password_hash, user_id),
@@ -58,7 +58,7 @@ def set_user_password_hash(user_id, password_hash):
 
 
 def set_user_avatar_filename(user_id, avatar_filename):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "UPDATE users SET avatar_filename = ? WHERE id = ?",
         (avatar_filename, user_id),
@@ -68,7 +68,7 @@ def set_user_avatar_filename(user_id, avatar_filename):
 
 
 def set_user_last_login_ip(user_id, ip_address):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "UPDATE users SET last_login_ip = ? WHERE id = ?",
         (ip_address, user_id),
@@ -86,7 +86,7 @@ def upsert_user_login_session(
     first_login_at,
     last_seen_at,
 ):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         """
         INSERT INTO user_login_sessions (
@@ -122,7 +122,7 @@ def upsert_user_login_session(
 
 
 def get_user_login_sessions(user_id):
-    conn = get_connection()
+    conn = get_master_connection()
     rows = conn.execute(
         """
         SELECT
@@ -143,7 +143,7 @@ def get_user_login_sessions(user_id):
 
 
 def deactivate_user_login_session(session_key):
-    conn = get_connection()
+    conn = get_master_connection()
     cursor = conn.execute(
         "UPDATE user_login_sessions SET is_active = 0 WHERE session_key = ?",
         (session_key,),
@@ -154,7 +154,7 @@ def deactivate_user_login_session(session_key):
 
 
 def deactivate_all_user_login_sessions(user_id):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "UPDATE user_login_sessions SET is_active = 0 WHERE user_id = ?",
         (user_id,),
@@ -164,7 +164,7 @@ def deactivate_all_user_login_sessions(user_id):
 
 
 def get_login_session_owner(session_key):
-    conn = get_connection()
+    conn = get_master_connection()
     row = conn.execute(
         """
         SELECT user_id, is_active
@@ -178,7 +178,7 @@ def get_login_session_owner(session_key):
 
 
 def get_system_password():
-    conn = get_connection()
+    conn = get_master_connection()
     row = conn.execute(
         "SELECT value FROM app_settings WHERE key = 'system_password'"
     ).fetchone()
@@ -187,7 +187,7 @@ def get_system_password():
 
 
 def set_system_password(new_password):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         """
         INSERT INTO app_settings (key, value)

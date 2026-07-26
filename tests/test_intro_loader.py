@@ -25,6 +25,17 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn(">Шанс</div>", template)
         self.assertIn("filename='js/intro-loader.js'", template)
 
+    def test_intro_bootstrap_hides_content_before_external_stylesheets_load(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        bootstrap_position = template.index('const introKey = "shans-intro-seen-v1"')
+        first_stylesheet_position = template.index('rel="stylesheet"')
+
+        self.assertLess(bootstrap_position, first_stylesheet_position)
+        self.assertIn(
+            "html.app-intro-pending body {\n            visibility: hidden;",
+            template,
+        )
+
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
@@ -45,6 +56,22 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", stylesheet)
         self.assertIn("@keyframes app-intro-logo-in", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)
+
+    def test_intro_uses_dynamic_viewport_and_centers_installed_ios_app(self):
+        stylesheet = STYLESHEET.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            stylesheet,
+            r"\.app-intro\s*\{[^}]*height:\s*100vh;[^}]*height:\s*100dvh;",
+        )
+        self.assertIn(
+            "@media (display-mode: standalone) and (max-width: 768px) and (pointer: coarse)",
+            stylesheet,
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.app-intro-stage\s*\{\s*transform:\s*translateY\(clamp\(-24px,\s*-2\.2dvh,\s*-16px\)\);",
+        )
 
     def test_intro_logo_is_inline_and_cannot_fail_as_an_image_request(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

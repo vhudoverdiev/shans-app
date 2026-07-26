@@ -18,6 +18,12 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('navigator.serviceWorker.register("/service-worker.js"', script)
         self.assertIn('scope: "/"', script)
         self.assertIn('updateViaCache: "none"', script)
+        self.assertIn("const HEALTH_TIMEOUT_MS = 4500", script)
+        self.assertIn('"/health?connection_check="', script)
+        self.assertIn("navigator.onLine", script)
+        self.assertIn("hasVeryWeakConnectionHint()", script)
+        self.assertIn('redirectToOffline("weak")', script)
+        self.assertIn("window.location.replace(buildOfflineUrl(reason))", script)
 
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
@@ -42,7 +48,11 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("Повторить попытку", page)
         self.assertIn('window.fetch("/health?offline_retry="', page)
         self.assertIn('cache: "no-store"', page)
-        self.assertIn("window.location.reload()", page)
+        self.assertIn("new URLSearchParams(window.location.search)", page)
+        self.assertIn('reason === "weak"', page)
+        self.assertIn("Слабое подключение к интернету", page)
+        self.assertIn("window.location.assign(returnPath)", page)
+        self.assertNotIn("window.location.reload()", page)
         self.assertIn("Интернет всё ещё недоступен", page)
 
 

@@ -15,11 +15,13 @@ from app.auth import (
     load_user_from_db,
     create_admin_if_not_exists,
 )
+from app.access_control import enforce_section_access, has_section_access, SECTION_LABELS
 from app.database import init_db, get_connection
 from app.routes import register_routes
 from app.planner import planner_bp, init_planner_db
 from app.learning import learning_bp, init_learning_db
 from app.workouts import workouts_bp, init_workouts_db
+from app.nutrition import nutrition_bp, init_nutrition_db
 from app.logging_setup import setup_logging, register_request_hooks
 from app.web_push import (
     init_web_push_db,
@@ -42,7 +44,7 @@ def build_static_asset_version(static_folder):
             asset_paths.extend(path for path in directory.rglob("*") if path.is_file())
 
     for filename in (
-        "favicon.svg",
+        "favicon.png",
         "logo.png",
         "service-worker.js",
         "site.webmanifest",
@@ -123,6 +125,7 @@ def create_app():
     init_planner_db()
     init_learning_db()
     init_workouts_db()
+    init_nutrition_db()
     init_web_push_db()
     create_admin_if_not_exists()
 
@@ -131,6 +134,7 @@ def create_app():
     app.register_blueprint(planner_bp)
     app.register_blueprint(learning_bp)
     app.register_blueprint(workouts_bp)
+    app.register_blueprint(nutrition_bp)
     _register_management_commands(app)
     werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
     if werkzeug_run_main in {"", "true", "1"}:
@@ -157,14 +161,18 @@ def create_app():
         if not token:
             token = secrets.token_urlsafe(32)
             session["_csrf_token"] = token
-        return {"csrf_token": token}
+        return {
+            "csrf_token": token,
+            "section_labels": SECTION_LABELS,
+            "has_section_access": has_section_access,
+        }
 
     @app.before_request
     def validate_csrf():
         if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
             return None
 
-        if request.endpoint in {"static", "health"}:
+        if request.endpoint in {"static", "health", "telegram_external_push"}:
             return None
 
         session_token = session.get("_csrf_token")
@@ -179,6 +187,10 @@ def create_app():
         if request_token != session_token:
             abort(400, description="CSRF token mismatch")
         return None
+
+    @app.before_request
+    def validate_section_access():
+        return enforce_section_access()
 
     @app.errorhandler(413)
     def handle_request_entity_too_large(_error):

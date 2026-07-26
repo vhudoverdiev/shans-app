@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hmac
 import json
 import threading
 import time
@@ -309,14 +310,26 @@ def _schedule_url(target_date: date) -> str:
     )
 
 
-def _get_due_task_candidates(now_local: datetime) -> list[PushCandidate]:
+def _get_due_task_candidates(
+    now_local: datetime,
+    user_ids=None,
+) -> list[PushCandidate]:
     today = now_local.date()
     tomorrow = today + timedelta(days=1)
     conn = get_connection()
     try:
+        schedule_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(schedule_tasks)").fetchall()
+        }
+        workout_owner_select = (
+            "workout_user_id"
+            if "workout_user_id" in schedule_columns
+            else "NULL AS workout_user_id"
+        )
         tasks = conn.execute(
-            """
-            SELECT id, title, task_date, start_time
+            f"""
+            SELECT id, title, task_date, start_time, {workout_owner_select}
             FROM schedule_tasks
             WHERE task_date BETWEEN ? AND ?
               AND status = 'planned'
@@ -352,6 +365,11 @@ def _get_due_task_candidates(now_local: datetime) -> list[PushCandidate]:
                 body=f"{task_time.strftime('%H:%M')} — {title}",
                 navigate_path=_schedule_url(task_date),
                 tag=event_key,
+                user_id=(
+                    int(task["workout_user_id"])
+                    if task["workout_user_id"] is not None
+                    else None
+                ),
             )
         )
     return candidates
@@ -516,31 +534,51 @@ def collect_due_candidates(
         now_local = now_local.replace(tzinfo=_get_timezone())
 
     candidates: list[PushCandidate] = []
+    safe_user_ids = (
+        sorted({int(user_id) for user_id in user_ids})
+        if user_ids is not None
+        else []
+    )
+
     if _summary_is_due(now_local, 10):
         target_date = now_local.date()
-        candidates.append(
-            PushCandidate(
-                key=f"summary:today:{target_date.isoformat()}",
-                title="Шанс — личный график",
-                body=build_personal_tasks_text(target_date, "сегодня"),
-                navigate_path=_schedule_url(target_date),
-                tag=f"summary-today-{target_date.isoformat()}",
+        summary_users = safe_user_ids or [None]
+        for user_id in summary_users:
+            candidates.append(
+                PushCandidate(
+                    key=f"summary:today:{target_date.isoformat()}",
+                    title="Шанс — личный график",
+                    body=build_personal_tasks_text(
+                        target_date,
+                        "сегодня",
+                        user_id,
+                    ),
+                    navigate_path=_schedule_url(target_date),
+                    tag=f"summary-today-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
             )
-        )
 
     if _summary_is_due(now_local, 20):
         target_date = now_local.date() + timedelta(days=1)
-        candidates.append(
-            PushCandidate(
-                key=f"summary:tomorrow:{target_date.isoformat()}",
-                title="Шанс — личный график",
-                body=build_personal_tasks_text(target_date, "завтра"),
-                navigate_path=_schedule_url(target_date),
-                tag=f"summary-tomorrow-{target_date.isoformat()}",
+        summary_users = safe_user_ids or [None]
+        for user_id in summary_users:
+            candidates.append(
+                PushCandidate(
+                    key=f"summary:tomorrow:{target_date.isoformat()}",
+                    title="Шанс — личный график",
+                    body=build_personal_tasks_text(
+                        target_date,
+                        "завтра",
+                        user_id,
+                    ),
+                    navigate_path=_schedule_url(target_date),
+                    tag=f"summary-tomorrow-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
             )
-        )
 
-    candidates.extend(_get_due_task_candidates(now_local))
+    candidates.extend(_get_due_task_candidates(now_local, user_ids=user_ids))
     if user_ids is not None:
         candidates.extend(_get_due_learning_candidates(now_local, user_ids))
     return candidates
@@ -889,6 +927,37 @@ def send_test_notification(user_id: int, endpoint: str) -> tuple[bool, str]:
     return True, "Тестовое уведомление отправлено."
 
 
+def _clean_external_push_text(value: object, fallback: str, max_length: int) -> str:
+    text = str(value or "").strip() or fallback
+    return text[:max_length].strip()
+
+
+def send_external_telegram_notification(payload: dict) -> tuple[int, int]:
+    timestamp = time.time_ns()
+    raw_user_id = payload.get("user_id")
+    user_id = None
+    if raw_user_id not in {None, ""}:
+        user_id = int(raw_user_id)
+
+    candidate = PushCandidate(
+        key=f"telegram:{timestamp}",
+        title=_clean_external_push_text(
+            payload.get("title"),
+            "Shans - Telegram",
+            80,
+        ),
+        body=_clean_external_push_text(
+            payload.get("body") or payload.get("text") or payload.get("message"),
+            "Script finished.",
+            800,
+        ),
+        navigate_path=_clean_external_push_text(payload.get("navigate_path"), "/", 300),
+        tag=f"telegram-{timestamp}",
+        user_id=user_id,
+    )
+    return deliver_candidate(candidate)
+
+
 def _scheduler_worker(app) -> None:
     while True:
         try:
@@ -1035,3 +1104,33 @@ def register_web_push_routes(app) -> None:
             ),
             200 if ok else 502,
         )
+
+    @app.post("/api/push/external/telegram")
+    def telegram_external_push():
+        configured_secret = str(
+            current_app.config.get("TELEGRAM_PUSH_SECRET") or ""
+        ).strip()
+        request_secret = str(request.headers.get("X-Shans-Push-Secret") or "").strip()
+        if not configured_secret:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "message": "Telegram push secret is not configured.",
+                    }
+                ),
+                503,
+            )
+        if not request_secret or not hmac.compare_digest(request_secret, configured_secret):
+            return jsonify({"ok": False, "message": "Forbidden."}), 403
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({"ok": False, "message": "Invalid JSON payload."}), 400
+
+        try:
+            sent_count, failed_count = send_external_telegram_notification(payload)
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "message": "Invalid user_id."}), 400
+
+        return jsonify({"ok": True, "sent": sent_count, "failed": failed_count})

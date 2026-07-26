@@ -42,6 +42,9 @@
         <div class="account-nav" role="tablist" aria-label="Разделы настроек">
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="security">Безопасность</button>
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
+            {% if can_manage_users %}
+            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="users">Пользователи</button>
+            {% endif %}
             <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
         </div>
         <a href="{{ url_for('logout') }}" class="btn btn-danger account-logout-btn" id="account-logout-btn">Выйти из аккаунта</a>
@@ -116,12 +119,30 @@
                 <p>Текущий статус: <strong>{% if otp_enabled %}включена{% else %}не включена{% endif %}</strong></p>
 
                 {% if otp_enabled %}
-                <form method="post" action="{{ url_for('disable_account_2fa') }}" class="form-block account-settings-form account-inline-form-spaced">
+                <button
+                    type="button"
+                    class="btn btn-danger account-inline-form-spaced"
+                    id="show-disable-2fa-form"
+                    aria-controls="disable-2fa-form"
+                    aria-expanded="false"
+                >
+                    Отключить
+                </button>
+                <form
+                    method="post"
+                    action="{{ url_for('disable_account_2fa') }}"
+                    class="form-block account-settings-form account-inline-form-spaced account-2fa-disable-form"
+                    id="disable-2fa-form"
+                    hidden
+                >
                     <div class="form-group">
                         <label for="disable_2fa_otp">Код</label>
-                        <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" readonly data-manual-focus required>
+                        <input type="text" id="disable_2fa_otp" name="otp_code" class="form-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required>
                     </div>
-                    <button type="submit" class="btn btn-danger">Отключить</button>
+                    <div class="account-2fa-disable-actions">
+                        <button type="submit" class="btn btn-danger">Подтвердить отключение</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-disable-2fa">Отмена</button>
+                    </div>
                 </form>
                 {% else %}
                 <form method="post" action="{{ url_for('start_account_2fa_setup') }}" class="form-block account-settings-form account-inline-form-spaced">
@@ -245,6 +266,93 @@
         </div>
     </div>
 
+    {% if can_manage_users %}
+    <div class="account-tab-content" data-account-panel="users">
+        <div class="account-grid">
+            <div class="card account-card account-card-glow">
+                <h2 class="section-title">Создать пользователя</h2>
+                <form method="post" action="{{ url_for('create_account_user') }}" class="form-block account-settings-form">
+                    <div class="form-group">
+                        <label for="managed_username">Логин</label>
+                        <input type="text" id="managed_username" name="username" class="form-input" autocomplete="off" minlength="3" pattern="[a-z0-9_.-]+" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="managed_display_name">Имя</label>
+                        <input type="text" id="managed_display_name" name="display_name" class="form-input" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="managed_password">Пароль</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="managed_password" name="password" class="form-input" minlength="8" required>
+                            <button type="button" class="password-toggle" data-password-toggle="managed_password" aria-label="Показать пароль">
+                                <span class="eye-icon"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Доступ к разделам</label>
+                        <div class="account-permissions-grid">
+                            {% for section_key, section_label in available_sections.items() %}
+                            <label class="account-permission-option">
+                                <input type="checkbox" name="permissions" value="{{ section_key }}">
+                                <span>{{ section_label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Создать пользователя</button>
+                </form>
+            </div>
+
+            <div class="card account-card">
+                <h2 class="section-title">Созданные пользователи</h2>
+                {% if managed_users %}
+                <div class="account-managed-users">
+                    {% for user in managed_users %}
+                    <form method="post" action="{{ url_for('update_account_user', user_id=user.id) }}" class="account-managed-user-card">
+                        <div class="account-managed-user-head">
+                            <div>
+                                <div class="account-managed-user-login">{{ user.username }}</div>
+                                <div class="muted-text">База: {{ user.data_database_name }}</div>
+                            </div>
+                            <span class="account-status-chip">Активен</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="managed_display_name_{{ user.id }}">Имя</label>
+                            <input type="text" id="managed_display_name_{{ user.id }}" name="display_name" class="form-input" value="{{ user.display_name or user.username }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="managed_password_{{ user.id }}">Новый пароль</label>
+                            <div class="password-input-wrap">
+                                <input type="password" id="managed_password_{{ user.id }}" name="password" class="form-input" minlength="8" placeholder="Оставьте пустым, если не менять">
+                                <button type="button" class="password-toggle" data-password-toggle="managed_password_{{ user.id }}" aria-label="Показать пароль">
+                                    <span class="eye-icon"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Доступ к разделам</label>
+                            <div class="account-permissions-grid">
+                                {% for section_key, section_label in available_sections.items() %}
+                                <label class="account-permission-option">
+                                    <input type="checkbox" name="permissions" value="{{ section_key }}" {% if section_key in user.permissions %}checked{% endif %}>
+                                    <span>{{ section_label }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Сохранить пользователя</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="muted-text">Пока нет созданных пользователей.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </section>
 
 <script>
@@ -252,47 +360,49 @@ document.addEventListener("DOMContentLoaded", function () {
     const tabButtons = document.querySelectorAll(".account-tab-btn");
     const tabPanels = document.querySelectorAll(".account-tab-content");
     const isMobileViewport = window.matchMedia("(max-width: 768px) and (pointer: coarse)").matches;
-    const manualFocusInputs = document.querySelectorAll("[data-manual-focus]");
+    const showDisable2faButton = document.getElementById("show-disable-2fa-form");
+    const disable2faForm = document.getElementById("disable-2fa-form");
+    const cancelDisable2faButton = document.getElementById("cancel-disable-2fa");
+    const disable2faOtpInput = document.getElementById("disable_2fa_otp");
     const allowedTabs = isMobileViewport
         ? new Set(["security"])
-        : new Set(["security", "import"]);
+        : new Set(["security", "import"{% if can_manage_users %}, "users"{% endif %}]);
 
-    function enableManualInput(event) {
-        const input = event.currentTarget;
-        input.readOnly = false;
-        input.removeAttribute("readonly");
-    }
-
-    function dismissRestoredMobileInputFocus() {
-        if (!isMobileViewport) return;
-        const activeElement = document.activeElement;
-        if (
-            activeElement
-            && activeElement.matches("[data-manual-focus]")
-            && activeElement.readOnly
-        ) {
-            activeElement.blur();
+    function closeDisable2faForm() {
+        if (!disable2faForm || !showDisable2faButton) return;
+        if (document.activeElement === disable2faOtpInput) {
+            disable2faOtpInput.blur();
+        }
+        disable2faForm.hidden = true;
+        showDisable2faButton.hidden = false;
+        showDisable2faButton.setAttribute("aria-expanded", "false");
+        if (disable2faOtpInput) {
+            disable2faOtpInput.value = "";
         }
     }
 
-    manualFocusInputs.forEach(function (input) {
-        input.addEventListener("pointerdown", enableManualInput, { once: true });
-        input.addEventListener("touchstart", enableManualInput, { once: true, passive: true });
-        input.addEventListener("keydown", enableManualInput, { once: true });
-        if (!isMobileViewport) {
-            input.readOnly = false;
-            input.removeAttribute("readonly");
+    if (showDisable2faButton && disable2faForm) {
+        showDisable2faButton.addEventListener("click", function () {
+            showDisable2faButton.hidden = true;
+            showDisable2faButton.setAttribute("aria-expanded", "true");
+            disable2faForm.hidden = false;
+        });
+    }
+
+    if (cancelDisable2faButton) {
+        cancelDisable2faButton.addEventListener("click", function () {
+            closeDisable2faForm();
+            showDisable2faButton.focus();
+        });
+    }
+
+    closeDisable2faForm();
+    window.addEventListener("pageshow", closeDisable2faForm);
+    window.addEventListener("pagehide", function () {
+        if (document.activeElement === disable2faOtpInput) {
+            disable2faOtpInput.blur();
         }
     });
-
-    if (isMobileViewport) {
-        window.addEventListener("pageshow", function () {
-            window.requestAnimationFrame(dismissRestoredMobileInputFocus);
-        });
-        window.requestAnimationFrame(dismissRestoredMobileInputFocus);
-        window.setTimeout(dismissRestoredMobileInputFocus, 250);
-        window.setTimeout(dismissRestoredMobileInputFocus, 1000);
-    }
 
     function activateTab(target) {
         if (!target) return;

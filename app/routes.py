@@ -40,6 +40,14 @@ from app.auth import (
     register_failed_login,
     clear_failed_logins,
 )
+from app.access_control import (
+    SECTION_LABELS,
+    build_managed_user_form,
+    create_managed_user,
+    get_managed_users,
+    is_system_admin_user,
+    update_managed_user,
+)
 from config import Config
 from app.models import (
     archive_car_notification,
@@ -1490,6 +1498,7 @@ def register_routes(app):
                 "current": item.get("current", False),
             })
         recovery_codes = session.get("account_recovery_codes", [])
+        can_manage_users = is_system_admin_user(current_user)
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
@@ -1497,6 +1506,9 @@ def register_routes(app):
             otp_enabled=bool(user_row and user_row.get("otp_enabled")),
             login_history=login_history,
             recovery_codes=recovery_codes[:8],
+            can_manage_users=can_manage_users,
+            managed_users=get_managed_users() if can_manage_users else [],
+            available_sections=SECTION_LABELS,
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])
@@ -1614,6 +1626,44 @@ def register_routes(app):
         set_user_password_hash(current_user.id, generate_password_hash(new_password))
         flash("Пароль успешно обновлён.", "success")
         return redirect(url_for("account_settings"))
+
+    @app.route("/account/settings/users/create", methods=["POST"])
+    @login_required
+    def create_account_user():
+        if not is_system_admin_user(current_user):
+            return redirect(url_for("index"))
+
+        form = build_managed_user_form(request.form)
+        try:
+            create_managed_user(form, int(current_user.id))
+        except ValueError as exc:
+            flash(str(exc), "danger")
+            return redirect(url_for("account_settings", tab="users"))
+
+        flash("Пользователь создан. Для него подготовлена отдельная пустая база.", "success")
+        return redirect(url_for("account_settings", tab="users"))
+
+    @app.route("/account/settings/users/<int:user_id>", methods=["POST"])
+    @login_required
+    def update_account_user(user_id):
+        if not is_system_admin_user(current_user):
+            return redirect(url_for("index"))
+
+        display_name = request.form.get("display_name", "")
+        password = request.form.get("password", "").strip()
+        permissions = {
+            key
+            for key in request.form.getlist("permissions")
+            if key in SECTION_LABELS
+        }
+        try:
+            update_managed_user(user_id, display_name, password, permissions)
+        except ValueError as exc:
+            flash(str(exc), "danger")
+            return redirect(url_for("account_settings", tab="users"))
+
+        flash("Пользователь обновлён.", "success")
+        return redirect(url_for("account_settings", tab="users"))
 
     @app.route("/account/settings/system-password", methods=["POST"])
     @login_required

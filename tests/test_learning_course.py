@@ -7,10 +7,14 @@ from app.learning import (
     DAILY_PASS_SCORE,
     ENGLISH_LESSONS,
     FINAL_PASS_SCORE,
+    _build_it_lecture_points,
+    _build_it_term_cards,
     _course_state,
+    _english_audio_segments,
     _get_final_result,
     _get_it_final_result,
     _it_course_state,
+    _it_audio_segments,
     _save_day_result,
     _save_final_result,
     _save_it_day_result,
@@ -27,6 +31,9 @@ from app.it_course_content import IT_LESSONS
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = PROJECT_ROOT / "app" / "templates"
+LEARNING_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "learning.css"
+COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
+LEARNING_MODULE = PROJECT_ROOT / "app" / "learning.py"
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -114,18 +121,44 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(result["attempts"], 3)
         self.assertEqual(result["passed"], 1)
 
-    def test_study_hub_exposes_both_active_courses(self):
+    def test_development_hub_exposes_courses_and_workouts(self):
         study_source = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
         base_source = (TEMPLATES / "base.html").read_text(encoding="utf-8")
 
+        self.assertIn("<h1>Развитие</h1>", study_source)
         self.assertIn(">IT<", study_source)
         self.assertIn("Фундамент IT на Python", study_source)
         self.assertIn("url_for('learning.english_course')", study_source)
         self.assertIn("url_for('learning.it_course')", study_source)
+        self.assertIn("url_for('workouts.index')", study_source)
+        self.assertIn('<div class="dashboard-card-title">Спорт</div>', study_source)
+        self.assertIn("url_for('nutrition.index')", study_source)
+        self.assertIn('<div class="dashboard-card-title">Питание</div>', study_source)
         self.assertNotIn("Скоро", study_source)
         self.assertIn(
-            ">Учёба</a>",
+            ">Развитие</a>",
             base_source,
+        )
+
+    def test_learning_theme_is_blue_on_desktop_and_keeps_purple_touch_palette(self):
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+        desktop_theme = styles.split(
+            "/* Desktop follows the shared blue site theme;",
+            1,
+        )[1]
+
+        self.assertIn(
+            "@media (hover: hover) and (pointer: fine)",
+            desktop_theme,
+        )
+        self.assertIn(
+            "linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #3b82f6 100%)",
+            desktop_theme,
+        )
+        self.assertNotIn("#9333ea", desktop_theme)
+        self.assertIn(
+            "linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)",
+            styles,
         )
 
     def test_it_course_has_thirty_complete_daily_lessons(self):
@@ -199,6 +232,74 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("Словарь вакансий", day_source)
         self.assertIn("Практика на 5 минут", day_source)
         self.assertIn("30 вопросов", final_source)
+
+    def test_courses_show_locked_future_days_after_day_thirty(self):
+        english_source = (TEMPLATES / "english_course.html").read_text(encoding="utf-8")
+        it_source = (TEMPLATES / "it_course.html").read_text(encoding="utf-8")
+
+        for source in (english_source, it_source):
+            self.assertIn("locked_future_lessons", source)
+            self.assertIn("Продолжение после 30-го дня", source)
+            self.assertIn("Пока не открыто", source)
+            self.assertNotIn("url_for('learning.english_day', day_number=lesson.day)", source.split("learning-future-grid", 1)[1])
+
+    def test_daily_lessons_expose_speech_synthesis_controls(self):
+        english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
+        it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        script_source = COURSE_AUDIO_SCRIPT.read_text(encoding="utf-8")
+        learning_source = LEARNING_MODULE.read_text(encoding="utf-8")
+
+        for source in (english_source, it_source):
+            self.assertIn("data-course-audio", source)
+            self.assertIn("course-audio-segments", source)
+            self.assertIn("course-audio.js", source)
+            self.assertIn("Включить озвучку", source)
+            self.assertIn("Озвучить урок", source)
+        self.assertIn("data-course-pronounce", english_source)
+        self.assertIn("data-course-pronounce-lang=\"en-US\"", english_source)
+        self.assertIn("course-pronounce-button", english_source)
+        self.assertIn("data-course-pronounce", it_source)
+        self.assertIn("data-course-pronounce-lang=\"en-US\"", it_source)
+        self.assertIn("<summary>Подробнее</summary>", it_source)
+        self.assertIn("lecture_points", it_source)
+        self.assertIn("term_cards", it_source)
+        self.assertIn("SpeechSynthesisUtterance", script_source)
+        self.assertIn("data-course-pronounce", script_source)
+        self.assertIn("speakSingle", script_source)
+        self.assertIn("ru-RU", script_source)
+        self.assertIn("en-US", learning_source)
+
+    def test_every_daily_lesson_has_audio_segments(self):
+        for lesson in ENGLISH_LESSONS:
+            segments = _english_audio_segments(lesson)
+            self.assertGreaterEqual(len(segments), 1 + 1 + len(lesson["words"]) * 2 + len(lesson["phrases"]) * 2)
+            self.assertTrue(any(segment["lang"] == "ru-RU" for segment in segments))
+            self.assertTrue(any(segment["lang"] == "en-US" for segment in segments))
+            for english, _russian in lesson["words"]:
+                self.assertTrue(
+                    any(segment["lang"] == "en-US" and segment["text"] == english for segment in segments),
+                    english,
+                )
+
+        for lesson in IT_LESSONS:
+            segments = _it_audio_segments(lesson)
+            lecture_points = _build_it_lecture_points(lesson)
+            term_cards = _build_it_term_cards(lesson)
+            self.assertGreaterEqual(
+                len(segments),
+                3 + len(lecture_points) * 2 + len(term_cards) * 2 + 1,
+            )
+            self.assertTrue(any(segment["lang"] == "en-US" for segment in segments))
+            for point in lecture_points:
+                self.assertTrue(any(segment["text"] == point["text"] for segment in segments))
+                self.assertTrue(any(segment["text"] == point["detail"] for segment in segments))
+            for term in term_cards:
+                self.assertTrue(term["detail"])
+                if term["is_english"]:
+                    self.assertTrue(
+                        any(segment["lang"] == "en-US" and segment["text"] == term["term"] for segment in segments),
+                        term["term"],
+                    )
 
 
 if __name__ == "__main__":

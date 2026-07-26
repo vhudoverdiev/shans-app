@@ -201,6 +201,9 @@
     background:
         radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.09), transparent 36%),
         linear-gradient(155deg, #ffffff 35%, #f9f8ff);
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .workout-plan-number {
@@ -224,10 +227,57 @@
 }
 
 .workout-plan-content p {
+    display: -webkit-box;
+    overflow: hidden;
     margin: 0;
     color: #5d687a;
     font-size: 14px;
     line-height: 1.58;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+.workout-plan-schedule {
+    display: grid;
+    gap: 3px;
+    margin-top: auto;
+    padding: 13px 14px;
+    border: 1px solid #ddd6fe;
+    border-radius: 15px;
+    color: #5b21b6;
+    background: #f5f3ff;
+}
+
+.workout-plan-schedule span {
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.workout-plan-schedule small {
+    color: #756b8d;
+    font-size: 11px;
+}
+
+.workout-plan-schedule-empty {
+    border-color: #e5e7eb;
+    color: #667085;
+    background: #f8fafc;
+}
+
+.workout-plan-open-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 13px;
+    color: var(--workout-purple);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.workout-plan-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.32);
+    box-shadow: 0 16px 34px rgba(79, 70, 229, 0.12);
 }
 
 .workout-plan-editor {
@@ -588,7 +638,190 @@
     line-height: 1.5;
 }
 
-@media (max-width: 1100px) {
+.workouts-back-link {
+    width: fit-content;
+    color: var(--workout-purple);
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.workout-plan-detail-hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 245px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: center;
+    gap: 34px;
+    padding: 38px 42px;
+    border-radius: 28px;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.18), transparent 30%),
+        linear-gradient(135deg, var(--workout-blue), var(--workout-purple));
+    box-shadow: 0 22px 52px rgba(79, 70, 229, 0.22);
+}
+
+.workout-plan-detail-copy {
+    min-width: 0;
+}
+
+.workout-plan-detail-copy h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(36px, 5vw, 58px);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+}
+
+.workout-plan-detail-copy > p:last-child {
+    display: -webkit-box;
+    max-width: 680px;
+    overflow: hidden;
+    margin: 15px 0 0;
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-line;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+.workout-plan-detail-schedule {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 8px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.workout-plan-detail-schedule > span {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.workout-plan-detail-schedule strong {
+    font-size: 24px;
+}
+
+.workout-plan-detail-schedule a,
+.workout-plan-detail-schedule small {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.workout-plan-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.workout-plan-detail-side {
+    display: grid;
+    gap: 20px;
+}
+
+.workout-plan-detail-side .workouts-section h2 {
+    margin: 0;
+    color: var(--workout-ink);
+    font-size: 23px;
+}
+
+.workout-plan-detail-textarea.form-input {
+    min-height: 330px;
+}
+
+.workout-plan-sync-steps {
+    display: grid;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.workout-plan-sync-steps > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.workout-plan-sync-steps span {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    color: #5b21b6;
+    background: #ede9fe;
+    font-size: 12px;
+    font-weight: 850;
+}
+
+.workout-plan-sync-steps p {
+    margin: 4px 0 0;
+    color: var(--workout-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.workout-plan-result-list {
+    display: grid;
+    gap: 9px;
+}
+
+.workout-plan-result-list article {
+    padding: 14px;
+    border: 1px solid var(--workout-line);
+    border-radius: 15px;
+    background: #fbfcff;
+}
+
+.workout-plan-result-list time,
+.workout-plan-result-list strong,
+.workout-plan-result-list span {
+    display: block;
+}
+
+.workout-plan-result-list time {
+    color: #7c8798;
+    font-size: 10px;
+}
+
+.workout-plan-result-list strong {
+    margin-top: 5px;
+    color: var(--workout-ink);
+    font-size: 14px;
+}
+
+.workout-plan-result-list span {
+    margin-top: 3px;
+    color: var(--workout-blue);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.workout-plan-result-list p {
+    margin: 6px 0 0;
+    color: var(--workout-muted);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.workout-plan-empty-state {
+    min-height: 170px;
+}
+
+@media (max-width: 1100px) and (pointer: coarse) {
     .workouts-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -662,6 +895,31 @@
     .workouts-section-heading > p {
         margin-top: 8px;
         text-align: left;
+    }
+
+    .workout-plan-detail-hero {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        min-height: 0;
+        padding: 27px 23px;
+        border-radius: 24px;
+    }
+
+    .workout-plan-detail-copy h1 {
+        font-size: 38px;
+    }
+
+    .workout-plan-detail-schedule {
+        padding: 18px;
+        border-radius: 19px;
+    }
+
+    .workout-plan-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .workout-plan-detail-textarea.form-input {
+        min-height: 280px;
     }
 
     .workout-plan-card {

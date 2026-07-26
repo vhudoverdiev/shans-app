@@ -52,8 +52,12 @@ a {
 
 .app-intro {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     z-index: 10000;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
     display: none;
     place-items: center;
     overflow: hidden;
@@ -291,6 +295,17 @@ a {
     }
 }
 
+/*
+ * Standalone iOS lays the page viewport below the status region. Because the
+ * reserved top and bottom regions are unequal, the mathematical viewport
+ * centre looks lower than the physical screen centre.
+ */
+@media (display-mode: standalone) and (max-width: 768px) and (pointer: coarse) {
+    .app-intro-stage {
+        transform: translateY(clamp(-24px, -2.2dvh, -16px));
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .app-intro,
     .app-intro-glow,
@@ -401,7 +416,7 @@ a {
 .top-nav-link-active {
     background: #2563eb;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    box-shadow: none;
 }
 
 .header-user-block {
@@ -639,6 +654,20 @@ a {
 
 .account-inline-form-spaced {
     margin-top: 12px;
+}
+
+.account-2fa-disable-form[hidden] {
+    display: none;
+}
+
+.account-2fa-disable-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.account-2fa-disable-actions .btn {
+    flex: 1 1 190px;
 }
 
 .account-logout-all-form {
@@ -939,7 +968,61 @@ a {
     color: #fff !important;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+    box-shadow: none;
+}
+
+.account-permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.account-permission-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #f8fbff;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.account-permission-option input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+}
+
+.account-managed-users {
+    display: grid;
+    gap: 14px;
+}
+
+.account-managed-user-card {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.account-managed-user-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.account-managed-user-login {
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 800;
 }
 
 .avatar-file-label:visited,
@@ -1125,7 +1208,7 @@ body.avatar-crop-scroll-locked {
 .btn-primary {
     background: #2563eb;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    box-shadow: none;
 }
 
 .btn-secondary {
@@ -1148,7 +1231,7 @@ body.avatar-crop-scroll-locked {
 .btn-tab-active {
     background: #2563eb;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    box-shadow: none;
 }
 
 .btn-tab.btn-tab-active:hover {
@@ -1159,7 +1242,7 @@ body.avatar-crop-scroll-locked {
 .btn-success {
     background: #16a34a;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.22);
+    box-shadow: none;
 }
 
 .btn-danger {
@@ -3173,7 +3256,7 @@ body.avatar-crop-scroll-locked {
     background: #4338ca;
     color: #ffffff;
     border-color: #4338ca;
-    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.24);
+    box-shadow: none;
 }
 
 .car-tab-count {
@@ -3478,7 +3561,7 @@ body.avatar-crop-scroll-locked {
     background: #4338ca;
     color: #ffffff;
     border-color: #4338ca;
-    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.24);
+    box-shadow: none;
 }
 
 .car-tab-count {
@@ -4128,7 +4211,7 @@ body.avatar-crop-scroll-locked {
 .shooting-nav-link-active {
     background: #2563eb;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    box-shadow: none;
 }
 
 .shooting-nav-count {
@@ -5083,7 +5166,7 @@ body.avatar-crop-scroll-locked {
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+    box-shadow: none;
 }
 
 .btn-tab.btn-tab-active:hover,

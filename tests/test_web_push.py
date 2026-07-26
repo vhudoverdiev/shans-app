@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import sqlite3
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ from py_vapid import Vapid
 from pywebpush import WebPushException
 
 from config import Config
+from app import create_app
 from app.database import _dict_row_factory
 from app.schedule_notifications import build_personal_tasks_text
 from app.learning import init_learning_db
@@ -29,6 +31,7 @@ from app.web_push import (
     init_web_push_db,
     mark_all_push_notifications_read,
     save_subscription,
+    send_external_telegram_notification,
     send_test_notification,
 )
 
@@ -39,8 +42,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 class WebPushSchedulingTests(unittest.TestCase):
     def setUp(self):
         self.original_database_name = Config.DATABASE_NAME
+        self.original_telegram_push_secret = Config.TELEGRAM_PUSH_SECRET
         self.temp_directory = tempfile.TemporaryDirectory()
         Config.DATABASE_NAME = str(Path(self.temp_directory.name) / "test.db")
+        Config.TELEGRAM_PUSH_SECRET = ""
         conn = self._connect()
         conn.execute(
             """
@@ -52,7 +57,9 @@ class WebPushSchedulingTests(unittest.TestCase):
                 start_time TEXT,
                 task_type TEXT NOT NULL DEFAULT 'Личное',
                 calendar_type TEXT NOT NULL DEFAULT 'personal',
-                status TEXT NOT NULL DEFAULT 'planned'
+                status TEXT NOT NULL DEFAULT 'planned',
+                workout_plan_id INTEGER,
+                workout_user_id INTEGER
             )
             """
         )
@@ -64,6 +71,7 @@ class WebPushSchedulingTests(unittest.TestCase):
 
     def tearDown(self):
         Config.DATABASE_NAME = self.original_database_name
+        Config.TELEGRAM_PUSH_SECRET = self.original_telegram_push_secret
         self.temp_directory.cleanup()
 
     def _connect(self):
@@ -78,15 +86,23 @@ class WebPushSchedulingTests(unittest.TestCase):
         start_time=None,
         calendar_type="personal",
         status="planned",
+        workout_user_id=None,
     ):
         conn = self._connect()
         cursor = conn.execute(
             """
             INSERT INTO schedule_tasks (
-                title, task_date, start_time, calendar_type, status
-            ) VALUES (?, ?, ?, ?, ?)
+                title, task_date, start_time, calendar_type, status, workout_user_id
+            ) VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (title, task_date, start_time, calendar_type, status),
+            (
+                title,
+                task_date,
+                start_time,
+                calendar_type,
+                status,
+                workout_user_id,
+            ),
         )
         conn.commit()
         task_id = cursor.lastrowid
@@ -136,6 +152,38 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(any(item.key == "summary:today:2026-07-21" for item in morning))
         self.assertFalse(any(item.key.startswith("summary:") for item in after_morning_window))
         self.assertTrue(any(item.key == "summary:tomorrow:2026-07-22" for item in evening))
+
+    def test_workout_tasks_in_summary_are_isolated_by_user(self):
+        target_date = "2026-07-21"
+        self._add_task("Общая личная задача", target_date)
+        self._add_task(
+            "Тренировка первого",
+            target_date,
+            workout_user_id=1,
+        )
+        self._add_task(
+            "Тренировка второго",
+            target_date,
+            workout_user_id=2,
+        )
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 10, 0, tzinfo=self.moscow_timezone),
+            user_ids={1, 2},
+        )
+        summaries = {
+            candidate.user_id: candidate.body
+            for candidate in candidates
+            if candidate.key == "summary:today:2026-07-21"
+        }
+
+        self.assertEqual(set(summaries), {1, 2})
+        self.assertIn("Общая личная задача", summaries[1])
+        self.assertIn("Общая личная задача", summaries[2])
+        self.assertIn("Тренировка первого", summaries[1])
+        self.assertNotIn("Тренировка второго", summaries[1])
+        self.assertIn("Тренировка второго", summaries[2])
+        self.assertNotIn("Тренировка первого", summaries[2])
 
     def test_learning_reminder_is_daily_and_targets_only_the_user(self):
         save_subscription(
@@ -391,6 +439,66 @@ class WebPushSchedulingTests(unittest.TestCase):
 
         self.assertTrue(ok)
         self.assertEqual(get_unread_push_notifications(1), ([], 0))
+
+    def test_external_telegram_notification_targets_selected_user(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            2,
+            self._subscription_payload("https://push.example.test/subscription/2"),
+            "https://shans.example.test",
+        )
+
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = send_external_telegram_notification(
+                {
+                    "title": "Render finished",
+                    "body": "The local script completed successfully.",
+                    "navigate_path": "/",
+                    "user_id": 1,
+                }
+            )
+
+        self.assertEqual(result, (1, 0))
+        send_mock.assert_called_once()
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
+        notifications, unread_count = get_unread_push_notifications(1)
+        self.assertEqual(unread_count, 1)
+        self.assertEqual(notifications[0]["title"], "Render finished")
+        self.assertEqual(
+            notifications[0]["body"],
+            "The local script completed successfully.",
+        )
+        self.assertEqual(get_unread_push_notifications(2), ([], 0))
+
+    def test_external_telegram_push_route_uses_secret_without_csrf(self):
+        Config.TELEGRAM_PUSH_SECRET = "test-secret"
+        with patch.dict(os.environ, {"WERKZEUG_RUN_MAIN": "false"}):
+            app = create_app()
+        app.config["TESTING"] = True
+        app.config["TELEGRAM_PUSH_SECRET"] = "test-secret"
+
+        with (
+            app.test_client() as client,
+            patch("app.web_push.send_external_telegram_notification", return_value=(1, 0)) as send_mock,
+        ):
+            forbidden_response = client.post(
+                "/api/push/external/telegram",
+                json={"body": "done"},
+            )
+            ok_response = client.post(
+                "/api/push/external/telegram",
+                json={"body": "done"},
+                headers={"X-Shans-Push-Secret": "test-secret"},
+            )
+
+        self.assertEqual(forbidden_response.status_code, 403)
+        self.assertEqual(ok_response.status_code, 200)
+        self.assertEqual(ok_response.get_json()["sent"], 1)
+        send_mock.assert_called_once_with({"body": "done"})
 
     def test_payload_is_declarative_and_has_absolute_navigation_url(self):
         candidate = PushCandidate(

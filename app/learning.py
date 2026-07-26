@@ -10,6 +10,7 @@ from app.it_course_content import IT_LESSONS
 learning_bp = Blueprint("learning", __name__)
 DAILY_PASS_SCORE = 4
 FINAL_PASS_SCORE = 24
+LOCKED_FUTURE_DAYS = tuple(range(31, 61))
 _PROGRESS_TABLES = {
     "english": "english_course_progress",
     "it": "it_course_progress",
@@ -959,6 +960,120 @@ def _it_course_state(user_id: int):
     return _get_course_state(user_id, "it", IT_LESSONS)
 
 
+def _locked_future_lessons(course_key: str) -> list[dict]:
+    titles = {
+        "english": "Продолжение English",
+        "it": "Продолжение IT",
+    }
+    summaries = {
+        "english": "Следующий уровень появится после запуска продолжения курса.",
+        "it": "Следующий уровень фундамента IT пока готовится.",
+    }
+    return [
+        {
+            "day": day_number,
+            "title": titles[course_key],
+            "summary": summaries[course_key],
+        }
+        for day_number in LOCKED_FUTURE_DAYS
+    ]
+
+
+def _english_audio_segments(lesson: dict) -> list[dict]:
+    segments = [
+        {"lang": "ru-RU", "text": f"День {lesson['day']}. {lesson['title']}."},
+        {"lang": "ru-RU", "text": lesson["focus"]},
+        {"lang": "ru-RU", "text": "Словарь дня."},
+    ]
+    for english, russian in lesson["words"]:
+        segments.extend(
+            (
+                {"lang": "en-US", "text": english},
+                {"lang": "ru-RU", "text": russian},
+            )
+        )
+    segments.append({"lang": "ru-RU", "text": "Предложения дня."})
+    for english, russian in lesson["phrases"]:
+        segments.extend(
+            (
+                {"lang": "en-US", "text": english},
+                {"lang": "ru-RU", "text": russian},
+            )
+        )
+    return segments
+
+
+def _it_audio_segments(lesson: dict) -> list[dict]:
+    segments = [
+        {"lang": "ru-RU", "text": f"День {lesson['day']}. {lesson['title']}."},
+        {"lang": "ru-RU", "text": lesson["summary"]},
+    ]
+    for point in _build_it_lecture_points(lesson):
+        segments.append({"lang": "ru-RU", "text": point["text"]})
+        segments.append({"lang": "ru-RU", "text": point["detail"]})
+    segments.append({"lang": "ru-RU", "text": "Словарь вакансий."})
+    for term_card in _build_it_term_cards(lesson):
+        if term_card["is_english"]:
+            segments.append({"lang": "en-US", "text": term_card["term"]})
+        segments.append({"lang": "ru-RU", "text": f"{term_card['term']}. {term_card['definition']}"})
+        segments.append({"lang": "ru-RU", "text": term_card["detail"]})
+    if lesson.get("code"):
+        segments.append(
+            {
+                "lang": "ru-RU",
+                "text": f"Разбор кода. {lesson['code_title']}. Код можно прочитать на экране и разобрать построчно.",
+            }
+        )
+    segments.append({"lang": "ru-RU", "text": f"Практика. {lesson['practice']}"})
+    return segments
+
+
+def _has_latin_letters(value: str) -> bool:
+    return any(("a" <= char.lower() <= "z") for char in value)
+
+
+def _build_it_term_cards(lesson: dict) -> list[dict]:
+    detail_templates = (
+        "В вакансии это слово обычно означает практический навык: нужно понимать смысл, видеть примеры в проекте и уметь объяснить, где это применяется.",
+        "Если встретите этот термин в требованиях, не учите его как отдельное слово. Свяжите его с задачей: что входит, что выходит и какую проблему это решает.",
+        "На собеседовании по junior-уровню часто достаточно простого объяснения, маленького примера и честного понимания ограничений.",
+        "В реальном проекте этот пункт редко живёт отдельно: он связан с кодом, данными, пользователем, сервером или командной работой.",
+        "Хороший способ закрепить термин — найти его в вакансии, документации или интерфейсе инструмента и пересказать своими словами.",
+        "Мини-проверка: спросите себя, кто этим пользуется, зачем это нужно и что сломается, если этой части не будет.",
+    )
+    cards = []
+    for index, (term, definition) in enumerate(lesson["terms"]):
+        cards.append(
+            {
+                "term": term,
+                "definition": definition,
+                "detail": (
+                    f"{detail_templates[index % len(detail_templates)]} "
+                    f"В контексте сегодняшнего урока «{term}» — это: {definition}."
+                ),
+                "is_english": _has_latin_letters(term),
+            }
+        )
+    return cards
+
+
+def _build_it_lecture_points(lesson: dict) -> list[dict]:
+    points = []
+    for index, paragraph in enumerate(lesson["lecture"], start=1):
+        points.append(
+            {
+                "number": index,
+                "text": paragraph,
+                "detail": (
+                    "Подробнее: попробуйте разложить этот пункт на три вопроса — что это такое, "
+                    "зачем это нужно в работе айтишника и где вы уже могли видеть это в обычном сайте "
+                    "или приложении. Такой разбор помогает читать вакансии без ощущения, что там просто набор непонятных слов."
+                ),
+            }
+        )
+    return points
+
+
 @learning_bp.route("/study")
 @login_required
 def study_hub():
@@ -983,6 +1098,7 @@ def english_course():
     return render_template(
         "english_course.html",
         lessons=lesson_cards,
+        locked_future_lessons=_locked_future_lessons("english"),
         passed_count=len(passed_days),
         progress_percent=round(len(passed_days) / len(ENGLISH_LESSONS) * 100),
         next_day=next_day,
@@ -1024,6 +1140,7 @@ def english_day(day_number: int):
         day_progress=progress.get(day_number),
         next_day=next_day,
         course_finished=len(passed_days) == len(ENGLISH_LESSONS),
+        audio_segments=_english_audio_segments(lesson),
     )
 
 
@@ -1074,6 +1191,7 @@ def it_course():
     return render_template(
         "it_course.html",
         lessons=lesson_cards,
+        locked_future_lessons=_locked_future_lessons("it"),
         passed_count=len(passed_days),
         progress_percent=round(len(passed_days) / len(IT_LESSONS) * 100),
         next_day=next_day,
@@ -1115,6 +1233,9 @@ def it_day(day_number: int):
         day_progress=progress.get(day_number),
         next_day=next_day,
         course_finished=len(passed_days) == len(IT_LESSONS),
+        lecture_points=_build_it_lecture_points(lesson),
+        term_cards=_build_it_term_cards(lesson),
+        audio_segments=_it_audio_segments(lesson),
     )
 
 

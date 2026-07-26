@@ -59,36 +59,30 @@
     <section class="workouts-section" aria-labelledby="workout-plans-title">
         <div class="workouts-section-heading">
             <div>
-                <p class="workouts-section-kicker">Готовая основа</p>
+                <p class="workouts-section-kicker">Еженедельное расписание</p>
                 <h2 id="workout-plans-title">Планы тренировок</h2>
             </div>
-            <p>Описание каждого плана можно изменить под свою программу.</p>
+            <p>Откройте тренировку, выберите день недели и подробно опишите свою программу.</p>
         </div>
 
         <div class="workout-plan-grid">
             {% for plan in plans %}
-            <article class="workout-plan-card" id="plan-{{ plan.id }}">
+            <a href="{{ url_for('workouts.plan_detail', plan_id=plan.id) }}" class="workout-plan-card" id="plan-{{ plan.id }}">
                 <div class="workout-plan-number" aria-hidden="true">{{ loop.index }}</div>
                 <div class="workout-plan-content">
                     <h3>{{ plan.name }}</h3>
-                    <p>{{ plan.description }}</p>
+                    <p>{{ plan.description or 'Добавьте упражнения, подходы, повторы и заметки к плану.' }}</p>
                 </div>
-                <details class="workout-plan-editor">
-                    <summary>Изменить описание</summary>
-                    <form method="post" action="{{ url_for('workouts.update_plan', plan_id=plan.id) }}">
-                        <label for="plan-description-{{ plan.id }}">Описание</label>
-                        <textarea
-                            id="plan-description-{{ plan.id }}"
-                            name="description"
-                            class="form-input workouts-textarea"
-                            maxlength="800"
-                            rows="5"
-                            required
-                        >{{ plan.description }}</textarea>
-                        <button type="submit" class="btn btn-primary btn-small">Сохранить</button>
-                    </form>
-                </details>
-            </article>
+                <div class="workout-plan-schedule{% if not plan.next_date %} workout-plan-schedule-empty{% endif %}">
+                    <span>{{ plan.weekday_label }}</span>
+                    {% if plan.next_date_display %}
+                    <small>Ближайшая: {{ plan.next_date_display }}</small>
+                    {% else %}
+                    <small>Выберите день недели</small>
+                    {% endif %}
+                </div>
+                <span class="workout-plan-open-label">Открыть план <span aria-hidden="true">→</span></span>
+            </a>
             {% endfor %}
         </div>
     </section>

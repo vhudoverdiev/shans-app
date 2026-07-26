@@ -11,6 +11,18 @@ from app.database import get_connection
 
 workouts_bp = Blueprint("workouts", __name__, url_prefix="/workouts")
 
+WEEKDAYS = (
+    (0, "Понедельник"),
+    (1, "Вторник"),
+    (2, "Среда"),
+    (3, "Четверг"),
+    (4, "Пятница"),
+    (5, "Суббота"),
+    (6, "Воскресенье"),
+)
+WEEKDAY_LABELS = dict(WEEKDAYS)
+SCHEDULE_HORIZON_DAYS = 366
+
 DEFAULT_WORKOUT_PLANS = (
     (
         "Тренировка 1",
@@ -40,6 +52,8 @@ def init_workouts_db() -> None:
                 user_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 description TEXT NOT NULL DEFAULT '',
+                weekday INTEGER,
+                schedule_start_date TEXT,
                 position INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -47,6 +61,14 @@ def init_workouts_db() -> None:
             )
             """
         )
+        workout_plan_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(workout_plans)").fetchall()
+        }
+        if "weekday" not in workout_plan_columns:
+            conn.execute("ALTER TABLE workout_plans ADD COLUMN weekday INTEGER")
+        if "schedule_start_date" not in workout_plan_columns:
+            conn.execute("ALTER TABLE workout_plans ADD COLUMN schedule_start_date TEXT")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS workout_results (
@@ -117,7 +139,7 @@ def get_workout_plans(user_id: int):
     try:
         return conn.execute(
             """
-            SELECT id, name, description, position
+            SELECT id, name, description, weekday, schedule_start_date, position
             FROM workout_plans
             WHERE user_id = ?
             ORDER BY position, id
@@ -128,19 +150,258 @@ def get_workout_plans(user_id: int):
         conn.close()
 
 
-def update_workout_plan_description(user_id: int, plan_id: int, description: str) -> bool:
+def get_workout_plan(user_id: int, plan_id: int):
     conn = get_connection()
     try:
+        return conn.execute(
+            """
+            SELECT id, name, description, weekday, schedule_start_date, position
+            FROM workout_plans
+            WHERE id = ? AND user_id = ?
+            """,
+            (plan_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def _schedule_task_columns(conn) -> set[str]:
+    table_exists = conn.execute(
+        """
+        SELECT 1
+        FROM sqlite_master
+        WHERE type = 'table' AND name = 'schedule_tasks'
+        """
+    ).fetchone()
+    if not table_exists:
+        return set()
+    return {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(schedule_tasks)").fetchall()
+    }
+
+
+def _coerce_schedule_date(value: date | str) -> date:
+    if isinstance(value, date):
+        return value
+    return date.fromisoformat(str(value))
+
+
+def sync_workout_plan_schedule(
+    user_id: int,
+    date_from: date | str,
+    date_to: date | str,
+) -> int:
+    """Create missing weekly workout occurrences without duplicating tasks."""
+    start_date = _coerce_schedule_date(date_from)
+    end_date = _coerce_schedule_date(date_to)
+    if end_date < start_date:
+        return 0
+
+    conn = get_connection()
+    try:
+        required_columns = {"workout_plan_id", "workout_user_id"}
+        if not required_columns.issubset(_schedule_task_columns(conn)):
+            return 0
+
+        plans = conn.execute(
+            """
+            SELECT id, name, description, weekday, schedule_start_date
+            FROM workout_plans
+            WHERE user_id = ? AND weekday IS NOT NULL
+            ORDER BY position, id
+            """,
+            (user_id,),
+        ).fetchall()
+        created_count = 0
+        for plan in plans:
+            weekday = int(plan["weekday"])
+            schedule_start = (
+                date.fromisoformat(plan["schedule_start_date"])
+                if plan["schedule_start_date"]
+                else date.today()
+            )
+            effective_start = max(start_date, schedule_start)
+            occurrence_date = effective_start + timedelta(
+                days=(weekday - effective_start.weekday()) % 7
+            )
+            while occurrence_date <= end_date:
+                cursor = conn.execute(
+                    """
+                    INSERT OR IGNORE INTO schedule_tasks (
+                        title,
+                        description,
+                        task_date,
+                        task_type,
+                        calendar_type,
+                        status,
+                        workout_plan_id,
+                        workout_user_id
+                    ) VALUES (?, ?, ?, 'Тренировка', 'personal', 'planned', ?, ?)
+                    """,
+                    (
+                        plan["name"],
+                        plan["description"],
+                        occurrence_date.isoformat(),
+                        plan["id"],
+                        user_id,
+                    ),
+                )
+                created_count += max(cursor.rowcount, 0)
+                occurrence_date += timedelta(days=7)
+
+            conn.execute(
+                """
+                UPDATE schedule_tasks
+                SET
+                    title = ?,
+                    description = ?,
+                    task_type = 'Тренировка',
+                    calendar_type = 'personal'
+                WHERE workout_plan_id = ?
+                  AND workout_user_id = ?
+                  AND task_date BETWEEN ? AND ?
+                """,
+                (
+                    plan["name"],
+                    plan["description"],
+                    plan["id"],
+                    user_id,
+                    start_date.isoformat(),
+                    end_date.isoformat(),
+                ),
+            )
+        conn.commit()
+        return created_count
+    finally:
+        conn.close()
+
+
+def update_workout_plan(
+    user_id: int,
+    plan_id: int,
+    name: str,
+    description: str,
+    weekday: int | None,
+) -> bool:
+    current_plan = get_workout_plan(user_id, plan_id)
+    if not current_plan:
+        return False
+
+    conn = get_connection()
+    try:
+        duplicate = conn.execute(
+            """
+            SELECT id
+            FROM workout_plans
+            WHERE user_id = ? AND LOWER(name) = LOWER(?) AND id <> ?
+            """,
+            (user_id, name, plan_id),
+        ).fetchone()
+        if duplicate:
+            raise ValueError("План с таким названием уже существует.")
+
+        schedule_start_date = current_plan["schedule_start_date"]
+        if weekday is None:
+            schedule_start_date = None
+        elif current_plan["weekday"] != weekday or not schedule_start_date:
+            schedule_start_date = date.today().isoformat()
+
         cursor = conn.execute(
             """
             UPDATE workout_plans
-            SET description = ?, updated_at = CURRENT_TIMESTAMP
+            SET
+                name = ?,
+                description = ?,
+                weekday = ?,
+                schedule_start_date = ?,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = ? AND user_id = ?
             """,
-            (description, plan_id, user_id),
+            (
+                name,
+                description,
+                weekday,
+                schedule_start_date,
+                plan_id,
+                user_id,
+            ),
         )
+
+        schedule_columns = _schedule_task_columns(conn)
+        if {"workout_plan_id", "workout_user_id"}.issubset(schedule_columns):
+            if current_plan["weekday"] != weekday:
+                conn.execute(
+                    """
+                    DELETE FROM schedule_tasks
+                    WHERE workout_plan_id = ?
+                      AND workout_user_id = ?
+                      AND task_date >= ?
+                    """,
+                    (plan_id, user_id, date.today().isoformat()),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE schedule_tasks
+                    SET title = ?, description = ?
+                    WHERE workout_plan_id = ?
+                      AND workout_user_id = ?
+                      AND task_date >= ?
+                    """,
+                    (
+                        name,
+                        description,
+                        plan_id,
+                        user_id,
+                        date.today().isoformat(),
+                    ),
+                )
         conn.commit()
-        return cursor.rowcount == 1
+    finally:
+        conn.close()
+
+    sync_workout_plan_schedule(
+        user_id,
+        date.today(),
+        date.today() + timedelta(days=SCHEDULE_HORIZON_DAYS),
+    )
+    return cursor.rowcount == 1
+
+
+def update_workout_plan_description(user_id: int, plan_id: int, description: str) -> bool:
+    plan = get_workout_plan(user_id, plan_id)
+    if not plan:
+        return False
+    return update_workout_plan(
+        user_id,
+        plan_id,
+        plan["name"],
+        description,
+        plan["weekday"],
+    )
+
+
+def next_workout_date(weekday: int | None, start_date: date | None = None) -> date | None:
+    if weekday is None:
+        return None
+    base_date = start_date or date.today()
+    return base_date + timedelta(days=(int(weekday) - base_date.weekday()) % 7)
+
+
+def get_workout_results_for_plan(user_id: int, plan_id: int, limit: int = 50):
+    conn = get_connection()
+    try:
+        return conn.execute(
+            """
+            SELECT id, exercise, result, performed_on, notes
+            FROM workout_results
+            WHERE user_id = ? AND workout_plan_id = ?
+            ORDER BY performed_on DESC, id DESC
+            LIMIT ?
+            """,
+            (user_id, plan_id, max(1, int(limit))),
+        ).fetchall()
     finally:
         conn.close()
 
@@ -367,7 +628,21 @@ def _format_date_ru(value: str) -> str:
 def index():
     user_id = int(current_user.id)
     ensure_default_workout_plans(user_id)
-    plans = get_workout_plans(user_id)
+    sync_workout_plan_schedule(
+        user_id,
+        date.today(),
+        date.today() + timedelta(days=SCHEDULE_HORIZON_DAYS),
+    )
+    plans = []
+    for row in get_workout_plans(user_id):
+        plan = dict(row)
+        upcoming_date = next_workout_date(plan["weekday"])
+        plan["weekday_label"] = WEEKDAY_LABELS.get(plan["weekday"], "Не запланирована")
+        plan["next_date"] = upcoming_date.isoformat() if upcoming_date else None
+        plan["next_date_display"] = (
+            _format_date_ru(upcoming_date.isoformat()) if upcoming_date else None
+        )
+        plans.append(plan)
     all_results = get_workout_results(user_id, limit=None)
     weight_entries = get_weight_entries(user_id)
     chart_points = [
@@ -396,24 +671,79 @@ def index():
     )
 
 
+@workouts_bp.route("/plans/<int:plan_id>")
+@login_required
+def plan_detail(plan_id: int):
+    user_id = int(current_user.id)
+    ensure_default_workout_plans(user_id)
+    plan_row = get_workout_plan(user_id, plan_id)
+    if not plan_row:
+        abort(404)
+
+    plan = dict(plan_row)
+    upcoming_date = next_workout_date(plan["weekday"])
+    plan["weekday_label"] = WEEKDAY_LABELS.get(plan["weekday"], "Не запланирована")
+    plan["next_date"] = upcoming_date.isoformat() if upcoming_date else None
+    plan["next_date_display"] = (
+        _format_date_ru(upcoming_date.isoformat()) if upcoming_date else None
+    )
+    results = [
+        {**dict(item), "display_date": _format_date_ru(item["performed_on"])}
+        for item in get_workout_results_for_plan(user_id, plan_id)
+    ]
+    return render_template(
+        "workout_plan_detail.html",
+        plan=plan,
+        weekdays=WEEKDAYS,
+        workout_results=results,
+    )
+
+
 @workouts_bp.route("/plans/<int:plan_id>", methods=["POST"])
 @login_required
 def update_plan(plan_id: int):
     user_id = int(current_user.id)
+    current_plan = get_workout_plan(user_id, plan_id)
+    if not current_plan:
+        abort(404)
     try:
-        description = _validate_text(
-            request.form.get("description", ""),
-            "Описание",
-            800,
+        name = _validate_text(
+            request.form.get("name", current_plan["name"]),
+            "Название",
+            80,
         )
+        description = _validate_optional_text(
+            request.form.get("description", current_plan["description"]),
+            "Описание",
+            5000,
+        )
+        raw_weekday = request.form.get("weekday")
+        if raw_weekday is None:
+            weekday = current_plan["weekday"]
+        elif raw_weekday == "":
+            weekday = None
+        else:
+            try:
+                weekday = int(raw_weekday)
+            except (TypeError, ValueError) as error:
+                raise ValueError("Выберите корректный день недели.") from error
+            if weekday not in WEEKDAY_LABELS:
+                raise ValueError("Выберите корректный день недели.")
+
+        if not update_workout_plan(user_id, plan_id, name, description, weekday):
+            abort(404)
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.index", _anchor=f"plan-{plan_id}"))
+        return redirect(url_for("workouts.plan_detail", plan_id=plan_id))
 
-    if not update_workout_plan_description(user_id, plan_id, description):
-        abort(404)
-    flash("Описание тренировки сохранено.", "success")
-    return redirect(url_for("workouts.index", _anchor=f"plan-{plan_id}"))
+    if weekday is None:
+        flash("План сохранён. Тренировка убрана из личного графика.", "success")
+    else:
+        flash(
+            f"План сохранён и добавлен в личный график: {WEEKDAY_LABELS[weekday].lower()}.",
+            "success",
+        )
+    return redirect(url_for("workouts.plan_detail", plan_id=plan_id))
 
 
 @workouts_bp.route("/results", methods=["POST"])

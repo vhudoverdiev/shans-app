@@ -10,7 +10,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import Config
-from app.database import get_connection
+from app.database import get_master_connection
 from app.models import get_user_by_id
 
 
@@ -21,12 +21,29 @@ class User(UserMixin):
     """
     Класс пользователя для Flask-Login.
     """
-    def __init__(self, user_id, username, password_hash, otp_enabled=False, avatar_filename=None):
+    def __init__(
+        self,
+        user_id,
+        username,
+        password_hash,
+        otp_enabled=False,
+        avatar_filename=None,
+        display_name=None,
+        is_system_admin=False,
+        is_active=True,
+    ):
         self.id = user_id
         self.username = username
         self.password_hash = password_hash
         self.otp_enabled = bool(otp_enabled)
         self.avatar_filename = avatar_filename
+        self.display_name = display_name or username
+        self.is_system_admin = bool(is_system_admin)
+        self._is_active = bool(is_active)
+
+    @property
+    def is_active(self):
+        return self._is_active
 
 
 def create_admin_if_not_exists():
@@ -45,7 +62,7 @@ def create_admin_if_not_exists():
         generated_password = secrets.token_urlsafe(12)
         admin_password = generated_password
 
-    conn = get_connection()
+    conn = get_master_connection()
     cursor = conn.cursor()
 
     existing_user = cursor.execute(
@@ -57,8 +74,14 @@ def create_admin_if_not_exists():
         password_hash = generate_password_hash(admin_password)
         otp_secret = generate_totp_secret()
         cursor.execute(
-            "INSERT INTO users (username, password_hash, otp_secret, otp_enabled) VALUES (?, ?, ?, 0)",
-            (admin_username, password_hash, otp_secret)
+            """
+            INSERT INTO users (
+                username, password_hash, otp_secret, otp_enabled,
+                display_name, is_system_admin, is_active
+            )
+            VALUES (?, ?, ?, 0, ?, 1, 1)
+            """,
+            (admin_username, password_hash, otp_secret, admin_username),
         )
         conn.commit()
         if generated_password:
@@ -75,6 +98,13 @@ def create_admin_if_not_exists():
         )
         conn.commit()
 
+    if existing_user and not existing_user.get("is_system_admin"):
+        cursor.execute(
+            "UPDATE users SET is_system_admin = 1, is_active = 1 WHERE id = ?",
+            (existing_user["id"],),
+        )
+        conn.commit()
+
     conn.close()
 
 
@@ -87,7 +117,7 @@ def disable_otp_for_username(username: str) -> bool:
     if not normalized_username:
         return False
 
-    conn = get_connection()
+    conn = get_master_connection()
     user = conn.execute(
         "SELECT id, otp_enabled FROM users WHERE username = ?",
         (normalized_username,),
@@ -111,7 +141,7 @@ def _utcnow_iso():
 
 
 def register_failed_login(username, ip_address):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         """
         INSERT INTO login_attempts (username, ip_address, attempted_at)
@@ -134,7 +164,7 @@ def clear_failed_logins_for_username(username: str) -> int:
     if not normalized_username:
         return 0
 
-    conn = get_connection()
+    conn = get_master_connection()
     cursor = conn.execute(
         "DELETE FROM login_attempts WHERE username = ?",
         (normalized_username,),
@@ -147,7 +177,7 @@ def clear_failed_logins_for_username(username: str) -> int:
     return deleted_rows
 
 def clear_failed_logins(username, ip_address):
-    conn = get_connection()
+    conn = get_master_connection()
     conn.execute(
         "DELETE FROM login_attempts WHERE username = ? AND ip_address = ?",
         (username, ip_address),
@@ -161,7 +191,7 @@ def is_login_rate_limited(username, ip_address):
     max_attempts = Config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS
     lower_bound = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
 
-    conn = get_connection()
+    conn = get_master_connection()
     count_row = conn.execute(
         """
         SELECT COUNT(*) AS attempts_count
@@ -180,20 +210,23 @@ def verify_user(username, password):
     """
     Проверяет логин и пароль пользователя.
     """
-    conn = get_connection()
+    conn = get_master_connection()
     user = conn.execute(
         "SELECT * FROM users WHERE username = ?",
         (username,)
     ).fetchone()
     conn.close()
 
-    if user and check_password_hash(user["password_hash"], password):
+    if user and user.get("is_active", 1) and check_password_hash(user["password_hash"], password):
         return User(
             user["id"],
             user["username"],
             user["password_hash"],
             user.get("otp_enabled", 0),
             user.get("avatar_filename"),
+            user.get("display_name"),
+            user.get("is_system_admin", 0),
+            user.get("is_active", 1),
         )
 
     return None
@@ -211,6 +244,9 @@ def load_user_from_db(user_id):
             user["password_hash"],
             user.get("otp_enabled", 0),
             user.get("avatar_filename"),
+            user.get("display_name"),
+            user.get("is_system_admin", 0),
+            user.get("is_active", 1),
         )
     return None
 

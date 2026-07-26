@@ -22,6 +22,22 @@
         <div><strong>5 мин</strong><span>Тест</span></div>
     </div>
 
+    <section class="course-audio-controller" data-course-audio>
+        <div class="course-audio-copy">
+            <p class="learning-kicker">Озвучка</p>
+            <h2>Слушать урок</h2>
+            <p>Лекция читается по-русски, английские слова и предложения произносятся английским голосом.</p>
+        </div>
+        <div class="course-audio-actions">
+            <button type="button" class="course-audio-toggle" data-course-audio-toggle aria-pressed="false">Включить озвучку</button>
+            <button type="button" class="course-audio-play" data-course-audio-play disabled>Озвучить урок</button>
+            <button type="button" class="course-audio-stop" data-course-audio-stop hidden>Стоп</button>
+        </div>
+        <div class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></div>
+    </section>
+
+    <script type="application/json" id="course-audio-segments">{{ audio_segments|tojson }}</script>
+
     <section class="lesson-section">
         <p class="learning-kicker">Мини-лекция</p>
         <h2>Как заниматься сегодня</h2>
@@ -39,7 +55,16 @@
         <div class="vocabulary-grid">
             {% for english, russian in lesson.words %}
             <article class="vocabulary-card">
-                <strong>{{ english }}</strong>
+                <div class="course-pronounce-line">
+                    <strong>{{ english }}</strong>
+                    <button
+                        type="button"
+                        class="course-pronounce-button"
+                        data-course-pronounce="{{ english }}"
+                        data-course-pronounce-lang="en-US"
+                        aria-label="Произнести слово {{ english }}"
+                    >🔊</button>
+                </div>
                 <span>{{ russian }}</span>
             </article>
             {% endfor %}
@@ -58,7 +83,16 @@
             {% for english, russian in lesson.phrases %}
             <article class="phrase-card">
                 <span class="phrase-language">EN</span>
-                <strong>{{ english }}</strong>
+                <div class="course-pronounce-line">
+                    <strong>{{ english }}</strong>
+                    <button
+                        type="button"
+                        class="course-pronounce-button"
+                        data-course-pronounce="{{ english }}"
+                        data-course-pronounce-lang="en-US"
+                        aria-label="Произнести фразу {{ english }}"
+                    >🔊</button>
+                </div>
                 <span class="phrase-translation">{{ russian }}</span>
             </article>
             {% endfor %}
@@ -124,4 +158,9 @@
         </form>
     </section>
 </section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

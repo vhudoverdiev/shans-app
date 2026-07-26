@@ -94,6 +94,8 @@ class PlannerCalendarTests(unittest.TestCase):
         work_tasks = get_tasks_for_day(TEST_DATE, CALENDAR_WORK)
         self.assertEqual([task["title"] for task in personal_tasks], ["Старая задача"])
         self.assertEqual(work_tasks, [])
+        self.assertIn("workout_plan_id", personal_tasks[0])
+        self.assertIn("workout_user_id", personal_tasks[0])
 
     def test_calendars_are_isolated_and_synced_tasks_stay_personal(self):
         init_planner_db()
@@ -153,6 +155,22 @@ class PlannerCalendarTests(unittest.TestCase):
         init_planner_db()
         create_task("Старая личная", TEST_DATE)
         create_task("Рабочая остаётся", TEST_DATE, calendar_type=CALENDAR_WORK)
+        conn = sqlite3.connect(Config.DATABASE_NAME)
+        conn.execute(
+            """
+            INSERT INTO schedule_tasks (
+                title,
+                task_date,
+                calendar_type,
+                status,
+                workout_plan_id,
+                workout_user_id
+            ) VALUES ('Плановая тренировка', ?, 'personal', 'planned', 99, 1)
+            """,
+            (TEST_DATE,),
+        )
+        conn.commit()
+        conn.close()
 
         replace_manual_schedule_tasks(
             [
@@ -166,8 +184,11 @@ class PlannerCalendarTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            [task["title"] for task in get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)],
-            ["Новая личная"],
+            {
+                task["title"]
+                for task in get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)
+            },
+            {"Новая личная", "Плановая тренировка"},
         )
         self.assertEqual(
             [task["title"] for task in get_tasks_for_day(TEST_DATE, CALENDAR_WORK)],

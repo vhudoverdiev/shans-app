@@ -25,21 +25,33 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             r"\.account-inline-notice\[hidden\]\s*\{\s*display:\s*none;\s*\}",
         )
 
-    def test_mobile_authenticator_input_waits_for_deliberate_user_interaction(self):
+    def test_authenticator_code_is_hidden_until_disable_is_requested(self):
         template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertNotIn("autofocus", template)
-        self.assertIn("autocomplete=\"off\" readonly data-manual-focus", template)
-        self.assertIn("function enableManualInput(event)", template)
-        self.assertIn('input.addEventListener("pointerdown", enableManualInput', template)
-        self.assertIn('input.addEventListener("touchstart", enableManualInput', template)
-        self.assertIn('input.addEventListener("keydown", enableManualInput', template)
-        self.assertIn("dismissRestoredMobileInputFocus", template)
-        self.assertIn('window.addEventListener("pageshow"', template)
-        self.assertIn("activeElement.blur()", template)
+        self.assertIn('id="show-disable-2fa-form"', template)
+        self.assertRegex(template, r'id="disable-2fa-form"\s+hidden')
+        self.assertIn('autocomplete="off" required', template)
+        self.assertIn("function closeDisable2faForm()", template)
+        self.assertIn("disable2faForm.hidden = false", template)
+        self.assertIn("disable2faForm.hidden = true", template)
+        self.assertIn("disable2faOtpInput.blur()", template)
+        self.assertIn(
+            'window.addEventListener("pageshow", closeDisable2faForm)',
+            template,
+        )
+        self.assertIn('window.addEventListener("pagehide"', template)
+        self.assertNotIn("data-manual-focus", template)
+        self.assertNotIn("disable2faOtpInput.focus()", template)
         self.assertIn(
             'window.matchMedia("(max-width: 768px) and (pointer: coarse)")',
             template,
+        )
+
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+        self.assertRegex(
+            stylesheet,
+            r"\.account-2fa-disable-form\[hidden\]\s*\{\s*display:\s*none;",
         )
 
 
