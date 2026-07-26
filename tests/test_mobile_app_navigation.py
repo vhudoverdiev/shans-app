@@ -50,13 +50,15 @@ class MobileAppNavigationTests(unittest.TestCase):
             - mobile_grid.count('class="dashboard-card-title')
             - mobile_grid.count('class="dashboard-card-text')
             - mobile_grid.count('class="dashboard-card-arrow'),
-            4,
+            5,
         )
         self.assertIn("url_for('planner.schedule')", mobile_grid)
         self.assertIn("url_for('shootings_hub')", mobile_grid)
         self.assertIn("url_for('reports_hub')", mobile_grid)
         self.assertIn("url_for('learning.study_hub')", mobile_grid)
+        self.assertIn("url_for('sport_hub')", mobile_grid)
         self.assertIn('<div class="dashboard-card-title">Учёба</div>', mobile_grid)
+        self.assertIn('<div class="dashboard-card-title">Спорт</div>', mobile_grid)
 
     def test_mobile_hubs_group_existing_sections(self):
         shootings = (TEMPLATES / "shootings_hub.html").read_text(encoding="utf-8")
@@ -74,19 +76,40 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn('@app.route("/reports")', routes)
         self.assertIn('@app.route("/sport")', routes)
 
+    def test_main_mobile_sections_use_shared_development_like_hero(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        for template_name, modifier in (
+            ("schedule.html", "section-hero-schedule"),
+            ("shootings_hub.html", "section-hero-shootings"),
+            ("reports_hub.html", "section-hero-reports"),
+            ("sport_hub.html", "section-hero-sport"),
+            ("account_settings.html", "section-hero-account"),
+        ):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("section-styled-page", source)
+            self.assertIn(f"section-hero {modifier}", source)
+            self.assertIn("section-hero-mark", source)
+
+        self.assertIn(".section-hero", styles)
+        self.assertIn("linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)", styles)
+        self.assertIn(".section-hero-mark", styles)
+        self.assertIn(".section-hero", mobile_styles)
+        self.assertIn("clamp(42px, 11vw, 58px)", mobile_styles)
+
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
 
         self.assertNotIn("mobile-fab", base)
         self.assertNotIn("mobile-fab", mobile_styles)
-        self.assertEqual(base.count('class="app-bottom-nav-link '), 5)
-        for label in ("График", "Съёмки", "Отчёт", "Развитие", "Аккаунт"):
+        self.assertEqual(base.count('class="app-bottom-nav-link '), 6)
+        for label in ("График", "Съёмки", "Отчёт", "Развитие", "Спорт", "Аккаунт"):
             self.assertIn(f"<span>{label}</span>", base)
         self.assertNotIn("<span>Учёба</span>", base)
-        self.assertNotIn("<span>Спорт</span>", base)
         self.assertNotIn("<span>Главная</span>", base)
-        self.assertIn("grid-template-columns: repeat(5, minmax(0, 1fr));", mobile_styles)
+        self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr));", mobile_styles)
         self.assertIn("is_reports_section", base)
         self.assertIn("url_for('reports_hub')", base)
         self.assertIn("is_study_section", base)
@@ -96,7 +119,7 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("is_sport_section", base)
         self.assertIn("url_for('sport_hub')", base)
         self.assertIn(
-            "{% set is_mobile_development_section = is_development_section or is_sport_section %}",
+            "{% set is_mobile_development_section = is_development_section %}",
             base,
         )
         self.assertIn(

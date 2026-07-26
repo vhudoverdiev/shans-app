@@ -2,12 +2,14 @@
 {% block title %}График | Шанс{% endblock %}
 
 {% block content %}
-<section class="car-page">
-    <div class="page-header">
+<section class="car-page section-styled-page">
+    <div class="section-hero section-hero-schedule">
         <div>
+            <p class="section-hero-kicker">{{ current_calendar_label }} график</p>
             <h1 class="page-title">График</h1>
-            <p class="planner-calendar-caption">{{ current_calendar_label }} график</p>
+            <p>Личные и рабочие задачи, планы на день и месяц, напоминания и важные события.</p>
         </div>
+        <div class="section-hero-mark" aria-hidden="true">30</div>
     </div>
 
     <nav class="planner-calendar-switch" aria-label="Выбор графика">

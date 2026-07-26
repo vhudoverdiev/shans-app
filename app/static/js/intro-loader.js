@@ -4,16 +4,22 @@
     const root = document.documentElement;
     const intro = document.getElementById("app-intro");
 
-    if (!root.classList.contains("app-intro-pending")) {
+    if (!root.classList.contains("app-intro-pending") || !window.__shansShouldRunIntro) {
         if (intro) {
             intro.remove();
         }
+        window.__shansShouldRunIntro = false;
         return;
     }
 
     if (!intro) {
         root.classList.remove("app-intro-pending");
         return;
+    }
+
+    if (window.__shansIntroFallbackTimer) {
+        window.clearTimeout(window.__shansIntroFallbackTimer);
+        window.__shansIntroFallbackTimer = null;
     }
 
     intro.hidden = false;
@@ -32,6 +38,7 @@
             window.setTimeout(function () {
                 intro.remove();
                 root.classList.remove("app-intro-running");
+                window.__shansShouldRunIntro = false;
             }, exitDuration);
         }, visibleDuration);
     });

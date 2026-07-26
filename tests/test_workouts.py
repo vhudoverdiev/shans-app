@@ -428,7 +428,7 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("Открыть тренировку", schedule)
         self.assertNotIn("autofocus", detail)
 
-    def test_training_is_reached_through_development_on_mobile_and_desktop(self):
+    def test_training_is_reached_through_sport_on_mobile_and_desktop(self):
         base = (PROJECT_ROOT / "app" / "templates" / "base.html").read_text(
             encoding="utf-8"
         )
@@ -452,11 +452,13 @@ class WorkoutsTests(unittest.TestCase):
 
         self.assertIn("url_for('learning.study_hub')", desktop_grid)
         self.assertIn("url_for('learning.study_hub')", mobile_grid)
+        self.assertIn("url_for('sport_hub')", mobile_grid)
         self.assertIn("url_for('learning.study_hub')", top_nav)
         self.assertIn("url_for('sport_hub')", top_nav)
         self.assertIn("url_for('learning.study_hub')", bottom_nav)
         self.assertIn("<span>Развитие</span>", bottom_nav)
-        self.assertNotIn("<span>Спорт</span>", bottom_nav)
+        self.assertIn("url_for('sport_hub')", bottom_nav)
+        self.assertIn("<span>Спорт</span>", bottom_nav)
         self.assertNotIn("url_for('workouts.index')", development_hub)
         self.assertIn("url_for('workouts.index')", sport_hub)
         self.assertIn("is_development_section", base)

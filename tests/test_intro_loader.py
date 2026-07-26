@@ -12,9 +12,14 @@ class IntroLoaderTests(unittest.TestCase):
     def test_base_template_bootstraps_first_visit_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
+        self.assertIn('<html lang="ru" class="app-intro-pending', template)
         self.assertIn('const introKey = "shans-intro-seen-v1"', template)
-        self.assertIn('document.documentElement.classList.add("app-intro-pending")', template)
-        self.assertIn("}, 3000);", template)
+        self.assertIn("window.localStorage.getItem(introKey)", template)
+        self.assertIn("window.localStorage.setItem(introKey, \"1\")", template)
+        self.assertIn("window.__shansShouldRunIntro = true", template)
+        self.assertIn("window.__shansIntroFallbackTimer", template)
+        self.assertIn("}, 8000);", template)
+        self.assertNotIn("}, 3000);", template)
         self.assertIn("onerror=\"document.documentElement.classList.remove('app-intro-pending')\"", template)
         self.assertIn('class="app-intro" id="app-intro" aria-hidden="true" hidden', template)
         self.assertIn('class="app-intro-logo"', template)
@@ -32,18 +37,26 @@ class IntroLoaderTests(unittest.TestCase):
 
         self.assertLess(bootstrap_position, first_stylesheet_position)
         self.assertIn(
-            "html.app-intro-pending body {\n            visibility: hidden;",
+            "html.app-intro-pending body > :not(#app-intro) {\n            visibility: hidden !important;",
             template,
         )
+        self.assertIn(
+            "html.app-intro-pending #app-intro[hidden] {\n            display: grid !important;",
+            template,
+        )
+        self.assertLess(template.index("html.app-intro-pending #app-intro"), first_stylesheet_position)
 
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
         self.assertIn('classList.contains("app-intro-pending")', script)
+        self.assertIn("!window.__shansShouldRunIntro", script)
         self.assertIn("intro.hidden = false", script)
         self.assertIn('classList.add("app-intro-running")', script)
         self.assertIn('classList.add("app-intro-leaving")', script)
         self.assertIn("intro.remove()", script)
+        self.assertIn("window.__shansShouldRunIntro = false", script)
+        self.assertIn("window.clearTimeout(window.__shansIntroFallbackTimer)", script)
         self.assertIn("prefers-reduced-motion: reduce", script)
 
     def test_intro_styles_reuse_brand_gradient_and_support_reduced_motion(self):

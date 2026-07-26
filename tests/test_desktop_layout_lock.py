@@ -62,8 +62,28 @@ class DesktopLayoutLockTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("request.endpoint == 'login'", base_template)
-        self.assertIn('class="login-centered-document"', base_template)
+        self.assertIn("login-centered-document", base_template)
         self.assertIn("html:not(.login-centered-document) body", stylesheet)
+        self.assertRegex(
+            stylesheet,
+            r"html\.login-centered-document,\s*"
+            r"html\.login-centered-document body\s*\{"
+            r"[^}]*overflow:\s*hidden;"
+            r"[^}]*overscroll-behavior:\s*none;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"html\.login-centered-document\s+\.app-body\s*\{"
+            r"[^}]*height:\s*100dvh;"
+            r"[^}]*overflow:\s*hidden;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"html\.login-centered-document\s+\.page-shell\s*\{"
+            r"[^}]*height:\s*100dvh;"
+            r"[^}]*padding:\s*0;"
+            r"[^}]*overflow:\s*hidden;",
+        )
         self.assertRegex(
             stylesheet,
             r"html\.login-centered-document\s+\.page-shell\s*\{"
