@@ -17,11 +17,12 @@ from flask_login import current_user, login_required
 from pywebpush import WebPushException, webpush
 
 from app.database import get_connection
-from app.schedule_notifications import build_personal_tasks_text
+from app.schedule_notifications import build_personal_tasks_text, build_work_tasks_text
 
 
 _TIMEZONE_NAME = "Europe/Moscow"
 _SUMMARY_WINDOW = timedelta(minutes=5)
+_WORK_SUMMARY_HOUR = 9
 _LEARNING_REMINDER_HOUR = 19
 _SCHEDULER_INTERVAL_SECONDS = 30
 _MAX_PUSH_PAYLOAD_BYTES = 3500
@@ -303,11 +304,15 @@ def _summary_is_due(now_local: datetime, hour: int) -> bool:
     return scheduled <= now_local < scheduled + _SUMMARY_WINDOW
 
 
-def _schedule_url(target_date: date) -> str:
+def _schedule_url(target_date: date, calendar_type: str = "personal") -> str:
     return (
-        "/planner.schedule?calendar=personal&view=day&date="
+        f"/planner.schedule?calendar={calendar_type}&view=day&date="
         f"{target_date.isoformat()}"
     )
+
+
+def _is_workday(target_date: date) -> bool:
+    return target_date.weekday() < 5
 
 
 def _get_due_task_candidates(
@@ -555,6 +560,21 @@ def collect_due_candidates(
                     ),
                     navigate_path=_schedule_url(target_date),
                     tag=f"summary-today-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
+            )
+
+    if _is_workday(now_local.date()) and _summary_is_due(now_local, _WORK_SUMMARY_HOUR):
+        target_date = now_local.date()
+        summary_users = safe_user_ids or [None]
+        for user_id in summary_users:
+            candidates.append(
+                PushCandidate(
+                    key=f"work-summary:today:{target_date.isoformat()}",
+                    title="Шанс — рабочий график",
+                    body=build_work_tasks_text(target_date, "сегодня"),
+                    navigate_path=_schedule_url(target_date, "work"),
+                    tag=f"work-summary-today-{target_date.isoformat()}",
                     user_id=user_id,
                 )
             )
@@ -932,12 +952,30 @@ def _clean_external_push_text(value: object, fallback: str, max_length: int) -> 
     return text[:max_length].strip()
 
 
+def _resolve_external_push_user_id(payload: dict) -> int | None:
+    raw_username = str(payload.get("username") or "").strip()
+    if raw_username:
+        conn = get_connection()
+        try:
+            row = conn.execute(
+                "SELECT id FROM users WHERE username = ? AND is_active = 1",
+                (raw_username,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            raise LookupError("Unknown username.")
+        return int(row["id"])
+
+    raw_user_id = payload.get("user_id")
+    if raw_user_id in {None, ""}:
+        return None
+    return int(raw_user_id)
+
+
 def send_external_telegram_notification(payload: dict) -> tuple[int, int]:
     timestamp = time.time_ns()
-    raw_user_id = payload.get("user_id")
-    user_id = None
-    if raw_user_id not in {None, ""}:
-        user_id = int(raw_user_id)
+    user_id = _resolve_external_push_user_id(payload)
 
     candidate = PushCandidate(
         key=f"telegram:{timestamp}",
@@ -1132,5 +1170,7 @@ def register_web_push_routes(app) -> None:
             sent_count, failed_count = send_external_telegram_notification(payload)
         except (TypeError, ValueError):
             return jsonify({"ok": False, "message": "Invalid user_id."}), 400
+        except LookupError as exc:
+            return jsonify({"ok": False, "message": str(exc)}), 400
 
         return jsonify({"ok": True, "sent": sent_count, "failed": failed_count})

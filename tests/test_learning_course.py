@@ -7,6 +7,7 @@ from app.learning import (
     DAILY_PASS_SCORE,
     ENGLISH_LESSONS,
     FINAL_PASS_SCORE,
+    _build_english_lecture_text,
     _build_it_lecture_points,
     _build_it_term_cards,
     _course_state,
@@ -138,6 +139,10 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("url_for('nutrition.index')", sport_source)
         self.assertIn('<div class="dashboard-card-title">Тренировки</div>', sport_source)
         self.assertIn('<div class="dashboard-card-title">Питание</div>', sport_source)
+        self.assertIn("url_for('shootings_hub')", base_source)
+        self.assertIn(">Съёмки</a>", base_source)
+        self.assertNotIn("url_for('budget')", base_source)
+        self.assertNotIn(">Бюджет</a>", base_source)
         self.assertIn(">Развитие</a>", base_source)
         self.assertIn(">Спорт</a>", base_source)
 
@@ -259,14 +264,22 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("course-audio.js", source)
             self.assertIn("Включить озвучку", source)
             self.assertIn("Озвучить урок", source)
+            self.assertIn("Пройти тест", source)
+            self.assertIn("data-quiz-reveal-button", source)
+            self.assertIn("data-quiz-form-shell", source)
+            self.assertIn("lesson-quiz.js", source)
         self.assertIn("data-course-pronounce", english_source)
         self.assertIn("data-course-pronounce-lang=\"en-US\"", english_source)
         self.assertIn("course-pronounce-button", english_source)
+        self.assertIn("<summary>Подробнее</summary>", english_source)
+        self.assertIn("lesson_lecture_text", english_source)
         self.assertIn("data-course-pronounce", it_source)
         self.assertIn("data-course-pronounce-lang=\"en-US\"", it_source)
         self.assertIn("<summary>Подробнее</summary>", it_source)
         self.assertIn("lecture_points", it_source)
         self.assertIn("term_cards", it_source)
+        self.assertIn("quiz_revealed", english_source)
+        self.assertIn("quiz_revealed", it_source)
         self.assertIn("SpeechSynthesisUtterance", script_source)
         self.assertIn("data-course-pronounce", script_source)
         self.assertIn("speakSingle", script_source)
@@ -279,6 +292,19 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("window.setTimeout(function ()", script_source)
         self.assertIn("microsoft aria online", script_source)
         self.assertIn("microsoft svetlana online", script_source)
+
+    def test_lecture_texts_are_expanded_for_english_and_it(self):
+        english_lesson = ENGLISH_LESSONS[0]
+        expanded_english = _build_english_lecture_text(english_lesson)
+        self.assertGreater(len(expanded_english), len(english_lesson["focus"]))
+        self.assertIn("Сначала знакомьтесь", expanded_english)
+        self.assertIn("практику", expanded_english)
+
+        it_points = _build_it_lecture_points(IT_LESSONS[0])
+        self.assertEqual(len(it_points), 3)
+        self.assertGreater(len(it_points[0]["text"]), len(IT_LESSONS[0]["lecture"][0]))
+        self.assertIn("реальный сайт", it_points[0]["text"])
+        self.assertIn("рабочую ситуацию", it_points[0]["text"])
 
     def test_every_daily_lesson_has_audio_segments(self):
         for lesson in ENGLISH_LESSONS:

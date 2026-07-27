@@ -41,7 +41,7 @@
     <section class="lesson-section">
         <p class="learning-kicker">Мини-лекция</p>
         <h2>Как заниматься сегодня</h2>
-        <p class="lesson-lecture">{{ lesson.focus }}</p>
+        <p class="lesson-lecture">{{ lesson_lecture_text }}</p>
     </section>
 
     <section class="lesson-section">
@@ -53,19 +53,23 @@
             <span>Прочитайте вслух 3 раза</span>
         </div>
         <div class="vocabulary-grid">
-            {% for english, russian in lesson.words %}
+            {% for card in word_cards %}
             <article class="vocabulary-card">
                 <div class="course-pronounce-line">
-                    <strong>{{ english }}</strong>
+                    <strong>{{ card.english }}</strong>
                     <button
                         type="button"
                         class="course-pronounce-button"
-                        data-course-pronounce="{{ english }}"
+                        data-course-pronounce="{{ card.english }}"
                         data-course-pronounce-lang="en-US"
-                        aria-label="Произнести слово {{ english }}"
+                        aria-label="Произнести слово {{ card.english }}"
                     >🔊</button>
                 </div>
-                <span>{{ russian }}</span>
+                <span>{{ card.russian }}</span>
+                <details class="it-more-details english-more-details">
+                    <summary>Подробнее</summary>
+                    <p>{{ card.detail }}</p>
+                </details>
             </article>
             {% endfor %}
         </div>
@@ -80,20 +84,24 @@
             <span>Сначала попробуйте перевести сами</span>
         </div>
         <div class="phrase-list">
-            {% for english, russian in lesson.phrases %}
+            {% for card in phrase_cards %}
             <article class="phrase-card">
                 <span class="phrase-language">EN</span>
                 <div class="course-pronounce-line">
-                    <strong>{{ english }}</strong>
+                    <strong>{{ card.english }}</strong>
                     <button
                         type="button"
                         class="course-pronounce-button"
-                        data-course-pronounce="{{ english }}"
+                        data-course-pronounce="{{ card.english }}"
                         data-course-pronounce-lang="en-US"
-                        aria-label="Произнести фразу {{ english }}"
+                        aria-label="Произнести фразу {{ card.english }}"
                     >🔊</button>
                 </div>
-                <span class="phrase-translation">{{ russian }}</span>
+                <span class="phrase-translation">{{ card.russian }}</span>
+                <details class="it-more-details english-more-details">
+                    <summary>Подробнее</summary>
+                    <p>{{ card.detail }}</p>
+                </details>
             </article>
             {% endfor %}
         </div>
@@ -137,25 +145,29 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-
-        <form method="post" class="quiz-form">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-            {% for question in questions %}
-            {% set question_index = loop.index0 %}
-            <fieldset class="quiz-question">
-                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
-                <div class="quiz-options">
-                    {% for option in question.options %}
-                    <label class="quiz-option">
-                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
-                        <span>{{ option }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </fieldset>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
-        </form>
+        <button type="button" class="btn btn-primary quiz-reveal-button" data-quiz-reveal-button data-quiz-target="english-day-quiz-form">
+            Пройти тест
+        </button>
+        <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="english-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
+            <form method="post" class="quiz-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                {% for question in questions %}
+                {% set question_index = loop.index0 %}
+                <fieldset class="quiz-question">
+                    <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
+                    <div class="quiz-options">
+                        {% for option in question.options %}
+                        <label class="quiz-option">
+                            <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
+                            <span>{{ option }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+            </form>
+        </div>
     </section>
 </section>
 {% endblock %}
@@ -163,4 +175,5 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

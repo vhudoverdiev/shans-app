@@ -147,25 +147,29 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-
-        <form method="post" class="quiz-form it-quiz-form">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-            {% for question in questions %}
-            {% set question_index = loop.index0 %}
-            <fieldset class="quiz-question">
-                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
-                <div class="quiz-options">
-                    {% for option in question.options %}
-                    <label class="quiz-option">
-                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
-                        <span>{{ option }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </fieldset>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
-        </form>
+        <button type="button" class="btn btn-primary quiz-reveal-button" data-quiz-reveal-button data-quiz-target="it-day-quiz-form">
+            Пройти тест
+        </button>
+        <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="it-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
+            <form method="post" class="quiz-form it-quiz-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                {% for question in questions %}
+                {% set question_index = loop.index0 %}
+                <fieldset class="quiz-question">
+                    <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
+                    <div class="quiz-options">
+                        {% for option in question.options %}
+                        <label class="quiz-option">
+                            <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
+                            <span>{{ option }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+            </form>
+        </div>
     </section>
 </section>
 {% endblock %}
@@ -173,4 +177,5 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

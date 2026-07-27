@@ -979,10 +979,19 @@ def _locked_future_lessons(course_key: str) -> list[dict]:
     ]
 
 
+def _build_english_lecture_text(lesson: dict) -> str:
+    return (
+        f"Сначала знакомьтесь с темой по одному короткому правилу: {lesson['focus']} "
+        "После чтения закройте карточку и попробуйте объяснить тему своими словами без подсказки. "
+        "Затем возьмите одну фразу дня, поменяйте в ней имя, действие или время и соберите свой вариант предложения. "
+        "Так короткая тема быстрее переходит из пассивного чтения в настоящую практику."
+    )
+
+
 def _english_audio_segments(lesson: dict) -> list[dict]:
     segments = [
         {"lang": "ru-RU", "text": f"День {lesson['day']}. {lesson['title']}."},
-        {"lang": "ru-RU", "text": lesson["focus"]},
+        {"lang": "ru-RU", "text": _build_english_lecture_text(lesson)},
         {"lang": "ru-RU", "text": "Словарь дня."},
     ]
     for english, russian in lesson["words"]:
@@ -1033,23 +1042,22 @@ def _has_latin_letters(value: str) -> bool:
 
 
 def _build_it_term_cards(lesson: dict) -> list[dict]:
-    detail_templates = (
-        "В вакансии это слово обычно означает практический навык: нужно понимать смысл, видеть примеры в проекте и уметь объяснить, где это применяется.",
-        "Если встретите этот термин в требованиях, не учите его как отдельное слово. Свяжите его с задачей: что входит, что выходит и какую проблему это решает.",
-        "На собеседовании по junior-уровню часто достаточно простого объяснения, маленького примера и честного понимания ограничений.",
-        "В реальном проекте этот пункт редко живёт отдельно: он связан с кодом, данными, пользователем, сервером или командной работой.",
-        "Хороший способ закрепить термин — найти его в вакансии, документации или интерфейсе инструмента и пересказать своими словами.",
-        "Мини-проверка: спросите себя, кто этим пользуется, зачем это нужно и что сломается, если этой части не будет.",
-    )
     cards = []
     for index, (term, definition) in enumerate(lesson["terms"]):
+        usage = (
+            "В вакансии это почти всегда проверяют через практический пример: где вы это применяли, "
+            "какую задачу решали и какой результат получили."
+            if index % 2 == 0
+            else "В проекте это помогает связать требования, код, данные и пользователя в одну понятную цепочку."
+        )
         cards.append(
             {
                 "term": term,
                 "definition": definition,
                 "detail": (
-                    f"{detail_templates[index % len(detail_templates)]} "
-                    f"В контексте сегодняшнего урока «{term}» — это: {definition}."
+                    f"«{term}» в теме «{lesson['title']}» означает: {definition}. "
+                    f"{usage} Мини-проверка: придумайте одну ситуацию, где без этого элемента работа сервиса стала бы медленнее, "
+                    "опаснее или непонятнее для команды."
                 ),
                 "is_english": _has_latin_letters(term),
             }
@@ -1060,18 +1068,59 @@ def _build_it_term_cards(lesson: dict) -> list[dict]:
 def _build_it_lecture_points(lesson: dict) -> list[dict]:
     points = []
     for index, paragraph in enumerate(lesson["lecture"], start=1):
+        key_fragment = paragraph.split(".")[0].strip()
+        context_hint = (
+            "Попробуйте назвать один реальный сайт, приложение или рабочую ситуацию, где этот принцип встречается прямо сейчас."
+            if index == 1
+            else "Свяжите эту мысль с тем, как человек принимает решение, ищет информацию или отправляет запрос в сервис."
+        )
         points.append(
             {
                 "number": index,
-                "text": paragraph,
+                "text": f"{paragraph} {context_hint}",
                 "detail": (
-                    "Подробнее: попробуйте разложить этот пункт на три вопроса — что это такое, "
-                    "зачем это нужно в работе айтишника и где вы уже могли видеть это в обычном сайте "
-                    "или приложении. Такой разбор помогает читать вакансии без ощущения, что там просто набор непонятных слов."
+                    f"Главная мысль: {key_fragment}. В работе айтишника этот пункт нужен, чтобы понимать не только слово, "
+                    "но и действие за ним: кто принимает решение, какие данные или инструменты участвуют, что считается хорошим результатом. "
+                    "Попробуйте найти пример в знакомом сервисе: форма входа, карточка товара, расписание, оплата или уведомление. "
+                    "Так тема перестаёт быть теорией и превращается в рабочий сценарий."
                 ),
             }
         )
     return points
+
+
+def _build_english_word_cards(lesson: dict) -> list[dict]:
+    cards = []
+    for index, (english, russian) in enumerate(lesson["words"]):
+        phrase_english, phrase_russian = lesson["phrases"][index % len(lesson["phrases"])]
+        cards.append(
+            {
+                "english": english,
+                "russian": russian,
+                "detail": (
+                    f"Слово «{english}» означает «{russian}». Произнесите его вслух, затем вставьте в короткую фразу по теме дня "
+                    f"«{lesson['title']}». Опорный пример: {phrase_english} — {phrase_russian}. "
+                    "Если слово кажется лёгким, проверьте себя наоборот: закройте английский вариант и восстановите его по-русски."
+                ),
+            }
+        )
+    return cards
+
+
+def _build_english_phrase_cards(lesson: dict) -> list[dict]:
+    cards = []
+    for english, russian in lesson["phrases"]:
+        cards.append(
+            {
+                "english": english,
+                "russian": russian,
+                "detail": (
+                    f"Фраза переводится как «{russian}». Сначала прочитайте её целиком, потом замените одно слово на своё: имя, время, место или действие. "
+                    "Так вы тренируете не одну готовую строку, а модель предложения, которую можно использовать в разговоре."
+                ),
+            }
+        )
+    return cards
 
 
 @learning_bp.route("/study")
@@ -1132,6 +1181,7 @@ def english_day(day_number: int):
     return render_template(
         "english_day.html",
         lesson=lesson,
+        lesson_lecture_text=_build_english_lecture_text(lesson),
         questions=questions,
         feedback=feedback,
         score=score,
@@ -1140,6 +1190,9 @@ def english_day(day_number: int):
         day_progress=progress.get(day_number),
         next_day=next_day,
         course_finished=len(passed_days) == len(ENGLISH_LESSONS),
+        word_cards=_build_english_word_cards(lesson),
+        phrase_cards=_build_english_phrase_cards(lesson),
+        quiz_revealed=score is not None,
         audio_segments=_english_audio_segments(lesson),
     )
 
@@ -1235,6 +1288,7 @@ def it_day(day_number: int):
         course_finished=len(passed_days) == len(IT_LESSONS),
         lecture_points=_build_it_lecture_points(lesson),
         term_cards=_build_it_term_cards(lesson),
+        quiz_revealed=score is not None,
         audio_segments=_it_audio_segments(lesson),
     )
 

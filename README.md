@@ -38,6 +38,24 @@ cd shans-app
 - Уведомления личного графика доставляются через Web Push в установленное на экран «Домой» веб-приложение.
 - Сводка приходит в 10:00 за текущий день и в 20:00 за следующий день по московскому времени.
 - Для задач с указанным временем отдельное напоминание приходит за 2 часа.
+- Внешний скрипт, который уже отправляет сообщение в Telegram, может продублировать его в push на сайте через `POST https://shansplanner.ru/api/push/external/telegram`.
+- На сервере нужно задать `TELEGRAM_PUSH_SECRET` в `.env`, а в запросе передавать тот же секрет в заголовке `X-Shans-Push-Secret`.
+
+Пример запроса из скрипта:
+
+```bash
+curl -X POST "https://shansplanner.ru/api/push/external/telegram" \
+  -H "Content-Type: application/json" \
+  -H "X-Shans-Push-Secret: $TELEGRAM_PUSH_SECRET" \
+  -d '{
+    "title": "Шанс - скрипт",
+    "body": "Скрипт завершился успешно.",
+    "navigate_path": "/",
+    "username": "vhudoverdiev"
+  }'
+```
+
+`username` можно заменить на любой другой логин, если понадобится отправлять push конкретному пользователю.
 
 ## Деплой на сервер (main)
 

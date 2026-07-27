@@ -27,15 +27,6 @@ html, body {
         padding: 0;
     }
 
-    html.login-centered-document .flash-stack {
-        position: fixed;
-        top: 12px;
-        left: 50%;
-        z-index: 300;
-        width: min(calc(100vw - 32px), 1248px);
-        margin: 0;
-        transform: translateX(-50%);
-    }
 }
 
 a {
@@ -1279,23 +1270,33 @@ body.avatar-crop-scroll-locked {
 ========================= */
 
 .flash-stack {
-    margin-bottom: 18px;
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 300;
+    width: min(360px, calc(100vw - 32px));
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: stretch;
+    gap: 10px;
+    pointer-events: none;
 }
 
 .flash-message {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 16px;
-    border-radius: 16px;
-    padding: 14px 18px;
-    font-size: 15px;
+    gap: 12px;
+    min-height: 52px;
+    border-radius: 14px;
+    padding: 13px 14px 13px 16px;
+    font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    line-height: 1.35;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
     border: 1px solid transparent;
+    pointer-events: auto;
 }
 
 .flash-message-text {
@@ -1306,7 +1307,10 @@ body.avatar-crop-scroll-locked {
     border: none;
     background: transparent;
     cursor: pointer;
-    font-size: 22px;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    font-size: 20px;
     line-height: 1;
     padding: 0;
     opacity: 0.7;
@@ -2339,6 +2343,12 @@ html.login-centered-document .page-shell {
 
     .status-btn {
         width: 100%;
+    }
+
+    .flash-stack {
+        right: 14px;
+        bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+        width: min(340px, calc(100vw - 28px));
     }
 
     .flash-message {

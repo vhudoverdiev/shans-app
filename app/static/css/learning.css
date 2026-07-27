@@ -796,6 +796,29 @@ a.english-day-card:hover {
     gap: 14px;
 }
 
+.quiz-reveal-button {
+    margin-bottom: 14px;
+}
+
+.quiz-form-shell {
+    overflow: hidden;
+    transition: max-height 0.24s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quiz-form-shell[hidden] {
+    display: none;
+}
+
+.quiz-form-shell:not([hidden]) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.quiz-form-shell-animating {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
 .quiz-question {
     min-width: 0;
     margin: 0;
@@ -879,6 +902,10 @@ a.english-day-card:hover {
     justify-self: start;
     padding-right: 30px;
     padding-left: 30px;
+}
+
+.english-more-details {
+    margin-top: 8px;
 }
 
 .final-best-score {

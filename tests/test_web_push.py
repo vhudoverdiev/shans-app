@@ -17,7 +17,7 @@ from pywebpush import WebPushException
 from config import Config
 from app import create_app
 from app.database import _dict_row_factory
-from app.schedule_notifications import build_personal_tasks_text
+from app.schedule_notifications import build_personal_tasks_text, build_work_tasks_text
 from app.learning import init_learning_db
 from app.web_push import (
     PushCandidate,
@@ -62,6 +62,22 @@ class WebPushSchedulingTests(unittest.TestCase):
                 workout_user_id INTEGER
             )
             """
+        )
+        conn.execute(
+            """
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1
+            )
+            """
+        )
+        conn.executemany(
+            "INSERT INTO users (id, username, is_active) VALUES (?, ?, ?)",
+            (
+                (1, "admin", 1),
+                (2, "vhudoverdiev", 1),
+            ),
         )
         conn.commit()
         conn.close()
@@ -152,6 +168,59 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(any(item.key == "summary:today:2026-07-21" for item in morning))
         self.assertFalse(any(item.key.startswith("summary:") for item in after_morning_window))
         self.assertTrue(any(item.key == "summary:tomorrow:2026-07-22" for item in evening))
+
+    def test_work_schedule_summary_is_sent_on_weekdays_at_9_moscow_time(self):
+        target_date = "2026-07-21"
+        self._add_task("Личная встреча", target_date, "08:30")
+        self._add_task("Рабочий созвон", target_date, "09:30", calendar_type="work")
+        self._add_task("Рабочий отчёт", target_date, "11:00", calendar_type="work")
+        self._add_task(
+            "Закрытая рабочая задача",
+            target_date,
+            "12:00",
+            calendar_type="work",
+            status="done",
+        )
+
+        summary_text = build_work_tasks_text(datetime(2026, 7, 21).date(), "сегодня")
+        self.assertIn("Рабочий созвон", summary_text)
+        self.assertIn("Рабочий отчёт", summary_text)
+        self.assertNotIn("Личная встреча", summary_text)
+        self.assertNotIn("Закрытая рабочая задача", summary_text)
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 9, 0, tzinfo=self.moscow_timezone),
+            user_ids={1, 2},
+        )
+        work_summaries = [
+            candidate
+            for candidate in candidates
+            if candidate.key == "work-summary:today:2026-07-21"
+        ]
+
+        self.assertEqual(len(work_summaries), 2)
+        self.assertEqual({candidate.user_id for candidate in work_summaries}, {1, 2})
+        self.assertTrue(all(candidate.title == "Шанс — рабочий график" for candidate in work_summaries))
+        self.assertTrue(
+            all(
+                candidate.navigate_path
+                == "/planner.schedule?calendar=work&view=day&date=2026-07-21"
+                for candidate in work_summaries
+            )
+        )
+        self.assertTrue(all("Рабочий созвон" in candidate.body for candidate in work_summaries))
+        self.assertTrue(all("Личная встреча" not in candidate.body for candidate in work_summaries))
+
+        after_window = collect_due_candidates(
+            datetime(2026, 7, 21, 9, 5, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+        weekend = collect_due_candidates(
+            datetime(2026, 7, 25, 9, 0, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+        self.assertFalse(any(item.key.startswith("work-summary:") for item in after_window))
+        self.assertFalse(any(item.key.startswith("work-summary:") for item in weekend))
 
     def test_workout_tasks_in_summary_are_isolated_by_user(self):
         target_date = "2026-07-21"
@@ -473,6 +542,33 @@ class WebPushSchedulingTests(unittest.TestCase):
             "The local script completed successfully.",
         )
         self.assertEqual(get_unread_push_notifications(2), ([], 0))
+
+    def test_external_telegram_notification_targets_selected_username(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            2,
+            self._subscription_payload("https://push.example.test/subscription/2"),
+            "https://shans.example.test",
+        )
+
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = send_external_telegram_notification(
+                {
+                    "title": "Render finished",
+                    "body": "The local script completed successfully.",
+                    "username": "vhudoverdiev",
+                }
+            )
+
+        self.assertEqual(result, (1, 0))
+        send_mock.assert_called_once()
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 2)
+        self.assertEqual(get_unread_push_notifications(1), ([], 0))
+        self.assertEqual(get_unread_push_notifications(2)[1], 1)
 
     def test_external_telegram_push_route_uses_secret_without_csrf(self):
         Config.TELEGRAM_PUSH_SECRET = "test-secret"

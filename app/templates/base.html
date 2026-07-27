@@ -172,8 +172,8 @@
 
             <nav class="top-nav" id="top-nav-menu">
                 <a href="{{ url_for('index') }}" class="top-nav-link {% if is_home_page %}top-nav-link-active{% endif %}">Главная</a>
-                {% if has_section_access('budget') %}
-                <a href="{{ url_for('budget') }}" class="top-nav-link {% if is_budget_page %}top-nav-link-active{% endif %}">Бюджет</a>
+                {% if has_section_access('shootings') %}
+                <a href="{{ url_for('shootings_hub') }}" class="top-nav-link {% if is_shootings_section %}top-nav-link-active{% endif %}">Съёмки</a>
                 {% endif %}
                 {% if has_section_access('schedule') %}
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link {% if is_schedule_page %}top-nav-link-active{% endif %}">График</a>
@@ -203,7 +203,7 @@
     <main class="page-shell">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="flash-stack">
+        <div class="flash-stack" role="status" aria-live="polite">
             {% for category, message in messages %}
             <div class="flash-message flash-{{ category if category else 'info' }}">
                 <div class="flash-message-text">{{ message }}</div>

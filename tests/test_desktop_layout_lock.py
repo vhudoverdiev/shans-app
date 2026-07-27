@@ -92,11 +92,13 @@ class DesktopLayoutLockTests(unittest.TestCase):
         )
         self.assertRegex(
             stylesheet,
-            r"html\.login-centered-document\s+\.flash-stack\s*\{"
+            r"\.flash-stack\s*\{"
             r"[^}]*position:\s*fixed;"
-            r"[^}]*left:\s*50%;"
-            r"[^}]*transform:\s*translateX\(-50%\);",
+            r"[^}]*right:\s*24px;"
+            r"[^}]*bottom:\s*24px;"
+            r"[^}]*width:\s*min\(360px,\s*calc\(100vw - 32px\)\);",
         )
+        self.assertIn('<div class="flash-stack" role="status" aria-live="polite">', base_template)
         self.assertLess(
             login_template.index('<div class="login-page">'),
             login_template.index('{% if login_stage == "otp" %}'),
