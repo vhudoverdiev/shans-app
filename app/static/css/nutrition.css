@@ -971,3 +971,78 @@
         -webkit-tap-highlight-color: transparent;
     }
 }
+
+/* Desktop nutrition uses neutral cards; touch/PWA keeps the richer accent styling. */
+@media (hover: hover) and (pointer: fine) {
+    .nutrition-hero {
+        border-color: #e5eaf2;
+        color: var(--nutrition-ink);
+        background: #ffffff;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.07);
+    }
+
+    .nutrition-hero::after {
+        display: none;
+    }
+
+    .nutrition-hero h1 {
+        color: var(--nutrition-ink);
+    }
+
+    .nutrition-hero p:last-child {
+        color: var(--nutrition-muted);
+    }
+
+    .nutrition-hero .nutrition-kicker,
+    .nutrition-section-label,
+    .nutrition-back-link,
+    .nutrition-text-link,
+    .nutrition-profile-details summary {
+        color: #475569;
+    }
+
+    .nutrition-hero-mark {
+        border-color: #e2e8f0;
+        color: #334155;
+        background: #f8fafc;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .nutrition-hero-mark svg {
+        stroke: #334155;
+    }
+
+    .nutrition-onboarding,
+    .nutrition-card,
+    .nutrition-day-summary,
+    .nutrition-progress-insight {
+        border-color: #e5eaf2;
+        background: #ffffff;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.07);
+    }
+
+    .nutrition-goal-pill,
+    .nutrition-count-pill,
+    .nutrition-meal-label {
+        color: #334155;
+        background: #f1f5f9;
+    }
+
+    .nutrition-primary-button {
+        background: #2563eb;
+        box-shadow: none;
+    }
+
+    .nutrition-secondary-button,
+    .nutrition-date-button {
+        color: #334155;
+        background: #f8fafc;
+    }
+
+    .nutrition-progress span {
+        background: #64748b;
+        box-shadow: none;
+    }
+}

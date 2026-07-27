@@ -1528,9 +1528,9 @@ body.avatar-crop-scroll-locked {
 
 .section-hero {
     position: relative;
-    min-height: 190px;
-    margin-bottom: 22px;
-    padding: 36px;
+    min-height: 148px;
+    margin-bottom: 18px;
+    padding: 26px 30px;
     border: 1px solid rgba(196, 181, 253, 0.7);
     border-radius: 28px;
     display: flex;
@@ -1548,10 +1548,10 @@ body.avatar-crop-scroll-locked {
 .section-hero::after {
     content: "";
     position: absolute;
-    right: -80px;
-    bottom: -110px;
-    width: 280px;
-    height: 280px;
+    right: -96px;
+    bottom: -132px;
+    width: 240px;
+    height: 240px;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 50%;
 }
@@ -1565,48 +1565,25 @@ body.avatar-crop-scroll-locked {
 .section-hero h1 {
     margin: 0;
     color: #ffffff;
-    font-size: clamp(32px, 5vw, 52px);
+    font-size: clamp(30px, 4vw, 44px);
     line-height: 1.05;
 }
 
 .section-hero p:not(.section-hero-kicker) {
     max-width: 720px;
-    margin: 14px 0 0;
+    margin: 10px 0 0;
     color: rgba(255, 255, 255, 0.86);
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .section-hero-kicker {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: #ddd6fe;
     font-size: 12px;
     font-weight: 850;
     letter-spacing: 0.09em;
     text-transform: uppercase;
-}
-
-.section-hero-mark {
-    width: 112px;
-    height: 112px;
-    flex: 0 0 112px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    border-radius: 34px;
-    display: grid;
-    place-items: center;
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.13);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    font-size: 40px;
-    font-weight: 850;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-.section-hero-schedule .section-hero-mark,
-.section-hero-reports .section-hero-mark,
-.section-hero-account .section-hero-mark {
-    font-family: Arial, Helvetica, sans-serif;
 }
 
 .section-styled-page .hub-grid .dashboard-card {
@@ -1626,6 +1603,40 @@ body.avatar-crop-scroll-locked {
 
 .hub-grid-compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Desktop keeps service sections neutral; mobile keeps the richer accent cards. */
+@media (hover: hover) and (pointer: fine) {
+    .section-hero {
+        border-color: #e5eaf2;
+        color: #172033;
+        background: #ffffff;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.07);
+    }
+
+    .section-hero::after {
+        display: none;
+    }
+
+    .section-hero .page-title,
+    .section-hero h1 {
+        color: #111827;
+    }
+
+    .section-hero p:not(.section-hero-kicker) {
+        color: #64748b;
+    }
+
+    .section-hero-kicker {
+        color: #475569;
+    }
+
+    .section-styled-page .hub-grid .dashboard-card,
+    .section-styled-page .hub-grid .dashboard-card-featured {
+        border-color: #e5eaf2;
+        background: #ffffff;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.07);
+    }
 }
 
 /* =========================

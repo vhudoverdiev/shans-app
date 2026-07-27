@@ -464,14 +464,21 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("is_development_section", base)
         self.assertIn("is_sport_section", base)
 
-    def test_workouts_desktop_theme_uses_blue_accents(self):
+    def test_workouts_desktop_theme_uses_neutral_surface(self):
         styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
+        desktop_theme = styles.split(
+            "/* Desktop sport/training pages use the neutral site surface. */",
+            1,
+        )[1]
 
-        self.assertIn("--workout-blue: #2563eb;", styles)
-        self.assertIn("--workout-purple: #1d4ed8;", styles)
-        self.assertIn("linear-gradient(135deg, var(--workout-blue), var(--workout-purple))", styles)
-        self.assertIn("background: #eff6ff;", styles)
-        self.assertIn("border: 1px solid #bfdbfe;", styles)
+        self.assertIn("@media (hover: hover) and (pointer: fine)", desktop_theme)
+        self.assertIn(".workouts-hero,", desktop_theme)
+        self.assertIn(".workout-plan-detail-hero", desktop_theme)
+        self.assertIn("background: #ffffff;", desktop_theme)
+        self.assertIn("border-color: #e5eaf2;", desktop_theme)
+        self.assertIn(".workout-plan-card", desktop_theme)
+        self.assertIn(".workout-plan-number", desktop_theme)
+        self.assertNotIn("linear-gradient(135deg, var(--workout-blue), var(--workout-purple))", desktop_theme)
         for purple_value in (
             "#7c3aed",
             "#9333ea",
@@ -481,7 +488,7 @@ class WorkoutsTests(unittest.TestCase):
             "rgba(124, 58, 237",
             "rgba(91, 33, 182",
         ):
-            self.assertNotIn(purple_value, styles)
+            self.assertNotIn(purple_value, desktop_theme)
 
 
 if __name__ == "__main__":

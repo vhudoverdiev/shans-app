@@ -90,13 +90,23 @@ class MobileAppNavigationTests(unittest.TestCase):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn("section-styled-page", source)
             self.assertIn(f"section-hero {modifier}", source)
-            self.assertIn("section-hero-mark", source)
+            self.assertNotIn("section-hero-mark", source)
 
         self.assertIn(".section-hero", styles)
         self.assertIn("linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)", styles)
-        self.assertIn(".section-hero-mark", styles)
+        desktop_neutral_theme = styles.split(
+            "/* Desktop keeps service sections neutral;",
+            1,
+        )[1]
+        self.assertIn("@media (hover: hover) and (pointer: fine)", desktop_neutral_theme)
+        self.assertIn(".section-hero", desktop_neutral_theme)
+        self.assertIn("background: #ffffff;", desktop_neutral_theme)
+        self.assertIn("border-color: #e5eaf2;", desktop_neutral_theme)
         self.assertIn(".section-hero", mobile_styles)
-        self.assertIn("clamp(42px, 11vw, 58px)", mobile_styles)
+        self.assertIn("clamp(34px, 9vw, 46px)", mobile_styles)
+
+        study_hub = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
+        self.assertNotIn("learning-hero-mark", study_hub)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")

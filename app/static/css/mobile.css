@@ -726,44 +726,36 @@
     }
 
     .section-hero {
-        min-height: 184px;
-        margin: 0 0 22px;
-        padding: 28px 22px;
-        border-radius: 28px;
-        box-shadow: 0 18px 42px rgba(91, 33, 182, 0.22);
+        min-height: 136px;
+        margin: 0 0 18px;
+        padding: 22px 20px;
+        border-radius: 24px;
+        box-shadow: 0 14px 34px rgba(91, 33, 182, 0.2);
     }
 
     .section-hero::after {
-        right: -108px;
-        bottom: -104px;
-        width: 260px;
-        height: 260px;
+        right: -116px;
+        bottom: -132px;
+        width: 230px;
+        height: 230px;
     }
 
     .section-hero .page-title,
     .section-hero h1 {
-        font-size: clamp(42px, 11vw, 58px);
+        font-size: clamp(34px, 9vw, 46px);
         letter-spacing: -0.03em;
     }
 
     .section-hero p:not(.section-hero-kicker) {
-        margin-top: 14px;
-        font-size: 17px;
-        line-height: 1.45;
+        margin-top: 10px;
+        font-size: 15px;
+        line-height: 1.38;
     }
 
     .section-hero-kicker {
-        font-size: 12px;
+        margin-bottom: 6px;
+        font-size: 11px;
         letter-spacing: 0.11em;
-    }
-
-    .section-hero-mark {
-        width: 72px;
-        height: 72px;
-        flex-basis: 72px;
-        align-self: flex-start;
-        border-radius: 24px;
-        font-size: 28px;
     }
 
     .dashboard-grid-mobile .dashboard-card,

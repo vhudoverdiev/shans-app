@@ -362,17 +362,23 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("progress_insight.protein_message", template)
         self.assertNotIn("autofocus", template)
 
-    def test_nutrition_desktop_theme_uses_blue_accents(self):
+    def test_nutrition_desktop_theme_uses_neutral_surface(self):
         styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+        desktop_theme = styles.split(
+            "/* Desktop nutrition uses neutral cards;",
+            1,
+        )[1]
 
-        self.assertIn("--nutrition-blue: #2563eb;", styles)
-        self.assertIn("--nutrition-blue-dark: #1d4ed8;", styles)
-        self.assertIn(
+        self.assertIn("@media (hover: hover) and (pointer: fine)", desktop_theme)
+        self.assertIn(".nutrition-hero", desktop_theme)
+        self.assertIn("background: #ffffff;", desktop_theme)
+        self.assertIn("border-color: #e5eaf2;", desktop_theme)
+        self.assertIn(".nutrition-onboarding", desktop_theme)
+        self.assertIn(".nutrition-card", desktop_theme)
+        self.assertNotIn(
             "linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #3b82f6 100%)",
-            styles,
+            desktop_theme,
         )
-        self.assertIn("background: linear-gradient(90deg, #2563eb, #3b82f6);", styles)
-        self.assertIn("background: var(--nutrition-blue-soft);", styles)
         for old_accent in (
             "#047857",
             "#0f9f83",
@@ -385,7 +391,7 @@ class NutritionTests(unittest.TestCase):
             "rgba(5, 150, 105",
             "rgba(139, 92, 246",
         ):
-            self.assertNotIn(old_accent, styles)
+            self.assertNotIn(old_accent, desktop_theme)
 
     def test_database_uses_snapshot_nutrients_for_diary_entries(self):
         food = get_food_catalog(1)[0]

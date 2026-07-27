@@ -141,22 +141,25 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn(">Развитие</a>", base_source)
         self.assertIn(">Спорт</a>", base_source)
 
-    def test_learning_theme_is_blue_on_desktop_and_keeps_purple_touch_palette(self):
+    def test_learning_hub_is_neutral_on_desktop_and_keeps_purple_touch_palette(self):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
-        desktop_theme = styles.split(
-            "/* Desktop follows the shared blue site theme;",
+        desktop_hub_theme = styles.split(
+            "/* Desktop development hub stays neutral;",
             1,
         )[1]
 
         self.assertIn(
             "@media (hover: hover) and (pointer: fine)",
-            desktop_theme,
+            desktop_hub_theme,
         )
+        self.assertIn(".learning-page .learning-hero-compact", desktop_hub_theme)
+        self.assertIn("background: #ffffff;", desktop_hub_theme)
+        self.assertIn("border-color: #e5eaf2;", desktop_hub_theme)
         self.assertIn(
-            "linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #3b82f6 100%)",
-            desktop_theme,
+            ".learning-page .study-direction-grid .dashboard-card",
+            desktop_hub_theme,
         )
-        self.assertNotIn("#9333ea", desktop_theme)
+        self.assertNotIn("#9333ea", desktop_hub_theme)
         self.assertIn(
             "linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)",
             styles,
