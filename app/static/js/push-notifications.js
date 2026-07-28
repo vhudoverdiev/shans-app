@@ -15,11 +15,6 @@
     let subscription = null;
     let publicKey = "";
 
-    function isStandaloneApp() {
-        return window.matchMedia("(display-mode: standalone)").matches
-            || window.navigator.standalone === true;
-    }
-
     function setStatus(message, state) {
         if (!statusText) return;
         statusText.textContent = message;
@@ -144,22 +139,17 @@
             setStatus("Уведомления личного графика включены на этом устройстве.", "success");
         } else if (subscriptionKeyWasUpdated) {
             setStatus("Ключ уведомлений обновлён. Нажмите «Включить уведомления», чтобы восстановить подписку.", "info");
-        } else if (!isStandaloneApp()) {
-            setStatus("Откройте сайт через значок «Шанс» на экране домой, чтобы включить уведомления.", "info");
         } else if (Notification.permission === "denied") {
-            setStatus("Уведомления запрещены в настройках iPhone для приложения «Шанс».", "error");
+            setStatus("Уведомления запрещены в настройках браузера.", "error");
         } else {
             setStatus("Уведомления выключены.", "idle");
         }
     }
 
     async function enableNotifications() {
-        if (!isStandaloneApp()) {
-            throw new Error("Сначала добавьте «Шанс» на экран домой и откройте приложение через его значок.");
-        }
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
-            throw new Error("Разрешение не выдано. Проверьте настройки уведомлений iPhone.");
+            throw new Error("Разрешение не выдано. Проверьте настройки уведомлений в браузере.");
         }
         if (!publicKey || !registration) {
             throw new Error("Настройки уведомлений ещё не загружены.");

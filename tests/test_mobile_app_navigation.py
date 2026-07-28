@@ -60,6 +60,21 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn('<div class="dashboard-card-title">Учёба</div>', mobile_grid)
         self.assertIn('<div class="dashboard-card-title">Спорт</div>', mobile_grid)
 
+    def test_desktop_shootings_nav_opens_booking_list_and_mobile_keeps_hub(self):
+        source = (TEMPLATES / "base.html").read_text(encoding="utf-8")
+        top_nav = source.split('<nav class="top-nav" id="top-nav-menu">', 1)[1].split(
+            '<div class="header-user-block">',
+            1,
+        )[0]
+        bottom_nav = source.split('<nav class="app-bottom-nav"', 1)[1].split(
+            '<button',
+            1,
+        )[0]
+
+        self.assertIn("url_for('shootings')", top_nav)
+        self.assertNotIn("url_for('shootings_hub')", top_nav)
+        self.assertIn("url_for('shootings_hub')", bottom_nav)
+
     def test_mobile_hubs_group_existing_sections(self):
         shootings = (TEMPLATES / "shootings_hub.html").read_text(encoding="utf-8")
         reports = (TEMPLATES / "reports_hub.html").read_text(encoding="utf-8")
@@ -107,6 +122,34 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         study_hub = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
         self.assertNotIn("learning-hero-mark", study_hub)
+
+    def test_schedule_hero_is_hidden_only_on_desktop(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        desktop_neutral_theme = styles.split(
+            "/* Desktop keeps service sections neutral;",
+            1,
+        )[1]
+        self.assertIn(".section-hero-schedule {\n        display: none;", desktop_neutral_theme)
+        self.assertNotIn(".section-hero-schedule", mobile_styles)
+
+    def test_section_hero_cards_keep_only_kicker_and_title_text(self):
+        for template_name in (
+            "schedule.html",
+            "shootings_hub.html",
+            "reports_hub.html",
+            "sport_hub.html",
+            "account_settings.html",
+        ):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            hero = source.split('<div class="section-hero', 1)[1].split("</div>", 2)[0]
+            unexpected_paragraphs = re.findall(
+                r"<p(?![^>]*section-hero-kicker)[^>]*>",
+                hero,
+            )
+
+            self.assertEqual(unexpected_paragraphs, [], template_name)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")

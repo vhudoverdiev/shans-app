@@ -804,6 +804,16 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn("payload.resetSubscription", push_client)
         self.assertIn("discardLocalSubscription", push_client)
 
+    def test_push_toggle_does_not_require_home_screen_installation(self):
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-notifications.js"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn("isStandaloneApp()", push_client)
+        self.assertNotIn("window.navigator.standalone", push_client)
+        self.assertNotIn("display-mode: standalone", push_client)
+        self.assertNotIn("экран домой", push_client)
+
 
 if __name__ == "__main__":
     unittest.main()

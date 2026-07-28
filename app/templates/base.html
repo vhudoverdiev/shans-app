@@ -12,12 +12,12 @@
     <script>
         (function () {
             try {
-                const introKey = "shans-intro-seen-v1";
-                if (window.localStorage.getItem(introKey)) {
+                const introKey = "shans-intro-session-v1";
+                if (window.sessionStorage.getItem(introKey)) {
                     document.documentElement.classList.remove("app-intro-pending");
                     return;
                 }
-                window.localStorage.setItem(introKey, "1");
+                window.sessionStorage.setItem(introKey, "1");
                 window.__shansShouldRunIntro = true;
                 window.__shansIntroFallbackTimer = window.setTimeout(function () {
                     if (!document.documentElement.classList.contains("app-intro-running")) {
@@ -173,7 +173,7 @@
             <nav class="top-nav" id="top-nav-menu">
                 <a href="{{ url_for('index') }}" class="top-nav-link {% if is_home_page %}top-nav-link-active{% endif %}">Главная</a>
                 {% if has_section_access('shootings') %}
-                <a href="{{ url_for('shootings_hub') }}" class="top-nav-link {% if is_shootings_section %}top-nav-link-active{% endif %}">Съёмки</a>
+                <a href="{{ url_for('shootings') }}" class="top-nav-link {% if is_shootings_section %}top-nav-link-active{% endif %}">Съёмки</a>
                 {% endif %}
                 {% if has_section_access('schedule') %}
                 <a href="{{ url_for('planner.schedule') }}" class="top-nav-link {% if is_schedule_page %}top-nav-link-active{% endif %}">График</a>

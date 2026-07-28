@@ -9,13 +9,13 @@ INTRO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "intro-loader.js"
 
 
 class IntroLoaderTests(unittest.TestCase):
-    def test_base_template_bootstraps_first_visit_intro(self):
+    def test_base_template_bootstraps_session_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn('<html lang="ru" class="app-intro-pending', template)
-        self.assertIn('const introKey = "shans-intro-seen-v1"', template)
-        self.assertIn("window.localStorage.getItem(introKey)", template)
-        self.assertIn("window.localStorage.setItem(introKey, \"1\")", template)
+        self.assertIn('const introKey = "shans-intro-session-v1"', template)
+        self.assertIn("window.sessionStorage.getItem(introKey)", template)
+        self.assertIn("window.sessionStorage.setItem(introKey, \"1\")", template)
         self.assertIn("window.__shansShouldRunIntro = true", template)
         self.assertIn("window.__shansIntroFallbackTimer", template)
         self.assertIn("}, 8000);", template)
@@ -32,7 +32,7 @@ class IntroLoaderTests(unittest.TestCase):
 
     def test_intro_bootstrap_hides_content_before_external_stylesheets_load(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
-        bootstrap_position = template.index('const introKey = "shans-intro-seen-v1"')
+        bootstrap_position = template.index('const introKey = "shans-intro-session-v1"')
         first_stylesheet_position = template.index('rel="stylesheet"')
 
         self.assertLess(bootstrap_position, first_stylesheet_position)
@@ -45,6 +45,8 @@ class IntroLoaderTests(unittest.TestCase):
             template,
         )
         self.assertLess(template.index("html.app-intro-pending #app-intro"), first_stylesheet_position)
+        self.assertNotIn("window.localStorage.getItem(introKey)", template)
+        self.assertNotIn("window.localStorage.setItem(introKey, \"1\")", template)
 
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")

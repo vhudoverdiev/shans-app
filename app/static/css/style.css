@@ -1611,6 +1611,10 @@ body.avatar-crop-scroll-locked {
 
 /* Desktop keeps service sections neutral; mobile keeps the richer accent cards. */
 @media (hover: hover) and (pointer: fine) {
+    .section-hero-schedule {
+        display: none;
+    }
+
     .section-hero {
         border-color: #e5eaf2;
         color: #172033;
