@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}{{ plan.name }} | Тренировки | Шанс{% endblock %}
 
@@ -27,57 +27,58 @@
         </div>
     </div>
 
-    <div class="workout-plan-detail-grid">
-        <section class="workouts-section" aria-labelledby="workout-plan-edit-title">
-            <div class="workouts-section-heading workouts-section-heading-compact">
-                <div>
-                    <p class="workouts-section-kicker">Настройки плана</p>
-                    <h2 id="workout-plan-edit-title">Название, день и программа</h2>
-                </div>
+        <div class="workout-plan-detail-grid">
+        <details class="workouts-section workout-plan-settings"{% if settings_open %} open{% endif %}>
+            <summary class="workouts-foldout-summary" aria-label="Настройки плана">
+                <span>
+                    <strong>Настройки плана</strong>
+                    <small>Название, день недели и программа</small>
+                </span>
+            </summary>
+            <div class="workouts-foldout-body">
+                <form method="post" action="{{ url_for('workouts.update_plan', plan_id=plan.id) }}" class="workouts-form workout-plan-detail-form">
+                    <div class="form-group">
+                        <label for="plan-name">Название</label>
+                        <input
+                            id="plan-name"
+                            name="name"
+                            type="text"
+                            class="form-input"
+                            maxlength="80"
+                            value="{{ plan.name }}"
+                            placeholder="Например, Ноги и корпус"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plan-weekday">День недели</label>
+                        <select id="plan-weekday" name="weekday" class="form-input">
+                            <option value="">Не добавлять в график</option>
+                            {% for value, label in weekdays %}
+                            <option value="{{ value }}"{% if plan.weekday == value %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="workouts-form-hint">Тренировка автоматически появится в личном графике на выбранный день каждой недели.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plan-description">Подробная программа</label>
+                        <textarea
+                            id="plan-description"
+                            name="description"
+                            class="form-input workouts-textarea workout-plan-detail-textarea"
+                            maxlength="5000"
+                            rows="14"
+                            placeholder="Разминка, упражнения, количество подходов и повторов, рабочие веса, отдых между подходами, заминка..."
+                        >{{ plan.description }}</textarea>
+                        <p class="workouts-form-hint">Можно внести до 5000 символов: упражнения, подходы, повторы, веса и любые заметки.</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary workouts-submit">Сохранить и обновить график</button>
+                </form>
             </div>
-
-            <form method="post" action="{{ url_for('workouts.update_plan', plan_id=plan.id) }}" class="workouts-form workout-plan-detail-form">
-                <div class="form-group">
-                    <label for="plan-name">Название</label>
-                    <input
-                        id="plan-name"
-                        name="name"
-                        type="text"
-                        class="form-input"
-                        maxlength="80"
-                        value="{{ plan.name }}"
-                        placeholder="Например, Ноги и корпус"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="plan-weekday">День недели</label>
-                    <select id="plan-weekday" name="weekday" class="form-input">
-                        <option value="">Не добавлять в график</option>
-                        {% for value, label in weekdays %}
-                        <option value="{{ value }}"{% if plan.weekday == value %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <p class="workouts-form-hint">Тренировка автоматически появится в личном графике на выбранный день каждой недели.</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="plan-description">Подробная программа</label>
-                    <textarea
-                        id="plan-description"
-                        name="description"
-                        class="form-input workouts-textarea workout-plan-detail-textarea"
-                        maxlength="5000"
-                        rows="14"
-                        placeholder="Разминка, упражнения, количество подходов и повторов, рабочие веса, отдых между подходами, заминка..."
-                    >{{ plan.description }}</textarea>
-                    <p class="workouts-form-hint">Можно внести до 5000 символов: упражнения, подходы, повторы, веса и любые заметки.</p>
-                </div>
-
-                <button type="submit" class="btn btn-primary workouts-submit">Сохранить и обновить график</button>
-            </form>
-        </section>
+        </details>
 
         <aside class="workout-plan-detail-side">
             <section class="workouts-section">
@@ -89,34 +90,99 @@
                     <div><span>3</span><p>Измените название или текст здесь — будущие записи обновятся без дублей.</p></div>
                 </div>
             </section>
-
-            <section class="workouts-section">
-                <div class="workouts-section-heading workouts-section-heading-compact">
-                    <div>
-                        <p class="workouts-section-kicker">Последние записи</p>
-                        <h2>Результаты плана</h2>
-                    </div>
-                </div>
-                {% if workout_results %}
-                <div class="workout-plan-result-list">
-                    {% for item in workout_results[:6] %}
-                    <article>
-                        <time datetime="{{ item.performed_on }}">{{ item.display_date }}</time>
-                        <strong>{{ item.exercise }}</strong>
-                        <span>{{ item.result }}</span>
-                        {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
-                    </article>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="workouts-empty-state workout-plan-empty-state">
-                    <strong>Результатов пока нет</strong>
-                    <p>После тренировки добавьте результат на общей странице.</p>
-                    <a href="{{ url_for('workouts.index', _anchor='add-result') }}" class="btn btn-secondary btn-small">Добавить результат</a>
-                </div>
-                {% endif %}
-            </section>
         </aside>
     </div>
-</section>
+
+    <section class="workouts-section workout-plan-diary" id="workout-plan-log" aria-labelledby="workout-plan-log-title">
+        <div class="workouts-section-heading">
+            <div>
+                <p class="workouts-section-kicker">Личный дневник</p>
+                <h2 id="workout-plan-log-title">Запись результата</h2>
+            </div>
+            <p>Добавляйте результат после конкретной тренировки и храните историю рядом с её планом.</p>
+        </div>
+
+        <form method="post" action="{{ url_for('workouts.create_result') }}" class="workouts-form workout-plan-diary-form">
+            <input type="hidden" name="workout_plan_id" value="{{ plan.id }}">
+            <input type="hidden" name="return_to" value="{{ url_for('workouts.plan_detail', plan_id=plan.id, _anchor='workout-plan-log') }}">
+            <div class="workouts-form-row">
+                <div class="form-group">
+                    <label for="exercise">Упражнение</label>
+                    <input
+                        type="text"
+                        id="exercise"
+                        name="exercise"
+                        class="form-input"
+                        maxlength="120"
+                        placeholder="Например, жим лёжа"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="exercise-result">Результат</label>
+                    <input
+                        type="text"
+                        id="exercise-result"
+                        name="result"
+                        class="form-input"
+                        maxlength="120"
+                        placeholder="Например, 80 кг × 8"
+                        required
+                    >
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="performed-on">Дата тренировки</label>
+                <input
+                    type="date"
+                    id="performed-on"
+                    name="performed_on"
+                    class="form-input"
+                    value="{{ today }}"
+                    max="{{ today }}"
+                    required
+                >
+            </div>
+            <div class="form-group">
+                <label for="result-notes">Самочувствие или заметка <span class="workouts-optional">необязательно</span></label>
+                <textarea
+                    id="result-notes"
+                    name="notes"
+                    class="form-input workouts-textarea"
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Техника, нагрузка, самочувствие"
+                ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary workouts-submit">Сохранить результат</button>
+        </form>
+
+        {% if workout_results %}
+        <div class="workout-plan-result-list">
+            {% for item in workout_results %}
+            <article>
+                <time datetime="{{ item.performed_on }}">{{ item.display_date }}</time>
+                <strong>{{ item.exercise }}</strong>
+                <span>{{ item.result }}</span>
+                {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
+                <form method="post" action="{{ url_for('workouts.remove_result', result_id=item.id) }}">
+                    <input type="hidden" name="return_to" value="{{ url_for('workouts.plan_detail', plan_id=plan.id, _anchor='workout-plan-log') }}">
+                    <button type="submit" class="workouts-delete-btn" aria-label="Удалить результат">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                            <path d="M6 7h12M10 11v6M14 11v6M9 7l1-2h4l1 2M7 7l1 13h8l1-13"></path>
+                        </svg>
+                    </button>
+                </form>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="workouts-empty-state workout-plan-empty-state">
+            <strong>Результатов пока нет</strong>
+            <p>После тренировки добавьте результат в этот дневник, и история останется внутри плана.</p>
+        </div>
+        {% endif %}
+    </section>
+    </section>
 {% endblock %}
+

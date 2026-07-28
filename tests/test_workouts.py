@@ -1,4 +1,4 @@
-import tempfile
+﻿import tempfile
 import unittest
 from datetime import date, timedelta
 from pathlib import Path
@@ -161,6 +161,29 @@ class WorkoutsTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(get_workout_results(1)), 1)
+
+    def test_result_form_returns_to_plan_detail_when_requested(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+        ensure_default_workout_plans(1)
+        plan_id = get_workout_plans(1)[0]["id"]
+        return_to = f"/workouts/plans/{plan_id}#workout-plan-log"
+
+        response = client.post(
+            "/workouts/results",
+            data={
+                "workout_plan_id": str(plan_id),
+                "exercise": "РџСЂРёСЃРµРґР°РЅРёСЏ",
+                "result": "3 Г— 10",
+                "performed_on": "2026-07-20",
+                "notes": "",
+                "return_to": return_to,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], return_to)
 
     def test_invalid_weight_is_rejected_without_database_write(self):
         app = self._create_app()
@@ -421,6 +444,13 @@ class WorkoutsTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("url_for('workouts.plan_detail'", overview)
+        self.assertNotIn("Личный дневник", overview)
+        self.assertIn("История веса", overview)
+        self.assertIn("workouts-foldout", overview)
+        self.assertIn("workout-plan-settings", detail)
+        self.assertIn("workout-plan-log-title", detail)
+        self.assertIn('name="workout_plan_id"', detail)
+        self.assertIn('name="return_to"', detail)
         self.assertIn('name="name"', detail)
         self.assertIn('name="weekday"', detail)
         self.assertIn('maxlength="5000"', detail)

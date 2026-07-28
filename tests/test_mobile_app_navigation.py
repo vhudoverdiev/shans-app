@@ -91,6 +91,24 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn('@app.route("/reports")', routes)
         self.assertIn('@app.route("/sport")', routes)
 
+    def test_subsection_pages_include_back_buttons_to_their_hubs(self):
+        shooting_section_templates = (
+            "photo_projects.html",
+            "shootings_upcoming.html",
+            "shootings_archive.html",
+            "scenarios_upcoming.html",
+            "scenarios_archive.html",
+        )
+        for template_name in shooting_section_templates:
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("url_for('shootings_hub')", source, template_name)
+            self.assertIn('class="btn btn-secondary">Назад</a>', source, template_name)
+
+        for template_name in ("budget.html", "car.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("url_for('reports_hub')", source, template_name)
+            self.assertIn('class="btn btn-secondary">Назад</a>', source, template_name)
+
     def test_main_mobile_sections_use_shared_development_like_hero(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
@@ -150,6 +168,23 @@ class MobileAppNavigationTests(unittest.TestCase):
             )
 
             self.assertEqual(unexpected_paragraphs, [], template_name)
+
+    def test_section_hero_cards_use_compact_vertical_spacing(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            styles,
+            r"\.section-hero\s*\{[^}]*min-height:\s*92px;[^}]*padding:\s*12px\s+20px;",
+        )
+        self.assertRegex(
+            mobile_styles,
+            r"\.section-hero\s*\{[^}]*min-height:\s*84px;[^}]*padding:\s*10px\s+16px;",
+        )
+        self.assertNotIn("min-height: 148px;", styles)
+        self.assertNotIn("padding: 26px 30px;", styles)
+        self.assertNotIn("min-height: 136px;", mobile_styles)
+        self.assertNotIn("padding: 22px 20px;", mobile_styles)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")

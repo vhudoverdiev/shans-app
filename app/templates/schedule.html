@@ -26,11 +26,11 @@
     <div class="stats-grid car-stats-grid planner-mobile-stats">
         <div class="stat-card">
             <div class="stat-label">Запланировано</div>
-            <div class="stat-value">{{ month_stats.planned }}</div>
+            <div class="stat-value" data-planner-stat="planned">{{ month_stats.planned }}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Выполнено</div>
-            <div class="stat-value">{{ month_stats.done }}</div>
+            <div class="stat-value" data-planner-stat="done">{{ month_stats.done }}</div>
         </div>
     </div>
 
@@ -147,7 +147,7 @@
                             {% if task.display_status == 'range' %}
                                 <span class="status-pill planner-status-chip-{{ task.display_status }}">{{ task.display_status_label }}</span>
                             {% else %}
-                                <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form">
+                                <form method="post" action="{{ url_for('planner.toggle_schedule_task', task_id=task.id) }}" class="inline-form planner-status-toggle-form" data-task-id="{{ task.id }}">
                                     <button class="status-pill planner-status-chip-{{ task.display_status }} planner-status-toggle-btn" type="submit">{{ task.display_status_label }}</button>
                                 </form>
                             {% endif %}
@@ -188,6 +188,78 @@
         {% endif %}
     </div>
 
+    {% endif %}
+
+    {% if current_view == 'day' %}
+    <script>
+        (function () {
+            const forms = document.querySelectorAll(".planner-status-toggle-form");
+            if (!forms.length) return;
+
+            const csrfMeta = document.querySelector("meta[name='csrf-token']");
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+            function adjustStat(status, delta) {
+                if (!status || !delta) return;
+                const node = document.querySelector(`[data-planner-stat="${status}"]`);
+                if (!node) return;
+                const currentValue = Number.parseInt(node.textContent || "0", 10);
+                if (Number.isNaN(currentValue)) return;
+                node.textContent = String(Math.max(0, currentValue + delta));
+            }
+
+            function updateStatusButton(button, displayStatus, label) {
+                Array.from(button.classList).forEach(function (className) {
+                    if (className.indexOf("planner-status-chip-") === 0) {
+                        button.classList.remove(className);
+                    }
+                });
+                button.classList.add(`planner-status-chip-${displayStatus}`);
+                button.textContent = label;
+            }
+
+            forms.forEach(function (form) {
+                form.addEventListener("submit", async function (event) {
+                    event.preventDefault();
+                    const button = form.querySelector(".planner-status-toggle-btn");
+                    if (!button || button.disabled) return;
+
+                    button.disabled = true;
+                    button.setAttribute("aria-busy", "true");
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "X-Requested-With": "XMLHttpRequest",
+                                ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+                            },
+                            credentials: "same-origin",
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Status update failed");
+                        }
+
+                        const payload = await response.json();
+                        if (!payload.ok) {
+                            throw new Error("Status update rejected");
+                        }
+
+                        adjustStat(payload.previousStatus, -1);
+                        adjustStat(payload.status, 1);
+                        updateStatusButton(button, payload.displayStatus, payload.displayStatusLabel);
+                    } catch (error) {
+                        HTMLFormElement.prototype.submit.call(form);
+                    } finally {
+                        button.disabled = false;
+                        button.removeAttribute("aria-busy");
+                    }
+                });
+            });
+        }());
+    </script>
     {% endif %}
 </section>
 {% if current_view == 'month' %}

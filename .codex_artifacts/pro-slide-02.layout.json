@@ -1,0 +1,1374 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/2nih0n",
+    "id": "2nih0n",
+    "slide": 2,
+    "layoutId": "6632720f-099b-4993-918f-b16a04996c85",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "10a4531f-7e9e-4f12-8063-794cb6ef36ac",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#F5F7FB",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "6632720f-099b-4993-918f-b16a04996c85",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "10a4531f-7e9e-4f12-8063-794cb6ef36ac",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "10a4531f-7e9e-4f12-8063-794cb6ef36ac",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bapcre50",
+      "id": "1",
+      "bbox": [
+        72,
+        54,
+        520,
+        24
+      ],
+      "geometry": "rect",
+      "text": "02 · ФУНКЦИОНАЛЬНАЯ КАРТА",
+      "textPreview": "02 · ФУНКЦИОНАЛЬНАЯ КАРТА",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "02 · ФУНКЦИОНАЛЬНАЯ КАРТА"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "02 · ФУНКЦИОНАЛЬНАЯ КАРТА",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#2563EB",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "02 · ФУНКЦИОНАЛЬНАЯ КАРТА",
+              "fontSize": 13,
+              "color": "#2563EB",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wbyd0j6l",
+      "id": "2",
+      "bbox": [
+        72,
+        96,
+        640,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Что закрывает система",
+      "textPreview": "Что закрывает система",
+      "resolvedFontSize": 44,
+      "resolvedTextStyle": {
+        "fontSize": 44,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Что закрывает система"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Что закрывает система",
+          "resolvedTextStyle": {
+            "fontSize": 44,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Что закрывает система",
+              "fontSize": 44,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xc7uton6",
+      "id": "3",
+      "bbox": [
+        72,
+        166,
+        790,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Shans не пытается быть универсальной CRM. Он закрывает конкретные ежедневные процессы владельца: планирование, работу с проектами, учёт и личное развитие.",
+      "textPreview": "Shans не пытается быть универсальной CRM. Он закрывает конкретные ежедневные процессы владельца: планирование, работу с проектами, учёт и...",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#334155",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans не пытается быть универсальной CRM. Он закрывает конкретные ежедневные процессы"
+          },
+          {
+            "index": 2,
+            "text": "владельца: планирование, работу с проектами, учёт и личное развитие."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans не пытается быть универсальной CRM. Он закрывает конкретные ежедневные процессы владельца: планирование, работу с проектами, учёт и личное развитие.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#334155"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans не пытается быть универсальной CRM. Он закрывает конкретные ежедневные процессы владельца: планирование, работу с проектами, учёт и личное развитие.",
+              "fontSize": 19,
+              "color": "#334155"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ydgv2tor",
+      "id": "4",
+      "bbox": [
+        72,
+        264,
+        506,
+        318
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#DBE3EF",
+      "lineWidth": 1
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jepwvy5w",
+      "id": "5",
+      "bbox": [
+        108,
+        300,
+        350,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Операционный контур",
+      "textPreview": "Операционный контур",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Операционный контур"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Операционный контур",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Операционный контур",
+              "fontSize": 24,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kfid43mh",
+      "id": "6",
+      "bbox": [
+        108,
+        403,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lgrex8n2",
+      "id": "7",
+      "bbox": [
+        108,
+        356,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "График",
+      "textPreview": "График",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "График"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "График",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#2563EB",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "График",
+              "fontSize": 13,
+              "color": "#2563EB",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ehwvq9o7",
+      "id": "8",
+      "bbox": [
+        278,
+        354,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "задачи, календарь, напоминания",
+      "textPreview": "задачи, календарь, напоминания",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "задачи, календарь, напоминания"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "задачи, календарь, напоминания",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "задачи, календарь, напоминания",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zi5cju5s",
+      "id": "9",
+      "bbox": [
+        108,
+        471,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nmdc7ml0",
+      "id": "10",
+      "bbox": [
+        108,
+        424,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Съёмки",
+      "textPreview": "Съёмки",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#7C3AED",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Съёмки"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Съёмки",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#7C3AED",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Съёмки",
+              "fontSize": 13,
+              "color": "#7C3AED",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2l4beh4f",
+      "id": "11",
+      "bbox": [
+        278,
+        422,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "клиенты, записи, сценарии",
+      "textPreview": "клиенты, записи, сценарии",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "клиенты, записи, сценарии"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "клиенты, записи, сценарии",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "клиенты, записи, сценарии",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/povu9c36",
+      "id": "12",
+      "bbox": [
+        108,
+        539,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/onmtgrml",
+      "id": "13",
+      "bbox": [
+        108,
+        492,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Финансы",
+      "textPreview": "Финансы",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#15803D",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Финансы"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Финансы",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#15803D",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Финансы",
+              "fontSize": 13,
+              "color": "#15803D",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fits32l4",
+      "id": "14",
+      "bbox": [
+        278,
+        490,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "бюджет, баланс, Excel",
+      "textPreview": "бюджет, баланс, Excel",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "бюджет, баланс, Excel"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "бюджет, баланс, Excel",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "бюджет, баланс, Excel",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ehkbax4j",
+      "id": "15",
+      "bbox": [
+        632,
+        264,
+        506,
+        318
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#DBE3EF",
+      "lineWidth": 1
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1kvu5c3a",
+      "id": "16",
+      "bbox": [
+        668,
+        300,
+        350,
+        30
+      ],
+      "geometry": "rect",
+      "text": "Личный контур",
+      "textPreview": "Личный контур",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Личный контур"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Личный контур",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Личный контур",
+              "fontSize": 24,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0jmtc7mp",
+      "id": "17",
+      "bbox": [
+        668,
+        403,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rutsz2ls",
+      "id": "18",
+      "bbox": [
+        668,
+        356,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Авто",
+      "textPreview": "Авто",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#D97706",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Авто"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Авто",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#D97706",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Авто",
+              "fontSize": 13,
+              "color": "#D97706",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qtkb6x4n",
+      "id": "19",
+      "bbox": [
+        838,
+        354,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "обслуживание, история, уведомления",
+      "textPreview": "обслуживание, история, уведомления",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "обслуживание, история,"
+          },
+          {
+            "index": 2,
+            "text": "уведомления"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "обслуживание, история, уведомления",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "обслуживание, история, уведомления",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/up0bixof",
+      "id": "20",
+      "bbox": [
+        668,
+        471,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vq9cb2p0",
+      "id": "21",
+      "bbox": [
+        668,
+        424,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Развитие",
+      "textPreview": "Развитие",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#7C3AED",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Развитие"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Развитие",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#7C3AED",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Развитие",
+              "fontSize": 13,
+              "color": "#7C3AED",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gridkn6l",
+      "id": "22",
+      "bbox": [
+        838,
+        422,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "IT, English, прогресс",
+      "textPreview": "IT, English, прогресс",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "IT, English, прогресс"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "IT, English, прогресс",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "IT, English, прогресс",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hsbuds7q",
+      "id": "23",
+      "bbox": [
+        668,
+        539,
+        460,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/idkvmxob",
+      "id": "24",
+      "bbox": [
+        668,
+        492,
+        160,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Здоровье",
+      "textPreview": "Здоровье",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#15803D",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Здоровье"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Здоровье",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#15803D",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Здоровье",
+              "fontSize": 13,
+              "color": "#15803D",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3etcf2pw",
+      "id": "25",
+      "bbox": [
+        838,
+        490,
+        290,
+        36
+      ],
+      "geometry": "rect",
+      "text": "тренировки, питание, динамика",
+      "textPreview": "тренировки, питание, динамика",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#0F172A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "тренировки, питание, динамика"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "тренировки, питание, динамика",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#0F172A",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "тренировки, питание, динамика",
+              "fontSize": 18,
+              "color": "#0F172A",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4f2do76h",
+      "id": "26",
+      "bbox": [
+        72,
+        646,
+        1136,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#E2E8F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5gbuhc72",
+      "id": "27",
+      "bbox": [
+        72,
+        666,
+        360,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Shans · личная система управления",
+      "textPreview": "Shans · личная система управления",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans · личная система управления"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans · личная система управления",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#64748B"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans · личная система управления",
+              "fontSize": 12,
+              "color": "#64748B"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qhkvqhon",
+      "id": "28",
+      "bbox": [
+        1110,
+        666,
+        98,
+        22
+      ],
+      "geometry": "rect",
+      "text": "02 / 03",
+      "textPreview": "02 / 03",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "bold": true,
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "02 / 03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "02 / 03",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#64748B",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "02 / 03",
+              "fontSize": 12,
+              "color": "#64748B",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

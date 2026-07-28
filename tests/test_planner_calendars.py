@@ -25,6 +25,7 @@ from app.planner import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_DATE = "2026-07-21"
+PLANNER_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
 
 
 class PlannerCalendarTests(unittest.TestCase):
@@ -239,6 +240,65 @@ class PlannerCalendarTests(unittest.TestCase):
         )
         self.assertEqual(get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL), [])
 
+    def test_task_status_toggle_does_not_flash_service_notification(self):
+        init_planner_db()
+        create_task("Quiet task", TEST_DATE)
+        task_id = get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)[0]["id"]
+        client = self._create_test_app().test_client()
+
+        response = client.post(f"/planner.schedule/task/{task_id}/toggle")
+
+        self.assertEqual(response.status_code, 302)
+        with client.session_transaction() as session:
+            self.assertNotIn("_flashes", session)
+        self.assertEqual(get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)[0]["status"], "done")
+
+    def test_task_status_toggle_supports_ajax_without_page_reload(self):
+        init_planner_db()
+        create_task("Quiet ajax task", TEST_DATE)
+        task_id = get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)[0]["id"]
+        client = self._create_test_app().test_client()
+
+        response = client.post(
+            f"/planner.schedule/task/{task_id}/toggle",
+            headers={
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["ok"], True)
+        self.assertEqual(payload["taskId"], task_id)
+        self.assertEqual(payload["previousStatus"], "planned")
+        self.assertEqual(payload["status"], "done")
+        self.assertEqual(payload["displayStatus"], "done")
+        self.assertTrue(payload["displayStatusLabel"])
+        self.assertEqual(get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)[0]["status"], "done")
+
+    def test_schedule_template_intercepts_status_toggle_forms(self):
+        template = (PROJECT_ROOT / "app" / "templates" / "schedule.html").read_text(encoding="utf-8")
+
+        self.assertIn("planner-status-toggle-form", template)
+        self.assertIn('fetch(form.action', template)
+        self.assertIn('"X-Requested-With": "XMLHttpRequest"', template)
+        self.assertIn('data-planner-stat="planned"', template)
+        self.assertIn('data-planner-stat="done"', template)
+
+    def test_task_move_next_day_does_not_flash_service_notification(self):
+        init_planner_db()
+        create_task("Quiet move", TEST_DATE)
+        task_id = get_tasks_for_day(TEST_DATE, CALENDAR_PERSONAL)[0]["id"]
+        client = self._create_test_app().test_client()
+
+        response = client.post(f"/planner.schedule/task/{task_id}/move-next-day")
+
+        self.assertEqual(response.status_code, 302)
+        with client.session_transaction() as session:
+            self.assertNotIn("_flashes", session)
+        self.assertEqual(get_tasks_for_day("2026-07-22", CALENDAR_PERSONAL)[0]["title"], "Quiet move")
+
     def test_bulk_delete_cannot_cross_calendar_boundary(self):
         init_planner_db()
         create_task("Личная защищена", TEST_DATE)
@@ -262,6 +322,15 @@ class PlannerCalendarTests(unittest.TestCase):
             ["Личная защищена"],
         )
         self.assertEqual(get_tasks_for_day(TEST_DATE, CALENDAR_WORK), [])
+
+    def test_schedule_task_form_keeps_date_and_time_fields_inside_mobile_width(self):
+        styles = PLANNER_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn(".car-form-grid > .form-group", styles)
+        self.assertIn(".car-form-grid .form-input", styles)
+        self.assertIn("min-width: 0;", styles)
+        self.assertIn("@media (max-width: 1100px)", styles)
+        self.assertIn(".car-page .car-form-grid", styles)
 
 
 if __name__ == "__main__":

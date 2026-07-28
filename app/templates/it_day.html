@@ -22,18 +22,12 @@
         <div><strong>5 минут</strong><span>Тест</span></div>
     </div>
 
-    <section class="course-audio-controller" data-course-audio>
-        <div class="course-audio-copy">
-            <p class="learning-kicker">Озвучка</p>
-            <h2>Слушать урок</h2>
-            <p>Озвучивается весь текст урока: тема, лекция, термины и практическое задание.</p>
-        </div>
-        <div class="course-audio-actions">
-            <button type="button" class="course-audio-toggle" data-course-audio-toggle aria-pressed="false">Включить озвучку</button>
-            <button type="button" class="course-audio-play" data-course-audio-play disabled>Озвучить урок</button>
-            <button type="button" class="course-audio-stop" data-course-audio-stop hidden>Стоп</button>
-        </div>
-        <div class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></div>
+    <section class="course-audio-controller course-audio-compact" data-course-audio>
+        <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок">
+            <span class="course-audio-icon" aria-hidden="true">🔊</span>
+        </button>
+        <span class="course-audio-label">Озвучить урок</span>
+        <span class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></span>
     </section>
 
     <script type="application/json" id="course-audio-segments">{{ audio_segments|tojson }}</script>
@@ -45,13 +39,13 @@
             {% for point in lecture_points %}
             <article class="it-lecture-point">
                 <p>{{ point.text }}</p>
-                <details class="it-more-details">
-                    <summary>Подробнее</summary>
-                    <p>{{ point.detail }}</p>
-                </details>
+                <p class="it-point-detail">{{ point.detail }}</p>
             </article>
             {% endfor %}
         </div>
+        <button type="button" class="btn btn-primary quiz-reveal-button lesson-next-button" data-quiz-reveal-button data-quiz-target="it-day-quiz-form">
+            Пройти тест
+        </button>
     </section>
 
     <section class="lesson-section">
@@ -78,10 +72,7 @@
                     {% endif %}
                 </div>
                 <span>{{ term.definition }}</span>
-                <details class="it-more-details">
-                    <summary>Подробнее</summary>
-                    <p>{{ term.detail }}</p>
-                </details>
+                <p class="it-term-detail">{{ term.detail }}</p>
             </article>
             {% endfor %}
         </div>
@@ -127,6 +118,12 @@
         {% elif passed and course_finished %}
         <a class="btn btn-primary" href="{{ url_for('learning.it_final') }}">Итоговый тест →</a>
         {% endif %}
+        {% if passed %}
+        <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="quiz-result-reset-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger">Отменить результат</button>
+        </form>
+        {% endif %}
     </section>
 
     <div class="quiz-feedback-list">
@@ -147,9 +144,6 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-        <button type="button" class="btn btn-primary quiz-reveal-button" data-quiz-reveal-button data-quiz-target="it-day-quiz-form">
-            Пройти тест
-        </button>
         <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="it-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
             <form method="post" class="quiz-form it-quiz-form">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">

@@ -1,0 +1,857 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/e3jypq",
+    "id": "e3jypq",
+    "slide": 3,
+    "layoutId": "cb22d2f2-50ef-4b83-9168-33981e66abf0",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "733513d7-8ead-4f08-a447-a2d8ae76c265",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#F5F7FB",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "cb22d2f2-50ef-4b83-9168-33981e66abf0",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "733513d7-8ead-4f08-a447-a2d8ae76c265",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "733513d7-8ead-4f08-a447-a2d8ae76c265",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/k7u583u1",
+      "id": "1",
+      "bbox": [
+        72,
+        54,
+        520,
+        30
+      ],
+      "geometry": "rect",
+      "text": "03 · О проекте и разработчике",
+      "textPreview": "03 · О проекте и разработчике",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03 · О проекте и разработчике"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03 · О проекте и разработчике",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#2563EB",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03 · О проекте и разработчике",
+              "fontSize": 18,
+              "color": "#2563EB",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/uh0faxor",
+      "id": "2",
+      "bbox": [
+        790,
+        54,
+        418,
+        584
+      ],
+      "geometry": "roundRect",
+      "alt": "Фотография разработчика проекта Shans",
+      "contentType": "image/jpeg",
+      "imageCrop": {
+        "left": 0.02,
+        "top": 0.18,
+        "right": 0.22,
+        "bottom": 0.02
+      },
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 5742"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "ad2cb02d-6461-4b16-a022-0becfcbc5cf7",
+        "contentType": "image/jpeg",
+        "byteLength": 585333
+      }
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/y5cn6tcv",
+      "id": "3",
+      "bbox": [
+        72,
+        118,
+        612,
+        170
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#2563EB",
+      "lineColor": "#2563EB",
+      "lineWidth": 1
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9wn658bi",
+      "id": "4",
+      "bbox": [
+        106,
+        152,
+        520,
+        80
+      ],
+      "geometry": "rect",
+      "text": "Создано под реальные задачи, а не под шаблон",
+      "textPreview": "Создано под реальные задачи, а не под шаблон",
+      "resolvedFontSize": 35,
+      "resolvedTextStyle": {
+        "fontSize": 35,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Создано под реальные задачи, а"
+          },
+          {
+            "index": 2,
+            "text": "не под шаблон"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Создано под реальные задачи, а не под шаблон",
+          "resolvedTextStyle": {
+            "fontSize": 35,
+            "color": "#FFFFFF",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Создано под реальные задачи, а не под шаблон",
+              "fontSize": 35,
+              "color": "#FFFFFF",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8vepc3ux",
+      "id": "5",
+      "bbox": [
+        106,
+        238,
+        500,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Shans спроектирован как личная система, в которой важные процессы всегда под рукой.",
+      "textPreview": "Shans спроектирован как личная система, в которой важные процессы всегда под рукой.",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#E0E7FF",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans спроектирован как личная система, в которой важные"
+          },
+          {
+            "index": 2,
+            "text": "процессы всегда под рукой."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans спроектирован как личная система, в которой важные процессы всегда под рукой.",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#E0E7FF"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans спроектирован как личная система, в которой важные процессы всегда под рукой.",
+              "fontSize": 17,
+              "color": "#E0E7FF"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7u5o3yts",
+      "id": "6",
+      "bbox": [
+        72,
+        328,
+        460,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Владимир Худовердиев",
+      "textPreview": "Владимир Худовердиев",
+      "resolvedFontSize": 30,
+      "resolvedTextStyle": {
+        "fontSize": 30,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Владимир Худовердиев"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Владимир Худовердиев",
+          "resolvedTextStyle": {
+            "fontSize": 30,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Владимир Худовердиев",
+              "fontSize": 30,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mtw7atc7",
+      "id": "7",
+      "bbox": [
+        72,
+        366,
+        360,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Разработчик проекта Shans",
+      "textPreview": "Разработчик проекта Shans",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Разработчик проекта Shans"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Разработчик проекта Shans",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#64748B"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Разработчик проекта Shans",
+              "fontSize": 18,
+              "color": "#64748B"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/p036t4ve",
+      "id": "8",
+      "bbox": [
+        72,
+        430,
+        620,
+        126
+      ],
+      "geometry": "rect",
+      "text": "«Я хотел собрать сервис, который помогает не держать всё в голове: планы, съёмки, деньги, машину, обучение и здоровье. Когда система напоминает, считает и структурирует, у человека остаётся больше внимания на реальную работу и развитие».",
+      "textPreview": "«Я хотел собрать сервис, который помогает не держать всё в голове: планы, съёмки, деньги, машину, обучение и здоровье. Когда система напо...",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "fontSize": 22,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 4,
+        "lines": [
+          {
+            "index": 1,
+            "text": "«Я хотел собрать сервис, который помогает не держать всё в"
+          },
+          {
+            "index": 2,
+            "text": "голове: планы, съёмки, деньги, машину, обучение и здоровье."
+          },
+          {
+            "index": 3,
+            "text": "Когда система напоминает, считает и структурирует, у человека"
+          },
+          {
+            "index": 4,
+            "text": "остаётся больше внимания на реальную работу и развитие»."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "«Я хотел собрать сервис, который помогает не держать всё в голове: планы, съёмки, деньги, машину, обучение и здоровье. Когда система напоминает, считает и структурирует, у человека остаётся больше внимания на реальную работу и развитие».",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "color": "#111827"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "«Я хотел собрать сервис, который помогает не держать всё в голове: планы, съёмки, деньги, машину, обучение и здоровье. Когда система напоминает, считает и структурирует, у человека остаётся больше внимания на реальную работу и развитие».",
+              "fontSize": 22,
+              "color": "#111827"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/oza50jut",
+      "id": "9",
+      "bbox": [
+        72,
+        588,
+        120,
+        38
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#EFF6FF",
+      "lineColor": "#BFDBFE",
+      "lineWidth": 1
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qtkfex4b",
+      "id": "10",
+      "bbox": [
+        86,
+        596,
+        92,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Надёжно",
+      "textPreview": "Надёжно",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Надёжно"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Надёжно",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#2563EB",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Надёжно",
+              "fontSize": 14,
+              "color": "#2563EB",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/butg725w",
+      "id": "11",
+      "bbox": [
+        210,
+        588,
+        110,
+        38
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#F5F3FF",
+      "lineColor": "#BFDBFE",
+      "lineWidth": 1
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cv2xg7mh",
+      "id": "12",
+      "bbox": [
+        224,
+        596,
+        82,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Удобно",
+      "textPreview": "Удобно",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#7C3AED",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Удобно"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Удобно",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#7C3AED",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Удобно",
+              "fontSize": 14,
+              "color": "#7C3AED",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dwby9c32",
+      "id": "13",
+      "bbox": [
+        338,
+        588,
+        158,
+        38
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#ECFDF5",
+      "lineColor": "#BFDBFE",
+      "lineWidth": 1
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/yhkfih47",
+      "id": "14",
+      "bbox": [
+        352,
+        596,
+        130,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Всегда рядом",
+      "textPreview": "Всегда рядом",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#15803D",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Всегда рядом"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Всегда рядом",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#15803D",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Всегда рядом",
+              "fontSize": 14,
+              "color": "#15803D",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zitgbmls",
+      "id": "15",
+      "bbox": [
+        72,
+        670,
+        240,
+        24
+      ],
+      "geometry": "rect",
+      "text": "shansplanner.ru",
+      "textPreview": "shansplanner.ru",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "shansplanner.ru"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "shansplanner.ru",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#64748B"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "shansplanner.ru",
+              "fontSize": 13,
+              "color": "#64748B"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0j2hk7md",
+      "id": "16",
+      "bbox": [
+        1090,
+        670,
+        118,
+        24
+      ],
+      "geometry": "rect",
+      "text": "03 / 03",
+      "textPreview": "03 / 03",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "bold": true,
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03 / 03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03 / 03",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#64748B",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03 / 03",
+              "fontSize": 13,
+              "color": "#64748B",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

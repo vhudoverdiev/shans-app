@@ -1190,7 +1190,6 @@ def register_routes(app):
         session.clear()
         logout_user()
         log_audit(current_app, "user_logout_device_session_current", username=username)
-        flash("Сессия завершена в настройках аккаунта на другом устройстве.", "warning")
         return redirect(url_for("login"))
 
     @app.route("/")
@@ -1723,7 +1722,6 @@ def register_routes(app):
         session.clear()
         logout_user()
         log_audit(current_app, "user_logout_all_devices", username=username)
-        flash("Вы вышли из аккаунта на текущем устройстве. Рекомендуем сменить пароль для завершения остальных сессий.", "success")
         return redirect(url_for("login"))
 
     @app.route("/account/settings/logout-device", methods=["POST"])
@@ -1743,7 +1741,6 @@ def register_routes(app):
             session.clear()
             logout_user()
             log_audit(current_app, "user_logout_device_session_current", username=username)
-            flash("Текущая сессия завершена.", "success")
             return redirect(url_for("login"))
 
         removed_rows = 0
@@ -1751,8 +1748,6 @@ def register_routes(app):
             removed_rows += deactivate_user_login_session(session_key)
         if removed_rows == 0:
             flash("Выбранная сессия не найдена.", "warning")
-        else:
-            flash("Выбранная сессия завершена.", "success")
         return redirect(url_for("account_settings"))
 
     @app.route("/logout")

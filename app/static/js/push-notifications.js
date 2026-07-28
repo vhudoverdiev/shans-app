@@ -29,6 +29,8 @@
     function syncButtons() {
         const enabled = Boolean(subscription);
         if (toggleButton) {
+            toggleButton.dataset.enabled = enabled ? "true" : "false";
+            toggleButton.setAttribute("aria-pressed", enabled ? "true" : "false");
             if (toggleMobileLabel) {
                 toggleMobileLabel.textContent = enabled ? "Выключить" : "Включить";
             }
@@ -95,6 +97,13 @@
             subscription = null;
             syncButtons();
         }
+    }
+
+    async function refreshSubscriptionState() {
+        if (!registration || !registration.pushManager) return subscription;
+        subscription = await registration.pushManager.getSubscription();
+        syncButtons();
+        return subscription;
     }
 
     async function initialize() {
@@ -169,6 +178,7 @@
             throw error;
         }
         subscription = newSubscription;
+        await refreshSubscriptionState();
         setStatus("Уведомления личного графика включены на этом устройстве.", "success");
     }
 
@@ -178,7 +188,7 @@
             endpoint: subscription.endpoint,
         });
         await subscription.unsubscribe();
-        subscription = null;
+        await refreshSubscriptionState();
         setStatus("Уведомления выключены.", "idle");
     }
 

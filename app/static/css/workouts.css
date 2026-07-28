@@ -353,6 +353,92 @@
     color: #3e4a5d;
 }
 
+.workouts-foldout {
+    padding: 0;
+    overflow: hidden;
+}
+
+.workouts-foldout > summary {
+    list-style: none;
+}
+
+.workouts-foldout > summary::-webkit-details-marker {
+    display: none;
+}
+
+.workouts-foldout-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 26px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.workouts-foldout-summary span {
+    min-width: 0;
+}
+
+.workouts-foldout-summary strong {
+    display: block;
+    color: var(--workout-ink);
+    font-size: 22px;
+    line-height: 1.15;
+}
+
+.workouts-foldout-summary small {
+    display: block;
+    margin-top: 4px;
+    color: var(--workout-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.workouts-foldout-summary::after {
+    content: "+";
+    flex: 0 0 auto;
+    color: var(--workout-purple);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.workouts-foldout[open] .workouts-foldout-summary::after {
+    content: "−";
+}
+
+.workouts-foldout-body {
+    padding: 0 26px 26px;
+    display: grid;
+    gap: 18px;
+}
+
+.workout-plan-settings {
+    align-self: start;
+}
+
+.workout-plan-settings .workouts-foldout-body {
+    gap: 16px;
+}
+
+.workout-plan-diary {
+    display: grid;
+    gap: 18px;
+}
+
+.workout-plan-diary .workouts-section-heading {
+    margin-bottom: 0;
+}
+
+.workout-plan-diary .workouts-section-heading > p {
+    max-width: 520px;
+}
+
+.workout-plan-diary-form {
+    margin-top: 4px;
+}
+
 .workouts-optional {
     color: #9aa3b2;
     font-size: 11px;
@@ -881,6 +967,24 @@
     .workouts-section {
         padding: 20px;
         border-radius: 22px;
+    }
+
+    .workouts-foldout-summary {
+        padding: 18px 20px;
+        gap: 14px;
+    }
+
+    .workouts-foldout-summary strong {
+        font-size: 20px;
+    }
+
+    .workouts-foldout-summary small {
+        font-size: 12px;
+    }
+
+    .workouts-foldout-body {
+        padding: 0 20px 20px;
+        gap: 16px;
     }
 
     .workouts-section-heading {

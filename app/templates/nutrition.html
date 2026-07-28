@@ -161,14 +161,14 @@
     </section>
 
     <div class="nutrition-content-grid">
-        <section class="nutrition-card" id="add-food-entry">
-            <div class="nutrition-section-heading">
+        <details class="nutrition-card nutrition-foldout-card" id="add-food-entry">
+            <summary class="nutrition-foldout-summary">
                 <div>
                     <span class="nutrition-section-label">Быстрая запись</span>
                     <h2>Добавить продукт</h2>
                 </div>
                 <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
-            </div>
+            </summary>
             <form method="post" action="{{ url_for('nutrition.create_entry') }}" class="nutrition-entry-form">
                 <input type="hidden" name="eaten_on" value="{{ selected_date }}">
                 <div class="nutrition-field nutrition-field-wide">
@@ -196,7 +196,7 @@
                 </div>
                 <button type="submit" class="nutrition-primary-button">Добавить в {{ selected_date_label|lower }}</button>
             </form>
-        </section>
+        </details>
 
         <section class="nutrition-card" id="nutrition-profile">
             <div class="nutrition-section-heading">
@@ -263,7 +263,7 @@
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="nutrition-secondary-button">Сохранить расчёт</button>
+                    <button type="submit" class="nutrition-secondary-button nutrition-profile-save-button">Сохранить расчёт</button>
                 </form>
             </details>
             {% else %}
@@ -316,14 +316,16 @@
                 <span class="nutrition-section-label">Значения на 100 г или 100 мл</span>
                 <h2>База продуктов</h2>
             </div>
-            <span class="nutrition-count-pill" id="nutrition-visible-count">{{ foods|length }}</span>
+            <div class="nutrition-heading-actions">
+                <span class="nutrition-count-pill" id="nutrition-visible-count">{{ foods|length }}</span>
+                <button type="button" class="nutrition-icon-button" data-open-custom-food aria-label="Добавить продукт вручную">+</button>
+            </div>
         </div>
         <div class="nutrition-catalog-toolbar">
             <label class="nutrition-search">
                 <span class="sr-only">Поиск продукта</span>
                 <input type="search" id="nutrition-catalog-search" placeholder="Поиск по названию или категории" autocomplete="off">
             </label>
-            <button type="button" class="nutrition-secondary-button" data-open-custom-food>Добавить свой</button>
         </div>
         <div class="nutrition-catalog" id="nutrition-catalog">
             {% for food in foods %}
@@ -347,7 +349,7 @@
         <p class="nutrition-no-results" id="nutrition-no-results" hidden>По вашему запросу продукты не найдены.</p>
     </section>
 
-    <section class="nutrition-card nutrition-custom-card" id="custom-food">
+    <section class="nutrition-card nutrition-custom-card" id="custom-food" hidden>
         <div class="nutrition-section-heading">
             <div>
                 <span class="nutrition-section-label">По этикетке</span>
@@ -406,7 +408,7 @@
                 <span class="nutrition-section-label">Полезные ориентиры</span>
                 <h2>Рекомендации</h2>
             </div>
-            <a href="{{ url_for('workouts.index') }}" class="nutrition-text-link">Открыть тренировки →</a>
+            <a href="{{ url_for('workouts.index') }}" class="nutrition-text-link">Тренировки →</a>
         </div>
         <div class="nutrition-recommendation-grid">
             {% for recommendation in recommendations %}

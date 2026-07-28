@@ -143,6 +143,38 @@ class NutritionTests(unittest.TestCase):
         self.assertEqual(insight["protein_missing"], 54)
         self.assertIn("Для набора мышечной массы не хватает", insight["protein_message"])
 
+    def test_progress_insight_shows_negative_result_after_overeating(self):
+        profile = {
+            "weight_kg": 80,
+            "goal": "lose",
+        }
+        plan = {
+            "maintenance_calories": 2760,
+        }
+        summary = {
+            "calories": 3530,
+            "protein": 90,
+        }
+
+        insight = build_nutrition_progress_insight(
+            profile,
+            plan,
+            summary,
+            is_today=True,
+        )
+
+        self.assertEqual(
+            insight["day_text"],
+            "За сегодня прогноз по весу: -0,10 кг.",
+        )
+        self.assertEqual(
+            insight["week_text"],
+            "Если каждый день будет примерно так же, за неделю прогноз по весу: -0,70 кг.",
+        )
+        self.assertIn("сегодня", insight["day_text"])
+        self.assertNotIn("сбросили", insight["day_text"])
+        self.assertNotIn("сбросите", insight["week_text"])
+
     def test_progress_insight_does_not_predict_weight_loss_without_food_entries(self):
         profile = {
             "weight_kg": 80,
@@ -356,6 +388,11 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("url_for('sport_hub')", base)
         self.assertIn("База продуктов", template)
         self.assertIn("Добавить продукт вручную", template)
+        self.assertIn('class="nutrition-card nutrition-foldout-card" id="add-food-entry"', template)
+        self.assertIn('class="nutrition-icon-button" data-open-custom-food', template)
+        self.assertIn('id="custom-food" hidden', template)
+        self.assertIn(">Тренировки →</a>", template)
+        self.assertNotIn("Открыть тренировки", template)
         self.assertIn("Последние 14 дней", template)
         self.assertIn("Прогноз веса", template)
         self.assertIn("progress_insight.day_text", template)
@@ -392,6 +429,21 @@ class NutritionTests(unittest.TestCase):
             "rgba(139, 92, 246",
         ):
             self.assertNotIn(old_accent, desktop_theme)
+
+    def test_nutrition_collapsible_controls_are_styled_and_scripted(self):
+        styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+        script = (
+            PROJECT_ROOT / "app" / "static" / "js" / "nutrition.js"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(".nutrition-profile-save-button", styles)
+        self.assertIn("margin-top: 22px;", styles)
+        self.assertIn(".nutrition-foldout-summary", styles)
+        self.assertIn(".nutrition-icon-button", styles)
+        self.assertIn("white-space: nowrap;", styles)
+        self.assertIn("entryCard.open = true;", script)
+        self.assertIn("customCard.hidden", script)
+        self.assertIn('trigger.setAttribute("aria-expanded"', script)
 
     def test_database_uses_snapshot_nutrients_for_diary_entries(self):
         food = get_food_catalog(1)[0]

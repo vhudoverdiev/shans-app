@@ -78,16 +78,6 @@ a {
     opacity: 0;
 }
 
-.app-intro-glow {
-    position: absolute;
-    width: min(86vw, 620px);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.2), rgba(37, 99, 235, 0.06) 45%, transparent 70%);
-    filter: blur(10px);
-    opacity: 0;
-}
-
 .app-intro-stage {
     position: relative;
     width: min(82vw, 360px);
@@ -110,25 +100,17 @@ a {
     place-items: center;
     overflow: hidden;
     background: linear-gradient(135deg, #2563eb, #7c3aed);
-    box-shadow:
-        0 28px 54px rgba(37, 99, 235, 0.28),
-        0 10px 22px rgba(124, 58, 237, 0.18),
-        inset 0 1px 1px rgba(255, 255, 255, 0.42);
+    box-shadow: 0 22px 42px rgba(37, 99, 235, 0.2);
     color: #fff;
     font-size: clamp(44px, 5vw, 56px);
     font-weight: 800;
     letter-spacing: -0.06em;
     opacity: 0;
-    transform: translateY(14px) scale(0.72) rotate(-5deg);
+    transform: translateY(8px) scale(0.94);
 }
 
 .app-intro-logo::after {
-    content: "";
-    position: absolute;
-    inset: -40% auto -40% -65%;
-    width: 38%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
-    transform: skewX(-18deg);
+    content: none;
 }
 
 .app-intro-logo-mark {
@@ -147,28 +129,6 @@ a {
     object-fit: cover;
 }
 
-.app-intro-orbit {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    border: 1px solid rgba(79, 70, 229, 0.22);
-    border-radius: 50%;
-    opacity: 0;
-    transform: translate(-50%, -62%) scale(0.48);
-}
-
-.app-intro-orbit-outer {
-    width: 236px;
-    height: 236px;
-}
-
-.app-intro-orbit-inner {
-    width: 174px;
-    height: 174px;
-    border-color: rgba(37, 99, 235, 0.28);
-}
-
 .app-intro-progress {
     position: relative;
     z-index: 3;
@@ -179,6 +139,7 @@ a {
     border-radius: 999px;
     background: rgba(99, 102, 241, 0.13);
     opacity: 0;
+    transform: translateY(6px);
 }
 
 .app-intro-progress span {
@@ -187,80 +148,28 @@ a {
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, #2563eb, #7c3aed);
-    transform: translateX(-105%);
-}
-
-.app-intro-running .app-intro-glow {
-    animation: app-intro-glow-in 1.4s ease-out both;
 }
 
 .app-intro-running .app-intro-logo {
-    animation: app-intro-logo-in 0.72s cubic-bezier(0.2, 0.82, 0.25, 1.18) 0.08s both;
-}
-
-.app-intro-running .app-intro-logo::after {
-    animation: app-intro-shine 0.68s ease 0.62s both;
-}
-
-.app-intro-running .app-intro-orbit-outer {
-    animation: app-intro-orbit 1.18s cubic-bezier(0.2, 0.72, 0.2, 1) 0.2s both;
-}
-
-.app-intro-running .app-intro-orbit-inner {
-    animation: app-intro-orbit 1.02s cubic-bezier(0.2, 0.72, 0.2, 1) 0.12s both;
+    animation: app-intro-logo-in 0.42s ease-out 0.08s both;
 }
 
 .app-intro-running .app-intro-progress {
-    animation: app-intro-copy-in 0.35s ease-out 0.68s both;
-}
-
-.app-intro-running .app-intro-progress span {
-    animation: app-intro-progress 0.78s cubic-bezier(0.65, 0, 0.35, 1) 0.72s both;
+    animation: app-intro-progress-in 0.32s ease-out 0.18s both;
 }
 
 @keyframes app-intro-logo-in {
     to {
         opacity: 1;
-        transform: translateY(0) scale(1) rotate(0);
+        transform: translateY(0) scale(1);
     }
 }
 
-@keyframes app-intro-orbit {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -62%) scale(0.48);
-    }
-    45% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -62%) scale(1.18);
-    }
-}
-
-@keyframes app-intro-shine {
-    from { left: -65%; }
-    to { left: 135%; }
-}
-
-@keyframes app-intro-copy-in {
+@keyframes app-intro-progress-in {
     to {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-@keyframes app-intro-progress {
-    0% { transform: translateX(-105%); }
-    72% { transform: translateX(-12%); }
-    100% { transform: translateX(0); }
-}
-
-@keyframes app-intro-glow-in {
-    0% { opacity: 0; transform: scale(0.76); }
-    55% { opacity: 1; }
-    100% { opacity: 0.72; transform: scale(1.06); }
 }
 
 @media (max-width: 768px) and (pointer: coarse) {
@@ -276,34 +185,12 @@ a {
         font-size: 46px;
     }
 
-    .app-intro-orbit-outer {
-        width: 214px;
-        height: 214px;
-    }
-
-    .app-intro-orbit-inner {
-        width: 156px;
-        height: 156px;
-    }
-}
-
-/*
- * Standalone iOS lays the page viewport below the status region. Because the
- * reserved top and bottom regions are unequal, the mathematical viewport
- * centre looks lower than the physical screen centre.
- */
-@media (display-mode: standalone) and (max-width: 768px) and (pointer: coarse) {
-    .app-intro-stage {
-        transform: translateY(clamp(-24px, -2.2dvh, -16px));
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .app-intro,
-    .app-intro-glow,
     .app-intro-logo,
     .app-intro-logo::after,
-    .app-intro-orbit,
     .app-intro-progress,
     .app-intro-progress span {
         animation: none !important;
@@ -1532,9 +1419,9 @@ body.avatar-crop-scroll-locked {
 
 .section-hero {
     position: relative;
-    min-height: 148px;
+    min-height: 92px;
     margin-bottom: 18px;
-    padding: 26px 30px;
+    padding: 12px 20px;
     border: 1px solid rgba(196, 181, 253, 0.7);
     border-radius: 28px;
     display: flex;
@@ -3588,6 +3475,11 @@ html.login-centered-document .page-shell {
     gap: 18px;
 }
 
+.car-form-grid > .form-group,
+.car-form-grid .form-input {
+    min-width: 0;
+}
+
 .car-form-full {
     grid-column: 1 / -1;
 }
@@ -3604,6 +3496,12 @@ html.login-centered-document .page-shell {
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 20px;
+}
+
+@media (max-width: 1100px) and (pointer: coarse) {
+    .car-page .car-form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .car-complete-top {

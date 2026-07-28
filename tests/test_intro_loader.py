@@ -13,6 +13,10 @@ class IntroLoaderTests(unittest.TestCase):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn('<html lang="ru" class="app-intro-pending', template)
+        self.assertIn('const isStandaloneApp = window.matchMedia("(display-mode: standalone)").matches', template)
+        self.assertIn("window.navigator.standalone === true", template)
+        self.assertIn("if (isStandaloneApp) {", template)
+        self.assertIn("window.__shansShouldRunIntro = false", template)
         self.assertIn('const introKey = "shans-intro-session-v1"', template)
         self.assertIn("window.sessionStorage.getItem(introKey)", template)
         self.assertIn("window.sessionStorage.setItem(introKey, \"1\")", template)
@@ -48,6 +52,17 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn("window.localStorage.getItem(introKey)", template)
         self.assertNotIn("window.localStorage.setItem(introKey, \"1\")", template)
 
+    def test_installed_pwa_skips_custom_intro_after_native_splash(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        standalone_position = template.index("const isStandaloneApp")
+        session_position = template.index('const introKey = "shans-intro-session-v1"')
+        standalone_block = template.split("if (isStandaloneApp) {", 1)[1].split("}", 1)[0]
+
+        self.assertLess(standalone_position, session_position)
+        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', standalone_block)
+        self.assertIn("window.__shansShouldRunIntro = false;", standalone_block)
+        self.assertIn("return;", standalone_block)
+
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
@@ -72,21 +87,27 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("@keyframes app-intro-logo-in", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)
 
-    def test_intro_uses_dynamic_viewport_and_centers_installed_ios_app(self):
+    def test_intro_progress_bar_does_not_slide_in_from_the_left(self):
+        stylesheet = STYLESHEET.read_text(encoding="utf-8")
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertNotIn("translateX(-105%)", stylesheet)
+        self.assertNotIn("@keyframes app-intro-progress {", stylesheet)
+        self.assertNotIn("app-intro-orbit", template)
+        self.assertNotIn("app-intro-orbit", stylesheet)
+        self.assertNotIn("app-intro-glow", template)
+        self.assertNotIn("app-intro-glow", stylesheet)
+        self.assertIn("@keyframes app-intro-progress-in", stylesheet)
+
+    def test_intro_uses_dynamic_viewport_without_standalone_second_logo(self):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
 
         self.assertRegex(
             stylesheet,
             r"\.app-intro\s*\{[^}]*height:\s*100vh;[^}]*height:\s*100dvh;",
         )
-        self.assertIn(
-            "@media (display-mode: standalone) and (max-width: 768px) and (pointer: coarse)",
-            stylesheet,
-        )
-        self.assertRegex(
-            stylesheet,
-            r"\.app-intro-stage\s*\{\s*transform:\s*translateY\(clamp\(-24px,\s*-2\.2dvh,\s*-16px\)\);",
-        )
+        self.assertNotIn("@media (display-mode: standalone)", stylesheet)
+        self.assertNotIn("translateY(clamp(-24px", stylesheet)
 
     def test_intro_logo_uses_the_exact_header_logo_asset(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

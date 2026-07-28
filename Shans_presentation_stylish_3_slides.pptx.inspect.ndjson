@@ -1,0 +1,91 @@
+{"kind":"deck","id":"pr/65uxs1","name":"Deck"}
+{"kind":"layout","layoutId":"ee6c0d4f-030c-4ebb-a2a8-2a7d4d477307","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"454b1bfb-6cda-4b61-a8fa-0eee4e28a41d","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/90dj2x","slide":1,"title":"SHANS","textShapes":12}
+{"kind":"shape","id":"sh/xw729k7e","slide":1,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/atw3ep83","slide":1,"bbox":[760,0,520,720]}
+{"kind":"textbox","id":"sh/kjylkzq5","slide":1,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[130,48,110,22]}
+{"kind":"textbox","id":"sh/5k72d47q","slide":1,"text":"personal management system","textPreview":"personal management system","textChars":26,"textLines":1,"bbox":[130,70,230,18]}
+{"kind":"textbox","id":"sh/ixg3ip8z","slide":1,"text":"Личная система,\nкоторая держит порядок","textPreview":"Личная система, | которая держит порядок","textChars":38,"textLines":2,"bbox":[72,168,590,142]}
+{"kind":"textbox","id":"sh/jipkbupk","slide":1,"text":"Shans объединяет график, проекты, финансы, авто, обучение и здоровье в одном аккуратном веб-приложении.","textPreview":"Shans объединяет график, проекты, финансы, авто, обучение и здоровье в одном аккуратном веб-приложении.","textChars":103,"textLines":1,"bbox":[76,336,520,74]}
+{"kind":"shape","id":"sh/snylozq1","slide":1,"bbox":[76,458,142,34]}
+{"kind":"textbox","id":"sh/tor2h47m","slide":1,"text":"PWA","textPreview":"PWA","textChars":3,"textLines":1,"bbox":[76,466,142,18]}
+{"kind":"shape","id":"sh/1cze903i","slide":1,"bbox":[232,458,142,34]}
+{"kind":"textbox","id":"sh/0bqdgv2x","slide":1,"text":"Push","textPreview":"Push","textChars":4,"textLines":1,"bbox":[232,466,142,18]}
+{"kind":"shape","id":"sh/zahw7qlc","slide":1,"bbox":[388,458,142,34]}
+{"kind":"textbox","id":"sh/e9ove5kr","slide":1,"text":"2FA","textPreview":"2FA","textChars":3,"textLines":1,"bbox":[388,466,142,18]}
+{"kind":"shape","id":"sh/90zedkje","slide":1,"bbox":[544,458,142,34]}
+{"kind":"textbox","id":"sh/ozqdkf2t","slide":1,"text":"Excel","textPreview":"Excel","textChars":5,"textLines":1,"bbox":[544,466,142,18]}
+{"kind":"shape","id":"sh/nyhwba18","slide":1,"bbox":[820,86,330,520]}
+{"kind":"shape","id":"sh/p4fe1g3a","slide":1,"bbox":[776,500,224,82]}
+{"kind":"textbox","id":"sh/436d8b2p","slide":1,"text":"1 интерфейс","textPreview":"1 интерфейс","textChars":11,"textLines":1,"bbox":[800,522,170,28]}
+{"kind":"textbox","id":"sh/wnqdoval","slide":1,"text":"для ежедневных процессов","textPreview":"для ежедневных процессов","textChars":24,"textLines":1,"bbox":[800,554,170,20]}
+{"kind":"textbox","id":"sh/hojehgb6","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[72,652,42,22]}
+{"kind":"shape","id":"sh/ul8vmlsf","slide":1,"bbox":[122,663,970,0]}
+{"kind":"textbox","id":"sh/vmhwfqt0","slide":1,"text":"Shans · project presentation","textPreview":"Shans · project presentation","textChars":28,"textLines":1,"bbox":[1110,652,120,22]}
+{"kind":"image","id":"im/m5o7i9wn","slide":1,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,48,42,42]}
+{"kind":"image","id":"im/hgb21cz2","slide":1,"name":"","geometry":"roundRect","alt":"Фотография разработчика проекта Shans","bbox":[838,104,294,484]}
+{"kind":"notes","id":"nt/90dj2x","slide":1,"text":"[Sources]\nЛокальный проект Shans; фотография разработчика из файла пользователя."}
+{"kind":"slide","id":"sl/remq8c","slide":2,"title":"SHANS","textShapes":24}
+{"kind":"shape","id":"sh/wn6hsni9","slide":2,"bbox":[0,0,1280,720]}
+{"kind":"textbox","id":"sh/u1ozqd03","slide":2,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[130,48,110,22]}
+{"kind":"textbox","id":"sh/90fih8ji","slide":2,"text":"personal management system","textPreview":"personal management system","textChars":26,"textLines":1,"bbox":[130,70,230,18]}
+{"kind":"textbox","id":"sh/8z6honid","slide":2,"text":"Архитектура продукта","textPreview":"Архитектура продукта","textChars":20,"textLines":1,"bbox":[72,136,380,44]}
+{"kind":"textbox","id":"sh/7ydgfi1s","slide":2,"text":"Внутри Shans нет случайных разделов. Каждый блок отвечает за конкретный сценарий: запланировать, выполнить, зафиксировать результат и вернуться к данным позже.","textPreview":"Внутри Shans нет случайных разделов. Каждый блок отвечает за конкретный сценарий: запланировать, выполнить, зафиксировать результат и вер...","textChars":159,"textLines":1,"bbox":[72,196,465,98]}
+{"kind":"shape","id":"sh/mx4zmd07","slide":2,"bbox":[676,112,424,424]}
+{"kind":"shape","id":"sh/twzitcz2","slide":2,"bbox":[818,252,140,140]}
+{"kind":"textbox","id":"sh/svqh07ih","slide":2,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[818,302,140,28]}
+{"kind":"textbox","id":"sh/2l0fydwr","slide":2,"text":"core","textPreview":"core","textChars":4,"textLines":1,"bbox":[818,334,140,20]}
+{"kind":"shape","id":"sh/nmtwridw","slide":2,"bbox":[736,158,126,48]}
+{"kind":"textbox","id":"sh/on2x0neh","slide":2,"text":"График","textPreview":"График","textChars":6,"textLines":1,"bbox":[736,172,126,20]}
+{"kind":"shape","id":"sh/pobetsv2","slide":2,"bbox":[944,178,126,48]}
+{"kind":"textbox","id":"sh/eh0fudwf","slide":2,"text":"Съёмки","textPreview":"Съёмки","textChars":6,"textLines":1,"bbox":[944,192,126,20]}
+{"kind":"shape","id":"sh/fi9wnid0","slide":2,"bbox":[954,422,126,48]}
+{"kind":"textbox","id":"sh/0jixwnel","slide":2,"text":"Отчёты","textPreview":"Отчёты","textChars":6,"textLines":1,"bbox":[954,436,126,20]}
+{"kind":"shape","id":"sh/1krep8v6","slide":2,"bbox":[716,442,126,48]}
+{"kind":"textbox","id":"sh/ydkf6xwj","slide":2,"text":"Авто","textPreview":"Авто","textChars":4,"textLines":1,"bbox":[716,456,126,20]}
+{"kind":"shape","id":"sh/zedwz2d4","slide":2,"bbox":[636,300,126,48]}
+{"kind":"textbox","id":"sh/vy5crutw","slide":2,"text":"Обучение","textPreview":"Обучение","textChars":8,"textLines":1,"bbox":[636,314,126,20]}
+{"kind":"shape","id":"sh/uxwbypcb","slide":2,"bbox":[1032,300,126,48]}
+{"kind":"textbox","id":"sh/h0nut4bm","slide":2,"text":"Спорт","textPreview":"Спорт","textChars":5,"textLines":1,"bbox":[1032,314,126,20]}
+{"kind":"shape","id":"sh/wzet0zu1","slide":2,"bbox":[650,574,500,0]}
+{"kind":"textbox","id":"sh/3m5cvets","slide":2,"text":"Единая логика: данные не теряются между разделами","textPreview":"Единая логика: данные не теряются между разделами","textChars":49,"textLines":1,"bbox":[650,592,500,24]}
+{"kind":"textbox","id":"sh/ilwb29c7","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[72,356,40,22]}
+{"kind":"textbox","id":"sh/5o7uxoby","slide":2,"text":"Планирование","textPreview":"Планирование","textChars":12,"textLines":1,"bbox":[120,354,260,24]}
+{"kind":"textbox","id":"sh/4nyt4jud","slide":2,"text":"Календарь, задачи, статусы и напоминания.","textPreview":"Календарь, задачи, статусы и напоминания.","textChars":41,"textLines":1,"bbox":[120,388,300,42]}
+{"kind":"textbox","id":"sh/rqpczeto","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[72,452,40,22]}
+{"kind":"textbox","id":"sh/qpgb69cj","slide":2,"text":"Учет","textPreview":"Учет","textChars":4,"textLines":1,"bbox":[120,450,260,24]}
+{"kind":"textbox","id":"sh/ovitgjah","slide":2,"text":"Бюджет, авто, история и экспорт в Excel.","textPreview":"Бюджет, авто, история и экспорт в Excel.","textChars":40,"textLines":1,"bbox":[120,484,300,42]}
+{"kind":"textbox","id":"sh/pwrapor2","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[72,548,40,22]}
+{"kind":"textbox","id":"sh/2tgbetsb","slide":2,"text":"Развитие","textPreview":"Развитие","textChars":8,"textLines":1,"bbox":[120,546,260,24]}
+{"kind":"textbox","id":"sh/nu9sne9w","slide":2,"text":"Курсы, тренировки, питание и прогресс.","textPreview":"Курсы, тренировки, питание и прогресс.","textChars":38,"textLines":1,"bbox":[120,580,300,42]}
+{"kind":"textbox","id":"sh/0rytcjal","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[72,652,42,22]}
+{"kind":"shape","id":"sh/1s7alorq","slide":2,"bbox":[122,663,970,0]}
+{"kind":"textbox","id":"sh/epgba9sf","slide":2,"text":"Shans · project presentation","textPreview":"Shans · project presentation","textChars":28,"textLines":1,"bbox":[1110,652,120,22]}
+{"kind":"image","id":"im/ux47ixs7","slide":2,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,48,42,42]}
+{"kind":"notes","id":"nt/remq8c","slide":2,"text":"[Sources]\nЛокальный проект Shans: app/routes.py, app/planner.py, app/learning.py, app/workouts.py, app/nutrition.py."}
+{"kind":"slide","id":"sl/vv67s6","slide":3,"title":"SHANS","textShapes":14}
+{"kind":"shape","id":"sh/4na5gnq9","slide":3,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/jm1onipo","slide":3,"bbox":[0,0,438,720]}
+{"kind":"textbox","id":"sh/hkj6ls7y","slide":3,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[130,48,110,22]}
+{"kind":"textbox","id":"sh/wzq5cnqd","slide":3,"text":"personal management system","textPreview":"personal management system","textChars":26,"textLines":1,"bbox":[130,70,230,18]}
+{"kind":"textbox","id":"sh/vyhojips","slide":3,"text":"Почему это выглядит цельно","textPreview":"Почему это выглядит цельно","textChars":26,"textLines":1,"bbox":[72,156,300,94]}
+{"kind":"textbox","id":"sh/ux8nad87","slide":3,"text":"Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.","textPreview":"Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.","textChars":94,"textLines":1,"bbox":[72,280,286,90]}
+{"kind":"shape","id":"sh/9wz6h87m","slide":3,"bbox":[72,420,142,34]}
+{"kind":"textbox","id":"sh/8vq583q1","slide":3,"text":"Практичность","textPreview":"Практичность","textChars":12,"textLines":1,"bbox":[72,428,142,18]}
+{"kind":"shape","id":"sh/it0vih0v","slide":3,"bbox":[72,466,142,34]}
+{"kind":"textbox","id":"sh/3u9wrm1g","slide":3,"text":"Мобильность","textPreview":"Мобильность","textChars":11,"textLines":1,"bbox":[72,474,142,18]}
+{"kind":"shape","id":"sh/4fidkri1","slide":3,"bbox":[72,512,142,34]}
+{"kind":"textbox","id":"sh/5gretwjm","slide":3,"text":"Безопасность","textPreview":"Безопасность","textChars":12,"textLines":1,"bbox":[72,520,142,18]}
+{"kind":"textbox","id":"sh/upgveh0z","slide":3,"text":"Разработчик","textPreview":"Разработчик","textChars":11,"textLines":1,"bbox":[520,72,180,22]}
+{"kind":"textbox","id":"sh/vq9wnm14","slide":3,"text":"Владимир\nХудовердиев","textPreview":"Владимир | Худовердиев","textChars":20,"textLines":2,"bbox":[520,108,360,86]}
+{"kind":"textbox","id":"sh/gridg7ip","slide":3,"text":"Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.","textPreview":"Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.","textChars":123,"textLines":1,"bbox":[520,216,430,82]}
+{"kind":"shape","id":"sh/hsrepcja","slide":3,"bbox":[520,330,446,0]}
+{"kind":"textbox","id":"sh/6lgvaxkn","slide":3,"text":"Итоговая ценность","textPreview":"Итоговая ценность","textChars":17,"textLines":1,"bbox":[520,366,260,24]}
+{"kind":"textbox","id":"sh/7mpwj218","slide":3,"text":"Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.","textPreview":"Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.","textChars":87,"textLines":1,"bbox":[520,406,398,86]}
+{"kind":"textbox","id":"sh/qtcj29c3","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[72,652,42,22]}
+{"kind":"shape","id":"sh/dg32x4vu","slide":3,"bbox":[122,663,970,0]}
+{"kind":"textbox","id":"sh/cfu14zu9","slide":3,"text":"Shans · project presentation","textPreview":"Shans · project presentation","textChars":28,"textLines":1,"bbox":[1110,652,120,22]}
+{"kind":"image","id":"im/ruh0byt4","slide":3,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,48,42,42]}
+{"kind":"image","id":"im/4ryd8jul","slide":3,"name":"","geometry":"roundRect","alt":"Фотография разработчика проекта Shans","bbox":[986,76,222,548]}
+{"kind":"notes","id":"nt/vv67s6","slide":3,"text":"[Sources]\nФотография разработчика: файл пользователя C:/Users/Владимир/Desktop/ываыва.jpg.\nЛогика и функции проекта: локальный проект Shans."}

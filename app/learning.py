@@ -687,6 +687,22 @@ def _save_course_day_result(
         conn.close()
 
 
+def _reset_course_day_result(user_id: int, day_number: int, course_key: str) -> None:
+    table_name = _course_table(course_key, _PROGRESS_TABLES)
+    conn = get_connection()
+    try:
+        conn.execute(
+            f"""
+            DELETE FROM {table_name}
+            WHERE user_id = ? AND day_number = ?
+            """,
+            (user_id, day_number),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _save_course_final_result(
     user_id: int,
     score: int,
@@ -725,6 +741,22 @@ def _save_course_final_result(
         conn.close()
 
 
+def _reset_course_final_result(user_id: int, course_key: str) -> None:
+    table_name = _course_table(course_key, _FINAL_TABLES)
+    conn = get_connection()
+    try:
+        conn.execute(
+            f"""
+            DELETE FROM {table_name}
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _get_progress(user_id: int) -> dict[int, dict]:
     return _get_course_progress(user_id, "english")
 
@@ -737,8 +769,16 @@ def _save_day_result(user_id: int, day_number: int, score: int, passed: bool) ->
     _save_course_day_result(user_id, day_number, score, passed, "english")
 
 
+def _reset_day_result(user_id: int, day_number: int) -> None:
+    _reset_course_day_result(user_id, day_number, "english")
+
+
 def _save_final_result(user_id: int, score: int, passed: bool) -> None:
     _save_course_final_result(user_id, score, passed, "english")
+
+
+def _reset_final_result(user_id: int) -> None:
+    _reset_course_final_result(user_id, "english")
 
 
 def _get_it_progress(user_id: int) -> dict[int, dict]:
@@ -758,8 +798,16 @@ def _save_it_day_result(
     _save_course_day_result(user_id, day_number, score, passed, "it")
 
 
+def _reset_it_day_result(user_id: int, day_number: int) -> None:
+    _reset_course_day_result(user_id, day_number, "it")
+
+
 def _save_it_final_result(user_id: int, score: int, passed: bool) -> None:
     _save_course_final_result(user_id, score, passed, "it")
+
+
+def _reset_it_final_result(user_id: int) -> None:
+    _reset_course_final_result(user_id, "it")
 
 
 def _rotated_options(correct: str, distractors, seed: int) -> tuple[tuple[str, ...], int]:
@@ -1197,6 +1245,17 @@ def english_day(day_number: int):
     )
 
 
+@learning_bp.route("/study/english/day/<int:day_number>/reset", methods=["POST"])
+@login_required
+def english_day_reset(day_number: int):
+    if day_number < 1 or day_number > len(ENGLISH_LESSONS):
+        abort(404)
+
+    _reset_day_result(int(current_user.id), day_number)
+    _reset_final_result(int(current_user.id))
+    return redirect(url_for("learning.english_day", day_number=day_number))
+
+
 @learning_bp.route("/study/english/final", methods=["GET", "POST"])
 @login_required
 def english_final():
@@ -1291,6 +1350,17 @@ def it_day(day_number: int):
         quiz_revealed=score is not None,
         audio_segments=_it_audio_segments(lesson),
     )
+
+
+@learning_bp.route("/study/it/day/<int:day_number>/reset", methods=["POST"])
+@login_required
+def it_day_reset(day_number: int):
+    if day_number < 1 or day_number > len(IT_LESSONS):
+        abort(404)
+
+    _reset_it_day_result(int(current_user.id), day_number)
+    _reset_it_final_result(int(current_user.id))
+    return redirect(url_for("learning.it_day", day_number=day_number))
 
 
 @learning_bp.route("/study/it/final", methods=["GET", "POST"])

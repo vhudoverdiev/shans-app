@@ -1,0 +1,1162 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/zcsjct",
+    "id": "zcsjct",
+    "slide": 3,
+    "layoutId": "ebd1ed75-429c-4518-9d34-6da382971847",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "35cf94c8-cdbd-4a7a-9e91-8b31d8ba9ea8",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "ebd1ed75-429c-4518-9d34-6da382971847",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "35cf94c8-cdbd-4a7a-9e91-8b31d8ba9ea8",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "35cf94c8-cdbd-4a7a-9e91-8b31d8ba9ea8",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h83mxofu",
+      "id": "1",
+      "bbox": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u5c32tgj",
+      "id": "2",
+      "bbox": [
+        72,
+        92,
+        372,
+        520
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#F8FBFF",
+      "lineColor": "#DBE3EF",
+      "lineWidth": 1
+    },
+    {
+      "order": 3,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/alk7qh87",
+      "id": "3",
+      "bbox": [
+        72,
+        44,
+        42,
+        42
+      ],
+      "geometry": "roundRect",
+      "alt": "Логотип Shans",
+      "contentType": "image/png",
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 26190"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "9871d844-d390-480b-8b29-088299238193",
+        "contentType": "image/png",
+        "byteLength": 931286
+      }
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vel83el",
+      "id": "4",
+      "bbox": [
+        130,
+        46,
+        110,
+        22
+      ],
+      "geometry": "rect",
+      "text": "SHANS",
+      "textPreview": "SHANS",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "SHANS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "SHANS",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "SHANS",
+              "fontSize": 16,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5wnm18f6",
+      "id": "5",
+      "bbox": [
+        130,
+        68,
+        220,
+        18
+      ],
+      "geometry": "rect",
+      "text": "personal management system",
+      "textPreview": "personal management system",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "personal management system"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "personal management system",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#64748B"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "personal management system",
+              "fontSize": 11,
+              "color": "#64748B"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/itc36twf",
+      "id": "6",
+      "bbox": [
+        104,
+        174,
+        290,
+        82
+      ],
+      "geometry": "rect",
+      "text": "Почему это выглядит цельно",
+      "textPreview": "Почему это выглядит цельно",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Почему это"
+          },
+          {
+            "index": 2,
+            "text": "выглядит цельно"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Почему это выглядит цельно",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Почему это выглядит цельно",
+              "fontSize": 36,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3u54zyx0",
+      "id": "7",
+      "bbox": [
+        104,
+        282,
+        286,
+        88
+      ],
+      "geometry": "rect",
+      "text": "Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.",
+      "textPreview": "Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "fontSize": 19,
+        "typeface": "+mn-lt",
+        "color": "#334155",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 4,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Проект собран вокруг реальных"
+          },
+          {
+            "index": 2,
+            "text": "ежедневных задач, поэтому его"
+          },
+          {
+            "index": 3,
+            "text": "можно расширять без потери"
+          },
+          {
+            "index": 4,
+            "text": "логики."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#334155"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Проект собран вокруг реальных ежедневных задач, поэтому его можно расширять без потери логики.",
+              "fontSize": 19,
+              "color": "#334155"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kzalwzyh",
+      "id": "8",
+      "bbox": [
+        104,
+        416,
+        132,
+        34
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#EEF2FF",
+      "lineColor": "#C7D2FE",
+      "lineWidth": 1
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/l0j2p4fm",
+      "id": "9",
+      "bbox": [
+        104,
+        424,
+        132,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Практичность",
+      "textPreview": "Практичность",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Практичность"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Практичность",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#2563EB",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Практичность",
+              "fontSize": 12,
+              "color": "#2563EB",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/90zmtwjq",
+      "id": "10",
+      "bbox": [
+        104,
+        466,
+        132,
+        34
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#F5F3FF",
+      "lineColor": "#DDD6FE",
+      "lineWidth": 1
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8zqlkri5",
+      "id": "11",
+      "bbox": [
+        104,
+        474,
+        132,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Мобильность",
+      "textPreview": "Мобильность",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#7C3AED",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Мобильность"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Мобильность",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#7C3AED",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Мобильность",
+              "fontSize": 12,
+              "color": "#7C3AED",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nyh4rm1k",
+      "id": "12",
+      "bbox": [
+        104,
+        516,
+        132,
+        34
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#ECFDF5",
+      "lineColor": "#BBF7D0",
+      "lineWidth": 1
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mx83ih0z",
+      "id": "13",
+      "bbox": [
+        104,
+        524,
+        132,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Безопасность",
+      "textPreview": "Безопасность",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#15803D",
+        "bold": true,
+        "alignment": "center",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Безопасность"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Безопасность",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#15803D",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Безопасность",
+              "fontSize": 12,
+              "color": "#15803D",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/x4jmxwjm",
+      "id": "14",
+      "bbox": [
+        520,
+        74,
+        150,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Разработчик",
+      "textPreview": "Разработчик",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#2563EB",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Разработчик"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Разработчик",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#2563EB",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Разработчик",
+              "fontSize": 13,
+              "color": "#2563EB",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w3alobi1",
+      "id": "15",
+      "bbox": [
+        520,
+        108,
+        340,
+        84
+      ],
+      "geometry": "rect",
+      "text": "Владимир\nХудовердиев",
+      "textPreview": "Владимир | Худовердиев",
+      "resolvedFontSize": 42,
+      "resolvedTextStyle": {
+        "fontSize": 42,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Владимир"
+          },
+          {
+            "index": 2,
+            "text": "Худовердиев"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Владимир",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Владимир",
+              "fontSize": 42,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "Худовердиев",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Худовердиев",
+              "fontSize": 42,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/v214v61g",
+      "id": "16",
+      "bbox": [
+        520,
+        218,
+        430,
+        82
+      ],
+      "geometry": "rect",
+      "text": "Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.",
+      "textPreview": "Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "fontSize": 20,
+        "typeface": "+mn-lt",
+        "color": "#334155",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans - авторский проект, созданный под"
+          },
+          {
+            "index": 2,
+            "text": "личные рабочие процессы: от расписания и"
+          },
+          {
+            "index": 3,
+            "text": "финансов до проектов, обучения и здоровья."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "color": "#334155"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans - авторский проект, созданный под личные рабочие процессы: от расписания и финансов до проектов, обучения и здоровья.",
+              "fontSize": 20,
+              "color": "#334155"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1s3m10b",
+      "id": "17",
+      "bbox": [
+        520,
+        332,
+        446,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#BFDBFE",
+      "lineWidth": 2
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5sjm1gjy",
+      "id": "18",
+      "bbox": [
+        520,
+        368,
+        220,
+        22
+      ],
+      "geometry": "rect",
+      "text": "Итоговая ценность",
+      "textPreview": "Итоговая ценность",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Итоговая ценность"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Итоговая ценность",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Итоговая ценность",
+              "fontSize": 16,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kralsbid",
+      "id": "19",
+      "bbox": [
+        520,
+        404,
+        398,
+        102
+      ],
+      "geometry": "rect",
+      "text": "Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.",
+      "textPreview": "Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "fontSize": 28,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 5,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Меньше хаоса в"
+          },
+          {
+            "index": 2,
+            "text": "повседневных данных."
+          },
+          {
+            "index": 3,
+            "text": "Больше контроля,"
+          },
+          {
+            "index": 4,
+            "text": "прозрачности и внимания на"
+          },
+          {
+            "index": 5,
+            "text": "важном."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "color": "#111827",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Меньше хаоса в повседневных данных. Больше контроля, прозрачности и внимания на важном.",
+              "fontSize": 28,
+              "color": "#111827",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/j2h0na5o",
+      "id": "20",
+      "bbox": [
+        992,
+        76,
+        216,
+        548
+      ],
+      "geometry": "roundRect",
+      "alt": "Фотография разработчика проекта Shans",
+      "contentType": "image/jpeg",
+      "imageCrop": {
+        "left": 0.03,
+        "top": 0.17,
+        "right": 0.23,
+        "bottom": 0.01
+      },
+      "imageFit": "cover",
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 12037"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "5525b570-9c21-4ce4-bed3-327dde433271",
+        "contentType": "image/jpeg",
+        "byteLength": 585333
+      }
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pobedob6",
+      "id": "21",
+      "bbox": [
+        72,
+        652,
+        1136,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#DDE5F0",
+      "lineWidth": 1
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2lkfi9cf",
+      "id": "22",
+      "bbox": [
+        72,
+        670,
+        42,
+        20
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "fontSize": 12,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#64748B",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 12,
+              "color": "#64748B",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3mtwbet0",
+      "id": "23",
+      "bbox": [
+        1058,
+        670,
+        150,
+        20
+      ],
+      "geometry": "rect",
+      "text": "Shans · project presentation",
+      "textPreview": "Shans · project presentation",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "fontSize": 11,
+        "typeface": "+mn-lt",
+        "color": "#64748B",
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans · project presentation"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans · project presentation",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#64748B",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans · project presentation",
+              "fontSize": 11,
+              "color": "#64748B",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

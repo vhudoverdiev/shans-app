@@ -54,7 +54,10 @@ def build_tasks_text(
     for index, task in enumerate(tasks, start=1):
         title = (task["title"] or "Без названия").strip()
         start_time = (task["start_time"] or "").strip()
-        lines.append(f"{index}. {start_time or '—'} — {title}")
+        if start_time:
+            lines.append(f"{index}. {start_time} — {title}")
+        else:
+            lines.append(f"{index}. {title}")
 
     lines.extend(["", f"Всего задач: {len(tasks)}"])
     return "\n".join(lines)

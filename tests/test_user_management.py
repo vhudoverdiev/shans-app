@@ -155,6 +155,24 @@ class UserManagementTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_logout_all_devices_does_not_flash_service_notification(self):
+        admin_id = self._user_id("admin")
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            with client.session_transaction() as session:
+                session["_csrf_token"] = "test-token"
+
+            response = client.post(
+                "/account/settings/logout-all",
+                data={"_csrf_token": "test-token"},
+            )
+
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.headers["Location"], "/login")
+            with client.session_transaction() as session:
+                self.assertNotIn("_flashes", session)
+
 
 if __name__ == "__main__":
     unittest.main()

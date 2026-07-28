@@ -545,8 +545,9 @@ def build_daily_summary(entries) -> dict:
     }
 
 
-def _format_weight_delta(value: float) -> str:
-    return f"{abs(value):.2f}".replace(".", ",")
+def _format_weight_delta(value: float, *, signed: bool = False) -> str:
+    formatted = f"{value:+.2f}" if signed else f"{abs(value):.2f}"
+    return formatted.replace(".", ",")
 
 
 def build_nutrition_progress_insight(
@@ -568,16 +569,26 @@ def build_nutrition_progress_insight(
         calorie_delta = float(plan["maintenance_calories"]) - float(summary["calories"])
         daily_weight_delta = round(calorie_delta / CALORIES_PER_KG, 4)
         weekly_weight_delta = round(daily_weight_delta * 7, 4)
-        daily_action = "сбросили" if daily_weight_delta >= 0 else "набрали"
-        weekly_action = "сбросите" if weekly_weight_delta >= 0 else "наберёте"
-        day_text = (
-            f"За {day_label} вы {daily_action} "
-            f"{_format_weight_delta(daily_weight_delta)} кг."
-        )
-        week_text = (
-            f"Если каждый день будет примерно так же, за неделю вы {weekly_action} "
-            f"{_format_weight_delta(weekly_weight_delta)} кг."
-        )
+        if daily_weight_delta >= 0:
+            day_text = (
+                f"За {day_label} вы сбросили "
+                f"{_format_weight_delta(daily_weight_delta)} кг."
+            )
+        else:
+            day_text = (
+                f"За {day_label} прогноз по весу: "
+                f"{_format_weight_delta(daily_weight_delta, signed=True)} кг."
+            )
+        if weekly_weight_delta >= 0:
+            week_text = (
+                f"Если каждый день будет примерно так же, за неделю вы сбросите "
+                f"{_format_weight_delta(weekly_weight_delta)} кг."
+            )
+        else:
+            week_text = (
+                "Если каждый день будет примерно так же, за неделю прогноз по весу: "
+                f"{_format_weight_delta(weekly_weight_delta, signed=True)} кг."
+            )
     else:
         day_text = f"Добавьте продукты {day_label}, и прогноз веса появится."
         week_text = "Пока нет записей за день, недельный прогноз не рассчитывается."

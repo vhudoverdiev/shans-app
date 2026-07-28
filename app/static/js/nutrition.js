@@ -39,6 +39,9 @@
         document.querySelectorAll("[data-select-food]").forEach(function (button) {
             button.addEventListener("click", function () {
                 input.value = button.dataset.selectFood || "";
+                if ("open" in entryCard) {
+                    entryCard.open = true;
+                }
                 entryCard.scrollIntoView({ behavior: "smooth", block: "center" });
             });
         });
@@ -47,10 +50,25 @@
     function initializeCustomFoodShortcut() {
         const customCard = document.getElementById("custom-food");
         const trigger = document.querySelector("[data-open-custom-food]");
+        const firstInput = document.getElementById("custom-food-name");
         if (!customCard || !trigger) return;
 
+        trigger.setAttribute("aria-expanded", "false");
+
         trigger.addEventListener("click", function () {
-            customCard.scrollIntoView({ behavior: "smooth", block: "start" });
+            const shouldShow = customCard.hidden;
+            customCard.hidden = !shouldShow;
+            trigger.setAttribute("aria-expanded", shouldShow ? "true" : "false");
+            trigger.classList.toggle("nutrition-icon-button-active", shouldShow);
+
+            if (shouldShow) {
+                customCard.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (firstInput) {
+                    window.setTimeout(function () {
+                        firstInput.focus({ preventScroll: true });
+                    }, 250);
+                }
+            }
         });
     }
 

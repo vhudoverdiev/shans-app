@@ -12,6 +12,13 @@
     <script>
         (function () {
             try {
+                const isStandaloneApp = window.matchMedia("(display-mode: standalone)").matches
+                    || window.navigator.standalone === true;
+                if (isStandaloneApp) {
+                    document.documentElement.classList.remove("app-intro-pending");
+                    window.__shansShouldRunIntro = false;
+                    return;
+                }
                 const introKey = "shans-intro-session-v1";
                 if (window.sessionStorage.getItem(introKey)) {
                     document.documentElement.classList.remove("app-intro-pending");
@@ -126,10 +133,7 @@
 </head>
 <body class="app-body{% if current_user.is_authenticated %} app-body-authenticated{% endif %}">
     <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
-        <div class="app-intro-glow"></div>
         <div class="app-intro-stage">
-            <span class="app-intro-orbit app-intro-orbit-outer"></span>
-            <span class="app-intro-orbit app-intro-orbit-inner"></span>
             <div class="app-intro-logo">
                 <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="" class="app-intro-logo-mark" aria-hidden="true">
             </div>

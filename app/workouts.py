@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from datetime import date, datetime, timedelta
+from urllib.parse import urlsplit
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -623,6 +624,18 @@ def _format_date_ru(value: str) -> str:
         return value
 
 
+def _safe_local_target(raw_target: str | None, default_target: str) -> str:
+    if not raw_target:
+        return default_target
+    candidate = raw_target.strip()
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc:
+        return default_target
+    if not candidate.startswith("/"):
+        return default_target
+    return candidate
+
+
 @workouts_bp.route("")
 @login_required
 def index():
@@ -668,6 +681,7 @@ def index():
         weight_chart_points=chart_points,
         summary=build_workout_summary(all_results, weight_entries),
         today=date.today().isoformat(),
+        weight_section_open=request.args.get("open") == "weight",
     )
 
 
@@ -696,6 +710,8 @@ def plan_detail(plan_id: int):
         plan=plan,
         weekdays=WEEKDAYS,
         workout_results=results,
+        today=date.today().isoformat(),
+        settings_open=request.args.get("open") == "settings",
     )
 
 
@@ -734,7 +750,7 @@ def update_plan(plan_id: int):
             abort(404)
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.plan_detail", plan_id=plan_id))
+        return redirect(url_for("workouts.plan_detail", plan_id=plan_id, open="settings"))
 
     if weekday is None:
         flash("План сохранён. Тренировка убрана из личного графика.", "success")
@@ -743,13 +759,14 @@ def update_plan(plan_id: int):
             f"План сохранён и добавлен в личный график: {WEEKDAY_LABELS[weekday].lower()}.",
             "success",
         )
-    return redirect(url_for("workouts.plan_detail", plan_id=plan_id))
+    return redirect(url_for("workouts.plan_detail", plan_id=plan_id, open="settings"))
 
 
 @workouts_bp.route("/results", methods=["POST"])
 @login_required
 def create_result():
     user_id = int(current_user.id)
+    plan_id = None
     try:
         raw_plan_id = request.form.get("workout_plan_id", "")
         try:
@@ -773,10 +790,20 @@ def create_result():
         )
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.index", _anchor="add-result"))
+        if plan_id is None:
+            return redirect(url_for("workouts.index"))
+        return_to = _safe_local_target(
+            request.form.get("return_to"),
+            url_for("workouts.plan_detail", plan_id=plan_id, _anchor="workout-plan-log"),
+        )
+        return redirect(return_to)
 
     flash("Результат упражнения добавлен.", "success")
-    return redirect(url_for("workouts.index", _anchor="results"))
+    return_to = _safe_local_target(
+        request.form.get("return_to"),
+        url_for("workouts.plan_detail", plan_id=plan_id, _anchor="workout-plan-log"),
+    )
+    return redirect(return_to)
 
 
 @workouts_bp.route("/results/<int:result_id>/delete", methods=["POST"])
@@ -785,7 +812,11 @@ def remove_result(result_id: int):
     if not delete_workout_result(int(current_user.id), result_id):
         abort(404)
     flash("Результат удалён.", "success")
-    return redirect(url_for("workouts.index", _anchor="results"))
+    return_to = _safe_local_target(
+        request.form.get("return_to"),
+        url_for("workouts.index"),
+    )
+    return redirect(return_to)
 
 
 @workouts_bp.route("/weight", methods=["POST"])
@@ -802,10 +833,10 @@ def save_weight():
         upsert_weight_entry(user_id, measured_on, weight_kg, notes)
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.index", _anchor="add-weight"))
+        return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))
 
     flash("Вес сохранён. Повторная запись за ту же дату обновляет значение.", "success")
-    return redirect(url_for("workouts.index", _anchor="weight-progress"))
+    return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))
 
 
 @workouts_bp.route("/weight/<int:entry_id>/delete", methods=["POST"])
@@ -814,4 +845,4 @@ def remove_weight(entry_id: int):
     if not delete_weight_entry(int(current_user.id), entry_id):
         abort(404)
     flash("Измерение веса удалено.", "success")
-    return redirect(url_for("workouts.index", _anchor="weight-progress"))
+    return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))

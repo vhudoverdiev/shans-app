@@ -696,6 +696,7 @@ class WebPushSchedulingTests(unittest.TestCase):
 
     def test_summary_message_builder_format(self):
         self._add_task("Проверка формата", "2026-07-22", "09:30")
+        self._add_task("Без времени", "2026-07-22")
 
         message = build_personal_tasks_text(
             datetime(2026, 7, 22).date(),
@@ -705,8 +706,9 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(
             message,
             "Задачи на завтра (22.07.2026):\n\n"
-            "1. 09:30 — Проверка формата\n\n"
-            "Всего задач: 1",
+            "1. 09:30 — Проверка формата\n"
+            "2. Без времени\n\n"
+            "Всего задач: 2",
         )
 
 
@@ -803,6 +805,21 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn("subscriptionUsesPublicKey", push_client)
         self.assertIn("payload.resetSubscription", push_client)
         self.assertIn("discardLocalSubscription", push_client)
+
+    def test_push_toggle_refreshes_ui_from_browser_subscription_state(self):
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-notifications.js"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("async function refreshSubscriptionState()", push_client)
+        self.assertIn("registration.pushManager.getSubscription()", push_client)
+        self.assertIn("await refreshSubscriptionState();", push_client)
+        self.assertIn('toggleButton.dataset.enabled = enabled ? "true" : "false";', push_client)
+        self.assertIn('toggleButton.setAttribute("aria-pressed", enabled ? "true" : "false");', push_client)
+        self.assertLess(
+            push_client.index("subscription = newSubscription;"),
+            push_client.index("await refreshSubscriptionState();", push_client.index("subscription = newSubscription;")),
+        )
 
     def test_push_toggle_does_not_require_home_screen_installation(self):
         push_client = (

@@ -18,6 +18,10 @@ from app.learning import (
     _it_audio_segments,
     _save_day_result,
     _save_final_result,
+    _reset_day_result,
+    _reset_final_result,
+    _reset_it_day_result,
+    _reset_it_final_result,
     _save_it_day_result,
     _save_it_final_result,
     build_daily_quiz,
@@ -34,7 +38,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = PROJECT_ROOT / "app" / "templates"
 LEARNING_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "learning.css"
 COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
-LEARNING_MODULE = PROJECT_ROOT / "app" / "learning.py"
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -107,6 +110,20 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(next_day, 2)
         self.assertEqual(progress[1]["best_score"], 5)
         self.assertEqual(progress[1]["attempts"], 3)
+
+    def test_day_reset_clears_progress_and_final_result_for_english(self):
+        _save_day_result(11, 1, 5, True)
+        _save_day_result(11, 2, 4, True)
+        _save_final_result(11, 27, True)
+
+        _reset_day_result(11, 2)
+        _reset_final_result(11)
+
+        progress, passed_days, next_day = _course_state(11)
+        self.assertEqual(set(progress), {1})
+        self.assertEqual(passed_days, {1})
+        self.assertEqual(next_day, 2)
+        self.assertIsNone(_get_final_result(11))
 
     def test_final_quiz_covers_all_days_and_saves_best_result(self):
         questions = build_final_quiz()
@@ -220,6 +237,20 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(next_day, 2)
         self.assertEqual(_course_state(17), ({}, set(), 1))
 
+    def test_day_reset_clears_progress_and_final_result_for_it(self):
+        _save_it_day_result(23, 1, 5, True)
+        _save_it_day_result(23, 2, 4, True)
+        _save_it_final_result(23, 28, True)
+
+        _reset_it_day_result(23, 2)
+        _reset_it_final_result(23)
+
+        progress, passed_days, next_day = _it_course_state(23)
+        self.assertEqual(set(progress), {1})
+        self.assertEqual(passed_days, {1})
+        self.assertEqual(next_day, 2)
+        self.assertIsNone(_get_it_final_result(23))
+
     def test_it_final_result_preserves_best_score_and_passed_state(self):
         _save_it_final_result(19, 20, False)
         _save_it_final_result(19, 28, True)
@@ -256,26 +287,36 @@ class EnglishCourseTests(unittest.TestCase):
         english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
         it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
         script_source = COURSE_AUDIO_SCRIPT.read_text(encoding="utf-8")
-        learning_source = LEARNING_MODULE.read_text(encoding="utf-8")
+        learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
         for source in (english_source, it_source):
             self.assertIn("data-course-audio", source)
             self.assertIn("course-audio-segments", source)
             self.assertIn("course-audio.js", source)
-            self.assertIn("Включить озвучку", source)
             self.assertIn("Озвучить урок", source)
+            self.assertIn("course-audio-button", source)
+            self.assertIn("course-audio-label", source)
+            self.assertIn("course-audio-icon", source)
+            self.assertIn("lesson-next-button", source)
+            self.assertIn("Отменить результат", source)
+            self.assertNotIn("data-course-audio-toggle", source)
+            self.assertNotIn("data-course-audio-stop", source)
+            self.assertNotIn("Включить озвучку", source)
+            self.assertNotIn("Стоп", source)
             self.assertIn("Пройти тест", source)
             self.assertIn("data-quiz-reveal-button", source)
             self.assertIn("data-quiz-form-shell", source)
             self.assertIn("lesson-quiz.js", source)
+        self.assertIn("english_day_reset", english_source)
+        self.assertIn("it_day_reset", it_source)
         self.assertIn("data-course-pronounce", english_source)
         self.assertIn("data-course-pronounce-lang=\"en-US\"", english_source)
         self.assertIn("course-pronounce-button", english_source)
-        self.assertIn("<summary>Подробнее</summary>", english_source)
+        self.assertNotIn("<summary>Подробнее</summary>", english_source)
         self.assertIn("lesson_lecture_text", english_source)
         self.assertIn("data-course-pronounce", it_source)
         self.assertIn("data-course-pronounce-lang=\"en-US\"", it_source)
-        self.assertIn("<summary>Подробнее</summary>", it_source)
+        self.assertNotIn("<summary>Подробнее</summary>", it_source)
         self.assertIn("lecture_points", it_source)
         self.assertIn("term_cards", it_source)
         self.assertIn("quiz_revealed", english_source)
@@ -284,7 +325,11 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("data-course-pronounce", script_source)
         self.assertIn("speakSingle", script_source)
         self.assertIn("ru-RU", script_source)
-        self.assertIn("en-US", learning_source)
+        self.assertIn("en-US", script_source)
+        self.assertIn("course-audio-playing", script_source)
+        self.assertNotIn("course-audio-toggle", script_source)
+        self.assertNotIn("course-audio-stop", script_source)
+        self.assertNotIn("STORAGE_KEY", script_source)
         self.assertIn("VOICE_PREFERENCES", script_source)
         self.assertIn("voiceScore", script_source)
         self.assertIn("getProsody", script_source)
@@ -292,6 +337,10 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("window.setTimeout(function ()", script_source)
         self.assertIn("microsoft aria online", script_source)
         self.assertIn("microsoft svetlana online", script_source)
+        self.assertIn("course-audio-button", learning_styles)
+        self.assertIn("course-audio-label", learning_styles)
+        self.assertNotIn("course-audio-copy", learning_styles)
+        self.assertNotIn("course-audio-actions", learning_styles)
 
     def test_lecture_texts_are_expanded_for_english_and_it(self):
         english_lesson = ENGLISH_LESSONS[0]

@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 import re
 
-from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 
 from app.database import get_connection
@@ -1425,16 +1425,31 @@ def delete_schedule_tasks_all():
 @login_required
 def toggle_schedule_task(task_id: int):
     task = get_task(task_id)
+    wants_json = (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("Accept", "")
+    )
     if not task or not _task_is_visible_to_user(task, _current_planner_user_id()):
+        if wants_json:
+            return jsonify({"ok": False, "message": "Task not found."}), 404
         flash("Задача не найдена.", "error")
         return redirect(url_for("planner.schedule"))
+
+    previous_status = task["status"]
     new_status = toggle_task_status(task_id)
-    if new_status == "done":
-        flash("Задача отмечена как выполненная.", "success")
-    elif new_status == "planned":
-        flash("Задача возвращена в запланированные.", "success")
-    else:
-        flash("Статус задачи не изменён.", "warning")
+    if wants_json:
+        updated_task = get_task(task_id)
+        return jsonify(
+            {
+                "ok": True,
+                "taskId": task_id,
+                "previousStatus": previous_status,
+                "status": new_status,
+                "displayStatus": _task_display_status(updated_task),
+                "displayStatusLabel": _task_display_status_label(updated_task),
+            }
+        )
+
     return redirect(
         url_for(
             "planner.schedule",
@@ -1443,7 +1458,6 @@ def toggle_schedule_task(task_id: int):
             calendar=_normalize_calendar(task.get("calendar_type")),
         )
     )
-
 
 @planner_bp.route("/planner.schedule/task/<int:task_id>/move-next-day", methods=["POST"])
 @login_required
@@ -1469,7 +1483,6 @@ def move_schedule_task_next_day(task_id: int):
     conn.execute("UPDATE schedule_tasks SET task_date = ? WHERE id = ?", (next_day, task_id))
     conn.commit()
     conn.close()
-    flash("Задача перенесена на следующий день.", "success")
     return redirect(
         url_for(
             "planner.schedule",

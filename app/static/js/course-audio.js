@@ -1,7 +1,6 @@
 (function () {
     "use strict";
 
-    const STORAGE_KEY = "shans.courseAudio.enabled";
     const VOICE_PREFERENCES = {
         ru: [
             "microsoft svetlana online",
@@ -35,9 +34,7 @@
         return;
     }
 
-    const toggleButton = controller.querySelector("[data-course-audio-toggle]");
     const playButton = controller.querySelector("[data-course-audio-play]");
-    const stopButton = controller.querySelector("[data-course-audio-stop]");
     const statusNode = controller.querySelector("[data-course-audio-status]");
     const pronounceButtons = Array.from(document.querySelectorAll("[data-course-pronounce]"));
 
@@ -66,15 +63,9 @@
 
     if (!supportsSpeech()) {
         controller.classList.add("course-audio-unavailable");
-        if (toggleButton) toggleButton.disabled = true;
         if (playButton) playButton.disabled = true;
-        if (stopButton) stopButton.hidden = true;
         setStatus("Озвучка недоступна в этом браузере.");
         return;
-    }
-
-    function isEnabled() {
-        return window.localStorage.getItem(STORAGE_KEY) === "1";
     }
 
     function getVoices() {
@@ -153,33 +144,22 @@
         return prosody.pauseAfter;
     }
 
-    function syncEnabledState() {
-        const enabled = isEnabled();
-        controller.classList.toggle("course-audio-enabled", enabled);
-        if (toggleButton) {
-            toggleButton.setAttribute("aria-pressed", enabled ? "true" : "false");
-            toggleButton.textContent = enabled ? "Озвучка включена" : "Включить озвучку";
-        }
+    function syncReadyState() {
         if (playButton) {
-            playButton.disabled = !enabled || segments.length === 0;
+            playButton.disabled = segments.length === 0;
         }
-        if (!enabled) {
-            setStatus("Озвучка выключена.");
-        } else if (segments.length === 0) {
+        if (segments.length === 0) {
             setStatus("Для этого урока нет текста озвучки.");
         } else {
-            setStatus("Готово к воспроизведению.");
+            setStatus("");
         }
     }
 
     function setPlaying(isPlaying) {
         controller.classList.toggle("course-audio-playing", isPlaying);
         if (playButton) {
-            playButton.disabled = isPlaying || !isEnabled() || segments.length === 0;
-            playButton.textContent = isPlaying ? "Озвучивается..." : "Озвучить урок";
-        }
-        if (stopButton) {
-            stopButton.hidden = !isPlaying;
+            playButton.disabled = segments.length === 0;
+            playButton.setAttribute("aria-pressed", isPlaying ? "true" : "false");
         }
     }
 
@@ -233,10 +213,6 @@
         if (!cleanText) {
             return;
         }
-        if (!isEnabled()) {
-            window.localStorage.setItem(STORAGE_KEY, "1");
-            syncEnabledState();
-        }
         stopSpeech();
         setStatus(lang && lang.startsWith("en") ? "Произношу по-английски..." : "Озвучиваю...");
         const utterance = buildUtterance({
@@ -253,10 +229,6 @@
     }
 
     function playSpeech() {
-        if (!isEnabled()) {
-            window.localStorage.setItem(STORAGE_KEY, "1");
-            syncEnabledState();
-        }
         if (!segments.length) {
             setStatus("Для этого урока нет текста озвучки.");
             return;
@@ -267,24 +239,13 @@
         speakNext(0);
     }
 
-    if (toggleButton) {
-        toggleButton.addEventListener("click", function () {
-            const enabled = !isEnabled();
-            window.localStorage.setItem(STORAGE_KEY, enabled ? "1" : "0");
-            if (!enabled) {
-                stopSpeech("Озвучка выключена.");
-            }
-            syncEnabledState();
-        });
-    }
-
     if (playButton) {
-        playButton.addEventListener("click", playSpeech);
-    }
-
-    if (stopButton) {
-        stopButton.addEventListener("click", function () {
-            stopSpeech("Озвучка остановлена.");
+        playButton.addEventListener("click", function () {
+            if (controller.classList.contains("course-audio-playing")) {
+                stopSpeech("Озвучка остановлена.");
+                return;
+            }
+            playSpeech();
         });
     }
 
@@ -298,12 +259,12 @@
     });
 
     if (speech.onvoiceschanged !== undefined) {
-        speech.onvoiceschanged = syncEnabledState;
+        speech.onvoiceschanged = syncReadyState;
     }
 
     window.addEventListener("pagehide", function () {
         speech.cancel();
     });
 
-    syncEnabledState();
+    syncReadyState();
 })();

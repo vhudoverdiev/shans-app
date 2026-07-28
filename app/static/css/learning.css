@@ -488,86 +488,66 @@ a.english-day-card:hover {
 }
 
 .course-audio-controller {
-    margin-bottom: 22px;
-    padding: 20px 22px;
-    border: 1px solid rgba(124, 58, 237, 0.22);
-    border-radius: 22px;
-    display: flex;
+    margin: 0 0 22px;
+    position: relative;
+}
+
+.course-audio-compact {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    background: linear-gradient(145deg, #ffffff, #faf5ff);
-    box-shadow: 0 12px 30px rgba(91, 33, 182, 0.08);
+    gap: 12px;
 }
 
-.course-audio-copy {
-    min-width: 0;
-}
-
-.course-audio-copy h2 {
-    margin: 0;
-    color: #111827;
-    font-size: 22px;
-}
-
-.course-audio-copy p:not(.learning-kicker) {
-    max-width: 650px;
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.course-audio-actions {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.course-audio-toggle,
-.course-audio-play,
-.course-audio-stop {
-    min-height: 42px;
-    padding: 0 15px;
+.course-audio-button {
+    width: 44px;
+    height: 44px;
     border: 1px solid #ddd6fe;
-    border-radius: 14px;
+    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: #6d28d9;
     background: #ffffff;
     font: inherit;
-    font-size: 13px;
-    font-weight: 800;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
 
-.course-audio-toggle[aria-pressed="true"],
-.course-audio-play {
+.course-audio-button[aria-pressed="true"] {
     border-color: #7c3aed;
     color: #ffffff;
     background: linear-gradient(135deg, #4f46e5, #9333ea);
 }
 
-.course-audio-play:disabled,
-.course-audio-toggle:disabled {
+.course-audio-button:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
 
-.course-audio-stop {
-    border-color: #fecaca;
-    color: #991b1b;
-    background: #fef2f2;
+.course-audio-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.course-audio-label {
+    color: #4c1d95;
+    font-size: 14px;
+    font-weight: 800;
 }
 
 .course-audio-status {
-    min-width: 140px;
-    color: #64748b;
-    font-size: 12px;
-    line-height: 1.35;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .course-pronounce-line {
@@ -737,6 +717,14 @@ a.english-day-card:hover {
     flex: 1;
 }
 
+.quiz-result-reset-form {
+    margin: 0;
+}
+
+.quiz-result-reset-form .btn {
+    white-space: nowrap;
+}
+
 .quiz-result h2 {
     margin: 0;
     color: #111827;
@@ -798,6 +786,10 @@ a.english-day-card:hover {
 
 .quiz-reveal-button {
     margin-bottom: 14px;
+}
+
+.lesson-next-button {
+    margin-top: 14px;
 }
 
 .quiz-form-shell {
@@ -906,6 +898,15 @@ a.english-day-card:hover {
 
 .english-more-details {
     margin-top: 8px;
+}
+
+.english-card-detail,
+.it-point-detail,
+.it-term-detail {
+    margin: 10px 0 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.6;
 }
 
 .final-best-score {
@@ -1294,24 +1295,16 @@ a.english-day-card:hover {
     }
 
     .course-audio-controller {
-        align-items: stretch;
-        flex-direction: column;
-        padding: 18px;
-        border-radius: 19px;
+        margin-bottom: 18px;
     }
 
-    .course-audio-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 9px;
+    .course-audio-compact {
+        gap: 10px;
     }
 
-    .course-audio-stop {
-        grid-column: 1 / -1;
-    }
-
-    .course-audio-status {
-        min-width: 0;
+    .course-audio-button {
+        width: 42px;
+        height: 42px;
     }
 
     .lesson-timing-grid > div {
@@ -1348,6 +1341,10 @@ a.english-day-card:hover {
     }
 
     .quiz-result .btn {
+        width: 100%;
+    }
+
+    .quiz-result-reset-form {
         width: 100%;
     }
 
@@ -1465,8 +1462,7 @@ a.english-day-card:hover {
     .learning-page .phrase-language,
     .learning-page .quiz-question legend > span,
     .learning-page .it-practice-number,
-    .learning-page .course-audio-toggle[aria-pressed="true"],
-    .learning-page .course-audio-play {
+    .learning-page .course-audio-button[aria-pressed="true"] {
         background: linear-gradient(135deg, #2563eb, #3b82f6);
     }
 

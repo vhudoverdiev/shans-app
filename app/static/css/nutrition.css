@@ -198,6 +198,13 @@
     gap: 20px;
 }
 
+.nutrition-heading-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
 .nutrition-goal-pill,
 .nutrition-count-pill,
 .nutrition-meal-label {
@@ -446,6 +453,27 @@
     box-shadow: none;
 }
 
+.nutrition-icon-button {
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 12px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--nutrition-blue), var(--nutrition-blue-dark));
+    font: inherit;
+    font-size: 22px;
+    font-weight: 850;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nutrition-icon-button-active {
+    background: #111827;
+}
+
 .nutrition-plan-facts {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -479,6 +507,59 @@
 
 .nutrition-profile-details .nutrition-profile-form {
     margin-top: 18px;
+}
+
+.nutrition-profile-save-button {
+    margin-top: 22px;
+}
+
+.nutrition-foldout-card {
+    padding: 0;
+}
+
+.nutrition-foldout-summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 30px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.nutrition-foldout-summary::-webkit-details-marker {
+    display: none;
+}
+
+.nutrition-foldout-summary::after {
+    content: "+";
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    color: var(--nutrition-blue);
+    background: var(--nutrition-blue-soft);
+    font-size: 22px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.nutrition-foldout-summary .nutrition-count-pill {
+    margin-left: auto;
+}
+
+.nutrition-foldout-card[open] .nutrition-foldout-summary {
+    padding-bottom: 18px;
+}
+
+.nutrition-foldout-card[open] .nutrition-foldout-summary::after {
+    content: "−";
+}
+
+.nutrition-foldout-card .nutrition-entry-form {
+    padding: 0 30px 30px;
 }
 
 .nutrition-entry-list {
@@ -648,6 +729,10 @@
     scroll-margin-top: 20px;
 }
 
+.nutrition-custom-card[hidden] {
+    display: none;
+}
+
 .nutrition-history {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -693,10 +778,15 @@
 }
 
 .nutrition-text-link {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
     color: var(--nutrition-blue);
     font-size: 13px;
     font-weight: 800;
+    line-height: 1.2;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .nutrition-recommendation-grid {
@@ -795,6 +885,23 @@
     .nutrition-card,
     .nutrition-summary-card {
         padding: 20px;
+    }
+
+    .nutrition-foldout-card {
+        padding: 0;
+    }
+
+    .nutrition-foldout-summary {
+        gap: 12px;
+        padding: 20px;
+    }
+
+    .nutrition-foldout-summary .nutrition-count-pill {
+        display: none;
+    }
+
+    .nutrition-foldout-card .nutrition-entry-form {
+        padding: 0 20px 20px;
     }
 
     .nutrition-card,
@@ -915,7 +1022,6 @@
     }
 
     .nutrition-text-link {
-        max-width: 120px;
         text-align: right;
     }
 }
@@ -952,6 +1058,7 @@
     .nutrition-primary-button:hover,
     .nutrition-secondary-button:hover,
     .nutrition-date-button:hover,
+    .nutrition-icon-button:hover,
     .nutrition-food-row:hover {
         transform: translateY(-1px);
     }
@@ -1030,9 +1137,22 @@
         background: #f1f5f9;
     }
 
+    .nutrition-foldout-summary::after {
+        color: #334155;
+        background: #f8fafc;
+    }
+
     .nutrition-primary-button {
         background: #2563eb;
         box-shadow: none;
+    }
+
+    .nutrition-icon-button {
+        background: #2563eb;
+    }
+
+    .nutrition-icon-button-active {
+        background: #334155;
     }
 
     .nutrition-secondary-button,
