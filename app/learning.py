@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app.database import get_connection
@@ -1382,6 +1382,13 @@ def english_day_reset(day_number: int):
 
     _reset_day_result(int(current_user.id), day_number)
     _reset_final_result(int(current_user.id))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify(
+            {
+                "ok": True,
+                "test_url": url_for("learning.english_day_test", day_number=day_number),
+            }
+        )
     return redirect(url_for("learning.english_day", day_number=day_number))
 
 
@@ -1513,6 +1520,13 @@ def it_day_reset(day_number: int):
 
     _reset_it_day_result(int(current_user.id), day_number)
     _reset_it_final_result(int(current_user.id))
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify(
+            {
+                "ok": True,
+                "test_url": url_for("learning.it_day_test", day_number=day_number),
+            }
+        )
     return redirect(url_for("learning.it_day", day_number=day_number))
 
 

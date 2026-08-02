@@ -44,6 +44,7 @@ TEMPLATES = PROJECT_ROOT / "app" / "templates"
 LEARNING_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "learning.css"
 MOBILE_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
 COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
+COURSE_DAY_ACTIONS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-day-actions.js"
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -325,6 +326,7 @@ class EnglishCourseTests(unittest.TestCase):
         english_test_source = (TEMPLATES / "english_day_test.html").read_text(encoding="utf-8")
         it_test_source = (TEMPLATES / "it_day_test.html").read_text(encoding="utf-8")
         script_source = COURSE_AUDIO_SCRIPT.read_text(encoding="utf-8")
+        day_actions_source = COURSE_DAY_ACTIONS_SCRIPT.read_text(encoding="utf-8")
         learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
         for source in (english_source, it_source):
@@ -338,6 +340,9 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("course-audio-label", source)
             self.assertIn("course-audio-icon", source)
             self.assertIn("lesson-next-button", source)
+            self.assertIn("course-day-actions.js", source)
+            self.assertIn("data-course-day-reset-form", source)
+            self.assertIn("data-test-url", source)
             self.assertIn("Отменить результат", source)
             self.assertNotIn("data-course-audio-toggle", source)
             self.assertNotIn("data-course-audio-stop", source)
@@ -362,6 +367,13 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("lesson-reset-form", english_source)
         self.assertIn("day_progress and day_progress.passed", it_source)
         self.assertIn("lesson-reset-form", it_source)
+        self.assertGreater(english_source.index("lesson-reset-form"), english_source.index("phrase-list"))
+        self.assertGreater(it_source.index("lesson-reset-form"), it_source.index("it-practice-card"))
+        self.assertIn("window.fetch(form.action", day_actions_source)
+        self.assertIn('"X-Requested-With": "XMLHttpRequest"', day_actions_source)
+        self.assertIn("form.replaceWith(createTestLink", day_actions_source)
+        self.assertIn('link.target = "_blank"', day_actions_source)
+        self.assertIn('link.textContent = "Пройти тест"', day_actions_source)
         self.assertIn("<summary>Подробнее</summary>", english_source)
         self.assertIn("lesson_detail_steps", english_source)
         self.assertIn("card.detail_paragraphs", english_source)

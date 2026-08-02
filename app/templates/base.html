@@ -1,5 +1,6 @@
+{% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test'] %}
 <!DOCTYPE html>
-<html lang="ru" class="app-intro-pending{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
+<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">

@@ -12,7 +12,12 @@ class IntroLoaderTests(unittest.TestCase):
     def test_base_template_bootstraps_session_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
-        self.assertIn('<html lang="ru" class="app-intro-pending', template)
+        self.assertIn("skip_intro_loader", template)
+        self.assertIn("request.endpoint in ['learning.english_day_test', 'learning.it_day_test']", template)
+        self.assertIn(
+            '<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}',
+            template,
+        )
         self.assertIn("const standaloneDisplayMode = window.matchMedia", template)
         self.assertIn('window.matchMedia("(display-mode: standalone)").matches', template)
         self.assertIn("const isStandaloneApp = standaloneDisplayMode", template)

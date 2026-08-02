@@ -59,12 +59,6 @@
             </article>
             {% endfor %}
         </div>
-        {% if day_progress and day_progress.passed %}
-        <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="lesson-reset-form">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn btn-danger">Отменить результат</button>
-        </form>
-        {% endif %}
     </section>
 
     <section class="lesson-section">
@@ -155,9 +149,16 @@
                     </ol>
                 </div>
             </details>
+            {% if day_progress and day_progress.passed %}
+            <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="lesson-reset-form course-day-reset-form" data-course-day-reset-form data-test-url="{{ url_for('learning.it_day_test', day_number=lesson.day) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-danger">Отменить результат</button>
+            </form>
+            {% else %}
             <a class="btn btn-primary lesson-next-button" href="{{ url_for('learning.it_day_test', day_number=lesson.day) }}" target="_blank" rel="noopener">
                 Пройти тест
             </a>
+            {% endif %}
         </div>
     </section>
 </section>
@@ -166,4 +167,5 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/course-day-actions.js', v=static_asset_version) }}" defer></script>
 {% endblock %}
