@@ -16,6 +16,47 @@
         return meta ? meta.getAttribute("content") : "";
     }
 
+    function openTestWithoutDarkFlash(url) {
+        const testWindow = window.open("", "_blank");
+        if (!testWindow) {
+            return false;
+        }
+
+        try {
+            testWindow.opener = null;
+            testWindow.document.open();
+            testWindow.document.write(
+                "<!doctype html><html><head><meta charset=\"utf-8\">" +
+                "<meta name=\"color-scheme\" content=\"light\">" +
+                "<style>html,body{margin:0;min-height:100%;background:#f5f7fb;color-scheme:light;}</style>" +
+                "</head><body></body></html>"
+            );
+            testWindow.document.close();
+            const navigateToTest = function () {
+                testWindow.location.replace(url);
+            };
+            if (testWindow.requestAnimationFrame) {
+                testWindow.requestAnimationFrame(navigateToTest);
+            } else {
+                testWindow.setTimeout(navigateToTest, 0);
+            }
+        } catch (error) {
+            testWindow.location.href = url;
+        }
+        return true;
+    }
+
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest("a.lesson-next-button[target='_blank']");
+        if (!link) {
+            return;
+        }
+
+        if (openTestWithoutDarkFlash(link.href)) {
+            event.preventDefault();
+        }
+    });
+
     document.querySelectorAll("[data-course-day-reset-form]").forEach(function (form) {
         form.addEventListener("submit", function (event) {
             event.preventDefault();
