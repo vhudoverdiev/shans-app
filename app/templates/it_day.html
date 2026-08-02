@@ -155,7 +155,7 @@
                 <button type="submit" class="btn btn-danger">Отменить результат</button>
             </form>
             {% else %}
-            <a class="btn btn-primary lesson-next-button" href="{{ url_for('learning.it_day_test', day_number=lesson.day) }}" target="_blank" rel="noopener">
+            <a class="btn btn-primary lesson-next-button" href="{{ url_for('learning.it_day_test', day_number=lesson.day) }}">
                 Пройти тест
             </a>
             {% endif %}
