@@ -1036,6 +1036,27 @@ def _build_english_lecture_text(lesson: dict) -> str:
     )
 
 
+def _build_english_lecture_details(lesson: dict) -> list[str]:
+    first_word, first_translation = lesson["words"][0]
+    first_phrase, first_phrase_translation = lesson["phrases"][0]
+    return [
+        f"Что изучаем: тема дня - «{lesson['title']}». Главная опора: {lesson['focus']}",
+        (
+            f"С чего начать новичку: возьмите первое слово «{first_word}» - «{first_translation}», "
+            "произнесите его вслух и сразу свяжите с реальной ситуацией из жизни."
+        ),
+        (
+            f"Базовый пример: {first_phrase} - {first_phrase_translation}. "
+            "Прочитайте английскую фразу целиком, затем закройте перевод и попробуйте вспомнить смысл."
+        ),
+        (
+            "Как тренироваться: замените в примере только одну часть - имя, предмет, место или время. "
+            "Так вы учите не набор слов, а простую схему предложения."
+        ),
+        "Мини-проверка: объясните правило одним предложением по-русски и составьте свой короткий пример на английском.",
+    ]
+
+
 def _english_audio_segments(lesson: dict) -> list[dict]:
     segments = [
         {"lang": "ru-RU", "text": f"День {lesson['day']}. {lesson['title']}."},
@@ -1108,6 +1129,16 @@ def _build_it_term_cards(lesson: dict) -> list[dict]:
                     "опаснее или непонятнее для команды."
                 ),
                 "is_english": _has_latin_letters(term),
+                "detail_steps": [
+                    f"Простыми словами: {definition}.",
+                    (
+                        f"Где встречается: представьте обычный сайт или приложение. Термин «{term}» помогает понять, "
+                        "какая часть системы отвечает за действие пользователя, данные или результат на экране."
+                    ),
+                    f"Базовый пример: если пользователь открывает урок «{lesson['title']}», этот термин помогает описать один кусочек процесса.",
+                    "Как объяснить на собеседовании: скажите, какую задачу решает термин, где вы его видите и какой результат должен получиться.",
+                    "Мини-практика: придумайте одну бытовую аналогию - папка, таблица, кнопка, заявка, список или сообщение.",
+                ],
             }
         )
     return cards
@@ -1132,9 +1163,67 @@ def _build_it_lecture_points(lesson: dict) -> list[dict]:
                     "Попробуйте найти пример в знакомом сервисе: форма входа, карточка товара, расписание, оплата или уведомление. "
                     "Так тема перестаёт быть теорией и превращается в рабочий сценарий."
                 ),
+                "detail_steps": [
+                    f"Главная мысль пункта: {key_fragment}.",
+                    "Почему это важно новичку: вы начинаете видеть не отдельные термины, а цепочку действий в продукте.",
+                    "Базовый пример: пользователь нажал кнопку, система проверила данные, сохранила результат и показала ответ.",
+                    "На что смотреть в реальном проекте: кто вводит данные, где они хранятся, какая ошибка возможна и как пользователь поймёт результат.",
+                    "Мини-практика: найдите похожий процесс в привычном сервисе - вход, поиск, покупка, запись на время или уведомление.",
+                ],
             }
         )
     return points
+
+
+def _explain_it_code_line(line: str) -> str:
+    stripped = line.strip()
+    if not stripped:
+        return "Пустая строка отделяет смысловые части примера, чтобы код было легче читать."
+    if stripped.startswith("import "):
+        return "Подключаем готовый модуль, чтобы не писать всю логику с нуля."
+    if stripped.startswith("def "):
+        return "Создаём функцию: небольшой именованный блок, который можно вызвать несколько раз."
+    if stripped.startswith("return "):
+        return "Возвращаем результат из функции наружу, чтобы его можно было использовать дальше."
+    if stripped.startswith("print("):
+        return "Показываем значение на экране. Это самый простой способ проверить, что получилось."
+    if stripped.startswith("for "):
+        return "Запускаем цикл: повторяем одно действие для нескольких элементов."
+    if stripped.startswith("if "):
+        return "Проверяем условие: если оно верное, выполняется вложенный блок кода."
+    if stripped.startswith("else"):
+        return "Описываем запасной вариант, если условие выше не сработало."
+    if stripped.startswith("class "):
+        return "Описываем класс: шаблон для объектов с данными и действиями."
+    if stripped.startswith("with open("):
+        return "Открываем файл безопасно: после блока Python сам закроет его."
+    if stripped.upper().startswith(("SELECT", "FROM", "WHERE", "ORDER BY", "CREATE TABLE", "INSERT", "UPDATE", "DELETE")):
+        return "Это строка SQL-запроса: она говорит базе данных, какие данные создать, найти или изменить."
+    if stripped.startswith(("{", "}", "[", "]")) or ":" in stripped and stripped.endswith((",", "{", "}", "true", "false")):
+        return "Это часть структурированных данных: ключи и значения описывают объект понятным для программы способом."
+    if stripped.split(" ", 1)[0] in {"git", "pwd", "ls", "mkdir", "cd"}:
+        return "Это команда терминала: её вводят в консоль, чтобы управлять файлами, папками или историей проекта."
+    return "Строка делает один маленький шаг примера. Прочитайте её слева направо и спросите себя: какие данные входят и что меняется после выполнения."
+
+
+def _build_it_code_steps(lesson: dict) -> list[dict]:
+    code = lesson.get("code") or ""
+    return [
+        {
+            "line": line,
+            "explanation": _explain_it_code_line(line),
+        }
+        for line in code.splitlines()
+    ]
+
+
+def _build_it_practice_steps(lesson: dict) -> list[str]:
+    return [
+        f"Прочитайте задание простыми словами: {lesson['practice']}",
+        "Разбейте его на 2-3 маленьких действия: подготовить данные, выполнить действие, проверить результат.",
+        "Сделайте самый простой вариант без украшений. Главное - чтобы он работал и вы понимали каждый шаг.",
+        "Проверьте себя: объясните вслух, что было на входе, что вы сделали и что получилось на выходе.",
+    ]
 
 
 def _build_english_word_cards(lesson: dict) -> list[dict]:
@@ -1150,6 +1239,13 @@ def _build_english_word_cards(lesson: dict) -> list[dict]:
                     f"«{lesson['title']}». Опорный пример: {phrase_english} — {phrase_russian}. "
                     "Если слово кажется лёгким, проверьте себя наоборот: закройте английский вариант и восстановите его по-русски."
                 ),
+                "detail_steps": [
+                    f"Значение: «{english}» = «{russian}».",
+                    "Как запомнить: свяжите слово с предметом, человеком или действием, которое вы реально видите.",
+                    f"Базовый пример: {phrase_english} - {phrase_russian}.",
+                    f"Как применить: замените в примере одно слово и вставьте «{english}» в свою короткую фразу.",
+                    "Мини-проверка: закройте перевод, произнесите английское слово и быстро назовите русский смысл.",
+                ],
             }
         )
     return cards
@@ -1166,6 +1262,13 @@ def _build_english_phrase_cards(lesson: dict) -> list[dict]:
                     f"Фраза переводится как «{russian}». Сначала прочитайте её целиком, потом замените одно слово на своё: имя, время, место или действие. "
                     "Так вы тренируете не одну готовую строку, а модель предложения, которую можно использовать в разговоре."
                 ),
+                "detail_steps": [
+                    f"Смысл: «{english}» = «{russian}».",
+                    "Сначала поймите фразу целиком, не переводите каждое слово отдельно.",
+                    "Найдите основу: кто действует, что происходит, где или когда это происходит.",
+                    "Базовая тренировка: замените одно слово на своё и получите новую фразу с тем же шаблоном.",
+                    "Мини-проверка: скажите фразу медленно, затем повторите быстрее, сохранив понятный смысл.",
+                ],
             }
         )
     return cards
@@ -1230,6 +1333,7 @@ def english_day(day_number: int):
         "english_day.html",
         lesson=lesson,
         lesson_lecture_text=_build_english_lecture_text(lesson),
+        lesson_detail_steps=_build_english_lecture_details(lesson),
         questions=questions,
         feedback=feedback,
         score=score,
@@ -1347,6 +1451,8 @@ def it_day(day_number: int):
         course_finished=len(passed_days) == len(IT_LESSONS),
         lecture_points=_build_it_lecture_points(lesson),
         term_cards=_build_it_term_cards(lesson),
+        code_steps=_build_it_code_steps(lesson),
+        practice_steps=_build_it_practice_steps(lesson),
         quiz_revealed=score is not None,
         audio_segments=_it_audio_segments(lesson),
     )

@@ -3,6 +3,15 @@
 
 {% block content %}
 <section class="car-page">
+    <div class="page-header">
+        <div>
+        </div>
+
+        <div class="page-actions">
+            <a href="{{ url_for('scenarios_archive' if scenario.is_archive else 'scenarios_upcoming') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
     <div class="car-tab-bar">
         <a href="{{ url_for('scenarios_upcoming') }}" class="car-tab-link">Активные</a>
         <a href="{{ url_for('scenarios_add') }}" class="car-tab-link">Добавить сценарий</a>

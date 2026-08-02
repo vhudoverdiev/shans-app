@@ -87,14 +87,18 @@
         </div>
     </section>
 
-    <details class="workouts-section workouts-foldout workouts-weight-foldout" id="weight-progress"{% if weight_section_open %} open{% endif %}>
-        <summary class="workouts-foldout-summary" aria-label="История веса">
-            <span>
-                <strong>История веса</strong>
-                <small>Записать вес и посмотреть динамику</small>
-            </span>
+    <details class="workouts-foldout workouts-weight-panel" id="weight-progress"{% if weight_section_open %} open{% endif %}>
+        <summary class="btn btn-secondary workouts-action-button workouts-weight-toggle" aria-label="Открыть историю веса">
+            История веса
         </summary>
-        <div class="workouts-foldout-body">
+        <section class="workouts-section workouts-weight-section">
+            <div class="workouts-section-heading">
+                <div>
+                    <p class="workouts-section-kicker">Вес</p>
+                    <h2>Запись веса</h2>
+                </div>
+                <p>Добавьте измерение и посмотрите динамику изменений.</p>
+            </div>
             <form method="post" action="{{ url_for('workouts.save_weight') }}" class="workouts-form">
                 <div class="workouts-form-row">
                     <div class="form-group">
@@ -176,7 +180,7 @@
                 {% endfor %}
             </div>
             {% endif %}
-        </div>
+        </section>
     </details>
 
     </section>

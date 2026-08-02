@@ -7,8 +7,13 @@ from app.learning import (
     DAILY_PASS_SCORE,
     ENGLISH_LESSONS,
     FINAL_PASS_SCORE,
+    _build_english_lecture_details,
     _build_english_lecture_text,
+    _build_english_phrase_cards,
+    _build_english_word_cards,
+    _build_it_code_steps,
     _build_it_lecture_points,
+    _build_it_practice_steps,
     _build_it_term_cards,
     _course_state,
     _english_audio_segments,
@@ -37,6 +42,7 @@ from app.it_course_content import IT_LESSONS
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = PROJECT_ROOT / "app" / "templates"
 LEARNING_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "learning.css"
+MOBILE_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
 COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
 
 
@@ -294,6 +300,8 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("course-audio-segments", source)
             self.assertIn("course-audio.js", source)
             self.assertIn("Озвучить урок", source)
+            self.assertEqual(source.count("data-course-audio-play"), 1)
+            self.assertIn("course-audio-inline", source)
             self.assertIn("course-audio-button", source)
             self.assertIn("course-audio-label", source)
             self.assertIn("course-audio-icon", source)
@@ -307,25 +315,39 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("data-quiz-reveal-button", source)
             self.assertIn("data-quiz-form-shell", source)
             self.assertIn("lesson-quiz.js", source)
+            self.assertNotIn("course-audio-controller", source)
+            self.assertNotIn("data-course-pronounce", source)
+            self.assertNotIn("course-pronounce-button", source)
         self.assertIn("english_day_reset", english_source)
         self.assertIn("it_day_reset", it_source)
-        self.assertIn("data-course-pronounce", english_source)
-        self.assertIn("data-course-pronounce-lang=\"en-US\"", english_source)
-        self.assertIn("course-pronounce-button", english_source)
-        self.assertNotIn("<summary>Подробнее</summary>", english_source)
+        self.assertIn("day_progress and day_progress.passed", english_source)
+        self.assertIn("lesson-reset-form", english_source)
+        self.assertIn("day_progress and day_progress.passed", it_source)
+        self.assertIn("lesson-reset-form", it_source)
+        self.assertIn("<summary>Подробнее</summary>", english_source)
+        self.assertIn("lesson_detail_steps", english_source)
+        self.assertIn("card.detail_steps", english_source)
         self.assertIn("lesson_lecture_text", english_source)
-        self.assertIn("data-course-pronounce", it_source)
-        self.assertIn("data-course-pronounce-lang=\"en-US\"", it_source)
-        self.assertNotIn("<summary>Подробнее</summary>", it_source)
+        self.assertIn("<summary>Подробнее</summary>", it_source)
         self.assertIn("lecture_points", it_source)
         self.assertIn("term_cards", it_source)
+        self.assertIn("point.detail_steps", it_source)
+        self.assertIn("term.detail_steps", it_source)
+        self.assertIn("code_steps", it_source)
+        self.assertIn("practice_steps", it_source)
         self.assertIn("quiz_revealed", english_source)
         self.assertIn("quiz_revealed", it_source)
+        self.assertIn('id="daily-test-result"', english_source)
+        self.assertIn("_anchor='daily-test-result'", english_source)
+        self.assertIn("url_for('learning.english_day'", english_source)
+        self.assertIn('id="daily-test-result"', it_source)
+        self.assertIn("_anchor='daily-test-result'", it_source)
+        self.assertIn("url_for('learning.it_day'", it_source)
         self.assertIn("SpeechSynthesisUtterance", script_source)
-        self.assertIn("data-course-pronounce", script_source)
-        self.assertIn("speakSingle", script_source)
+        self.assertNotIn("data-course-pronounce", script_source)
+        self.assertNotIn("speakSingle", script_source)
         self.assertIn("ru-RU", script_source)
-        self.assertIn("en-US", script_source)
+        self.assertIn('startsWith("en")', script_source)
         self.assertIn("course-audio-playing", script_source)
         self.assertNotIn("course-audio-toggle", script_source)
         self.assertNotIn("course-audio-stop", script_source)
@@ -339,8 +361,32 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("microsoft svetlana online", script_source)
         self.assertIn("course-audio-button", learning_styles)
         self.assertIn("course-audio-label", learning_styles)
+        self.assertIn("course-audio-inline", learning_styles)
+        self.assertIn("lesson-more-details", learning_styles)
         self.assertNotIn("course-audio-copy", learning_styles)
         self.assertNotIn("course-audio-actions", learning_styles)
+
+    def test_lesson_cards_render_beginner_friendly_more_details_controls(self):
+        english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
+        it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLES.read_text(encoding="utf-8")
+
+        for source in (english_source, it_source):
+            self.assertIn("<details", source)
+            self.assertIn("<summary>Подробнее</summary>", source)
+            self.assertIn("lesson-more-body", source)
+            self.assertIn("lesson-next-button", source)
+
+        self.assertIn("english-card-detail", english_source)
+        self.assertIn("it-point-detail", it_source)
+        self.assertIn("it-term-detail", it_source)
+        self.assertIn("english-more-details", english_source)
+        self.assertIn("it-more-details", it_source)
+        self.assertIn("lesson-more-details summary::after", learning_styles)
+        self.assertIn("lesson-more-body ol", learning_styles)
+        self.assertNotIn("course-pronounce-button", mobile_styles)
+        self.assertNotIn("it-more-details", mobile_styles)
 
     def test_lecture_texts_are_expanded_for_english_and_it(self):
         english_lesson = ENGLISH_LESSONS[0]
@@ -354,6 +400,30 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertGreater(len(it_points[0]["text"]), len(IT_LESSONS[0]["lecture"][0]))
         self.assertIn("реальный сайт", it_points[0]["text"])
         self.assertIn("рабочую ситуацию", it_points[0]["text"])
+
+    def test_more_details_content_is_expanded_for_beginners(self):
+        english_lesson = ENGLISH_LESSONS[0]
+        english_details = _build_english_lecture_details(english_lesson)
+        word_cards = _build_english_word_cards(english_lesson)
+        phrase_cards = _build_english_phrase_cards(english_lesson)
+
+        self.assertGreaterEqual(len(english_details), 5)
+        self.assertTrue(any("Базовый пример" in step for step in english_details))
+        self.assertEqual(len(word_cards[0]["detail_steps"]), 5)
+        self.assertEqual(len(phrase_cards[0]["detail_steps"]), 5)
+        self.assertTrue(any("Мини-проверка" in step for step in word_cards[0]["detail_steps"]))
+
+        it_lesson = IT_LESSONS[0]
+        it_points = _build_it_lecture_points(it_lesson)
+        term_cards = _build_it_term_cards(it_lesson)
+        code_steps = _build_it_code_steps(IT_LESSONS[6])
+        practice_steps = _build_it_practice_steps(it_lesson)
+
+        self.assertEqual(len(it_points[0]["detail_steps"]), 5)
+        self.assertEqual(len(term_cards[0]["detail_steps"]), 5)
+        self.assertTrue(any("Базовый пример" in step for step in term_cards[0]["detail_steps"]))
+        self.assertTrue(any(step["explanation"] for step in code_steps))
+        self.assertGreaterEqual(len(practice_steps), 4)
 
     def test_every_daily_lesson_has_audio_segments(self):
         for lesson in ENGLISH_LESSONS:

@@ -665,10 +665,6 @@ def index():
         }
         for item in weight_entries
     ]
-    result_history = [
-        {**dict(item), "display_date": _format_date_ru(item["performed_on"])}
-        for item in all_results[:50]
-    ]
     weight_history = [
         {**dict(item), "display_date": _format_date_ru(item["measured_on"])}
         for item in reversed(weight_entries)
@@ -676,7 +672,6 @@ def index():
     return render_template(
         "workouts.html",
         plans=plans,
-        workout_results=result_history,
         weight_entries=weight_history,
         weight_chart_points=chart_points,
         summary=build_workout_summary(all_results, weight_entries),
@@ -759,7 +754,7 @@ def update_plan(plan_id: int):
             f"План сохранён и добавлен в личный график: {WEEKDAY_LABELS[weekday].lower()}.",
             "success",
         )
-    return redirect(url_for("workouts.plan_detail", plan_id=plan_id, open="settings"))
+    return redirect(url_for("workouts.plan_detail", plan_id=plan_id))
 
 
 @workouts_bp.route("/results", methods=["POST"])

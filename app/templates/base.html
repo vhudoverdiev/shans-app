@@ -2,7 +2,7 @@
 <html lang="ru" class="app-intro-pending{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
@@ -12,7 +12,9 @@
     <script>
         (function () {
             try {
-                const isStandaloneApp = window.matchMedia("(display-mode: standalone)").matches
+                const standaloneDisplayMode = window.matchMedia
+                    && window.matchMedia("(display-mode: standalone)").matches;
+                const isStandaloneApp = standaloneDisplayMode
                     || window.navigator.standalone === true;
                 if (isStandaloneApp) {
                     document.documentElement.classList.remove("app-intro-pending");
@@ -91,7 +93,9 @@
             display: grid;
             place-items: center;
             overflow: hidden;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            background: transparent;
+            opacity: 0;
+            transform: translateY(8px) scale(0.94);
         }
 
         html.app-intro-pending .app-intro-logo-mark {
@@ -108,6 +112,8 @@
             overflow: hidden;
             border-radius: 999px;
             background: rgba(99, 102, 241, 0.13);
+            opacity: 0;
+            transform: translateY(6px);
         }
 
         html.app-intro-pending .app-intro-progress span {
@@ -116,6 +122,21 @@
             height: 100%;
             border-radius: inherit;
             background: linear-gradient(90deg, #2563eb, #7c3aed);
+        }
+
+        @media (display-mode: standalone) {
+            html.app-intro-pending,
+            html.app-intro-pending body {
+                overflow: auto;
+            }
+
+            html.app-intro-pending body > :not(#app-intro) {
+                visibility: visible !important;
+            }
+
+            html.app-intro-pending #app-intro {
+                display: none !important;
+            }
         }
     </style>
     {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}

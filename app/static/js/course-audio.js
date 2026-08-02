@@ -36,8 +36,6 @@
 
     const playButton = controller.querySelector("[data-course-audio-play]");
     const statusNode = controller.querySelector("[data-course-audio-status]");
-    const pronounceButtons = Array.from(document.querySelectorAll("[data-course-pronounce]"));
-
     let segments = [];
     try {
         segments = JSON.parse(dataNode.textContent || "[]")
@@ -208,26 +206,6 @@
         speech.speak(utterance);
     }
 
-    function speakSingle(text, lang) {
-        const cleanText = String(text || "").trim();
-        if (!cleanText) {
-            return;
-        }
-        stopSpeech();
-        setStatus(lang && lang.startsWith("en") ? "Произношу по-английски..." : "Озвучиваю...");
-        const utterance = buildUtterance({
-            lang: lang || "en-US",
-            text: cleanText,
-        });
-        utterance.onend = function () {
-            setStatus("Готово к воспроизведению.");
-        };
-        utterance.onerror = function () {
-            setStatus("Не удалось воспроизвести произношение. Попробуйте ещё раз.");
-        };
-        speech.speak(utterance);
-    }
-
     function playSpeech() {
         if (!segments.length) {
             setStatus("Для этого урока нет текста озвучки.");
@@ -248,15 +226,6 @@
             playSpeech();
         });
     }
-
-    pronounceButtons.forEach((button) => {
-        button.addEventListener("click", function () {
-            speakSingle(
-                button.getAttribute("data-course-pronounce"),
-                button.getAttribute("data-course-pronounce-lang") || "en-US",
-            );
-        });
-    });
 
     if (speech.onvoiceschanged !== undefined) {
         speech.onvoiceschanged = syncReadyState;

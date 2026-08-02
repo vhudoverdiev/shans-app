@@ -427,6 +427,7 @@ class WorkoutsTests(unittest.TestCase):
         updated = get_workout_plan(1, plan["id"])
 
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], f"/workouts/plans/{plan['id']}")
         self.assertEqual(updated["name"], "Ноги и корпус")
         self.assertEqual(updated["weekday"], 3)
         self.assertIn("Планка", updated["description"])
@@ -439,15 +440,23 @@ class WorkoutsTests(unittest.TestCase):
         detail = (
             PROJECT_ROOT / "app" / "templates" / "workout_plan_detail.html"
         ).read_text(encoding="utf-8")
+        workouts_source = (
+            PROJECT_ROOT / "app" / "workouts.py"
+        ).read_text(encoding="utf-8")
         schedule = (
             PROJECT_ROOT / "app" / "templates" / "schedule.html"
         ).read_text(encoding="utf-8")
 
         self.assertIn("url_for('workouts.plan_detail'", overview)
         self.assertNotIn("Личный дневник", overview)
+        self.assertNotIn("workout_results=result_history", workouts_source)
         self.assertIn("История веса", overview)
-        self.assertIn("workouts-foldout", overview)
+        self.assertIn("workouts-weight-toggle", overview)
+        self.assertIn("workouts-weight-section", overview)
         self.assertIn("workout-plan-settings", detail)
+        self.assertIn("workout-plan-settings-toggle", detail)
+        self.assertIn("Редактировать тренировку", detail)
+        self.assertNotIn("workout-plan-settings\" open", detail)
         self.assertIn("workout-plan-log-title", detail)
         self.assertIn('name="workout_plan_id"', detail)
         self.assertIn('name="return_to"', detail)

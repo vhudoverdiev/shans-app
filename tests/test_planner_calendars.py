@@ -324,13 +324,26 @@ class PlannerCalendarTests(unittest.TestCase):
         self.assertEqual(get_tasks_for_day(TEST_DATE, CALENDAR_WORK), [])
 
     def test_schedule_task_form_keeps_date_and_time_fields_inside_mobile_width(self):
+        template = (PROJECT_ROOT / "app" / "templates" / "schedule_task_form.html").read_text(encoding="utf-8")
         styles = PLANNER_STYLE_FILE.read_text(encoding="utf-8")
+        mobile_styles = (PROJECT_ROOT / "app" / "static" / "css" / "mobile.css").read_text(encoding="utf-8")
 
+        self.assertIn("planner-task-form-grid", template)
         self.assertIn(".car-form-grid > .form-group", styles)
         self.assertIn(".car-form-grid .form-input", styles)
+        self.assertIn(".planner-task-form-grid > .form-group", styles)
+        self.assertIn(".planner-task-form-grid .form-input", styles)
+        self.assertIn(".planner-task-form-grid", mobile_styles)
         self.assertIn("min-width: 0;", styles)
+        self.assertIn("box-sizing: border-box;", styles)
         self.assertIn("@media (max-width: 1100px)", styles)
-        self.assertIn(".car-page .car-form-grid", styles)
+        self.assertIn(".car-page .planner-task-form-grid", styles)
+
+    def test_schedule_day_table_has_mobile_labels_for_all_cells(self):
+        template = (PROJECT_ROOT / "app" / "templates" / "schedule.html").read_text(encoding="utf-8")
+
+        for label in ("Выбор", "Название", "Время", "Статус", "Описание", "Действия"):
+            self.assertIn(f'data-label="{label}"', template)
 
 
 if __name__ == "__main__":

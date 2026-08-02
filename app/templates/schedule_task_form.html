@@ -28,7 +28,7 @@
                 <button class="car-tab-link planner-mode-tab" type="button" data-mode="range">Протяжённая</button>
             </div>
             <input type="hidden" name="task_form_mode" id="task_form_mode" value="single" data-initial-mode="{% if task and task.range_end_date %}range{% else %}single{% endif %}">
-            <div class="car-form-grid">
+            <div class="car-form-grid planner-task-form-grid">
                 <div class="form-group">
                     <label>Название</label>
                     <input class="form-input" type="text" name="title" required value="{{ task.title if task else '' }}">

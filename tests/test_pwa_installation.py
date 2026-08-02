@@ -25,6 +25,10 @@ class PwaInstallationTests(unittest.TestCase):
             template,
         )
         self.assertIn(
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">',
+            template,
+        )
+        self.assertIn(
             'rel="apple-touch-icon"',
             template,
         )

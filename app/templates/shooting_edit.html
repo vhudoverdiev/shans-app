@@ -5,6 +5,10 @@
     <div class="page-header">
         <div>
         </div>
+
+        <div class="page-actions">
+            <a href="{{ url_for('shootings_archive' if shooting.is_archive else 'shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
+        </div>
     </div>
 
     <div class="car-tab-bar">

@@ -104,10 +104,24 @@ class MobileAppNavigationTests(unittest.TestCase):
             self.assertIn("url_for('shootings_hub')", source, template_name)
             self.assertIn('class="btn btn-secondary">Назад</a>', source, template_name)
 
+        for template_name, endpoint in (
+            ("shootings_add.html", "shootings_upcoming"),
+            ("shooting_edit.html", "shootings_archive' if shooting.is_archive else 'shootings_upcoming"),
+            ("scenarios_add.html", "scenarios_upcoming"),
+            ("scenario_edit.html", "scenarios_archive' if scenario.is_archive else 'scenarios_upcoming"),
+        ):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn(f"url_for('{endpoint}')", source, template_name)
+            self.assertIn('class="btn btn-secondary">Назад</a>', source, template_name)
+
         for template_name in ("budget.html", "car.html"):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn("url_for('reports_hub')", source, template_name)
             self.assertIn('class="btn btn-secondary">Назад</a>', source, template_name)
+
+        car_notifications = (TEMPLATES / "car_notifications.html").read_text(encoding="utf-8")
+        self.assertIn("url_for('car')", car_notifications)
+        self.assertIn('class="btn btn-secondary">Назад</a>', car_notifications)
 
     def test_main_mobile_sections_use_shared_development_like_hero(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
@@ -175,16 +189,22 @@ class MobileAppNavigationTests(unittest.TestCase):
 
         self.assertRegex(
             styles,
-            r"\.section-hero\s*\{[^}]*min-height:\s*92px;[^}]*padding:\s*12px\s+20px;",
+            r"\.section-hero\s*\{[^}]*min-height:\s*46px;[^}]*padding:\s*6px\s+20px;",
         )
         self.assertRegex(
             mobile_styles,
-            r"\.section-hero\s*\{[^}]*min-height:\s*84px;[^}]*padding:\s*10px\s+16px;",
+            r"\.section-hero\s*\{[^}]*min-height:\s*42px;[^}]*padding:\s*5px\s+16px;",
         )
+        self.assertIn("margin: 0 0 3px;", styles)
+        self.assertIn("margin-bottom: 3px;", mobile_styles)
         self.assertNotIn("min-height: 148px;", styles)
         self.assertNotIn("padding: 26px 30px;", styles)
+        self.assertNotIn("min-height: 92px;", styles)
+        self.assertNotIn("padding: 12px 20px;", styles)
         self.assertNotIn("min-height: 136px;", mobile_styles)
         self.assertNotIn("padding: 22px 20px;", mobile_styles)
+        self.assertNotIn("min-height: 84px;", mobile_styles)
+        self.assertNotIn("padding: 10px 16px;", mobile_styles)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
@@ -212,6 +232,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         )
         self.assertIn(
             "@media (max-width: 900px) and (pointer: coarse)",
+            mobile_styles,
+        )
+        self.assertIn(
+            ".page-shell {\n        padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));\n    }",
             mobile_styles,
         )
         self.assertIn(".app-bottom-nav-link-active", mobile_styles)

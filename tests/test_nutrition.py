@@ -165,15 +165,16 @@ class NutritionTests(unittest.TestCase):
 
         self.assertEqual(
             insight["day_text"],
-            "За сегодня прогноз по весу: -0,10 кг.",
+            "Результат похудения сегодня: -0,10 кг.",
         )
         self.assertEqual(
             insight["week_text"],
-            "Если каждый день будет примерно так же, за неделю прогноз по весу: -0,70 кг.",
+            "Если каждый день будет примерно так же, результат похудения за неделю: -0,70 кг.",
         )
         self.assertIn("сегодня", insight["day_text"])
         self.assertNotIn("сбросили", insight["day_text"])
         self.assertNotIn("сбросите", insight["week_text"])
+        self.assertIn("-0,10 кг", insight["day_text"])
 
     def test_progress_insight_does_not_predict_weight_loss_without_food_entries(self):
         profile = {
@@ -388,7 +389,8 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("url_for('sport_hub')", base)
         self.assertIn("База продуктов", template)
         self.assertIn("Добавить продукт вручную", template)
-        self.assertIn('class="nutrition-card nutrition-foldout-card" id="add-food-entry"', template)
+        self.assertIn('class="nutrition-foldout-panel" id="add-food-entry"', template)
+        self.assertIn('class="nutrition-secondary-button nutrition-foldout-button"', template)
         self.assertIn('class="nutrition-icon-button" data-open-custom-food', template)
         self.assertIn('id="custom-food" hidden', template)
         self.assertIn(">Тренировки →</a>", template)
@@ -437,8 +439,11 @@ class NutritionTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn(".nutrition-profile-save-button", styles)
-        self.assertIn("margin-top: 22px;", styles)
-        self.assertIn(".nutrition-foldout-summary", styles)
+        self.assertIn("margin-top: 28px;", styles)
+        self.assertIn(".nutrition-foldout-panel", styles)
+        self.assertIn(".nutrition-foldout-button", styles)
+        self.assertIn("width: fit-content;", styles)
+        self.assertIn("max-width: max-content;", styles)
         self.assertIn(".nutrition-icon-button", styles)
         self.assertIn("white-space: nowrap;", styles)
         self.assertIn("entryCard.open = true;", script)

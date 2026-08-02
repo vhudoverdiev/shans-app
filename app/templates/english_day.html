@@ -22,13 +22,13 @@
         <div><strong>5 мин</strong><span>Тест</span></div>
     </div>
 
-    <section class="course-audio-controller course-audio-compact" data-course-audio>
-        <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок">
+    <div class="course-audio-inline" data-course-audio>
+        <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок" title="Озвучить урок">
             <span class="course-audio-icon" aria-hidden="true">🔊</span>
         </button>
         <span class="course-audio-label">Озвучить урок</span>
         <span class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></span>
-    </section>
+    </div>
 
     <script type="application/json" id="course-audio-segments">{{ audio_segments|tojson }}</script>
 
@@ -36,6 +36,22 @@
         <p class="learning-kicker">Мини-лекция</p>
         <h2>Как заниматься сегодня</h2>
         <p class="lesson-lecture">{{ lesson_lecture_text }}</p>
+        <details class="lesson-more-details">
+            <summary>Подробнее</summary>
+            <div class="lesson-more-body">
+                <ol>
+                    {% for step in lesson_detail_steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </details>
+        {% if day_progress and day_progress.passed %}
+        <form method="post" action="{{ url_for('learning.english_day_reset', day_number=lesson.day) }}" class="lesson-reset-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger">Отменить результат</button>
+        </form>
+        {% endif %}
         <button type="button" class="btn btn-primary quiz-reveal-button lesson-next-button" data-quiz-reveal-button data-quiz-target="english-day-quiz-form">
             Пройти тест
         </button>
@@ -52,18 +68,19 @@
         <div class="vocabulary-grid">
             {% for card in word_cards %}
             <article class="vocabulary-card">
-                <div class="course-pronounce-line">
-                    <strong>{{ card.english }}</strong>
-                    <button
-                        type="button"
-                        class="course-pronounce-button"
-                        data-course-pronounce="{{ card.english }}"
-                        data-course-pronounce-lang="en-US"
-                        aria-label="Произнести слово {{ card.english }}"
-                    >🔊</button>
-                </div>
+                <strong class="learning-card-title">{{ card.english }}</strong>
                 <span>{{ card.russian }}</span>
-                <p class="english-card-detail">{{ card.detail }}</p>
+                <details class="lesson-more-details english-more-details">
+                    <summary>Подробнее</summary>
+                    <div class="lesson-more-body">
+                        <p class="english-card-detail">{{ card.detail }}</p>
+                        <ol>
+                            {% for step in card.detail_steps %}
+                            <li>{{ step }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </details>
             </article>
             {% endfor %}
         </div>
@@ -81,25 +98,26 @@
             {% for card in phrase_cards %}
             <article class="phrase-card">
                 <span class="phrase-language">EN</span>
-                <div class="course-pronounce-line">
-                    <strong>{{ card.english }}</strong>
-                    <button
-                        type="button"
-                        class="course-pronounce-button"
-                        data-course-pronounce="{{ card.english }}"
-                        data-course-pronounce-lang="en-US"
-                        aria-label="Произнести фразу {{ card.english }}"
-                    >🔊</button>
-                </div>
+                <strong>{{ card.english }}</strong>
                 <span class="phrase-translation">{{ card.russian }}</span>
-                <p class="english-card-detail">{{ card.detail }}</p>
+                <details class="lesson-more-details english-more-details">
+                    <summary>Подробнее</summary>
+                    <div class="lesson-more-body">
+                        <p class="english-card-detail">{{ card.detail }}</p>
+                        <ol>
+                            {% for step in card.detail_steps %}
+                            <li>{{ step }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </details>
             </article>
             {% endfor %}
         </div>
     </section>
 
     {% if score is not none %}
-    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" role="status">
+    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="daily-test-result" role="status">
         <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
         <div>
             <h2>{% if passed %}Урок пройден{% else %}Стоит повторить материал{% endif %}</h2>
@@ -143,7 +161,7 @@
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
         <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="english-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
-            <form method="post" class="quiz-form">
+            <form method="post" action="{{ url_for('learning.english_day', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                 {% for question in questions %}
                 {% set question_index = loop.index0 %}

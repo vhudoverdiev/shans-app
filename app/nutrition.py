@@ -576,7 +576,7 @@ def build_nutrition_progress_insight(
             )
         else:
             day_text = (
-                f"За {day_label} прогноз по весу: "
+                f"Результат похудения {day_label}: "
                 f"{_format_weight_delta(daily_weight_delta, signed=True)} кг."
             )
         if weekly_weight_delta >= 0:
@@ -586,7 +586,7 @@ def build_nutrition_progress_insight(
             )
         else:
             week_text = (
-                "Если каждый день будет примерно так же, за неделю прогноз по весу: "
+                "Если каждый день будет примерно так же, результат похудения за неделю: "
                 f"{_format_weight_delta(weekly_weight_delta, signed=True)} кг."
             )
     else:

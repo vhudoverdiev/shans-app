@@ -22,13 +22,13 @@
         <div><strong>5 минут</strong><span>Тест</span></div>
     </div>
 
-    <section class="course-audio-controller course-audio-compact" data-course-audio>
-        <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок">
+    <div class="course-audio-inline" data-course-audio>
+        <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок" title="Озвучить урок">
             <span class="course-audio-icon" aria-hidden="true">🔊</span>
         </button>
         <span class="course-audio-label">Озвучить урок</span>
         <span class="course-audio-status" data-course-audio-status role="status" aria-live="polite"></span>
-    </section>
+    </div>
 
     <script type="application/json" id="course-audio-segments">{{ audio_segments|tojson }}</script>
 
@@ -39,10 +39,26 @@
             {% for point in lecture_points %}
             <article class="it-lecture-point">
                 <p>{{ point.text }}</p>
-                <p class="it-point-detail">{{ point.detail }}</p>
+                <details class="lesson-more-details it-more-details">
+                    <summary>Подробнее</summary>
+                    <div class="lesson-more-body">
+                        <p class="it-point-detail">{{ point.detail }}</p>
+                        <ol>
+                            {% for step in point.detail_steps %}
+                            <li>{{ step }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </details>
             </article>
             {% endfor %}
         </div>
+        {% if day_progress and day_progress.passed %}
+        <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="lesson-reset-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger">Отменить результат</button>
+        </form>
+        {% endif %}
         <button type="button" class="btn btn-primary quiz-reveal-button lesson-next-button" data-quiz-reveal-button data-quiz-target="it-day-quiz-form">
             Пройти тест
         </button>
@@ -59,20 +75,19 @@
         <div class="it-term-grid">
             {% for term in term_cards %}
             <article class="it-term-card">
-                <div class="course-pronounce-line">
-                    <strong>{{ term.term }}</strong>
-                    {% if term.is_english %}
-                    <button
-                        type="button"
-                        class="course-pronounce-button"
-                        data-course-pronounce="{{ term.term }}"
-                        data-course-pronounce-lang="en-US"
-                        aria-label="Произнести термин {{ term.term }}"
-                    >🔊</button>
-                    {% endif %}
-                </div>
+                <strong>{{ term.term }}</strong>
                 <span>{{ term.definition }}</span>
-                <p class="it-term-detail">{{ term.detail }}</p>
+                <details class="lesson-more-details it-more-details">
+                    <summary>Подробнее</summary>
+                    <div class="lesson-more-body">
+                        <p class="it-term-detail">{{ term.detail }}</p>
+                        <ol>
+                            {% for step in term.detail_steps %}
+                            <li>{{ step }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </details>
             </article>
             {% endfor %}
         </div>
@@ -88,6 +103,23 @@
             <span>Не переписывайте вслепую — объясните каждую строку</span>
         </div>
         <pre class="it-code-block"><code>{{ lesson.code }}</code></pre>
+        <details class="lesson-more-details it-more-details">
+            <summary>Подробнее</summary>
+            <div class="lesson-more-body">
+                <ol>
+                    {% for step in code_steps %}
+                    <li>
+                        {% if step.line %}
+                        <code>{{ step.line }}</code>
+                        {% else %}
+                        <span>Пустая строка</span>
+                        {% endif %}
+                        <span>{{ step.explanation }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </details>
     </section>
     {% endif %}
 
@@ -97,11 +129,21 @@
             <p class="learning-kicker">Практика на 5 минут</p>
             <h2>Сделайте самостоятельно</h2>
             <p>{{ lesson.practice }}</p>
+            <details class="lesson-more-details it-more-details">
+                <summary>Подробнее</summary>
+                <div class="lesson-more-body">
+                    <ol>
+                        {% for step in practice_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </details>
         </div>
     </section>
 
     {% if score is not none %}
-    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" role="status">
+    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="daily-test-result" role="status">
         <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
         <div>
             <h2>{% if passed %}Урок пройден{% else %}Повторите термины и лекцию{% endif %}</h2>
@@ -145,7 +187,7 @@
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
         <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="it-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
-            <form method="post" class="quiz-form it-quiz-form">
+            <form method="post" action="{{ url_for('learning.it_day', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                 {% for question in questions %}
                 {% set question_index = loop.index0 %}

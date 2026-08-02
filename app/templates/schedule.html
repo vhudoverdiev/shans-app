@@ -123,27 +123,27 @@
                 <tbody>
                     {% for task in day_tasks %}
                     <tr>
-                        <td class="bulk-col">
+                        <td class="bulk-col" data-label="Выбор">
                             {% if task.workout_plan_id %}
                             <span class="planner-workout-marker" title="Управляется планом тренировки" aria-label="Плановая тренировка">🏋️</span>
                             {% else %}
                             <input type="checkbox" class="bulk-row-checkbox" value="{{ task.id }}" aria-label="Выбрать запись">
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Название">
                             {% if task.task_type == 'Сценарий' or (task.range_end_date and task.status == 'planned') or task.task_type in ['Фотопроект', 'Съёмка'] or task.is_important %}
                             <span class="planner-task-alert-icon" aria-hidden="true" title="Важная задача">❗</span>
                             {% endif %}
                             {{ task.title }}
                         </td>
-                        <td>
+                        <td data-label="Время">
                             {% if task.start_time %}
                                 {{ task.start_time }}
                             {% else %}
                                 —
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Статус">
                             {% if task.display_status == 'range' %}
                                 <span class="status-pill planner-status-chip-{{ task.display_status }}">{{ task.display_status_label }}</span>
                             {% else %}
@@ -152,7 +152,7 @@
                                 </form>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Описание">
                             {% if task.workout_plan_id %}
                             <a class="btn btn-secondary btn-small planner-shooting-open-btn" href="{{ url_for('workouts.plan_detail', plan_id=task.workout_plan_id) }}">Открыть тренировку</a>
                             {% elif task.task_type == 'Съёмка' and task.shooting_id %}
@@ -163,7 +163,7 @@
                             {{ task.description or '—' }}
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Действия">
                             <div class="table-actions-icon">
                                 {% if task.workout_plan_id %}
                                 <a class="icon-action-btn icon-edit" href="{{ url_for('workouts.plan_detail', plan_id=task.workout_plan_id) }}" title="Открыть план">↗</a>

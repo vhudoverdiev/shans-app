@@ -161,41 +161,46 @@
     </section>
 
     <div class="nutrition-content-grid">
-        <details class="nutrition-card nutrition-foldout-card" id="add-food-entry">
-            <summary class="nutrition-foldout-summary">
-                <div>
-                    <span class="nutrition-section-label">Быстрая запись</span>
-                    <h2>Добавить продукт</h2>
-                </div>
-                <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
+        <details class="nutrition-foldout-panel" id="add-food-entry">
+            <summary class="nutrition-secondary-button nutrition-foldout-button">
+                Быстрая запись
             </summary>
-            <form method="post" action="{{ url_for('nutrition.create_entry') }}" class="nutrition-entry-form">
-                <input type="hidden" name="eaten_on" value="{{ selected_date }}">
-                <div class="nutrition-field nutrition-field-wide">
-                    <label for="food-query">Продукт или блюдо</label>
-                    <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
-                    <datalist id="nutrition-food-list">
-                        {% for food in foods %}
-                        <option value="{{ food.id }} — {{ food.name }}">{{ food.category }}</option>
-                        {% endfor %}
-                    </datalist>
-                </div>
-                <div class="nutrition-entry-fields">
-                    <div class="nutrition-field">
-                        <label for="food-grams">Количество, г/мл</label>
-                        <input id="food-grams" name="grams" type="number" min="1" max="3000" step="0.1" inputmode="decimal" value="100" required>
+            <section class="nutrition-card nutrition-foldout-card">
+                <div class="nutrition-section-heading">
+                    <div>
+                        <span class="nutrition-section-label">Быстрая запись</span>
+                        <h2>Добавить продукт</h2>
                     </div>
-                    <div class="nutrition-field">
-                        <label for="meal-type">Приём пищи</label>
-                        <select id="meal-type" name="meal_type" class="form-input" required>
-                            {% for value, label in meal_types.items() %}
-                            <option value="{{ value }}">{{ label }}</option>
+                    <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
+                </div>
+                <form method="post" action="{{ url_for('nutrition.create_entry') }}" class="nutrition-entry-form">
+                    <input type="hidden" name="eaten_on" value="{{ selected_date }}">
+                    <div class="nutrition-field nutrition-field-wide">
+                        <label for="food-query">Продукт или блюдо</label>
+                        <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
+                        <datalist id="nutrition-food-list">
+                            {% for food in foods %}
+                            <option value="{{ food.id }} — {{ food.name }}">{{ food.category }}</option>
                             {% endfor %}
-                        </select>
+                        </datalist>
                     </div>
-                </div>
-                <button type="submit" class="nutrition-primary-button">Добавить в {{ selected_date_label|lower }}</button>
-            </form>
+                    <div class="nutrition-entry-fields">
+                        <div class="nutrition-field">
+                            <label for="food-grams">Количество, г/мл</label>
+                            <input id="food-grams" name="grams" type="number" min="1" max="3000" step="0.1" inputmode="decimal" value="100" required>
+                        </div>
+                        <div class="nutrition-field">
+                            <label for="meal-type">Приём пищи</label>
+                            <select id="meal-type" name="meal_type" class="form-input" required>
+                                {% for value, label in meal_types.items() %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="nutrition-primary-button">Добавить в {{ selected_date_label|lower }}</button>
+                </form>
+            </section>
         </details>
 
         <section class="nutrition-card" id="nutrition-profile">

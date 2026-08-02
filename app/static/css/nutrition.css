@@ -510,56 +510,42 @@
 }
 
 .nutrition-profile-save-button {
-    margin-top: 22px;
+    margin-top: 28px;
+    align-self: flex-start;
 }
 
-.nutrition-foldout-card {
-    padding: 0;
+.nutrition-foldout-panel {
+    margin-top: 24px;
 }
 
-.nutrition-foldout-summary {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 30px;
+.nutrition-foldout-button {
+    width: fit-content;
+    min-height: 44px;
     cursor: pointer;
+    user-select: none;
     list-style: none;
 }
 
-.nutrition-foldout-summary::-webkit-details-marker {
+.nutrition-foldout-button::-webkit-details-marker {
     display: none;
 }
 
-.nutrition-foldout-summary::after {
-    content: "+";
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 12px;
-    color: var(--nutrition-blue);
-    background: var(--nutrition-blue-soft);
-    font-size: 22px;
+.nutrition-foldout-button::after {
+    content: " +";
+    margin-left: 8px;
     font-weight: 850;
-    line-height: 1;
 }
 
-.nutrition-foldout-summary .nutrition-count-pill {
-    margin-left: auto;
+.nutrition-foldout-panel[open] > .nutrition-foldout-button::after {
+    content: " −";
 }
 
-.nutrition-foldout-card[open] .nutrition-foldout-summary {
-    padding-bottom: 18px;
-}
-
-.nutrition-foldout-card[open] .nutrition-foldout-summary::after {
-    content: "−";
+.nutrition-foldout-card {
+    margin-top: 14px;
 }
 
 .nutrition-foldout-card .nutrition-entry-form {
-    padding: 0 30px 30px;
+    margin-top: 22px;
 }
 
 .nutrition-entry-list {
@@ -778,6 +764,8 @@
 }
 
 .nutrition-text-link {
+    width: fit-content;
+    max-width: max-content;
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
@@ -888,20 +876,7 @@
     }
 
     .nutrition-foldout-card {
-        padding: 0;
-    }
-
-    .nutrition-foldout-summary {
-        gap: 12px;
         padding: 20px;
-    }
-
-    .nutrition-foldout-summary .nutrition-count-pill {
-        display: none;
-    }
-
-    .nutrition-foldout-card .nutrition-entry-form {
-        padding: 0 20px 20px;
     }
 
     .nutrition-card,
@@ -1135,11 +1110,6 @@
     .nutrition-meal-label {
         color: #334155;
         background: #f1f5f9;
-    }
-
-    .nutrition-foldout-summary::after {
-        color: #334155;
-        background: #f8fafc;
     }
 
     .nutrition-primary-button {

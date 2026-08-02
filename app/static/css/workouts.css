@@ -366,6 +366,35 @@
     display: none;
 }
 
+.workouts-action-button {
+    width: fit-content;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.workouts-action-button::after {
+    content: " +";
+    margin-left: 8px;
+    font-weight: 850;
+}
+
+.workouts-foldout[open] > .workouts-action-button::after {
+    content: " -";
+}
+
+.workouts-weight-panel {
+    margin-top: 18px;
+}
+
+.workouts-weight-section,
+.workout-plan-settings .workouts-section {
+    margin-top: 14px;
+}
+
 .workouts-foldout-summary {
     display: flex;
     align-items: center;
@@ -412,6 +441,10 @@
     padding: 0 26px 26px;
     display: grid;
     gap: 18px;
+}
+
+.workouts-foldout > .workouts-section.workouts-foldout-body {
+    padding: 28px;
 }
 
 .workout-plan-settings {

@@ -27,15 +27,18 @@
         </div>
     </div>
 
-        <div class="workout-plan-detail-grid">
-        <details class="workouts-section workout-plan-settings"{% if settings_open %} open{% endif %}>
-            <summary class="workouts-foldout-summary" aria-label="Настройки плана">
-                <span>
-                    <strong>Настройки плана</strong>
-                    <small>Название, день недели и программа</small>
-                </span>
+    <div class="workout-plan-detail-grid">
+        <details class="workouts-foldout workout-plan-settings"{% if settings_open %} open{% endif %}>
+            <summary class="btn btn-secondary workouts-action-button workout-plan-settings-toggle" aria-label="Открыть настройки плана">
+                Настройки
             </summary>
-            <div class="workouts-foldout-body">
+            <section class="workouts-section workouts-foldout-body">
+                <div class="workouts-section-heading workouts-section-heading-compact">
+                    <div>
+                        <p class="workouts-section-kicker">Настройки плана</p>
+                        <h2>Редактировать тренировку</h2>
+                    </div>
+                </div>
                 <form method="post" action="{{ url_for('workouts.update_plan', plan_id=plan.id) }}" class="workouts-form workout-plan-detail-form">
                     <div class="form-group">
                         <label for="plan-name">Название</label>
@@ -77,7 +80,7 @@
 
                     <button type="submit" class="btn btn-primary workouts-submit">Сохранить и обновить график</button>
                 </form>
-            </div>
+            </section>
         </details>
 
         <aside class="workout-plan-detail-side">

@@ -18,7 +18,7 @@
     }
 
     .page-shell {
-        padding: 12px 10px 20px;
+        padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
     }
 
     .site-header-inner {
@@ -200,11 +200,21 @@
     }
 
     .car-form-grid,
+    .planner-task-form-grid,
     .filter-grid,
     .budget-manage-grid,
     .budget-manage-grid-top {
         grid-template-columns: 1fr !important;
         gap: 10px;
+    }
+
+    .planner-task-form-grid,
+    .planner-task-form-grid > .form-group,
+    .planner-task-form-grid .form-input {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     .car-form-actions,
@@ -726,9 +736,9 @@
     }
 
     .section-hero {
-        min-height: 84px;
+        min-height: 42px;
         margin: 0 0 18px;
-        padding: 10px 16px;
+        padding: 5px 16px;
         border-radius: 24px;
         box-shadow: 0 14px 34px rgba(91, 33, 182, 0.2);
     }
@@ -753,7 +763,7 @@
     }
 
     .section-hero-kicker {
-        margin-bottom: 6px;
+        margin-bottom: 3px;
         font-size: 11px;
         letter-spacing: 0.11em;
     }
@@ -1136,9 +1146,7 @@
     .app-body .nutrition-history-day,
     .app-body .nutrition-history-day-active,
     .app-body .workouts-submit,
-    .app-body .course-audio-button,
-    .app-body .course-pronounce-button,
-    .app-body .it-more-details summary {
+    .app-body .course-audio-button {
         box-shadow: none !important;
         filter: none !important;
         -webkit-tap-highlight-color: transparent;

@@ -487,15 +487,12 @@ a.english-day-card:hover {
     margin-bottom: 22px;
 }
 
-.course-audio-controller {
-    margin: 0 0 22px;
-    position: relative;
-}
-
-.course-audio-compact {
+.course-audio-inline {
+    margin: 0 0 18px;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    position: relative;
 }
 
 .course-audio-button {
@@ -548,30 +545,6 @@ a.english-day-card:hover {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-}
-
-.course-pronounce-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.course-pronounce-button {
-    flex: 0 0 auto;
-    width: 36px;
-    height: 36px;
-    border: 1px solid #ddd6fe;
-    border-radius: 13px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #6d28d9;
-    background: #f5f3ff;
-    font: inherit;
-    font-size: 15px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .lesson-timing-grid > div {
@@ -792,6 +765,10 @@ a.english-day-card:hover {
     margin-top: 14px;
 }
 
+.lesson-reset-form {
+    margin: 18px 0 0;
+}
+
 .quiz-form-shell {
     overflow: hidden;
     transition: max-height 0.24s ease, opacity 0.2s ease, transform 0.2s ease;
@@ -896,10 +873,6 @@ a.english-day-card:hover {
     padding-left: 30px;
 }
 
-.english-more-details {
-    margin-top: 8px;
-}
-
 .english-card-detail,
 .it-point-detail,
 .it-term-detail {
@@ -907,6 +880,84 @@ a.english-day-card:hover {
     color: #475569;
     font-size: 14px;
     line-height: 1.6;
+}
+
+.learning-card-title {
+    display: block;
+}
+
+.lesson-more-details {
+    margin-top: 12px;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.lesson-more-details summary {
+    min-height: 40px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #5b21b6;
+    font-size: 13px;
+    font-weight: 850;
+    cursor: pointer;
+    list-style: none;
+}
+
+.lesson-more-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.lesson-more-details summary::after {
+    content: "+";
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    font-size: 15px;
+    line-height: 1;
+}
+
+.lesson-more-details[open] summary::after {
+    content: "-";
+}
+
+.lesson-more-body {
+    padding: 0 13px 13px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.62;
+}
+
+.lesson-more-body p {
+    margin: 0 0 10px;
+}
+
+.lesson-more-body ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.lesson-more-body li + li {
+    margin-top: 8px;
+}
+
+.lesson-more-body code {
+    display: inline-block;
+    max-width: 100%;
+    padding: 2px 6px;
+    border-radius: 7px;
+    color: #0f172a;
+    background: #eef2ff;
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
 .final-best-score {
@@ -1009,43 +1060,6 @@ a.english-day-card:hover {
     border: 1px solid #e2e8f0;
     border-radius: 18px;
     background: #ffffff;
-}
-
-.it-more-details {
-    margin-top: 12px;
-}
-
-.it-more-details summary {
-    width: fit-content;
-    padding: 8px 12px;
-    border: 1px solid #ddd6fe;
-    border-radius: 999px;
-    color: #6d28d9;
-    background: #f5f3ff;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    list-style: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.it-more-details summary::-webkit-details-marker {
-    display: none;
-}
-
-.it-more-details summary::after {
-    content: " ↓";
-}
-
-.it-more-details[open] summary::after {
-    content: " ↑";
-}
-
-.it-more-details p {
-    margin-top: 10px;
-    color: #475569;
-    font-size: 14px;
-    line-height: 1.6;
 }
 
 .it-term-grid {
@@ -1294,7 +1308,7 @@ a.english-day-card:hover {
         gap: 9px;
     }
 
-    .course-audio-controller {
+    .course-audio-inline {
         margin-bottom: 18px;
     }
 
@@ -1475,11 +1489,6 @@ a.english-day-card:hover {
     .learning-page .vocabulary-card,
     .learning-page .phrase-card,
     .learning-page .it-practice-card {
-        border-color: rgba(37, 99, 235, 0.24);
-        background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
-    }
-
-    .learning-page .course-audio-controller {
         border-color: rgba(37, 99, 235, 0.24);
         background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
     }
