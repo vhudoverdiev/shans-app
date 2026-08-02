@@ -65,9 +65,6 @@
             <button type="submit" class="btn btn-danger">Отменить результат</button>
         </form>
         {% endif %}
-        <button type="button" class="btn btn-primary quiz-reveal-button lesson-next-button" data-quiz-reveal-button data-quiz-target="it-day-quiz-form">
-            Пройти тест
-        </button>
     </section>
 
     <section class="lesson-section">
@@ -158,72 +155,9 @@
                     </ol>
                 </div>
             </details>
-        </div>
-    </section>
-
-    {% if score is not none %}
-    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="daily-test-result" role="status">
-        <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
-        <div>
-            <h2>{% if passed %}Урок пройден{% else %}Повторите термины и лекцию{% endif %}</h2>
-            <p>
-                {% if passed %}
-                Отлично! Следующий день курса открыт.
-                {% else %}
-                Для прохождения нужно минимум {{ pass_score }} правильных ответа. Прочитайте объяснения и попробуйте снова.
-                {% endif %}
-            </p>
-        </div>
-        {% if passed and next_day %}
-        <a class="btn btn-primary" href="{{ url_for('learning.it_day', day_number=next_day) }}">День {{ next_day }} →</a>
-        {% elif passed and course_finished %}
-        <a class="btn btn-primary" href="{{ url_for('learning.it_final') }}">Итоговый тест →</a>
-        {% endif %}
-        {% if passed %}
-        <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="quiz-result-reset-form">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn btn-danger">Отменить результат</button>
-        </form>
-        {% endif %}
-    </section>
-
-    <div class="quiz-feedback-list">
-        {% for item in feedback %}
-        <article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}">
-            <strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong>
-            <span>{{ item.explanation }}</span>
-        </article>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <section class="lesson-section quiz-section" id="daily-test">
-        <div class="learning-section-heading">
-            <div>
-                <p class="learning-kicker">Проверка знаний</p>
-                <h2>{% if score is not none %}Пройти тест ещё раз{% else %}Тест дня{% endif %}</h2>
-            </div>
-            <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
-        </div>
-        <div class="quiz-form-shell{% if quiz_revealed %} quiz-form-shell-open{% endif %}" id="it-day-quiz-form" data-quiz-form-shell {% if not quiz_revealed %}hidden{% endif %}>
-            <form method="post" action="{{ url_for('learning.it_day', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                {% for question in questions %}
-                {% set question_index = loop.index0 %}
-                <fieldset class="quiz-question">
-                    <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
-                    <div class="quiz-options">
-                        {% for option in question.options %}
-                        <label class="quiz-option">
-                            <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
-                            <span>{{ option }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </fieldset>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
-            </form>
+            <a class="btn btn-primary lesson-next-button" href="{{ url_for('learning.it_day_test', day_number=lesson.day) }}" target="_blank" rel="noopener">
+                Пройти тест
+            </a>
         </div>
     </section>
 </section>
@@ -232,5 +166,4 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
-<script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

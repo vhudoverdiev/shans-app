@@ -29,6 +29,7 @@ class OfflineSupportTests(unittest.TestCase):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
+        self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
         self.assertIn("OFFLINE_LOGO_URL", service_worker)
         self.assertIn('addEventListener("install"', service_worker)

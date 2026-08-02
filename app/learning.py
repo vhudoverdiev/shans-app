@@ -1322,6 +1322,34 @@ def english_day(day_number: int):
         return redirect(url_for("learning.english_course"))
 
     lesson = ENGLISH_LESSONS[day_number - 1]
+    if request.method == "POST":
+        return redirect(url_for("learning.english_day_test", day_number=day_number), code=307)
+
+    return render_template(
+        "english_day.html",
+        lesson=lesson,
+        lesson_lecture_text=_build_english_lecture_text(lesson),
+        lesson_detail_steps=_build_english_lecture_details(lesson),
+        pass_score=DAILY_PASS_SCORE,
+        day_progress=progress.get(day_number),
+        word_cards=_build_english_word_cards(lesson),
+        phrase_cards=_build_english_phrase_cards(lesson),
+        audio_segments=_english_audio_segments(lesson),
+    )
+
+
+@learning_bp.route("/study/english/day/<int:day_number>/test", methods=["GET", "POST"])
+@login_required
+def english_day_test(day_number: int):
+    if day_number < 1 or day_number > len(ENGLISH_LESSONS):
+        abort(404)
+
+    progress, passed_days, next_day = _course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.english_course"))
+
+    lesson = ENGLISH_LESSONS[day_number - 1]
     questions = build_daily_quiz(day_number)
     score = None
     passed = False
@@ -1333,10 +1361,8 @@ def english_day(day_number: int):
         progress, passed_days, next_day = _course_state(int(current_user.id))
 
     return render_template(
-        "english_day.html",
+        "english_day_test.html",
         lesson=lesson,
-        lesson_lecture_text=_build_english_lecture_text(lesson),
-        lesson_detail_steps=_build_english_lecture_details(lesson),
         questions=questions,
         feedback=feedback,
         score=score,
@@ -1345,10 +1371,6 @@ def english_day(day_number: int):
         day_progress=progress.get(day_number),
         next_day=next_day,
         course_finished=len(passed_days) == len(ENGLISH_LESSONS),
-        word_cards=_build_english_word_cards(lesson),
-        phrase_cards=_build_english_phrase_cards(lesson),
-        quiz_revealed=score is not None,
-        audio_segments=_english_audio_segments(lesson),
     )
 
 
@@ -1431,6 +1453,34 @@ def it_day(day_number: int):
         return redirect(url_for("learning.it_course"))
 
     lesson = IT_LESSONS[day_number - 1]
+    if request.method == "POST":
+        return redirect(url_for("learning.it_day_test", day_number=day_number), code=307)
+
+    return render_template(
+        "it_day.html",
+        lesson=lesson,
+        pass_score=DAILY_PASS_SCORE,
+        day_progress=progress.get(day_number),
+        lecture_points=_build_it_lecture_points(lesson),
+        term_cards=_build_it_term_cards(lesson),
+        code_steps=_build_it_code_steps(lesson),
+        practice_steps=_build_it_practice_steps(lesson),
+        audio_segments=_it_audio_segments(lesson),
+    )
+
+
+@learning_bp.route("/study/it/day/<int:day_number>/test", methods=["GET", "POST"])
+@login_required
+def it_day_test(day_number: int):
+    if day_number < 1 or day_number > len(IT_LESSONS):
+        abort(404)
+
+    progress, passed_days, next_day = _it_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.it_course"))
+
+    lesson = IT_LESSONS[day_number - 1]
     questions = build_it_daily_quiz(day_number)
     score = None
     passed = False
@@ -1442,7 +1492,7 @@ def it_day(day_number: int):
         progress, passed_days, next_day = _it_course_state(int(current_user.id))
 
     return render_template(
-        "it_day.html",
+        "it_day_test.html",
         lesson=lesson,
         questions=questions,
         feedback=feedback,
@@ -1452,12 +1502,6 @@ def it_day(day_number: int):
         day_progress=progress.get(day_number),
         next_day=next_day,
         course_finished=len(passed_days) == len(IT_LESSONS),
-        lecture_points=_build_it_lecture_points(lesson),
-        term_cards=_build_it_term_cards(lesson),
-        code_steps=_build_it_code_steps(lesson),
-        practice_steps=_build_it_practice_steps(lesson),
-        quiz_revealed=score is not None,
-        audio_segments=_it_audio_segments(lesson),
     )
 
 

@@ -43,6 +43,7 @@ class StaticAssetVersioningTests(unittest.TestCase):
         for filename in (
             "apple-touch-icon.png",
             "ios-startup-iphone-16-pro-max.png",
+            "pwa-icon-512.png",
         ):
             with tempfile.TemporaryDirectory() as temp_directory:
                 static_root = Path(temp_directory)

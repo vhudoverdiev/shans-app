@@ -48,6 +48,7 @@ def build_static_asset_version(static_folder):
         "favicon.png",
         "ios-startup-iphone-16-pro-max.png",
         "logo.png",
+        "pwa-icon-512.png",
         "service-worker.js",
         "site.webmanifest",
     ):

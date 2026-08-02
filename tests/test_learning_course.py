@@ -193,6 +193,36 @@ class EnglishCourseTests(unittest.TestCase):
             styles,
         )
 
+    def test_it_and_english_desktop_theme_replaces_purple_accents_with_blue(self):
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+        desktop_course_theme = styles.split(
+            "/* Desktop follows the shared blue site theme;",
+            1,
+        )[1].split(
+            "/* Desktop development hub stays neutral;",
+            1,
+        )[0]
+
+        self.assertIn(
+            "@media (hover: hover) and (pointer: fine)",
+            desktop_course_theme,
+        )
+        for selector in (
+            ".learning-page .lesson-more-details summary",
+            ".learning-page .lesson-more-details summary::after",
+            ".learning-page .course-pronounce-button",
+            ".learning-page .course-audio-button",
+            ".learning-page .phrase-card",
+        ):
+            self.assertIn(selector, desktop_course_theme)
+        self.assertIn("#2563eb", desktop_course_theme)
+        self.assertIn("#3b82f6", desktop_course_theme)
+        self.assertIn("#bfdbfe", desktop_course_theme)
+        self.assertNotIn("#6d28d9", desktop_course_theme)
+        self.assertNotIn("#7c3aed", desktop_course_theme)
+        self.assertNotIn("#9333ea", desktop_course_theme)
+        self.assertNotIn("#5b21b6", desktop_course_theme)
+
     def test_it_course_has_thirty_complete_daily_lessons(self):
         self.assertEqual(len(IT_LESSONS), 30)
         self.assertEqual(
@@ -292,6 +322,8 @@ class EnglishCourseTests(unittest.TestCase):
     def test_daily_lessons_expose_speech_synthesis_controls(self):
         english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
         it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        english_test_source = (TEMPLATES / "english_day_test.html").read_text(encoding="utf-8")
+        it_test_source = (TEMPLATES / "it_day_test.html").read_text(encoding="utf-8")
         script_source = COURSE_AUDIO_SCRIPT.read_text(encoding="utf-8")
         learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
@@ -312,9 +344,12 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertNotIn("Включить озвучку", source)
             self.assertNotIn("Стоп", source)
             self.assertIn("Пройти тест", source)
-            self.assertIn("data-quiz-reveal-button", source)
-            self.assertIn("data-quiz-form-shell", source)
-            self.assertIn("lesson-quiz.js", source)
+            self.assertIn('target="_blank"', source)
+            self.assertIn('rel="noopener"', source)
+            self.assertNotIn("data-quiz-reveal-button", source)
+            self.assertNotIn("data-quiz-form-shell", source)
+            self.assertNotIn("lesson-quiz.js", source)
+            self.assertNotIn("Проверка знаний", source)
             self.assertNotIn("course-audio-controller", source)
             self.assertIn("data-course-pronounce", source)
             self.assertIn("data-pronounce-text", source)
@@ -341,19 +376,31 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("term.detail_steps", it_source)
         self.assertIn("code_steps", it_source)
         self.assertIn("practice_steps", it_source)
-        self.assertIn("quiz_revealed", english_source)
-        self.assertIn("quiz_revealed", it_source)
-        self.assertIn('id="daily-test-result"', english_source)
-        self.assertIn("_anchor='daily-test-result'", english_source)
-        self.assertIn("url_for('learning.english_day'", english_source)
-        self.assertIn('id="daily-test-result"', it_source)
-        self.assertIn("_anchor='daily-test-result'", it_source)
-        self.assertIn("url_for('learning.it_day'", it_source)
+        self.assertNotIn("quiz_revealed", english_source)
+        self.assertNotIn("quiz_revealed", it_source)
+        self.assertNotIn('id="daily-test-result"', english_source)
+        self.assertNotIn('id="daily-test-result"', it_source)
+        self.assertIn("url_for('learning.english_day_test'", english_source)
+        self.assertIn("url_for('learning.it_day_test'", it_source)
+        for source in (english_test_source, it_test_source):
+            self.assertIn("Тест дня", source)
+            self.assertIn("quiz-form", source)
+            self.assertIn('id="daily-test-result"', source)
+            self.assertIn("_anchor='daily-test-result'", source)
+            self.assertIn("Проверить ответы", source)
+            self.assertIn("Вернуться к уроку", source)
+        self.assertIn("url_for('learning.english_day_test'", english_test_source)
+        self.assertIn("url_for('learning.it_day_test'", it_test_source)
         self.assertIn("SpeechSynthesisUtterance", script_source)
         self.assertIn("data-course-pronounce", script_source)
         self.assertIn("playPronunciation", script_source)
         self.assertIn("data-pronounce-text", english_source)
         self.assertIn("term.is_english", it_source)
+        self.assertIn("phrase-title-row", english_source)
+        self.assertIn("phrase-title-row", learning_styles)
+        self.assertEqual(english_source.count("data-course-pronounce"), 2)
+        self.assertEqual(english_source.count("data-pronounce-lang=\"en-US\""), 2)
+        self.assertIn('data-pronounce-text="{{ card.english }}"', english_source)
         self.assertNotIn("speakSingle", script_source)
         self.assertIn("ru-RU", script_source)
         self.assertIn('startsWith("en")', script_source)
@@ -371,9 +418,13 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("course-audio-button", learning_styles)
         self.assertIn("course-pronounce-button", learning_styles)
         self.assertIn("learning-card-title-row", learning_styles)
+        self.assertIn(".learning-section-heading h1", learning_styles)
         self.assertIn("course-audio-label", learning_styles)
         self.assertIn("course-audio-inline", learning_styles)
         self.assertIn("lesson-more-details", learning_styles)
+        self.assertNotIn("max-width: 850px", learning_styles)
+        self.assertNotIn("max-width: 930px", learning_styles)
+        self.assertNotIn("max-width: 960px", learning_styles)
         self.assertNotIn("course-audio-copy", learning_styles)
         self.assertNotIn("course-audio-actions", learning_styles)
 

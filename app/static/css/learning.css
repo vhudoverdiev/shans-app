@@ -287,6 +287,7 @@
     margin-bottom: 16px;
 }
 
+.learning-section-heading h1,
 .learning-section-heading h2 {
     margin: 0;
     color: #111827;
@@ -627,7 +628,6 @@ a.english-day-card:hover {
 }
 
 .lesson-lecture {
-    max-width: 850px;
     margin: 12px 0 0;
     color: #334155;
     font-size: 16px;
@@ -698,6 +698,14 @@ a.english-day-card:hover {
     color: #111827;
     font-size: 16px;
     line-height: 1.45;
+}
+
+.phrase-title-row {
+    align-items: flex-start;
+}
+
+.phrase-title-row .course-pronounce-button {
+    margin-top: -2px;
 }
 
 .phrase-translation {
@@ -1094,7 +1102,6 @@ a.english-day-card:hover {
 }
 
 .it-lecture-copy p {
-    max-width: 930px;
     margin: 0;
     color: #334155;
     font-size: 16px;
@@ -1102,7 +1109,7 @@ a.english-day-card:hover {
 }
 
 .it-lecture-point {
-    max-width: 960px;
+    width: 100%;
     padding: 16px;
     border: 1px solid #e2e8f0;
     border-radius: 18px;
@@ -1492,7 +1499,9 @@ a.english-day-card:hover {
     }
 
     .learning-page .learning-back-link:hover,
-    .learning-page .vocabulary-card strong {
+    .learning-page .vocabulary-card strong,
+    .learning-page .course-audio-label,
+    .learning-page .lesson-more-details summary {
         color: #1d4ed8;
     }
 
@@ -1523,8 +1532,26 @@ a.english-day-card:hover {
     .learning-page .phrase-language,
     .learning-page .quiz-question legend > span,
     .learning-page .it-practice-number,
+    .learning-page .lesson-more-details summary::after,
+    .learning-page .course-pronounce-button:hover,
+    .learning-page .course-pronounce-button:focus-visible,
+    .learning-page .course-pronounce-button-playing,
     .learning-page .course-audio-button[aria-pressed="true"] {
         background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .learning-page .course-audio-button,
+    .learning-page .course-pronounce-button {
+        border-color: #bfdbfe;
+        color: #2563eb;
+    }
+
+    .learning-page .course-audio-button[aria-pressed="true"],
+    .learning-page .course-pronounce-button:hover,
+    .learning-page .course-pronounce-button:focus-visible,
+    .learning-page .course-pronounce-button-playing {
+        border-color: #2563eb;
+        color: #ffffff;
     }
 
     .learning-page .study-card-it,
@@ -1538,6 +1565,15 @@ a.english-day-card:hover {
     .learning-page .it-practice-card {
         border-color: rgba(37, 99, 235, 0.24);
         background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
+    }
+
+    .learning-page .lesson-more-details,
+    .learning-page .phrase-card {
+        border-color: #bfdbfe;
+    }
+
+    .learning-page .lesson-more-body code {
+        background: #dbeafe;
     }
 
     .learning-page .learning-progress-track {

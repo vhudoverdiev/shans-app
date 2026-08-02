@@ -11,6 +11,7 @@ MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.png"
 APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon.png"
+PWA_ICON = PROJECT_ROOT / "app" / "static" / "pwa-icon-512.png"
 IPHONE_16_PRO_MAX_STARTUP = PROJECT_ROOT / "app" / "static" / "ios-startup-iphone-16-pro-max.png"
 
 
@@ -52,13 +53,29 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(manifest["start_url"], "/")
         self.assertIn(
             {
-                "src": "/static/logo.png",
-                "sizes": "1254x1254",
+                "src": "/static/pwa-icon-512.png",
+                "sizes": "512x512",
                 "type": "image/png",
                 "purpose": "any",
             },
             manifest["icons"],
         )
+
+    def test_home_screen_install_metadata_never_uses_old_logo_icon(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+        install_icon_sources = [
+            icon["src"]
+            for icon in manifest["icons"]
+            if icon.get("purpose") in {None, "any", "any maskable", "maskable any"}
+        ]
+
+        self.assertNotIn("/static/logo.png", install_icon_sources)
+        self.assertIn("/static/pwa-icon-512.png", install_icon_sources)
+        self.assertIn("filename='apple-touch-icon.png', v=static_asset_version", template)
+        self.assertIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
+        self.assertNotIn("filename='logo.png', v=static_asset_version", template.split('rel="manifest"', 1)[0])
 
     def test_browser_favicon_is_a_rounded_square(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
@@ -89,10 +106,13 @@ class PwaInstallationTests(unittest.TestCase):
 
     def test_ios_home_screen_assets_have_expected_dimensions(self):
         apple_touch_icon = APPLE_TOUCH_ICON.read_bytes()
+        pwa_icon = PWA_ICON.read_bytes()
         startup_image = IPHONE_16_PRO_MAX_STARTUP.read_bytes()
 
         self.assertEqual(apple_touch_icon[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", apple_touch_icon[16:24]), (180, 180))
+        self.assertEqual(pwa_icon[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", pwa_icon[16:24]), (512, 512))
         self.assertEqual(startup_image[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", startup_image[16:24]), (1320, 2868))
 
