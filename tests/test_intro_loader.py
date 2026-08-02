@@ -14,6 +14,10 @@ class IntroLoaderTests(unittest.TestCase):
 
         self.assertIn("skip_intro_loader", template)
         self.assertIn("request.endpoint in ['learning.english_day_test', 'learning.it_day_test']", template)
+        self.assertIn("const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};", template)
+        self.assertIn("if (skipIntroLoader) {", template)
+        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', template)
+        self.assertIn("window.__shansShouldRunIntro = false;", template)
         self.assertIn(
             '<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}',
             template,
@@ -40,7 +44,24 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn('class="brand-badge"', template)
         self.assertNotIn("app-intro-wordmark", template)
         self.assertNotIn(">Шанс</div>", template)
+        self.assertIn("{% if not skip_intro_loader %}", template)
         self.assertIn("filename='js/intro-loader.js'", template)
+
+    def test_day_test_pages_do_not_render_intro_loader_markup(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn("skip_intro_loader", template)
+        self.assertIn("return;", template.split("if (skipIntroLoader) {", 1)[1].split("}", 1)[0])
+        self.assertIn(
+            "{% if not skip_intro_loader %}\n"
+            "    <script src=\"{{ url_for('static', filename='js/intro-loader.js'",
+            template,
+        )
+        self.assertIn(
+            "{% if not skip_intro_loader %}\n"
+            "    <div class=\"app-intro\" id=\"app-intro\"",
+            template,
+        )
 
     def test_intro_bootstrap_hides_content_before_external_stylesheets_load(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

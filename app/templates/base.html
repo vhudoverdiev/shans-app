@@ -12,6 +12,13 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <script>
         (function () {
+            const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};
+            if (skipIntroLoader) {
+                document.documentElement.classList.remove("app-intro-pending");
+                window.__shansShouldRunIntro = false;
+                return;
+            }
+
             function scheduleIntroFallback() {
                 window.__shansIntroFallbackTimer = window.setTimeout(function () {
                     if (!document.documentElement.classList.contains("app-intro-running")) {
@@ -174,11 +181,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/planner.css', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/learning.css', v=static_asset_version) }}">
     {% block extra_head %}{% endblock %}
+    {% if not skip_intro_loader %}
     <script src="{{ url_for('static', filename='js/intro-loader.js', v=static_asset_version) }}" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
+    {% endif %}
     <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/push-inbox.js', v=static_asset_version) }}" defer></script>
 </head>
 <body class="app-body{% if current_user.is_authenticated %} app-body-authenticated{% endif %}">
+    {% if not skip_intro_loader %}
     <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
         <div class="app-intro-stage">
             <div class="app-intro-logo">
@@ -187,6 +197,7 @@
             <div class="app-intro-progress"><span></span></div>
         </div>
     </div>
+    {% endif %}
 
     {% if current_user.is_authenticated %}
     {% set is_home_page = request.endpoint == 'index' %}
