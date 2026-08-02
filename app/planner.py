@@ -916,7 +916,18 @@ def upsert_task_for_booking(booking_id: int):
         return
 
     title = booking["project_title"]
-    description = ""
+    description_parts = [
+        str(booking["client_name"] or "").strip(),
+        str(booking["client_contact"] or "").strip(),
+    ]
+    price = float(booking["price"] or 0)
+    prepayment = float(booking["prepayment"] or 0)
+    remaining_payment = max(price - prepayment, 0)
+    if price or prepayment:
+        description_parts.append(
+            f"Payment: {price:g}, prepayment: {prepayment:g}, remaining: {remaining_payment:g}"
+        )
+    description = "\n".join(part for part in description_parts if part)
 
     conn = get_connection()
     existing_task = conn.execute("SELECT id FROM schedule_tasks WHERE booking_id = ?", (booking_id,)).fetchone()

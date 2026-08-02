@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime, date
+from datetime import datetime, date, time
 from io import BytesIO
 import hashlib
 import hmac
@@ -683,6 +683,8 @@ def _parse_excel_time(value) -> str:
         return ""
     if isinstance(value, datetime):
         return value.strftime("%H:%M")
+    if isinstance(value, time):
+        return value.strftime("%H:%M")
     if isinstance(value, date):
         return ""
 
@@ -929,7 +931,7 @@ def _parse_schedule_excel(file_storage):
         task_type = "Личное"
 
         if time_index is not None and time_index < len(row) and row[time_index] is not None:
-            start_time = str(row[time_index]).strip()
+            start_time = _parse_excel_time(row[time_index])
         if description_index is not None and description_index < len(row) and row[description_index] is not None:
             description = str(row[description_index]).strip()
         if importance_index is not None and importance_index < len(row) and row[importance_index] is not None:
@@ -1745,7 +1747,9 @@ def register_routes(app):
 
         removed_rows = 0
         for session_key in target_session_keys:
-            removed_rows += deactivate_user_login_session(session_key)
+            session_owner = get_login_session_owner(session_key)
+            if session_owner and int(session_owner["user_id"]) == int(current_user.id):
+                removed_rows += deactivate_user_login_session(session_key)
         if removed_rows == 0:
             flash("Выбранная сессия не найдена.", "warning")
         return redirect(url_for("account_settings"))
