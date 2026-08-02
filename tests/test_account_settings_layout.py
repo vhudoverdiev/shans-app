@@ -9,12 +9,12 @@ ACCOUNT_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "account_settings.html"
 
 
 class AccountSettingsLayoutTests(unittest.TestCase):
-    def test_profile_card_uses_compact_spacing_below_page_subtitle(self):
+    def test_profile_card_starts_without_removed_hero_gap(self):
         stylesheet = STYLE_FILE.read_text(encoding="utf-8")
 
         self.assertRegex(
             stylesheet,
-            r"\.account-hero-card\s*\{[^}]*margin-top:\s*24px;",
+            r"\.account-hero-card\s*\{[^}]*margin-top:\s*0;",
         )
 
     def test_hidden_inline_notice_does_not_reserve_vertical_space(self):

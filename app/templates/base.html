@@ -11,31 +11,51 @@
     <title>{% block title %}Шанс{% endblock %}</title>
     <script>
         (function () {
-            try {
-                const standaloneDisplayMode = window.matchMedia
-                    && window.matchMedia("(display-mode: standalone)").matches;
-                const isStandaloneApp = standaloneDisplayMode
-                    || window.navigator.standalone === true;
-                if (isStandaloneApp) {
-                    document.documentElement.classList.remove("app-intro-pending");
-                    window.__shansShouldRunIntro = false;
-                    return;
-                }
-                const introKey = "shans-intro-session-v1";
-                if (window.sessionStorage.getItem(introKey)) {
-                    document.documentElement.classList.remove("app-intro-pending");
-                    return;
-                }
-                window.sessionStorage.setItem(introKey, "1");
-                window.__shansShouldRunIntro = true;
+            function scheduleIntroFallback() {
                 window.__shansIntroFallbackTimer = window.setTimeout(function () {
                     if (!document.documentElement.classList.contains("app-intro-running")) {
                         document.documentElement.classList.remove("app-intro-pending");
                     }
                 }, 8000);
+            }
+
+            try {
+                const standaloneDisplayMode = window.matchMedia
+                    && window.matchMedia("(display-mode: standalone)").matches;
+                const isStandaloneApp = standaloneDisplayMode
+                    || (window.navigator && window.navigator.standalone === true);
+                if (isStandaloneApp) {
+                    document.documentElement.classList.remove("app-intro-pending");
+                    window.__shansShouldRunIntro = false;
+                    return;
+                }
+
+                const introKey = "shans-intro-session-v1";
+                let introAlreadyShown = false;
+                try {
+                    introAlreadyShown = Boolean(
+                        window.sessionStorage
+                        && window.sessionStorage.getItem(introKey)
+                    );
+                    if (!introAlreadyShown && window.sessionStorage) {
+                        window.sessionStorage.setItem(introKey, "1");
+                    }
+                } catch (storageError) {
+                    introAlreadyShown = false;
+                }
+
+                if (introAlreadyShown) {
+                    document.documentElement.classList.remove("app-intro-pending");
+                    window.__shansShouldRunIntro = false;
+                    return;
+                }
+
+                window.__shansShouldRunIntro = true;
+                scheduleIntroFallback();
             } catch (error) {
-                // The application remains usable when browser storage is unavailable.
-                document.documentElement.classList.remove("app-intro-pending");
+                // Keep the first-visit intro available in constrained browser contexts.
+                window.__shansShouldRunIntro = true;
+                scheduleIntroFallback();
             }
         }());
     </script>
@@ -141,7 +161,12 @@
     </style>
     {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png', v=static_asset_version) }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png', v=static_asset_version) }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v=static_asset_version) }}">
+    <link
+        rel="apple-touch-startup-image"
+        media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+        href="{{ url_for('static', filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version) }}"
+    >
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">

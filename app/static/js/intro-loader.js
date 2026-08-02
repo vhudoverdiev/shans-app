@@ -7,7 +7,10 @@
     function isStandaloneApp() {
         const standaloneDisplayMode = window.matchMedia
             && window.matchMedia("(display-mode: standalone)").matches;
-        return Boolean(standaloneDisplayMode || window.navigator.standalone === true);
+        return Boolean(
+            standaloneDisplayMode
+            || (window.navigator && window.navigator.standalone === true)
+        );
     }
 
     function clearIntroFallbackTimer() {

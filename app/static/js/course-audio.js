@@ -36,6 +36,7 @@
 
     const playButton = controller.querySelector("[data-course-audio-play]");
     const statusNode = controller.querySelector("[data-course-audio-status]");
+    const pronounceButtons = Array.from(document.querySelectorAll("[data-course-pronounce]"));
     let segments = [];
     try {
         segments = JSON.parse(dataNode.textContent || "[]")
@@ -62,6 +63,9 @@
     if (!supportsSpeech()) {
         controller.classList.add("course-audio-unavailable");
         if (playButton) playButton.disabled = true;
+        pronounceButtons.forEach((button) => {
+            button.disabled = true;
+        });
         setStatus("Озвучка недоступна в этом браузере.");
         return;
     }
@@ -161,6 +165,18 @@
         }
     }
 
+    function setPronounceButton(button, isPlaying) {
+        if (!button) return;
+        button.classList.toggle("course-pronounce-button-playing", isPlaying);
+        button.setAttribute("aria-pressed", isPlaying ? "true" : "false");
+    }
+
+    function resetPronounceButtons() {
+        pronounceButtons.forEach((button) => {
+            setPronounceButton(button, false);
+        });
+    }
+
     function buildUtterance(segment) {
         const utterance = new SpeechSynthesisUtterance(segment.text);
         const prosody = getProsody(segment.lang);
@@ -178,6 +194,7 @@
     function stopSpeech(message) {
         speech.cancel();
         setPlaying(false);
+        resetPronounceButtons();
         if (message) {
             setStatus(message);
         }
@@ -217,6 +234,32 @@
         speakNext(0);
     }
 
+    function playPronunciation(button) {
+        const text = String(button.dataset.pronounceText || "").trim();
+        const lang = button.dataset.pronounceLang || "en-US";
+        if (!text) return;
+
+        if (button.getAttribute("aria-pressed") === "true") {
+            stopSpeech("Произношение остановлено.");
+            return;
+        }
+
+        stopSpeech();
+        setPronounceButton(button, true);
+        setStatus(`Произношу: ${text}`);
+
+        const utterance = buildUtterance({ lang, text });
+        utterance.onend = function () {
+            setPronounceButton(button, false);
+            setStatus("");
+        };
+        utterance.onerror = function () {
+            setPronounceButton(button, false);
+            setStatus("Не удалось воспроизвести произношение. Попробуйте ещё раз.");
+        };
+        speech.speak(utterance);
+    }
+
     if (playButton) {
         playButton.addEventListener("click", function () {
             if (controller.classList.contains("course-audio-playing")) {
@@ -226,6 +269,13 @@
             playSpeech();
         });
     }
+
+    pronounceButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", function () {
+            playPronunciation(button);
+        });
+    });
 
     if (speech.onvoiceschanged !== undefined) {
         speech.onvoiceschanged = syncReadyState;

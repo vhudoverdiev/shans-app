@@ -39,11 +39,9 @@
         <details class="lesson-more-details">
             <summary>Подробнее</summary>
             <div class="lesson-more-body">
-                <ol>
-                    {% for step in lesson_detail_steps %}
-                    <li>{{ step }}</li>
-                    {% endfor %}
-                </ol>
+                {% for step in lesson_detail_steps %}
+                <p>{{ step }}</p>
+                {% endfor %}
             </div>
         </details>
         {% if day_progress and day_progress.passed %}
@@ -68,17 +66,28 @@
         <div class="vocabulary-grid">
             {% for card in word_cards %}
             <article class="vocabulary-card">
-                <strong class="learning-card-title">{{ card.english }}</strong>
+                <div class="learning-card-title-row">
+                    <strong class="learning-card-title">{{ card.english }}</strong>
+                    <button type="button" class="course-pronounce-button" data-course-pronounce data-pronounce-text="{{ card.english }}" data-pronounce-lang="en-US" aria-label="Прослушать произношение: {{ card.english }}" title="Прослушать произношение: {{ card.english }}">
+                        <span class="course-audio-icon" aria-hidden="true">🔊</span>
+                    </button>
+                </div>
                 <span>{{ card.russian }}</span>
                 <details class="lesson-more-details english-more-details">
                     <summary>Подробнее</summary>
                     <div class="lesson-more-body">
                         <p class="english-card-detail">{{ card.detail }}</p>
+                        {% if card.detail_paragraphs %}
+                            {% for paragraph in card.detail_paragraphs %}
+                            <p>{{ paragraph }}</p>
+                            {% endfor %}
+                        {% else %}
                         <ol>
                             {% for step in card.detail_steps %}
                             <li>{{ step }}</li>
                             {% endfor %}
                         </ol>
+                        {% endif %}
                     </div>
                 </details>
             </article>
@@ -104,11 +113,17 @@
                     <summary>Подробнее</summary>
                     <div class="lesson-more-body">
                         <p class="english-card-detail">{{ card.detail }}</p>
+                        {% if card.detail_paragraphs %}
+                            {% for paragraph in card.detail_paragraphs %}
+                            <p>{{ paragraph }}</p>
+                            {% endfor %}
+                        {% else %}
                         <ol>
                             {% for step in card.detail_steps %}
                             <li>{{ step }}</li>
                             {% endfor %}
                         </ol>
+                        {% endif %}
                     </div>
                 </details>
             </article>

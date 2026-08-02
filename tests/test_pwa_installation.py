@@ -10,6 +10,8 @@ BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.png"
+APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon.png"
+IPHONE_16_PRO_MAX_STARTUP = PROJECT_ROOT / "app" / "static" / "ios-startup-iphone-16-pro-max.png"
 
 
 class PwaInstallationTests(unittest.TestCase):
@@ -29,10 +31,16 @@ class PwaInstallationTests(unittest.TestCase):
             template,
         )
         self.assertIn(
-            'rel="apple-touch-icon"',
+            'rel="apple-touch-icon" sizes="180x180"',
             template,
         )
-        self.assertIn("filename='logo.png'", template)
+        self.assertIn("filename='apple-touch-icon.png', v=static_asset_version", template)
+        self.assertNotIn('rel="apple-touch-icon" href="{{ url_for(\'static\', filename=\'logo.png\'', template)
+        self.assertIn('rel="apple-touch-startup-image"', template)
+        self.assertIn("device-width: 440px", template)
+        self.assertIn("device-height: 956px", template)
+        self.assertIn("-webkit-device-pixel-ratio: 3", template)
+        self.assertIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
         self.assertIn("filename='site.webmanifest'", template)
 
     def test_manifest_describes_standalone_shans_app(self):
@@ -78,6 +86,15 @@ class PwaInstallationTests(unittest.TestCase):
             hashlib.sha256(logo).hexdigest(),
             "4ae379a1088102a02eafd5b28ad21392eab9d8a19d3f50dce22649777c1c3de8",
         )
+
+    def test_ios_home_screen_assets_have_expected_dimensions(self):
+        apple_touch_icon = APPLE_TOUCH_ICON.read_bytes()
+        startup_image = IPHONE_16_PRO_MAX_STARTUP.read_bytes()
+
+        self.assertEqual(apple_touch_icon[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", apple_touch_icon[16:24]), (180, 180))
+        self.assertEqual(startup_image[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", startup_image[16:24]), (1320, 2868))
 
 
 if __name__ == "__main__":

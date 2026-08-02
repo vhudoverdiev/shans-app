@@ -217,6 +217,21 @@
         box-sizing: border-box;
     }
 
+    .planner-task-form-grid .form-input:is(input[type="date"], input[type="time"]) {
+        display: block;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        padding-right: 46px;
+        overflow: hidden;
+    }
+
+    .planner-task-form-grid .form-input:is(input[type="date"], input[type="time"])::-webkit-calendar-picker-indicator {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
     .car-form-actions,
     .filter-actions,
     .table-actions,
@@ -735,39 +750,6 @@
         max-width: none;
     }
 
-    .section-hero {
-        min-height: 42px;
-        margin: 0 0 18px;
-        padding: 5px 16px;
-        border-radius: 24px;
-        box-shadow: 0 14px 34px rgba(91, 33, 182, 0.2);
-    }
-
-    .section-hero::after {
-        right: -116px;
-        bottom: -132px;
-        width: 230px;
-        height: 230px;
-    }
-
-    .section-hero .page-title,
-    .section-hero h1 {
-        font-size: clamp(34px, 9vw, 46px);
-        letter-spacing: -0.03em;
-    }
-
-    .section-hero p:not(.section-hero-kicker) {
-        margin-top: 10px;
-        font-size: 15px;
-        line-height: 1.38;
-    }
-
-    .section-hero-kicker {
-        margin-bottom: 3px;
-        font-size: 11px;
-        letter-spacing: 0.11em;
-    }
-
     .dashboard-grid-mobile .dashboard-card,
     .hub-grid .dashboard-card {
         min-height: 178px;
@@ -795,14 +777,14 @@
         position: fixed;
         left: max(10px, env(safe-area-inset-left));
         right: max(10px, env(safe-area-inset-right));
-        bottom: max(9px, env(safe-area-inset-bottom));
+        bottom: 0;
         z-index: 260;
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 4px;
-        padding: 7px;
+        padding: 7px 7px calc(7px + env(safe-area-inset-bottom));
         border: 1px solid rgba(203, 213, 225, 0.78);
-        border-radius: 24px;
+        border-radius: 24px 24px 0 0;
         background: rgba(255, 255, 255, 0.92);
         box-shadow: 0 18px 46px rgba(15, 23, 42, 0.2);
         backdrop-filter: blur(18px);
@@ -1146,7 +1128,8 @@
     .app-body .nutrition-history-day,
     .app-body .nutrition-history-day-active,
     .app-body .workouts-submit,
-    .app-body .course-audio-button {
+    .app-body .course-audio-button,
+    .app-body .course-pronounce-button {
         box-shadow: none !important;
         filter: none !important;
         -webkit-tap-highlight-color: transparent;

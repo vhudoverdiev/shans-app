@@ -123,50 +123,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("url_for('car')", car_notifications)
         self.assertIn('class="btn btn-secondary">Назад</a>', car_notifications)
 
-    def test_main_mobile_sections_use_shared_development_like_hero(self):
+    def test_service_sections_do_not_render_hero_headers(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
 
-        for template_name, modifier in (
-            ("schedule.html", "section-hero-schedule"),
-            ("shootings_hub.html", "section-hero-shootings"),
-            ("reports_hub.html", "section-hero-reports"),
-            ("sport_hub.html", "section-hero-sport"),
-            ("account_settings.html", "section-hero-account"),
-        ):
-            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
-            self.assertIn("section-styled-page", source)
-            self.assertIn(f"section-hero {modifier}", source)
-            self.assertNotIn("section-hero-mark", source)
-
-        self.assertIn(".section-hero", styles)
-        self.assertIn("linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)", styles)
-        desktop_neutral_theme = styles.split(
-            "/* Desktop keeps service sections neutral;",
-            1,
-        )[1]
-        self.assertIn("@media (hover: hover) and (pointer: fine)", desktop_neutral_theme)
-        self.assertIn(".section-hero", desktop_neutral_theme)
-        self.assertIn("background: #ffffff;", desktop_neutral_theme)
-        self.assertIn("border-color: #e5eaf2;", desktop_neutral_theme)
-        self.assertIn(".section-hero", mobile_styles)
-        self.assertIn("clamp(34px, 9vw, 46px)", mobile_styles)
-
-        study_hub = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
-        self.assertNotIn("learning-hero-mark", study_hub)
-
-    def test_schedule_hero_is_hidden_only_on_desktop(self):
-        styles = STYLE_FILE.read_text(encoding="utf-8")
-        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
-
-        desktop_neutral_theme = styles.split(
-            "/* Desktop keeps service sections neutral;",
-            1,
-        )[1]
-        self.assertIn(".section-hero-schedule {\n        display: none;", desktop_neutral_theme)
-        self.assertNotIn(".section-hero-schedule", mobile_styles)
-
-    def test_section_hero_cards_keep_only_kicker_and_title_text(self):
         for template_name in (
             "schedule.html",
             "shootings_hub.html",
@@ -175,36 +135,29 @@ class MobileAppNavigationTests(unittest.TestCase):
             "account_settings.html",
         ):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
-            hero = source.split('<div class="section-hero', 1)[1].split("</div>", 2)[0]
-            unexpected_paragraphs = re.findall(
-                r"<p(?![^>]*section-hero-kicker)[^>]*>",
-                hero,
-            )
+            self.assertIn("section-styled-page", source)
+            self.assertNotIn("section-hero", source)
+            self.assertNotIn("section-hero-kicker", source)
 
-            self.assertEqual(unexpected_paragraphs, [], template_name)
+        self.assertNotIn(".section-hero", styles)
+        self.assertNotIn(".section-hero", mobile_styles)
+        self.assertNotIn("section-hero-schedule", styles)
+        self.assertNotIn("section-hero-schedule", mobile_styles)
 
-    def test_section_hero_cards_use_compact_vertical_spacing(self):
+        study_hub = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
+        self.assertNotIn("learning-hero-mark", study_hub)
+
+    def test_service_section_cards_keep_desktop_neutral_theme(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
-        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+        desktop_neutral_theme = styles.split(
+            "/* Desktop keeps service section cards neutral;",
+            1,
+        )[1]
 
-        self.assertRegex(
-            styles,
-            r"\.section-hero\s*\{[^}]*min-height:\s*46px;[^}]*padding:\s*6px\s+20px;",
-        )
-        self.assertRegex(
-            mobile_styles,
-            r"\.section-hero\s*\{[^}]*min-height:\s*42px;[^}]*padding:\s*5px\s+16px;",
-        )
-        self.assertIn("margin: 0 0 3px;", styles)
-        self.assertIn("margin-bottom: 3px;", mobile_styles)
-        self.assertNotIn("min-height: 148px;", styles)
-        self.assertNotIn("padding: 26px 30px;", styles)
-        self.assertNotIn("min-height: 92px;", styles)
-        self.assertNotIn("padding: 12px 20px;", styles)
-        self.assertNotIn("min-height: 136px;", mobile_styles)
-        self.assertNotIn("padding: 22px 20px;", mobile_styles)
-        self.assertNotIn("min-height: 84px;", mobile_styles)
-        self.assertNotIn("padding: 10px 16px;", mobile_styles)
+        self.assertIn("@media (hover: hover) and (pointer: fine)", desktop_neutral_theme)
+        self.assertIn(".section-styled-page .hub-grid .dashboard-card", desktop_neutral_theme)
+        self.assertIn("background: #ffffff;", desktop_neutral_theme)
+        self.assertIn("border-color: #e5eaf2;", desktop_neutral_theme)
 
     def test_bottom_navigation_replaces_mobile_avatar_menu(self):
         base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
@@ -218,6 +171,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertNotIn("<span>Учёба</span>", base)
         self.assertNotIn("<span>Главная</span>", base)
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr));", mobile_styles)
+        self.assertIn("bottom: 0;", mobile_styles)
+        self.assertIn("padding: 7px 7px calc(7px + env(safe-area-inset-bottom));", mobile_styles)
+        self.assertIn("border-radius: 24px 24px 0 0;", mobile_styles)
+        self.assertNotIn("bottom: max(9px, env(safe-area-inset-bottom));", mobile_styles)
         self.assertIn("is_reports_section", base)
         self.assertIn("url_for('reports_hub')", base)
         self.assertIn("is_study_section", base)

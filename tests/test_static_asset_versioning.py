@@ -39,6 +39,22 @@ class StaticAssetVersioningTests(unittest.TestCase):
 
         self.assertNotEqual(first_version, second_version)
 
+    def test_asset_version_changes_when_ios_home_screen_assets_change(self):
+        for filename in (
+            "apple-touch-icon.png",
+            "ios-startup-iphone-16-pro-max.png",
+        ):
+            with tempfile.TemporaryDirectory() as temp_directory:
+                static_root = Path(temp_directory)
+                asset = static_root / filename
+                asset.write_bytes(b"first-ios-asset")
+
+                first_version = build_static_asset_version(static_root)
+                asset.write_bytes(b"second-ios-asset")
+                second_version = build_static_asset_version(static_root)
+
+            self.assertNotEqual(first_version, second_version, filename)
+
     def test_templates_append_asset_version_to_css_and_javascript(self):
         base_template = BASE_TEMPLATE.read_text(encoding="utf-8")
         account_template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
@@ -58,6 +74,8 @@ class StaticAssetVersioningTests(unittest.TestCase):
             )
         self.assertIn("filename='logo.png', v=static_asset_version", base_template)
         self.assertIn("filename='favicon.png', v=static_asset_version", base_template)
+        self.assertIn("filename='apple-touch-icon.png', v=static_asset_version", base_template)
+        self.assertIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", base_template)
         self.assertIn(
             "filename='js/push-notifications.js', v=config.get('STATIC_ASSET_VERSION', 'dev')",
             account_template,

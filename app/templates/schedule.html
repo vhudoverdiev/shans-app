@@ -3,13 +3,6 @@
 
 {% block content %}
 <section class="car-page section-styled-page">
-    <div class="section-hero section-hero-schedule">
-        <div>
-            <p class="section-hero-kicker">{{ current_calendar_label }} график</p>
-            <h1 class="page-title">График</h1>
-        </div>
-    </div>
-
     <nav class="planner-calendar-switch" aria-label="Выбор графика">
         <a
             href="{{ url_for('planner.schedule', calendar='personal', view=current_view, date=selected_date.isoformat()) }}"

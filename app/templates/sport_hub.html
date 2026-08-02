@@ -4,13 +4,6 @@
 
 {% block content %}
 <section class="dashboard-page hub-page section-styled-page">
-    <div class="section-hero section-hero-sport">
-        <div>
-            <p class="section-hero-kicker">Здоровье и прогресс</p>
-            <h1 class="page-title">Спорт</h1>
-        </div>
-    </div>
-
     <div class="dashboard-grid hub-grid hub-grid-compact">
         {% if has_section_access('workouts') %}
         <a href="{{ url_for('workouts.index') }}" class="dashboard-card dashboard-card-featured">

@@ -338,6 +338,14 @@ class PlannerCalendarTests(unittest.TestCase):
         self.assertIn("box-sizing: border-box;", styles)
         self.assertIn("@media (max-width: 1100px)", styles)
         self.assertIn(".car-page .planner-task-form-grid", styles)
+        self.assertIn('.planner-task-form-grid .form-input:is(input[type="date"], input[type="time"])', mobile_styles)
+        self.assertIn("inline-size: 100%;", mobile_styles)
+        self.assertIn("max-inline-size: 100%;", mobile_styles)
+        self.assertIn("-webkit-appearance: none;", mobile_styles)
+        self.assertIn("padding-right: 46px;", mobile_styles)
+        self.assertIn("overflow: hidden;", mobile_styles)
+        self.assertIn("::-webkit-calendar-picker-indicator", mobile_styles)
+        self.assertIn("margin-left: 0;", mobile_styles)
 
     def test_schedule_day_table_has_mobile_labels_for_all_cells(self):
         template = (PROJECT_ROOT / "app" / "templates" / "schedule.html").read_text(encoding="utf-8")

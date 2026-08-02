@@ -43,11 +43,17 @@
                     <summary>Подробнее</summary>
                     <div class="lesson-more-body">
                         <p class="it-point-detail">{{ point.detail }}</p>
+                        {% if point.detail_paragraphs %}
+                            {% for paragraph in point.detail_paragraphs %}
+                            <p>{{ paragraph }}</p>
+                            {% endfor %}
+                        {% else %}
                         <ol>
                             {% for step in point.detail_steps %}
                             <li>{{ step }}</li>
                             {% endfor %}
                         </ol>
+                        {% endif %}
                     </div>
                 </details>
             </article>
@@ -75,17 +81,30 @@
         <div class="it-term-grid">
             {% for term in term_cards %}
             <article class="it-term-card">
-                <strong>{{ term.term }}</strong>
+                <div class="learning-card-title-row">
+                    <strong>{{ term.term }}</strong>
+                    {% if term.is_english %}
+                    <button type="button" class="course-pronounce-button" data-course-pronounce data-pronounce-text="{{ term.term }}" data-pronounce-lang="en-US" aria-label="Прослушать произношение: {{ term.term }}" title="Прослушать произношение: {{ term.term }}">
+                        <span class="course-audio-icon" aria-hidden="true">🔊</span>
+                    </button>
+                    {% endif %}
+                </div>
                 <span>{{ term.definition }}</span>
                 <details class="lesson-more-details it-more-details">
                     <summary>Подробнее</summary>
                     <div class="lesson-more-body">
                         <p class="it-term-detail">{{ term.detail }}</p>
+                        {% if term.detail_paragraphs %}
+                            {% for paragraph in term.detail_paragraphs %}
+                            <p>{{ paragraph }}</p>
+                            {% endfor %}
+                        {% else %}
                         <ol>
                             {% for step in term.detail_steps %}
                             <li>{{ step }}</li>
                             {% endfor %}
                         </ol>
+                        {% endif %}
                     </div>
                 </details>
             </article>

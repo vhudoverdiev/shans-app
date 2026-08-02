@@ -23,6 +23,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("window.sessionStorage.getItem(introKey)", template)
         self.assertIn("window.sessionStorage.setItem(introKey, \"1\")", template)
         self.assertIn("window.__shansShouldRunIntro = true", template)
+        self.assertIn("function scheduleIntroFallback()", template)
         self.assertIn("window.__shansIntroFallbackTimer", template)
         self.assertIn("}, 8000);", template)
         self.assertNotIn("}, 3000);", template)
@@ -76,6 +77,38 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("visibility: visible !important;", standalone_css)
         self.assertIn("html.app-intro-pending #app-intro", standalone_css)
         self.assertIn("display: none !important;", standalone_css)
+
+    def test_storage_unavailable_still_runs_first_visit_intro(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        storage_catch = template.split("} catch (storageError) {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        bootstrap_catch = template.split("} catch (error) {", 1)[1].split(
+            "</script>",
+            1,
+        )[0]
+
+        self.assertIn("introAlreadyShown = false;", storage_catch)
+        self.assertIn("window.__shansShouldRunIntro = true;", bootstrap_catch)
+        self.assertIn("scheduleIntroFallback();", bootstrap_catch)
+        self.assertNotIn(
+            'document.documentElement.classList.remove("app-intro-pending");',
+            bootstrap_catch,
+        )
+
+    def test_standalone_checks_tolerate_missing_navigator(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        script = INTRO_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "|| (window.navigator && window.navigator.standalone === true)",
+            template,
+        )
+        self.assertIn(
+            "|| (window.navigator && window.navigator.standalone === true)",
+            script,
+        )
 
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")

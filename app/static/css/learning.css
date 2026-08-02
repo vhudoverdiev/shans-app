@@ -521,6 +521,53 @@ a.english-day-card:hover {
     opacity: 0.55;
 }
 
+.learning-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+.learning-card-title-row strong,
+.learning-card-title-row .learning-card-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.course-pronounce-button {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border: 1px solid #ddd6fe;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6d28d9;
+    background: #ffffff;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.course-pronounce-button:hover,
+.course-pronounce-button:focus-visible,
+.course-pronounce-button-playing {
+    border-color: #7c3aed;
+    color: #ffffff;
+    background: #7c3aed;
+}
+
+.course-pronounce-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.course-pronounce-button .course-audio-icon {
+    font-size: 14px;
+}
+
 .course-audio-icon {
     display: inline-flex;
     align-items: center;
