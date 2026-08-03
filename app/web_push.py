@@ -26,6 +26,7 @@ _WORK_SUMMARY_HOUR = 9
 _LEARNING_REMINDER_HOUR = 19
 _SCHEDULER_INTERVAL_SECONDS = 30
 _MAX_PUSH_PAYLOAD_BYTES = 3500
+_INBOX_HISTORY_DAYS = 3
 _scheduler_lock = threading.Lock()
 _scheduler_started = False
 
@@ -822,6 +823,42 @@ def get_unread_push_notifications(user_id: int, limit: int = 20) -> tuple[list[d
         conn.close()
 
 
+def get_recent_push_notifications(
+    user_id: int,
+    days: int = _INBOX_HISTORY_DAYS,
+    limit: int = 50,
+) -> tuple[list[dict], int]:
+    safe_days = max(1, min(int(days), 30))
+    safe_limit = max(1, min(int(limit), 100))
+    history_window = f"-{safe_days} days"
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, title, body, navigate_path, created_at, read_at
+            FROM web_push_inbox
+            WHERE user_id = ?
+              AND created_at >= datetime('now', ?)
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (user_id, history_window, safe_limit),
+        ).fetchall()
+        count_row = conn.execute(
+            """
+            SELECT COUNT(*) AS unread_count
+            FROM web_push_inbox
+            WHERE user_id = ?
+              AND read_at IS NULL
+              AND created_at >= datetime('now', ?)
+            """,
+            (user_id, history_window),
+        ).fetchone()
+        return [dict(row) for row in rows], int(count_row["unread_count"] if count_row else 0)
+    finally:
+        conn.close()
+
+
 def mark_all_push_notifications_read(user_id: int) -> int:
     conn = get_connection()
     try:
@@ -984,7 +1021,7 @@ def send_external_telegram_notification(payload: dict) -> tuple[int, int]:
         key=f"telegram:{timestamp}",
         title=_clean_external_push_text(
             payload.get("title"),
-            "Shans - Telegram",
+            "Вк аккануты",
             80,
         ),
         body=_clean_external_push_text(
@@ -1092,7 +1129,7 @@ def register_web_push_routes(app) -> None:
     @app.get("/api/push/inbox")
     @login_required
     def web_push_inbox():
-        notifications, unread_count = get_unread_push_notifications(
+        notifications, unread_count = get_recent_push_notifications(
             int(current_user.id)
         )
         response = jsonify(
@@ -1106,9 +1143,12 @@ def register_web_push_routes(app) -> None:
                         "body": item["body"],
                         "navigatePath": item["navigate_path"],
                         "createdAt": item["created_at"],
+                        "readAt": item["read_at"],
+                        "unread": item["read_at"] is None,
                     }
                     for item in notifications
                 ],
+                "historyDays": _INBOX_HISTORY_DAYS,
             }
         )
         response.headers["Cache-Control"] = "no-store"

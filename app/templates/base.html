@@ -342,11 +342,13 @@
         type="button"
         class="mobile-push-inbox-trigger"
         id="mobile-push-inbox-trigger"
-        aria-label="Открыть непрочитанные уведомления"
+        aria-label="Открыть новые уведомления"
         aria-controls="mobile-push-inbox-sheet"
         aria-expanded="false"
         data-inbox-url="{{ url_for('web_push_inbox') }}"
         data-read-url="{{ url_for('web_push_inbox_read') }}"
+        data-push-inbox-trigger
+        data-push-inbox-floating
         hidden
     >
         <span class="mobile-push-inbox-trigger-ring" aria-hidden="true"></span>
@@ -354,7 +356,7 @@
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
             <path d="M10 21h4"></path>
         </svg>
-        <span class="mobile-push-inbox-count" id="mobile-push-inbox-count" aria-hidden="true"></span>
+        <span class="mobile-push-inbox-count" id="mobile-push-inbox-count" data-push-inbox-count aria-hidden="true"></span>
     </button>
 
     <div class="mobile-push-inbox-sheet" id="mobile-push-inbox-sheet" hidden>
@@ -363,7 +365,7 @@
             <div class="mobile-push-inbox-handle" aria-hidden="true"></div>
             <div class="mobile-push-inbox-header">
                 <div>
-                    <div class="mobile-push-inbox-eyebrow">Личный график</div>
+                    <div class="mobile-push-inbox-eyebrow">За последние 3 дня</div>
                     <h2 id="mobile-push-inbox-title">Уведомления</h2>
                 </div>
                 <button type="button" class="mobile-push-inbox-close" data-push-inbox-close aria-label="Закрыть">×</button>

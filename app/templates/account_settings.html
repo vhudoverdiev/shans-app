@@ -40,6 +40,23 @@
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="users">Пользователи</button>
             {% endif %}
             <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
+            <button
+                type="button"
+                class="account-notifications-btn"
+                id="account-push-inbox-trigger"
+                aria-label="Открыть уведомления за последние 3 дня"
+                aria-controls="mobile-push-inbox-sheet"
+                aria-expanded="false"
+                data-inbox-url="{{ url_for('web_push_inbox') }}"
+                data-read-url="{{ url_for('web_push_inbox_read') }}"
+                data-push-inbox-trigger
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                    <path d="M10 21h4"></path>
+                </svg>
+                <span class="account-notifications-badge" data-push-inbox-count aria-hidden="true" hidden></span>
+            </button>
         </div>
         <a href="{{ url_for('logout') }}" class="btn btn-danger account-logout-btn" id="account-logout-btn">Выйти из аккаунта</a>
     </div>

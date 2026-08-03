@@ -27,6 +27,7 @@ from app.web_push import (
     _send_to_subscription,
     collect_due_candidates,
     deliver_candidate,
+    get_recent_push_notifications,
     get_unread_push_notifications,
     init_web_push_db,
     mark_all_push_notifications_read,
@@ -405,6 +406,50 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(mark_all_push_notifications_read(1), 1)
         self.assertEqual(get_unread_push_notifications(1), ([], 0))
 
+    def test_recent_inbox_returns_last_three_days_and_recent_unread_count(self):
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now', '-4 days'), NULL)
+                """,
+                (1, "old", "Old", "Too old", "/"),
+            )
+            conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now', '-2 days'), datetime('now'))
+                """,
+                (1, "recent-read", "Recent read", "Seen", "/"),
+            )
+            conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now', '-1 day'), NULL)
+                """,
+                (1, "recent-unread", "Recent unread", "New", "/"),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        notifications, unread_count = get_recent_push_notifications(1)
+
+        self.assertEqual(unread_count, 1)
+        self.assertEqual(
+            [notification["title"] for notification in notifications],
+            ["Recent unread", "Recent read"],
+        )
+        self.assertIsNone(notifications[0]["read_at"])
+        self.assertIsNotNone(notifications[1]["read_at"])
+
     def test_existing_device_delivery_is_migrated_to_user_deduplication(self):
         save_subscription(
             1,
@@ -542,6 +587,26 @@ class WebPushSchedulingTests(unittest.TestCase):
             "The local script completed successfully.",
         )
         self.assertEqual(get_unread_push_notifications(2), ([], 0))
+
+    def test_external_telegram_notification_uses_vk_accounts_fallback_title(self):
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+
+        with patch("app.web_push._send_to_subscription"):
+            result = send_external_telegram_notification(
+                {
+                    "body": "The local script completed successfully.",
+                    "navigate_path": "/",
+                }
+            )
+
+        self.assertEqual(result, (1, 0))
+        notifications, unread_count = get_unread_push_notifications(1)
+        self.assertEqual(unread_count, 1)
+        self.assertEqual(notifications[0]["title"], "Вк аккануты")
 
     def test_external_telegram_notification_ignores_recipient_override(self):
         save_subscription(
@@ -755,6 +820,8 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn('id="push-notifications-toggle"', template)
         self.assertIn("data-push-toggle-mobile-label>Включить</span>", template)
         self.assertIn('id="push-notifications-status"', template)
+        self.assertIn('id="account-push-inbox-trigger"', template)
+        self.assertIn('data-push-inbox-trigger', template)
         self.assertIn("push-notifications.js", template)
         self.assertIn('id="push-notifications-test"', template)
         self.assertIn("account-push-desktop-only", template)
@@ -775,7 +842,7 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn("shans-push-received", service_worker)
         self.assertIn('addEventListener("notificationclick"', service_worker)
 
-    def test_mobile_push_inbox_only_uses_push_api(self):
+    def test_push_inbox_uses_recent_history_and_cross_tab_sync(self):
         base_template = (
             PROJECT_ROOT / "app" / "templates" / "base.html"
         ).read_text(encoding="utf-8")
@@ -791,10 +858,15 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn("js/push-inbox.js", base_template)
         self.assertIn("data-inbox-url", base_template)
         self.assertIn("data-read-url", base_template)
+        self.assertIn("За последние 3 дня", base_template)
         self.assertIn("shans-push-received", push_client)
-        self.assertIn('window.fetch(trigger.dataset.inboxUrl', push_client)
-        self.assertIn('window.fetch(trigger.dataset.readUrl', push_client)
+        self.assertIn('window.fetch(apiTrigger.dataset.inboxUrl', push_client)
+        self.assertIn('window.fetch(apiTrigger.dataset.readUrl', push_client)
+        self.assertIn("BroadcastChannel", push_client)
+        self.assertIn("localStorage.setItem", push_client)
+        self.assertIn("За последние 3 дня уведомлений нет.", push_client)
         self.assertIn('CREATE TABLE IF NOT EXISTS web_push_inbox', push_module)
+        self.assertIn("def get_recent_push_notifications", push_module)
         self.assertIn('@app.get("/api/push/inbox")', push_module)
         self.assertIn('@app.post("/api/push/inbox/read")', push_module)
 

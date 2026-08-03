@@ -472,9 +472,58 @@ a {
 
 .account-nav {
     display: flex;
+    align-items: center;
     gap: 10px;
     margin-top: 16px;
     flex-wrap: wrap;
+}
+
+.account-notifications-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 1px solid #dbe5ff;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #eff6ff;
+    color: #2563eb;
+    cursor: pointer;
+}
+
+.account-notifications-btn:hover {
+    background: #dbeafe;
+}
+
+.account-notifications-btn svg {
+    width: 21px;
+    height: 21px;
+}
+
+.account-notifications-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 6px;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.account-notifications-badge[hidden] {
+    display: none !important;
 }
 
 .account-logout-btn {
@@ -1280,9 +1329,270 @@ body.avatar-crop-scroll-locked {
     display: none;
 }
 
-.mobile-push-inbox-trigger,
+.mobile-push-inbox-trigger {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 275;
+    width: 52px;
+    height: 52px;
+    border: 1px solid rgba(191, 219, 254, 0.88);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    cursor: pointer;
+    animation: mobile-push-inbox-arrived 1.8s ease-in-out infinite;
+}
+
+.mobile-push-inbox-trigger[hidden],
+.mobile-push-inbox-sheet[hidden] {
+    display: none !important;
+}
+
+.mobile-push-inbox-trigger > svg {
+    position: relative;
+    z-index: 2;
+    width: 24px;
+    height: 24px;
+}
+
+.mobile-push-inbox-trigger-ring {
+    position: absolute;
+    inset: -6px;
+    border: 2px solid rgba(37, 99, 235, 0.18);
+    border-radius: 22px;
+    animation: mobile-push-inbox-ring 1.8s ease-out infinite;
+}
+
+.mobile-push-inbox-count {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    z-index: 3;
+    min-width: 23px;
+    height: 23px;
+    padding: 0 6px;
+    border: 3px solid #ffffff;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1;
+    box-shadow: 0 5px 13px rgba(220, 38, 38, 0.28);
+}
+
+.mobile-push-inbox-count[hidden] {
+    display: none !important;
+}
+
 .mobile-push-inbox-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 420;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.mobile-push-inbox-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    background: rgba(15, 23, 42, 0.38);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.mobile-push-inbox-panel {
+    position: relative;
+    z-index: 1;
+    width: min(520px, calc(100vw - 40px));
+    max-height: min(72vh, 680px);
+    overflow: auto;
+    padding: 18px;
+    border: 1px solid #e3e9f7;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    overscroll-behavior: contain;
+}
+
+.mobile-push-inbox-sheet-open .mobile-push-inbox-backdrop {
+    opacity: 1;
+}
+
+.mobile-push-inbox-sheet-open .mobile-push-inbox-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.mobile-push-inbox-handle {
     display: none;
+}
+
+.mobile-push-inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.mobile-push-inbox-eyebrow {
+    margin-bottom: 3px;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mobile-push-inbox-header h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 25px;
+    line-height: 1.15;
+}
+
+.mobile-push-inbox-close {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border: 0;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mobile-push-inbox-list {
+    display: grid;
+    gap: 11px;
+}
+
+.mobile-push-inbox-item {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #e7ecf5;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.mobile-push-inbox-item-unread {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+}
+
+.mobile-push-inbox-item-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.mobile-push-inbox-item-content {
+    min-width: 0;
+}
+
+.mobile-push-inbox-item h3 {
+    margin: 1px 0 5px;
+    color: #172033;
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.mobile-push-inbox-item p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+.mobile-push-inbox-item-footer {
+    min-height: 22px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.mobile-push-inbox-item-footer time {
+    color: #8a94a6;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.mobile-push-inbox-item-footer a {
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.mobile-push-inbox-empty {
+    padding: 26px 18px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #64748b;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.mobile-push-inbox-open {
+    overflow: hidden;
+}
+
+@keyframes mobile-push-inbox-arrived {
+    0%,
+    100% {
+        box-shadow: 0 16px 36px rgba(37, 99, 235, 0.22);
+    }
+    50% {
+        box-shadow: 0 18px 42px rgba(37, 99, 235, 0.34);
+    }
+}
+
+@keyframes mobile-push-inbox-ring {
+    0% {
+        opacity: 0.9;
+        transform: scale(0.82);
+    }
+    75%,
+    100% {
+        opacity: 0;
+        transform: scale(1.18);
+    }
 }
 
 .dashboard-card {
