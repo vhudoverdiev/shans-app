@@ -4,15 +4,6 @@
     const root = document.documentElement;
     const intro = document.getElementById("app-intro");
 
-    function isStandaloneApp() {
-        const standaloneDisplayMode = window.matchMedia
-            && window.matchMedia("(display-mode: standalone)").matches;
-        return Boolean(
-            standaloneDisplayMode
-            || (window.navigator && window.navigator.standalone === true)
-        );
-    }
-
     function clearIntroFallbackTimer() {
         if (window.__shansIntroFallbackTimer) {
             window.clearTimeout(window.__shansIntroFallbackTimer);
@@ -72,11 +63,6 @@
         });
     }
 
-    if (isStandaloneApp()) {
-        removeIntroWithoutAnimation();
-        return;
-    }
-
     if (!root.classList.contains("app-intro-pending") || !window.__shansShouldRunIntro) {
         if (intro) {
             intro.remove();
@@ -99,7 +85,7 @@
     const exitDuration = reducedMotion ? 20 : 430;
 
     waitForIntroLogoImage().then(function () {
-        if (!window.__shansShouldRunIntro || isStandaloneApp()) {
+        if (!window.__shansShouldRunIntro) {
             removeIntroWithoutAnimation();
             return;
         }

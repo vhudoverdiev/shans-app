@@ -13,11 +13,12 @@
     <script>
         (function () {
             const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};
-            const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};
+            const routeForcesIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};
             const standaloneDisplayMode = window.matchMedia
                 && window.matchMedia("(display-mode: standalone)").matches;
             const isStandaloneApp = standaloneDisplayMode
                 || (window.navigator && window.navigator.standalone === true);
+            const forceIntroLoader = routeForcesIntroLoader || isStandaloneApp;
             isStandaloneApp && document.documentElement.classList.add("shans-standalone-app");
 
             if (skipIntroLoader) {
@@ -35,12 +36,6 @@
             }
 
             try {
-                if (isStandaloneApp) {
-                    document.documentElement.classList.remove("app-intro-pending");
-                    window.__shansShouldRunIntro = false;
-                    return;
-                }
-
                 const introKey = "shans-intro-session-v1";
                 let introAlreadyShown = false;
                 try {
@@ -66,7 +61,7 @@
                 window.__shansShouldRunIntro = true;
                 scheduleIntroFallback();
             } catch (error) {
-                // Keep the first-visit intro available in constrained browser contexts.
+                // Keep the intro available in constrained browser contexts.
                 window.__shansShouldRunIntro = true;
                 scheduleIntroFallback();
             }
@@ -155,21 +150,6 @@
             height: 100%;
             border-radius: inherit;
             background: linear-gradient(90deg, #2563eb, #7c3aed);
-        }
-
-        @media (display-mode: standalone) {
-            html.app-intro-pending,
-            html.app-intro-pending body {
-                overflow: auto;
-            }
-
-            html.app-intro-pending body > :not(#app-intro) {
-                visibility: visible !important;
-            }
-
-            html.app-intro-pending #app-intro {
-                display: none !important;
-            }
         }
     </style>
     {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}

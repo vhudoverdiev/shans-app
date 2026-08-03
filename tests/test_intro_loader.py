@@ -20,7 +20,8 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("'workouts.edit_plan'", template)
         self.assertIn("'nutrition.edit_profile'", template)
         self.assertIn("const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};", template)
-        self.assertIn("const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
+        self.assertIn("const routeForcesIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
+        self.assertIn("const forceIntroLoader = routeForcesIntroLoader || isStandaloneApp;", template)
         self.assertIn("if (skipIntroLoader) {", template)
         self.assertIn('document.documentElement.classList.remove("app-intro-pending");', template)
         self.assertIn("window.__shansShouldRunIntro = false;", template)
@@ -33,8 +34,6 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("const isStandaloneApp = standaloneDisplayMode", template)
         self.assertIn("window.navigator.standalone === true", template)
         self.assertIn('classList.add("shans-standalone-app")', template)
-        self.assertIn("if (isStandaloneApp) {", template)
-        self.assertIn("window.__shansShouldRunIntro = false", template)
         self.assertIn('const introKey = "shans-intro-session-v1"', template)
         self.assertIn("window.sessionStorage.getItem(introKey)", template)
         self.assertIn("window.sessionStorage.setItem(introKey, \"1\")", template)
@@ -62,7 +61,8 @@ class IntroLoaderTests(unittest.TestCase):
         )[0]
 
         self.assertNotIn("request.endpoint == 'login'", skip_expression)
-        self.assertIn("const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
+        self.assertIn("const routeForcesIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
+        self.assertIn("const forceIntroLoader = routeForcesIntroLoader || isStandaloneApp;", template)
         self.assertIn("{% if request.endpoint == 'login' %} login-centered-document{% endif %}", template)
         self.assertIn(
             '<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == \'login\' %}',
@@ -131,28 +131,34 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn("window.localStorage.getItem(introKey)", template)
         self.assertNotIn("window.localStorage.setItem(introKey, \"1\")", template)
 
-    def test_installed_pwa_skips_custom_intro_after_native_splash(self):
+    def test_installed_pwa_runs_custom_intro_and_ignores_session_marker(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
         standalone_position = template.index("const standaloneDisplayMode")
         session_position = template.index('const introKey = "shans-intro-session-v1"')
-        standalone_block = template.split("if (isStandaloneApp) {", 1)[1].split("}", 1)[0]
-
-        self.assertLess(standalone_position, session_position)
-        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', standalone_block)
-        self.assertIn("window.__shansShouldRunIntro = false;", standalone_block)
-        self.assertIn("return;", standalone_block)
-
-    def test_standalone_css_prevents_second_logo_before_javascript_finishes(self):
-        template = BASE_TEMPLATE.read_text(encoding="utf-8")
-        standalone_css = template.split("@media (display-mode: standalone)", 1)[1].split(
-            "</style>",
+        storage_block = template.split('const introKey = "shans-intro-session-v1"', 1)[1].split(
+            "if (!forceIntroLoader && introAlreadyShown) {",
+            1,
+        )[0]
+        runtime_critical_styles = template.split("</noscript>", 1)[1].split(
+            "{% set static_asset_version",
             1,
         )[0]
 
-        self.assertIn("html.app-intro-pending body > :not(#app-intro)", standalone_css)
-        self.assertIn("visibility: visible !important;", standalone_css)
-        self.assertIn("html.app-intro-pending #app-intro", standalone_css)
-        self.assertIn("display: none !important;", standalone_css)
+        self.assertLess(standalone_position, session_position)
+        self.assertIn("const forceIntroLoader = routeForcesIntroLoader || isStandaloneApp;", template)
+        self.assertIn("if (!forceIntroLoader) {", storage_block)
+        self.assertNotIn("if (isStandaloneApp) {", template)
+        self.assertNotIn("display: none !important;", runtime_critical_styles)
+
+    def test_standalone_critical_css_does_not_hide_custom_intro(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        runtime_critical_styles = template.split("</noscript>", 1)[1].split(
+            "{% set static_asset_version",
+            1,
+        )[0]
+
+        self.assertNotIn("@media (display-mode: standalone)", template)
+        self.assertNotIn("display: none !important;", runtime_critical_styles)
 
     def test_storage_unavailable_still_runs_first_visit_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
@@ -173,23 +179,17 @@ class IntroLoaderTests(unittest.TestCase):
             bootstrap_catch,
         )
 
-    def test_standalone_checks_tolerate_missing_navigator(self):
+    def test_standalone_detection_tolerates_missing_navigator(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
-        script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
         self.assertIn(
             "|| (window.navigator && window.navigator.standalone === true)",
             template,
         )
-        self.assertIn(
-            "|| (window.navigator && window.navigator.standalone === true)",
-            script,
-        )
 
     def test_intro_script_cleans_up_after_animation(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
-        self.assertIn("function isStandaloneApp()", script)
         self.assertIn("function removeIntroWithoutAnimation()", script)
         self.assertIn('classList.contains("app-intro-pending")', script)
         self.assertIn("!window.__shansShouldRunIntro", script)
@@ -204,16 +204,15 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("window.clearTimeout(window.__shansIntroFallbackTimer)", script)
         self.assertIn("prefers-reduced-motion: reduce", script)
 
-    def test_intro_script_rechecks_standalone_before_showing_logo(self):
+    def test_intro_script_does_not_cancel_standalone_before_showing_logo(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
 
-        standalone_check_position = script.index("if (isStandaloneApp())")
         show_logo_position = script.index("intro.hidden = false")
-        standalone_block = script.split("if (isStandaloneApp()) {", 1)[1].split("}", 1)[0]
 
-        self.assertLess(standalone_check_position, show_logo_position)
-        self.assertIn("removeIntroWithoutAnimation();", standalone_block)
-        self.assertIn("return;", standalone_block)
+        self.assertNotIn("function isStandaloneApp()", script)
+        self.assertNotIn("if (isStandaloneApp())", script)
+        self.assertNotIn("window.navigator.standalone", script)
+        self.assertLess(script.index("waitForIntroLogoImage().then"), show_logo_position)
 
     def test_intro_waits_for_logo_before_revealing_logo_container(self):
         script = INTRO_SCRIPT.read_text(encoding="utf-8")
