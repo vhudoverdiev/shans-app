@@ -173,7 +173,14 @@
                     </div>
                     <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
                 </div>
-                <form method="post" action="{{ url_for('nutrition.create_entry') }}" class="nutrition-entry-form">
+                <form
+                    method="post"
+                    action="{{ url_for('nutrition.create_entry') }}"
+                    class="nutrition-entry-form"
+                    data-ajax-submit
+                    data-ajax-update="#nutrition-summary, #diary, .nutrition-history"
+                    data-ajax-reset="true"
+                >
                     <input type="hidden" name="eaten_on" value="{{ selected_date }}">
                     <div class="nutrition-field nutrition-field-wide">
                         <label for="food-query">Продукт или блюдо</label>
@@ -323,7 +330,7 @@
             </div>
             <div class="nutrition-heading-actions">
                 <span class="nutrition-count-pill" id="nutrition-visible-count">{{ foods|length }}</span>
-                <button type="button" class="nutrition-icon-button" data-open-custom-food aria-label="Добавить продукт вручную">+</button>
+                <a href="{{ url_for('nutrition.new_custom_food') }}" class="nutrition-icon-button" aria-label="Добавить продукт вручную">+</a>
             </div>
         </div>
         <div class="nutrition-catalog-toolbar">
@@ -352,41 +359,6 @@
             {% endfor %}
         </div>
         <p class="nutrition-no-results" id="nutrition-no-results" hidden>По вашему запросу продукты не найдены.</p>
-    </section>
-
-    <section class="nutrition-card nutrition-custom-card" id="custom-food" hidden>
-        <div class="nutrition-section-heading">
-            <div>
-                <span class="nutrition-section-label">По этикетке</span>
-                <h2>Добавить продукт вручную</h2>
-            </div>
-        </div>
-        <p class="nutrition-card-intro">Укажите значения с упаковки на 100 г или 100 мл. Продукт сохранится только в вашем каталоге.</p>
-        <form method="post" action="{{ url_for('nutrition.create_custom_food') }}" class="nutrition-custom-form">
-            <div class="nutrition-field nutrition-field-wide">
-                <label for="custom-food-name">Название</label>
-                <input id="custom-food-name" name="name" type="text" maxlength="120" placeholder="Например, йогурт любимой марки" required>
-            </div>
-            <div class="nutrition-custom-nutrients">
-                <div class="nutrition-field">
-                    <label for="custom-calories">Ккал</label>
-                    <input id="custom-calories" name="calories" type="number" min="0" max="900" step="0.1" inputmode="decimal" required>
-                </div>
-                <div class="nutrition-field">
-                    <label for="custom-protein">Белки</label>
-                    <input id="custom-protein" name="protein" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
-                </div>
-                <div class="nutrition-field">
-                    <label for="custom-fat">Жиры</label>
-                    <input id="custom-fat" name="fat" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
-                </div>
-                <div class="nutrition-field">
-                    <label for="custom-carbs">Углеводы</label>
-                    <input id="custom-carbs" name="carbs" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
-                </div>
-            </div>
-            <button type="submit" class="nutrition-primary-button">Сохранить продукт</button>
-        </form>
     </section>
 
     <section class="nutrition-card">

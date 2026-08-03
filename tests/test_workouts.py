@@ -63,8 +63,11 @@ class WorkoutsTests(unittest.TestCase):
                     "{{ weight_entries|length }}|{{ summary.result_count }}"
                 ),
                 "workout_plan_detail.html": (
-                    "{{ plan.name }}|{{ plan.weekday_label }}|"
-                    "{{ workout_results|length }}"
+                    "{{ plan.name }}|{{ workout_results|length }}"
+                ),
+                "workout_plan_edit.html": (
+                    "Редактировать тренировку|← Назад к тренировке|"
+                    "<select name=\"weekday\"></select>"
                 ),
             }
         )
@@ -200,6 +203,7 @@ class WorkoutsTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
         self.assertEqual(get_weight_entries(1), [])
 
     def test_weekly_plan_syncs_to_personal_schedule_without_duplicates(self):
@@ -414,7 +418,14 @@ class WorkoutsTests(unittest.TestCase):
 
         detail_response = client.get(f"/workouts/plans/{plan['id']}")
         self.assertEqual(detail_response.status_code, 200)
-        self.assertIn("Тренировка 1|Не запланирована", detail_response.get_data(as_text=True))
+        self.assertIn("Тренировка 1|0", detail_response.get_data(as_text=True))
+
+        edit_response = client.get(f"/workouts/plans/{plan['id']}/edit")
+        edit_html = edit_response.get_data(as_text=True)
+        self.assertEqual(edit_response.status_code, 200)
+        self.assertIn("Редактировать тренировку", edit_html)
+        self.assertIn("← Назад к тренировке", edit_html)
+        self.assertIn('name="weekday"', edit_html)
 
         response = client.post(
             f"/workouts/plans/{plan['id']}",
@@ -448,24 +459,68 @@ class WorkoutsTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("url_for('workouts.plan_detail'", overview)
+        self.assertIn("url_for('sport_hub')", overview)
+        self.assertIn("← Спорт", overview)
         self.assertNotIn("Личный дневник", overview)
         self.assertNotIn("workout_results=result_history", workouts_source)
         self.assertIn("История веса", overview)
-        self.assertIn("workouts-weight-toggle", overview)
+        self.assertIn("График веса", overview)
+        self.assertIn("Записать вес", overview)
+        self.assertIn("внесите описание", overview)
+        self.assertIn("внесите описание", detail)
+        self.assertLess(overview.index('id="weight-chart"'), overview.index('id="weight-kg"'))
+        self.assertNotIn("Еженедельное расписание", overview)
+        self.assertNotIn("Откройте тренировку, выберите день недели", overview)
+        self.assertNotIn("Добавьте измерение и посмотрите динамику изменений.", overview)
+        self.assertNotIn("workouts-weight-toggle", overview)
+        self.assertNotIn("workouts-weight-panel", overview)
+        self.assertNotIn("weight_section_open", workouts_source)
+        self.assertNotIn('open="weight"', workouts_source)
         self.assertIn("workouts-weight-section", overview)
-        self.assertIn("workout-plan-settings", detail)
-        self.assertIn("workout-plan-settings-toggle", detail)
-        self.assertIn("Редактировать тренировку", detail)
-        self.assertNotIn("workout-plan-settings\" open", detail)
+        self.assertIn("workout-plan-detail-toolbar", detail)
+        self.assertIn("workouts.edit_plan", detail)
+        self.assertIn("Редактировать", detail)
+        self.assertNotIn('target="_blank"', detail)
+        self.assertNotIn('rel="noopener"', detail)
+        self.assertNotIn("workout-plan-detail-schedule", detail)
+        self.assertNotIn("День недели", detail)
+        self.assertNotIn("plan.weekday_label", detail)
+        self.assertNotIn("Ближайшая:", detail)
+        self.assertNotIn("Добавляйте результат после конкретной тренировки", detail)
+        self.assertNotIn("workout-plan-settings", detail)
+        self.assertNotIn("Настройки", detail)
+        self.assertNotIn("Как работает связь", detail)
+        self.assertNotIn("Выберите постоянный день недели.", detail)
+        self.assertNotIn("План появится в личном графике автоматически.", detail)
+        self.assertNotIn("Измените название или текст здесь", detail)
+        self.assertNotIn("workout-plan-detail-side", detail)
+        self.assertNotIn("workout-plan-sync-steps", detail)
         self.assertIn("workout-plan-log-title", detail)
         self.assertIn('name="workout_plan_id"', detail)
         self.assertIn('name="return_to"', detail)
-        self.assertIn('name="name"', detail)
-        self.assertIn('name="weekday"', detail)
-        self.assertIn('maxlength="5000"', detail)
-        self.assertIn("Сохранить и обновить график", detail)
+        edit = (
+            PROJECT_ROOT / "app" / "templates" / "workout_plan_edit.html"
+        ).read_text(encoding="utf-8")
+        self.assertIn("url_for('workouts.plan_detail'", edit)
+        self.assertIn("← Назад к тренировке", edit)
+        self.assertIn('name="name"', edit)
+        self.assertIn('name="weekday"', edit)
+        self.assertIn('maxlength="5000"', edit)
+        self.assertIn(">Сохранить</button>", edit)
+        self.assertNotIn("Сохранить и обновить график", edit)
+        self.assertNotIn(
+            "Можно внести до 5000 символов: упражнения, подходы, повторы, веса и любые заметки.",
+            edit,
+        )
+        self.assertNotIn("target=\"_blank\"", edit)
         self.assertIn("Открыть тренировку", schedule)
         self.assertNotIn("autofocus", detail)
+        self.assertNotIn("settings_open", workouts_source)
+        base = (
+            PROJECT_ROOT / "app" / "templates" / "base.html"
+        ).read_text(encoding="utf-8")
+        self.assertIn("'workouts.plan_detail'", base)
+        self.assertIn("'workouts.edit_plan'", base)
 
     def test_training_is_reached_through_sport_on_mobile_and_desktop(self):
         base = (PROJECT_ROOT / "app" / "templates" / "base.html").read_text(
@@ -505,6 +560,12 @@ class WorkoutsTests(unittest.TestCase):
 
     def test_workouts_desktop_theme_uses_neutral_surface(self):
         styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
+        self.assertNotIn(".workout-plan-detail-side", styles)
+        self.assertNotIn(".workout-plan-sync-steps", styles)
+        self.assertNotIn(".workout-plan-detail-schedule", styles)
+        self.assertIn(".workout-plan-detail-toolbar", styles)
+        self.assertIn(".workout-plan-edit-card", styles)
+        self.assertIn(".workout-plan-edit-link::after", styles)
         desktop_theme = styles.split(
             "/* Desktop sport/training pages use the neutral site surface. */",
             1,

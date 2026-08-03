@@ -56,6 +56,7 @@ class NutritionTests(unittest.TestCase):
                     "{{ foods|length }}|{{ entries|length }}|"
                     "{{ summary.calories }}|{{ target_calories or 0 }}"
                 ),
+                "nutrition_custom_food.html": "custom food page",
             }
         )
         login_manager = LoginManager(app)
@@ -381,6 +382,9 @@ class NutritionTests(unittest.TestCase):
         template = (
             PROJECT_ROOT / "app" / "templates" / "nutrition.html"
         ).read_text(encoding="utf-8")
+        custom_template = (
+            PROJECT_ROOT / "app" / "templates" / "nutrition_custom_food.html"
+        ).read_text(encoding="utf-8")
 
         self.assertNotIn("url_for('nutrition.index')", hub)
         self.assertIn("url_for('nutrition.index')", sport_hub)
@@ -391,8 +395,14 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("Добавить продукт вручную", template)
         self.assertIn('class="nutrition-foldout-panel" id="add-food-entry"', template)
         self.assertIn('class="nutrition-secondary-button nutrition-foldout-button"', template)
-        self.assertIn('class="nutrition-icon-button" data-open-custom-food', template)
-        self.assertIn('id="custom-food" hidden', template)
+        self.assertIn("url_for('nutrition.new_custom_food')", template)
+        self.assertIn('class="nutrition-icon-button"', template)
+        self.assertNotIn("data-open-custom-food", template)
+        self.assertNotIn('id="custom-food" hidden', template)
+        self.assertNotIn("По этикетке", template)
+        self.assertIn("← Назад к питанию", custom_template)
+        self.assertIn("url_for('nutrition.create_custom_food')", custom_template)
+        self.assertIn("Сохранить продукт", custom_template)
         self.assertIn(">Тренировки →</a>", template)
         self.assertNotIn("Открыть тренировки", template)
         self.assertIn("Последние 14 дней", template)
@@ -400,6 +410,30 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("progress_insight.day_text", template)
         self.assertIn("progress_insight.protein_message", template)
         self.assertNotIn("autofocus", template)
+
+    def test_custom_food_page_is_separate_from_catalog(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+
+        response = client.get("/nutrition/foods/new")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_data(as_text=True), "custom food page")
+
+        response = client.post(
+            "/nutrition/foods",
+            data={
+                "name": "",
+                "calories": "90",
+                "protein": "5",
+                "fat": "2",
+                "carbs": "12",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/nutrition/foods/new")
 
     def test_nutrition_desktop_theme_uses_neutral_surface(self):
         styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
@@ -446,9 +480,11 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("max-width: max-content;", styles)
         self.assertIn(".nutrition-icon-button", styles)
         self.assertIn("white-space: nowrap;", styles)
+        self.assertIn("text-decoration: none;", styles)
+        self.assertIn(".nutrition-custom-food-card", styles)
         self.assertIn("entryCard.open = true;", script)
-        self.assertIn("customCard.hidden", script)
-        self.assertIn('trigger.setAttribute("aria-expanded"', script)
+        self.assertNotIn("customCard.hidden", script)
+        self.assertNotIn('trigger.setAttribute("aria-expanded"', script)
 
     def test_database_uses_snapshot_nutrients_for_diary_entries(self):
         food = get_food_catalog(1)[0]

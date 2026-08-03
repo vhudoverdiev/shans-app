@@ -135,6 +135,7 @@ SECTION_ENDPOINTS = {
         "nutrition.save_profile",
         "nutrition.create_entry",
         "nutrition.remove_entry",
+        "nutrition.new_custom_food",
         "nutrition.create_custom_food",
         "nutrition.remove_custom_food",
     },

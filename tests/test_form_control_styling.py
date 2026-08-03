@@ -5,7 +5,9 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = PROJECT_ROOT / "app" / "templates"
+BASE_TEMPLATE = TEMPLATES_DIR / "base.html"
 STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
+FORM_CONTROLS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "form-controls.js"
 DATE_TYPES = {"date", "time", "month", "datetime-local"}
 
 
@@ -41,6 +43,47 @@ class FormControlStylingTests(unittest.TestCase):
         self.assertIn('input[type="datetime-local"]', stylesheet)
         self.assertIn("::-webkit-calendar-picker-indicator", stylesheet)
         self.assertIn("appearance: none;", stylesheet)
+        self.assertIn("width: min(286px, calc(100vw - 24px));", stylesheet)
+        self.assertIn("width: min(304px, calc(100vw - 20px));", stylesheet)
+        self.assertRegex(
+            stylesheet,
+            r"\.custom-select-button\s*\{[^}]*font-weight:\s*400;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.custom-select-option\s*\{[^}]*font-weight:\s*400;",
+        )
+
+    def test_base_template_loads_custom_form_control_enhancement(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn("js/form-controls.js", template)
+        self.assertIn("defer", template)
+
+    def test_custom_form_control_assets_cover_dropdowns_and_calendars(self):
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+        script = FORM_CONTROLS_SCRIPT.read_text(encoding="utf-8")
+
+        for selector in (
+            ".custom-select-button",
+            ".custom-select-menu",
+            ".custom-select-option",
+            ".custom-date-panel",
+            ".custom-date-calendar",
+            ".custom-date-day-selected",
+            ".custom-month-grid",
+            ".custom-month-option-selected",
+        ):
+            self.assertIn(selector, stylesheet)
+
+        self.assertIn("select.form-input:not([multiple]):not([data-native-control])", script)
+        self.assertIn("input.form-input[type='date']:not([data-native-control])", script)
+        self.assertIn("input.form-input[type='datetime-local']:not([data-native-control])", script)
+        self.assertIn("input.form-input[type='month']:not([data-native-control])", script)
+        self.assertIn('!panel.classList.contains("custom-date-panel")', script)
+        self.assertIn('panel.style.minWidth = shouldMatchAnchorWidth ? rect.width + "px" : "";', script)
+        self.assertIn("dispatchNativeChange", script)
+        self.assertIn("MutationObserver", script)
 
 
 if __name__ == "__main__":

@@ -220,9 +220,16 @@
         );
     }
 
+    window.ShansWorkouts = window.ShansWorkouts || {};
+    window.ShansWorkouts.renderWeightChart = renderWeightChart;
+
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", renderWeightChart);
     } else {
         renderWeightChart();
     }
+
+    document.addEventListener("shans:ajax-updated", function () {
+        renderWeightChart();
+    });
 }());

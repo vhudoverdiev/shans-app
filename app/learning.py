@@ -970,12 +970,22 @@ def grade_quiz(questions: list[dict], form) -> tuple[int, list[dict]]:
             selected_index = int(raw_answer)
         except (TypeError, ValueError):
             selected_index = -1
+        options = question["options"]
+        correct_index = question["correct_index"]
+        selected_answer = (
+            options[selected_index]
+            if 0 <= selected_index < len(options)
+            else "не выбран"
+        )
+        correct_answer = options[correct_index]
         is_correct = selected_index == question["correct_index"]
         score += int(is_correct)
         feedback.append(
             {
                 **question,
                 "selected_index": selected_index,
+                "selected_answer": selected_answer,
+                "correct_answer": correct_answer,
                 "is_correct": is_correct,
             }
         )

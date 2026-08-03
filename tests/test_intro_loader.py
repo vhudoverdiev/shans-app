@@ -13,7 +13,11 @@ class IntroLoaderTests(unittest.TestCase):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn("skip_intro_loader", template)
-        self.assertIn("request.endpoint in ['learning.english_day_test', 'learning.it_day_test']", template)
+        self.assertIn("request.endpoint in [", template)
+        self.assertIn("'learning.english_day_test'", template)
+        self.assertIn("'learning.it_day_test'", template)
+        self.assertIn("'workouts.plan_detail'", template)
+        self.assertIn("'workouts.edit_plan'", template)
         self.assertIn("const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};", template)
         self.assertIn("if (skipIntroLoader) {", template)
         self.assertIn('document.documentElement.classList.remove("app-intro-pending");', template)

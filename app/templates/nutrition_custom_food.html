@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить продукт | Питание | Шанс{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nutrition.css', v=static_asset_version) }}">
+{% endblock %}
+
+{% block content %}
+<section class="nutrition-page nutrition-custom-food-page">
+    <a href="{{ url_for('nutrition.index') }}" class="nutrition-back-link">← Назад к питанию</a>
+
+    <section class="nutrition-card nutrition-custom-food-card" aria-labelledby="nutrition-custom-food-title">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Добавление продукта</span>
+                <h1 id="nutrition-custom-food-title">Добавить продукт вручную</h1>
+            </div>
+        </div>
+        <p class="nutrition-card-intro">Укажите значения с упаковки на 100 г или 100 мл. Продукт сохранится только в вашем каталоге.</p>
+
+        <form method="post" action="{{ url_for('nutrition.create_custom_food') }}" class="nutrition-custom-form">
+            <div class="nutrition-field nutrition-field-wide">
+                <label for="custom-food-name">Название</label>
+                <input id="custom-food-name" name="name" type="text" maxlength="120" placeholder="Например, йогурт любимой марки" required>
+            </div>
+            <div class="nutrition-custom-nutrients">
+                <div class="nutrition-field">
+                    <label for="custom-calories">Ккал</label>
+                    <input id="custom-calories" name="calories" type="number" min="0" max="900" step="0.1" inputmode="decimal" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="custom-protein">Белки</label>
+                    <input id="custom-protein" name="protein" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="custom-fat">Жиры</label>
+                    <input id="custom-fat" name="fat" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="custom-carbs">Углеводы</label>
+                    <input id="custom-carbs" name="carbs" type="number" min="0" max="100" step="0.1" inputmode="decimal" required>
+                </div>
+            </div>
+            <button type="submit" class="nutrition-primary-button">Сохранить продукт</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

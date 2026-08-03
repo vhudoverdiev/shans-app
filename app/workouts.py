@@ -676,7 +676,6 @@ def index():
         weight_chart_points=chart_points,
         summary=build_workout_summary(all_results, weight_entries),
         today=date.today().isoformat(),
-        weight_section_open=request.args.get("open") == "weight",
     )
 
 
@@ -703,10 +702,24 @@ def plan_detail(plan_id: int):
     return render_template(
         "workout_plan_detail.html",
         plan=plan,
-        weekdays=WEEKDAYS,
         workout_results=results,
         today=date.today().isoformat(),
-        settings_open=request.args.get("open") == "settings",
+    )
+
+
+@workouts_bp.route("/plans/<int:plan_id>/edit")
+@login_required
+def edit_plan(plan_id: int):
+    user_id = int(current_user.id)
+    ensure_default_workout_plans(user_id)
+    plan_row = get_workout_plan(user_id, plan_id)
+    if not plan_row:
+        abort(404)
+
+    return render_template(
+        "workout_plan_edit.html",
+        plan=dict(plan_row),
+        weekdays=WEEKDAYS,
     )
 
 
@@ -745,7 +758,7 @@ def update_plan(plan_id: int):
             abort(404)
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.plan_detail", plan_id=plan_id, open="settings"))
+        return redirect(url_for("workouts.edit_plan", plan_id=plan_id))
 
     if weekday is None:
         flash("План сохранён. Тренировка убрана из личного графика.", "success")
@@ -828,10 +841,10 @@ def save_weight():
         upsert_weight_entry(user_id, measured_on, weight_kg, notes)
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))
+        return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
     flash("Вес сохранён. Повторная запись за ту же дату обновляет значение.", "success")
-    return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))
+    return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
 
 @workouts_bp.route("/weight/<int:entry_id>/delete", methods=["POST"])
@@ -840,4 +853,4 @@ def remove_weight(entry_id: int):
     if not delete_weight_entry(int(current_user.id), entry_id):
         abort(404)
     flash("Измерение веса удалено.", "success")
-    return redirect(url_for("workouts.index", open="weight", _anchor="weight-progress"))
+    return redirect(url_for("workouts.index", _anchor="weight-progress"))

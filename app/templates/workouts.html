@@ -8,6 +8,8 @@
 
 {% block content %}
 <section class="workouts-page">
+    <a href="{{ url_for('sport_hub') }}" class="workouts-back-link">← Спорт</a>
+
     <div class="workouts-hero">
         <div>
             <p class="workouts-kicker">Движение и прогресс</p>
@@ -59,10 +61,8 @@
     <section class="workouts-section" aria-labelledby="workout-plans-title">
         <div class="workouts-section-heading">
             <div>
-                <p class="workouts-section-kicker">Еженедельное расписание</p>
                 <h2 id="workout-plans-title">Планы тренировок</h2>
             </div>
-            <p>Откройте тренировку, выберите день недели и подробно опишите свою программу.</p>
         </div>
 
         <div class="workout-plan-grid">
@@ -71,7 +71,7 @@
                 <div class="workout-plan-number" aria-hidden="true">{{ loop.index }}</div>
                 <div class="workout-plan-content">
                     <h3>{{ plan.name }}</h3>
-                    <p>{{ plan.description or 'Добавьте упражнения, подходы, повторы и заметки к плану.' }}</p>
+                    <p>{{ plan.description or 'внесите описание' }}</p>
                 </div>
                 <div class="workout-plan-schedule{% if not plan.next_date %} workout-plan-schedule-empty{% endif %}">
                     <span>{{ plan.weekday_label }}</span>
@@ -87,19 +87,61 @@
         </div>
     </section>
 
-    <details class="workouts-foldout workouts-weight-panel" id="weight-progress"{% if weight_section_open %} open{% endif %}>
-        <summary class="btn btn-secondary workouts-action-button workouts-weight-toggle" aria-label="Открыть историю веса">
-            История веса
-        </summary>
-        <section class="workouts-section workouts-weight-section">
-            <div class="workouts-section-heading">
+    <section class="workouts-section workouts-weight-section" id="weight-progress" aria-labelledby="weight-progress-title">
+        <div class="workouts-section-heading">
+            <div>
+                <p class="workouts-section-kicker">История веса</p>
+                <h2 id="weight-progress-title">График веса</h2>
+            </div>
+        </div>
+
+        <div class="weight-chart" id="weight-chart" role="img" aria-label="График изменения веса">
+            <div class="weight-chart-empty">
+                {% if weight_chart_points %}
+                    Строим график…
+                {% else %}
+                    Добавьте первое измерение — здесь появится график динамики.
+                {% endif %}
+            </div>
+        </div>
+        <script type="application/json" id="weight-chart-data">{{ weight_chart_points|tojson }}</script>
+
+        {% if weight_entries %}
+        <div class="weight-history">
+            {% for entry in weight_entries %}
+            <article class="weight-history-item">
+                <div>
+                    <strong>{{ ("%.1f"|format(entry.weight_kg))|replace(".", ",") }} кг</strong>
+                    <time datetime="{{ entry.measured_on }}">{{ entry.display_date }}</time>
+                    {% if entry.notes %}<p>{{ entry.notes }}</p>{% endif %}
+                </div>
+                <form method="post" action="{{ url_for('workouts.remove_weight', entry_id=entry.id) }}">
+                    <button type="submit" class="workouts-delete-btn" aria-label="Удалить запись веса">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                            <path d="M6 7h12M10 11v6M14 11v6M9 7l1-2h4l1 2M7 7l1 13h8l1-13"></path>
+                        </svg>
+                    </button>
+                </form>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="workouts-weight-form-block">
+            <div class="workouts-section-heading workouts-section-heading-compact">
                 <div>
                     <p class="workouts-section-kicker">Вес</p>
-                    <h2>Запись веса</h2>
+                    <h2>Записать вес</h2>
                 </div>
-                <p>Добавьте измерение и посмотрите динамику изменений.</p>
             </div>
-            <form method="post" action="{{ url_for('workouts.save_weight') }}" class="workouts-form">
+            <form
+                method="post"
+                action="{{ url_for('workouts.save_weight') }}"
+                class="workouts-form"
+                data-ajax-submit
+                data-ajax-update=".workouts-summary, .workouts-weight-section"
+                data-ajax-reset="true"
+            >
                 <div class="workouts-form-row">
                     <div class="form-group">
                         <label for="weight-kg">Вес, кг</label>
@@ -148,40 +190,8 @@
                 <span aria-hidden="true">!</span>
                 <p>Фиксируйте вес в одинаковых условиях. При боли или плохом самочувствии уменьшите нагрузку.</p>
             </aside>
-
-            <div class="weight-chart" id="weight-chart" role="img" aria-label="График изменения веса">
-                <div class="weight-chart-empty">
-                    {% if weight_chart_points %}
-                        Строим график…
-                    {% else %}
-                        Добавьте первое измерение — здесь появится график динамики.
-                    {% endif %}
-                </div>
-            </div>
-            <script type="application/json" id="weight-chart-data">{{ weight_chart_points|tojson }}</script>
-
-            {% if weight_entries %}
-            <div class="weight-history">
-                {% for entry in weight_entries %}
-                <article class="weight-history-item">
-                    <div>
-                        <strong>{{ ("%.1f"|format(entry.weight_kg))|replace(".", ",") }} кг</strong>
-                        <time datetime="{{ entry.measured_on }}">{{ entry.display_date }}</time>
-                        {% if entry.notes %}<p>{{ entry.notes }}</p>{% endif %}
-                    </div>
-                    <form method="post" action="{{ url_for('workouts.remove_weight', entry_id=entry.id) }}">
-                        <button type="submit" class="workouts-delete-btn" aria-label="Удалить запись веса">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                                <path d="M6 7h12M10 11v6M14 11v6M9 7l1-2h4l1 2M7 7l1 13h8l1-13"></path>
-                            </svg>
-                        </button>
-                    </form>
-                </article>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </section>
-    </details>
+        </div>
+    </section>
 
     </section>
 {% endblock %}

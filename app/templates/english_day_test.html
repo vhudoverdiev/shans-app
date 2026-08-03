@@ -64,6 +64,8 @@
         {% for item in feedback %}
         <article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}">
             <strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong>
+            <span><b>Вы выбрали:</b> {{ item.selected_answer }}</span>
+            <span><b>Правильный ответ:</b> {{ item.correct_answer }}</span>
             <span>{{ item.explanation }}</span>
         </article>
         {% endfor %}

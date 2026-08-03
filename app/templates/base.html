@@ -1,4 +1,4 @@
-{% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test'] %}
+{% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test', 'workouts.plan_detail', 'workouts.edit_plan'] %}
 <!DOCTYPE html>
 <html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
 <head>
@@ -186,6 +186,8 @@
     {% endif %}
     <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/push-inbox.js', v=static_asset_version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/form-controls.js', v=static_asset_version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/ajax-forms.js', v=static_asset_version) }}" defer></script>
 </head>
 <body class="app-body{% if current_user.is_authenticated %} app-body-authenticated{% endif %}">
     {% if not skip_intro_loader %}

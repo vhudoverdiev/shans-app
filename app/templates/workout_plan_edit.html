@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать {{ plan.name }} | Тренировки | Шанс{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/workouts.css', v=static_asset_version) }}">
+{% endblock %}
+
+{% block content %}
+<section class="workouts-page workout-plan-edit-page">
+    <a href="{{ url_for('workouts.plan_detail', plan_id=plan.id) }}" class="workouts-back-link">← Назад к тренировке</a>
+
+    <section class="workouts-section workout-plan-edit-card" aria-labelledby="workout-plan-edit-title">
+        <div class="workouts-section-heading workouts-section-heading-compact">
+            <div>
+                <p class="workouts-section-kicker">Редактирование</p>
+                <h1 id="workout-plan-edit-title">Редактировать тренировку</h1>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('workouts.update_plan', plan_id=plan.id) }}" class="workouts-form workout-plan-detail-form">
+            <div class="form-group">
+                <label for="plan-name">Название</label>
+                <input
+                    id="plan-name"
+                    name="name"
+                    type="text"
+                    class="form-input"
+                    maxlength="80"
+                    value="{{ plan.name }}"
+                    placeholder="Например, Ноги и корпус"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="plan-weekday">День недели</label>
+                <select id="plan-weekday" name="weekday" class="form-input">
+                    <option value="">Не добавлять в график</option>
+                    {% for value, label in weekdays %}
+                    <option value="{{ value }}"{% if plan.weekday == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <p class="workouts-form-hint">Тренировка автоматически появится в личном графике на выбранный день каждой недели.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="plan-description">Подробная программа</label>
+                <textarea
+                    id="plan-description"
+                    name="description"
+                    class="form-input workouts-textarea workout-plan-detail-textarea"
+                    maxlength="5000"
+                    rows="14"
+                    placeholder="Разминка, упражнения, количество подходов и повторов, рабочие веса, отдых между подходами, заминка..."
+                >{{ plan.description }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary workouts-submit">Сохранить</button>
+        </form>
+    </section>
+</section>
+{% endblock %}

@@ -948,6 +948,12 @@ def remove_entry(entry_id: int):
     return redirect(url_for("nutrition.index", date=redirect_date, _anchor="diary"))
 
 
+@nutrition_bp.route("/foods/new")
+@login_required
+def new_custom_food():
+    return render_template("nutrition_custom_food.html")
+
+
 @nutrition_bp.route("/foods", methods=["POST"])
 @login_required
 def create_custom_food():
@@ -982,7 +988,7 @@ def create_custom_food():
         )
     except ValueError as error:
         flash(str(error), "error")
-        return redirect(url_for("nutrition.index", _anchor="custom-food"))
+        return redirect(url_for("nutrition.new_custom_food"))
 
     flash("Личный продукт добавлен. Теперь его можно выбрать в дневнике.", "success")
     return redirect(url_for("nutrition.index", _anchor="add-food-entry"))
@@ -994,4 +1000,4 @@ def remove_custom_food(food_id: int):
     if not delete_custom_food(int(current_user.id), food_id):
         abort(404)
     flash("Личный продукт удалён. Старые записи дневника сохранены.", "success")
-    return redirect(url_for("nutrition.index", _anchor="custom-food"))
+    return redirect(url_for("nutrition.index", _anchor="nutrition-catalog"))

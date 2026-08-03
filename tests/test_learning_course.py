@@ -94,8 +94,12 @@ class EnglishCourseTests(unittest.TestCase):
 
         self.assertEqual(score, len(questions))
         self.assertTrue(all(item["is_correct"] for item in feedback))
+        self.assertEqual(feedback[0]["selected_answer"], questions[0]["options"][questions[0]["correct_index"]])
+        self.assertEqual(feedback[0]["correct_answer"], questions[0]["options"][questions[0]["correct_index"]])
         self.assertEqual(missing_score, 0)
         self.assertFalse(any(item["is_correct"] for item in missing_feedback))
+        self.assertEqual(missing_feedback[0]["selected_answer"], "не выбран")
+        self.assertEqual(missing_feedback[0]["correct_answer"], questions[0]["options"][questions[0]["correct_index"]])
         self.assertEqual(DAILY_PASS_SCORE, 4)
 
     def test_progress_unlocks_only_the_next_day_and_preserves_best_score(self):
@@ -400,6 +404,8 @@ class EnglishCourseTests(unittest.TestCase):
         for source in (english_test_source, it_test_source):
             self.assertIn("Тест дня", source)
             self.assertIn("quiz-form", source)
+            self.assertIn("item.selected_answer", source)
+            self.assertIn("item.correct_answer", source)
             self.assertIn('id="daily-test-result"', source)
             self.assertIn("_anchor='daily-test-result'", source)
             self.assertIn("Проверить ответы", source)
@@ -437,6 +443,7 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("course-audio-label", learning_styles)
         self.assertIn("course-audio-inline", learning_styles)
         self.assertIn("lesson-more-details", learning_styles)
+        self.assertIn(".quiz-feedback-item span b", learning_styles)
         self.assertNotIn("max-width: 850px", learning_styles)
         self.assertNotIn("max-width: 930px", learning_styles)
         self.assertNotIn("max-width: 960px", learning_styles)

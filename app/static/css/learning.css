@@ -803,6 +803,10 @@ a.english-day-card:hover {
     line-height: 1.45;
 }
 
+.quiz-feedback-item span b {
+    color: #111827;
+}
+
 .quiz-section {
     scroll-margin-top: 24px;
 }

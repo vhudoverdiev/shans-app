@@ -12,6 +12,8 @@
         const noResults = document.getElementById("nutrition-no-results");
 
         if (!search || rows.length === 0) return;
+        if (search.dataset.nutritionSearchReady === "1") return;
+        search.dataset.nutritionSearchReady = "1";
 
         function applyFilter() {
             const query = normalize(search.value);
@@ -37,6 +39,8 @@
         if (!input || !entryCard) return;
 
         document.querySelectorAll("[data-select-food]").forEach(function (button) {
+            if (button.dataset.nutritionSelectReady === "1") return;
+            button.dataset.nutritionSelectReady = "1";
             button.addEventListener("click", function () {
                 input.value = button.dataset.selectFood || "";
                 if ("open" in entryCard) {
@@ -47,34 +51,16 @@
         });
     }
 
-    function initializeCustomFoodShortcut() {
-        const customCard = document.getElementById("custom-food");
-        const trigger = document.querySelector("[data-open-custom-food]");
-        const firstInput = document.getElementById("custom-food-name");
-        if (!customCard || !trigger) return;
-
-        trigger.setAttribute("aria-expanded", "false");
-
-        trigger.addEventListener("click", function () {
-            const shouldShow = customCard.hidden;
-            customCard.hidden = !shouldShow;
-            trigger.setAttribute("aria-expanded", shouldShow ? "true" : "false");
-            trigger.classList.toggle("nutrition-icon-button-active", shouldShow);
-
-            if (shouldShow) {
-                customCard.scrollIntoView({ behavior: "smooth", block: "start" });
-                if (firstInput) {
-                    window.setTimeout(function () {
-                        firstInput.focus({ preventScroll: true });
-                    }, 250);
-                }
-            }
-        });
+    function initializeNutritionPage() {
+        initializeCatalogSearch();
+        initializeFoodSelection();
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        initializeCatalogSearch();
-        initializeFoodSelection();
-        initializeCustomFoodShortcut();
+        initializeNutritionPage();
+    });
+
+    document.addEventListener("shans:ajax-updated", function () {
+        initializeNutritionPage();
     });
 }());
