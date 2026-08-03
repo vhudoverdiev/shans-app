@@ -971,15 +971,17 @@ class WebPushAssetsTests(unittest.TestCase):
             PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
         ).read_text(encoding="utf-8")
 
-        self.assertIn('<span class="account-push-mobile-only">Уведомления</span>', template)
         self.assertIn('id="push-notifications-toggle"', template)
-        self.assertIn("data-push-toggle-mobile-label>Включить</span>", template)
+        self.assertIn("<span data-push-toggle-mobile-label>Включить</span>", template)
         self.assertIn('id="push-notifications-status"', template)
+        self.assertIn('aria-live="polite" hidden', template)
         self.assertNotIn('id="account-push-inbox-trigger"', template)
         self.assertNotIn('account-notifications-btn', template)
         self.assertIn("push-notifications.js", template)
-        self.assertIn('id="push-notifications-test"', template)
-        self.assertIn("account-push-desktop-only", template)
+        self.assertNotIn('id="push-notifications-test"', template)
+        self.assertNotIn("account-push-desktop-only", template)
+        self.assertNotIn("Уведомления личного графика", template)
+        self.assertNotIn("Включить уведомления", template)
         self.assertIn(".account-push-desktop-only", mobile_styles)
         self.assertIn("grid-template-columns: 1fr;", mobile_styles)
         self.assertIn(

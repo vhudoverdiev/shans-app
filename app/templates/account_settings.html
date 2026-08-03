@@ -153,22 +153,13 @@
                 data-unsubscribe-url="{{ url_for('web_push_unsubscribe') }}"
                 data-test-url="{{ url_for('web_push_test') }}"
             >
-                <h2 class="section-title">
-                    <span class="account-push-mobile-only">Уведомления</span>
-                    <span class="account-push-desktop-only">Уведомления личного графика</span>
-                </h2>
-                <p class="muted-text account-push-description account-push-desktop-only">
-                    В 10:00 — задачи на сегодня, в 19:00 — непройденные учебные тесты, в 20:00 — задачи на завтра, при указанном времени — напоминание за 2 часа.
-                </p>
-                <p class="account-push-status" id="push-notifications-status" role="status" aria-live="polite">
+                <p class="account-push-status" id="push-notifications-status" role="status" aria-live="polite" hidden>
                     Проверяем поддержку уведомлений…
                 </p>
                 <div class="account-push-actions">
                     <button type="button" class="btn btn-primary" id="push-notifications-toggle">
-                        <span class="account-push-mobile-only" data-push-toggle-mobile-label>Включить</span>
-                        <span class="account-push-desktop-only" data-push-toggle-desktop-label>Включить уведомления</span>
+                        <span data-push-toggle-mobile-label>Включить</span>
                     </button>
-                    <button type="button" class="btn btn-secondary account-push-desktop-only" id="push-notifications-test" hidden>Прислать тестовое уведомление</button>
                 </div>
             </div>
 

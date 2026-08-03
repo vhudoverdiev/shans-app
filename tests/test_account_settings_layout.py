@@ -60,11 +60,25 @@ class AccountSettingsLayoutTests(unittest.TestCase):
 
         self.assertIn('id="push-notifications-card"', template)
         self.assertIn('id="push-notifications-toggle"', template)
-        self.assertIn('id="push-notifications-test"', template)
+        push_card = template.split('id="push-notifications-card"', 1)[1].split(
+            '<div class="card account-card">',
+            1,
+        )[0]
+        self.assertIn("data-push-toggle-mobile-label>Включить</span>", push_card)
+        self.assertIn('id="push-notifications-status"', push_card)
+        self.assertIn('aria-live="polite" hidden', push_card)
+        self.assertNotIn("Уведомления личного графика", push_card)
+        self.assertNotIn("В 10:00", push_card)
+        self.assertNotIn("Включить уведомления", push_card)
+        self.assertNotIn('id="push-notifications-test"', push_card)
         self.assertIn("push-notifications.js", template)
         self.assertNotRegex(
             stylesheet,
             r"\.account-settings-page\s+\.account-push-card\s*\{\s*display:\s*none;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.account-push-status\[hidden\]\s*\{\s*display:\s*none;",
         )
 
 

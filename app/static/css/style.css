@@ -572,6 +572,10 @@ a {
     line-height: 1.45;
 }
 
+.account-push-status[hidden] {
+    display: none;
+}
+
 .account-push-status[data-state="success"] {
     background: #ecfdf5;
     color: #047857;
