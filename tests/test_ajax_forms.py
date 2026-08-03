@@ -35,6 +35,14 @@ class AjaxFormTests(unittest.TestCase):
         self.assertIn("hasErrorFlash", script)
         self.assertIn("form.submit()", script)
 
+    def test_csrf_tokens_are_added_after_ajax_fragment_updates(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn("function injectCsrfTokens(scope)", template)
+        self.assertIn("injectCsrfTokens(document);", template)
+        self.assertIn('document.addEventListener("shans:ajax-updated"', template)
+        self.assertIn("input[name='_csrf_token']", template)
+
     def test_workout_add_forms_update_without_page_reload(self):
         detail = WORKOUT_DETAIL_TEMPLATE.read_text(encoding="utf-8")
         overview = WORKOUTS_TEMPLATE.read_text(encoding="utf-8")
@@ -44,6 +52,8 @@ class AjaxFormTests(unittest.TestCase):
         self.assertIn("data-ajax-submit", detail)
         self.assertIn('data-ajax-update=".workout-plan-diary"', detail)
         self.assertIn('data-ajax-reset="true"', detail)
+        self.assertIn("url_for('workouts.remove_result'", detail)
+        self.assertIn('data-ajax-update=".workout-plan-diary"', detail)
         self.assertIn("url_for('workouts.save_weight')", overview)
         self.assertIn('data-ajax-update=".workouts-summary, .workouts-weight-section"', overview)
         self.assertIn("window.ShansWorkouts.renderWeightChart", script)

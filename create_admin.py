@@ -71,7 +71,7 @@ def configure_admins(
             connection.execute(
                 """
                 UPDATE users
-                SET password_hash = ?, otp_secret = ?
+                SET password_hash = ?, otp_secret = ?, is_system_admin = 1, is_active = 1
                 WHERE id = ?
                 """,
                 (password_hash, otp_secret, user_id),
@@ -84,10 +84,13 @@ def configure_admins(
         else:
             connection.execute(
                 """
-                INSERT INTO users (username, password_hash, otp_secret, otp_enabled)
-                VALUES (?, ?, ?, 0)
+                INSERT INTO users (
+                    username, password_hash, otp_secret, otp_enabled,
+                    display_name, is_system_admin, is_active
+                )
+                VALUES (?, ?, ?, 0, ?, 1, 1)
                 """,
-                (username, password_hash, generate_totp_secret()),
+                (username, password_hash, generate_totp_secret(), username),
             )
             result = "created"
 

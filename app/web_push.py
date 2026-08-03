@@ -952,25 +952,28 @@ def _clean_external_push_text(value: object, fallback: str, max_length: int) -> 
     return text[:max_length].strip()
 
 
-def _resolve_external_push_user_id(payload: dict) -> int | None:
-    raw_username = str(payload.get("username") or "").strip()
-    if raw_username:
-        conn = get_connection()
-        try:
-            row = conn.execute(
-                "SELECT id FROM users WHERE username = ? AND is_active = 1",
-                (raw_username,),
-            ).fetchone()
-        finally:
-            conn.close()
-        if not row:
-            raise LookupError("Unknown username.")
-        return int(row["id"])
+def _resolve_main_admin_user_id() -> int:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE COALESCE(is_system_admin, 0) = 1
+              AND COALESCE(is_active, 1) = 1
+            ORDER BY id ASC
+            LIMIT 1
+            """
+        ).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise LookupError("Main administrator is not configured.")
+    return int(row["id"])
 
-    raw_user_id = payload.get("user_id")
-    if raw_user_id in {None, ""}:
-        return None
-    return int(raw_user_id)
+
+def _resolve_external_push_user_id(_payload: dict) -> int:
+    return _resolve_main_admin_user_id()
 
 
 def send_external_telegram_notification(payload: dict) -> tuple[int, int]:

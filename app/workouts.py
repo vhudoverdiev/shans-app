@@ -23,6 +23,8 @@ WEEKDAYS = (
 )
 WEEKDAY_LABELS = dict(WEEKDAYS)
 SCHEDULE_HORIZON_DAYS = 366
+WORKOUT_DESCRIPTION_PLACEHOLDER = "добавьте описание"
+LEGACY_EMPTY_WORKOUT_DESCRIPTIONS = {"нет"}
 
 DEFAULT_WORKOUT_PLANS = (
     (
@@ -41,6 +43,20 @@ DEFAULT_WORKOUT_PLANS = (
         "их безопасную альтернативу, затем упражнения на заднюю поверхность бедра и пресс.",
     ),
 )
+
+
+def _is_empty_workout_description(description: str | None) -> bool:
+    normalized = (description or "").strip()
+    return (
+        not normalized
+        or normalized.casefold() in LEGACY_EMPTY_WORKOUT_DESCRIPTIONS
+    )
+
+
+def _workout_description_display(description: str | None) -> str:
+    if _is_empty_workout_description(description):
+        return WORKOUT_DESCRIPTION_PLACEHOLDER
+    return (description or "").strip()
 
 
 def init_workouts_db() -> None:
@@ -650,6 +666,7 @@ def index():
     for row in get_workout_plans(user_id):
         plan = dict(row)
         upcoming_date = next_workout_date(plan["weekday"])
+        plan["description_display"] = _workout_description_display(plan["description"])
         plan["weekday_label"] = WEEKDAY_LABELS.get(plan["weekday"], "Не запланирована")
         plan["next_date"] = upcoming_date.isoformat() if upcoming_date else None
         plan["next_date_display"] = (
@@ -690,6 +707,7 @@ def plan_detail(plan_id: int):
 
     plan = dict(plan_row)
     upcoming_date = next_workout_date(plan["weekday"])
+    plan["description_display"] = _workout_description_display(plan["description"])
     plan["weekday_label"] = WEEKDAY_LABELS.get(plan["weekday"], "Не запланирована")
     plan["next_date"] = upcoming_date.isoformat() if upcoming_date else None
     plan["next_date_display"] = (
@@ -716,9 +734,13 @@ def edit_plan(plan_id: int):
     if not plan_row:
         abort(404)
 
+    plan = dict(plan_row)
+    plan["description_form_value"] = (
+        "" if _is_empty_workout_description(plan["description"]) else plan["description"]
+    )
     return render_template(
         "workout_plan_edit.html",
-        plan=dict(plan_row),
+        plan=plan,
         weekdays=WEEKDAYS,
     )
 

@@ -29,6 +29,9 @@ from app.nutrition import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 NUTRITION_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "nutrition.css"
+NUTRITION_PROFILE_EDIT_TEMPLATE = (
+    PROJECT_ROOT / "app" / "templates" / "nutrition_profile_edit.html"
+)
 
 
 class TestUser(UserMixin):
@@ -57,6 +60,11 @@ class NutritionTests(unittest.TestCase):
                     "{{ summary.calories }}|{{ target_calories or 0 }}"
                 ),
                 "nutrition_custom_food.html": "custom food page",
+                "nutrition_profile_edit.html": (
+                    "edit profile page|{{ profile.formula_sex }}|"
+                    "{{ profile.age }}|{{ activity_levels|length }}|"
+                    "{{ nutrition_goals|length }}|{{ formula_sexes|length }}"
+                ),
             }
         )
         login_manager = LoginManager(app)
@@ -369,6 +377,67 @@ class NutritionTests(unittest.TestCase):
             [],
         )
 
+    def test_profile_edit_page_is_separate_and_updates_profile(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+
+        response = client.get("/nutrition/profile/edit")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/nutrition#nutrition-profile")
+
+        upsert_nutrition_profile(
+            1,
+            "male",
+            30,
+            180,
+            80,
+            75,
+            "moderate",
+            "lose",
+        )
+
+        response = client.get("/nutrition/profile/edit")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_data(as_text=True), "edit profile page|male|30|5|3|2")
+
+        response = client.post(
+            "/nutrition/profile",
+            data={
+                "profile_source": "edit",
+                "formula_sex": "male",
+                "age": "12",
+                "height_cm": "180",
+                "weight_kg": "80",
+                "activity_level": "moderate",
+                "goal": "lose",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/nutrition/profile/edit")
+        self.assertEqual(get_nutrition_profile(1)["age"], 30)
+
+        response = client.post(
+            "/nutrition/profile",
+            data={
+                "profile_source": "edit",
+                "formula_sex": "female",
+                "age": "34",
+                "height_cm": "168",
+                "weight_kg": "65",
+                "target_weight_kg": "60",
+                "activity_level": "light",
+                "goal": "maintain",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/nutrition#nutrition-profile")
+
+        profile = get_nutrition_profile(1)
+        self.assertEqual(profile["formula_sex"], "female")
+        self.assertEqual(profile["age"], 34)
+        self.assertEqual(profile["goal"], "maintain")
+
     def test_templates_expose_nutrition_through_development_navigation(self):
         hub = (
             PROJECT_ROOT / "app" / "templates" / "study_hub.html"
@@ -385,6 +454,9 @@ class NutritionTests(unittest.TestCase):
         custom_template = (
             PROJECT_ROOT / "app" / "templates" / "nutrition_custom_food.html"
         ).read_text(encoding="utf-8")
+        profile_edit_template = NUTRITION_PROFILE_EDIT_TEMPLATE.read_text(
+            encoding="utf-8"
+        )
 
         self.assertNotIn("url_for('nutrition.index')", hub)
         self.assertIn("url_for('nutrition.index')", sport_hub)
@@ -393,8 +465,33 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("url_for('sport_hub')", base)
         self.assertIn("База продуктов", template)
         self.assertIn("Добавить продукт вручную", template)
-        self.assertIn('class="nutrition-foldout-panel" id="add-food-entry"', template)
-        self.assertIn('class="nutrition-secondary-button nutrition-foldout-button"', template)
+        quick_entry_block = template.split('id="add-food-entry"', 1)[1].split(
+            'id="nutrition-profile"',
+            1,
+        )[0]
+
+        self.assertIn(
+            'class="nutrition-card nutrition-quick-entry-card" id="add-food-entry"',
+            template,
+        )
+        self.assertNotIn("nutrition-foldout-panel", template)
+        self.assertNotIn("nutrition-foldout-button", template)
+        self.assertNotIn("<details", quick_entry_block)
+        self.assertNotIn("<summary", quick_entry_block)
+        profile_card_block = template.split(
+            '<section class="nutrition-card" id="nutrition-profile">',
+            1,
+        )[1].split(
+            'id="diary"',
+            1,
+        )[0]
+        self.assertIn("url_for('nutrition.edit_profile')", profile_card_block)
+        self.assertIn("nutrition-profile-edit-button", profile_card_block)
+        self.assertIn(">Изменить данные</a>", profile_card_block)
+        self.assertNotIn("nutrition-profile-details", profile_card_block)
+        self.assertNotIn("<details", profile_card_block)
+        self.assertNotIn("<summary", profile_card_block)
+        self.assertNotIn('name="formula_sex"', profile_card_block)
         self.assertIn("url_for('nutrition.new_custom_food')", template)
         self.assertIn('class="nutrition-icon-button"', template)
         self.assertNotIn("data-open-custom-food", template)
@@ -403,9 +500,20 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("← Назад к питанию", custom_template)
         self.assertIn("url_for('nutrition.create_custom_food')", custom_template)
         self.assertIn("Сохранить продукт", custom_template)
-        self.assertIn(">Тренировки →</a>", template)
+        self.assertIn("← Назад к питанию", profile_edit_template)
+        self.assertIn("url_for('nutrition.save_profile')", profile_edit_template)
+        self.assertIn('name="profile_source" value="edit"', profile_edit_template)
+        self.assertIn("Сохранить расчёт", profile_edit_template)
+        self.assertIn("nutrition-profile-edit-card", profile_edit_template)
+        self.assertNotIn("Полезные ориентиры", template)
+        self.assertNotIn("Рекомендации", template)
+        self.assertNotIn("nutrition-recommendations", template)
+        self.assertNotIn("recommendations", template)
+        self.assertNotIn(">Тренировки →</a>", template)
         self.assertNotIn("Открыть тренировки", template)
         self.assertIn("Последние 14 дней", template)
+        self.assertNotIn("<aside class=\"nutrition-disclaimer\">", template)
+        self.assertNotIn("<strong>Важно</strong>", template)
         self.assertIn("Прогноз веса", template)
         self.assertIn("progress_insight.day_text", template)
         self.assertIn("progress_insight.protein_message", template)
@@ -466,23 +574,28 @@ class NutritionTests(unittest.TestCase):
         ):
             self.assertNotIn(old_accent, desktop_theme)
 
-    def test_nutrition_collapsible_controls_are_styled_and_scripted(self):
+    def test_nutrition_quick_entry_is_always_expanded(self):
         styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
         script = (
             PROJECT_ROOT / "app" / "static" / "js" / "nutrition.js"
         ).read_text(encoding="utf-8")
 
-        self.assertIn(".nutrition-profile-save-button", styles)
-        self.assertIn("margin-top: 28px;", styles)
-        self.assertIn(".nutrition-foldout-panel", styles)
-        self.assertIn(".nutrition-foldout-button", styles)
-        self.assertIn("width: fit-content;", styles)
-        self.assertIn("max-width: max-content;", styles)
+        self.assertIn(".nutrition-profile-edit-button", styles)
+        self.assertIn(".nutrition-profile-edit-card", styles)
+        self.assertIn(".nutrition-profile-edit-card .nutrition-profile-form", styles)
+        self.assertNotIn(".nutrition-profile-details", styles)
+        self.assertNotIn(".nutrition-profile-save-button", styles)
+        self.assertIn(".nutrition-quick-entry-card .nutrition-entry-form", styles)
+        self.assertNotIn(".nutrition-foldout-panel", styles)
+        self.assertNotIn(".nutrition-foldout-button", styles)
         self.assertIn(".nutrition-icon-button", styles)
         self.assertIn("white-space: nowrap;", styles)
         self.assertIn("text-decoration: none;", styles)
         self.assertIn(".nutrition-custom-food-card", styles)
-        self.assertIn("entryCard.open = true;", script)
+        self.assertNotIn(".nutrition-recommendation-grid", styles)
+        self.assertNotIn(".nutrition-disclaimer", styles)
+        self.assertNotIn(".nutrition-text-link", styles)
+        self.assertNotIn("entryCard.open = true;", script)
         self.assertNotIn("customCard.hidden", script)
         self.assertNotIn('trigger.setAttribute("aria-expanded"', script)
 

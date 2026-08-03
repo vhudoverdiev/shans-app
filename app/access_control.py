@@ -132,6 +132,7 @@ SECTION_ENDPOINTS = {
     },
     "nutrition": {
         "nutrition.index",
+        "nutrition.edit_profile",
         "nutrition.save_profile",
         "nutrition.create_entry",
         "nutrition.remove_entry",

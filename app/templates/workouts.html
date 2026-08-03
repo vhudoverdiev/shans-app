@@ -71,7 +71,7 @@
                 <div class="workout-plan-number" aria-hidden="true">{{ loop.index }}</div>
                 <div class="workout-plan-content">
                     <h3>{{ plan.name }}</h3>
-                    <p>{{ plan.description or 'внесите описание' }}</p>
+                    <p>{{ plan.description_display }}</p>
                 </div>
                 <div class="workout-plan-schedule{% if not plan.next_date %} workout-plan-schedule-empty{% endif %}">
                     <span>{{ plan.weekday_label }}</span>

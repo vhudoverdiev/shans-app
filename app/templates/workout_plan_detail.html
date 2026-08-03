@@ -20,7 +20,13 @@
         <div class="workout-plan-detail-copy">
             <p class="workouts-kicker">Подробности тренировки</p>
             <h1>{{ plan.name }}</h1>
-            <p>{{ plan.description or 'внесите описание' }}</p>
+            <p class="workout-plan-description">{{ plan.description_display }}</p>
+        </div>
+        <div class="workout-plan-detail-status workout-plan-schedule{% if not plan.next_date %} workout-plan-schedule-empty{% endif %}">
+            <span>{{ plan.weekday_label }}</span>
+            {% if plan.next_date_display %}
+            <small>Ближайшая: {{ plan.next_date_display }}</small>
+            {% endif %}
         </div>
     </div>
 
@@ -102,7 +108,12 @@
                 <strong>{{ item.exercise }}</strong>
                 <span>{{ item.result }}</span>
                 {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
-                <form method="post" action="{{ url_for('workouts.remove_result', result_id=item.id) }}">
+                <form
+                    method="post"
+                    action="{{ url_for('workouts.remove_result', result_id=item.id) }}"
+                    data-ajax-submit
+                    data-ajax-update=".workout-plan-diary"
+                >
                     <input type="hidden" name="return_to" value="{{ url_for('workouts.plan_detail', plan_id=plan.id, _anchor='workout-plan-log') }}">
                     <button type="submit" class="workouts-delete-btn" aria-label="Удалить результат">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">

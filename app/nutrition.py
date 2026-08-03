@@ -679,101 +679,6 @@ def _resolve_food_query(user_id: int, raw_query: str):
         conn.close()
 
 
-def build_nutrition_recommendations(
-    profile,
-    plan: dict | None,
-    summary: dict,
-    *,
-    is_today: bool,
-) -> list[dict]:
-    recommendations = []
-    if not profile or not plan:
-        recommendations.append(
-            {
-                "title": "Заполните профиль",
-                "text": (
-                    "Возраст, рост, вес, активность и цель нужны для ориентировочного "
-                    "расчёта дневной калорийности."
-                ),
-            }
-        )
-    else:
-        goal = profile["goal"]
-        if goal == "lose":
-            recommendations.append(
-                {
-                    "title": "Сохраняйте умеренный дефицит",
-                    "text": (
-                        "Цель рассчитана с небольшим дефицитом. Силовые тренировки "
-                        "и обычная ходьба помогают сохранять активность и мышечную массу."
-                    ),
-                }
-            )
-        elif goal == "gain":
-            recommendations.append(
-                {
-                    "title": "Набирайте постепенно",
-                    "text": (
-                        "Цель использует небольшой профицит. Добавляйте калории постепенно "
-                        "и отслеживайте силовой прогресс и изменение веса."
-                    ),
-                }
-            )
-        else:
-            recommendations.append(
-                {
-                    "title": "Ориентируйтесь на стабильность",
-                    "text": (
-                        "Смотрите на среднее потребление за несколько дней и динамику веса, "
-                        "а не на одно отдельное значение."
-                    ),
-                }
-            )
-
-        if is_today and summary["calories"] > 0:
-            ratio = summary["calories"] / max(plan["target_calories"], 1)
-            if ratio < 0.7:
-                recommendations.append(
-                    {
-                        "title": "Дневник пока заполнен не полностью",
-                        "text": (
-                            "Проверьте, внесены ли напитки, перекусы, масла и соусы — "
-                            "они часто остаются незаписанными."
-                        ),
-                    }
-                )
-            elif ratio > 1.15:
-                recommendations.append(
-                    {
-                        "title": "Сегодня выше ориентира",
-                        "text": (
-                            "Не компенсируйте это голоданием. Вернитесь к обычному режиму "
-                            "и оцените среднее значение за неделю."
-                        ),
-                    }
-                )
-
-    recommendations.extend(
-        (
-            {
-                "title": "Собирайте разнообразный рацион",
-                "text": (
-                    "Чаще выбирайте овощи, фрукты, цельные крупы и разные источники белка. "
-                    "Для продуктов в упаковке используйте значения с этикетки."
-                ),
-            },
-            {
-                "title": "Двигайтесь регулярно",
-                "text": (
-                    "Для взрослых ориентир — 150–300 минут умеренной активности в неделю "
-                    "и силовые упражнения на основные группы мышц не менее двух дней."
-                ),
-            },
-        )
-    )
-    return recommendations
-
-
 @nutrition_bp.route("")
 @login_required
 def index():
@@ -830,12 +735,6 @@ def index():
         entries=entries_with_labels,
         summary=summary,
         history=get_nutrition_history(user_id, selected_date),
-        recommendations=build_nutrition_recommendations(
-            profile,
-            plan,
-            summary,
-            is_today=selected_date == today,
-        ),
         progress_insight=build_nutrition_progress_insight(
             profile,
             plan,
@@ -858,9 +757,27 @@ def index():
     )
 
 
+@nutrition_bp.route("/profile/edit")
+@login_required
+def edit_profile():
+    profile = get_nutrition_profile(int(current_user.id))
+    if not profile:
+        flash("Сначала заполните профиль питания.", "error")
+        return redirect(url_for("nutrition.index", _anchor="nutrition-profile"))
+
+    return render_template(
+        "nutrition_profile_edit.html",
+        profile=profile,
+        activity_levels=ACTIVITY_LEVELS,
+        nutrition_goals=NUTRITION_GOALS,
+        formula_sexes=FORMULA_SEXES,
+    )
+
+
 @nutrition_bp.route("/profile", methods=["POST"])
 @login_required
 def save_profile():
+    is_edit_profile_form = (request.form.get("profile_source") or "").strip() == "edit"
     try:
         formula_sex = (request.form.get("formula_sex") or "").strip()
         age = _parse_integer(request.form.get("age", ""), "Возраст", 18, 100)
@@ -896,9 +813,13 @@ def save_profile():
         )
     except ValueError as error:
         flash(str(error), "error")
+        if is_edit_profile_form:
+            return redirect(url_for("nutrition.edit_profile"))
         return redirect(url_for("nutrition.index", _anchor="nutrition-profile"))
 
     flash("Профиль и дневная цель обновлены.", "success")
+    if is_edit_profile_form:
+        return redirect(url_for("nutrition.index", _anchor="nutrition-profile"))
     return redirect(url_for("nutrition.index", _anchor="nutrition-summary"))
 
 

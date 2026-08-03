@@ -161,54 +161,49 @@
     </section>
 
     <div class="nutrition-content-grid">
-        <details class="nutrition-foldout-panel" id="add-food-entry">
-            <summary class="nutrition-secondary-button nutrition-foldout-button">
-                Быстрая запись
-            </summary>
-            <section class="nutrition-card nutrition-foldout-card">
-                <div class="nutrition-section-heading">
-                    <div>
-                        <span class="nutrition-section-label">Быстрая запись</span>
-                        <h2>Добавить продукт</h2>
-                    </div>
-                    <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
+        <section class="nutrition-card nutrition-quick-entry-card" id="add-food-entry">
+            <div class="nutrition-section-heading">
+                <div>
+                    <span class="nutrition-section-label">Быстрая запись</span>
+                    <h2>Добавить продукт</h2>
                 </div>
-                <form
-                    method="post"
-                    action="{{ url_for('nutrition.create_entry') }}"
-                    class="nutrition-entry-form"
-                    data-ajax-submit
-                    data-ajax-update="#nutrition-summary, #diary, .nutrition-history"
-                    data-ajax-reset="true"
-                >
-                    <input type="hidden" name="eaten_on" value="{{ selected_date }}">
-                    <div class="nutrition-field nutrition-field-wide">
-                        <label for="food-query">Продукт или блюдо</label>
-                        <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
-                        <datalist id="nutrition-food-list">
-                            {% for food in foods %}
-                            <option value="{{ food.id }} — {{ food.name }}">{{ food.category }}</option>
+                <span class="nutrition-count-pill">{{ builtin_food_count }} в базе</span>
+            </div>
+            <form
+                method="post"
+                action="{{ url_for('nutrition.create_entry') }}"
+                class="nutrition-entry-form"
+                data-ajax-submit
+                data-ajax-update="#nutrition-summary, #diary, .nutrition-history"
+                data-ajax-reset="true"
+            >
+                <input type="hidden" name="eaten_on" value="{{ selected_date }}">
+                <div class="nutrition-field nutrition-field-wide">
+                    <label for="food-query">Продукт или блюдо</label>
+                    <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
+                    <datalist id="nutrition-food-list">
+                        {% for food in foods %}
+                        <option value="{{ food.id }} — {{ food.name }}">{{ food.category }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="nutrition-entry-fields">
+                    <div class="nutrition-field">
+                        <label for="food-grams">Количество, г/мл</label>
+                        <input id="food-grams" name="grams" type="number" min="1" max="3000" step="0.1" inputmode="decimal" value="100" required>
+                    </div>
+                    <div class="nutrition-field">
+                        <label for="meal-type">Приём пищи</label>
+                        <select id="meal-type" name="meal_type" class="form-input" required>
+                            {% for value, label in meal_types.items() %}
+                            <option value="{{ value }}">{{ label }}</option>
                             {% endfor %}
-                        </datalist>
+                        </select>
                     </div>
-                    <div class="nutrition-entry-fields">
-                        <div class="nutrition-field">
-                            <label for="food-grams">Количество, г/мл</label>
-                            <input id="food-grams" name="grams" type="number" min="1" max="3000" step="0.1" inputmode="decimal" value="100" required>
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="meal-type">Приём пищи</label>
-                            <select id="meal-type" name="meal_type" class="form-input" required>
-                                {% for value, label in meal_types.items() %}
-                                <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" class="nutrition-primary-button">Добавить в {{ selected_date_label|lower }}</button>
-                </form>
-            </section>
-        </details>
+                </div>
+                <button type="submit" class="nutrition-primary-button">Добавить в {{ selected_date_label|lower }}</button>
+            </form>
+        </section>
 
         <section class="nutrition-card" id="nutrition-profile">
             <div class="nutrition-section-heading">
@@ -230,54 +225,10 @@
                 <div><span>Целевой вес</span><strong>{{ profile.target_weight_kg|round(1) }} кг</strong></div>
                 {% endif %}
             </div>
-            <details class="nutrition-profile-details">
-                <summary>Изменить данные</summary>
-                <form method="post" action="{{ url_for('nutrition.save_profile') }}" class="nutrition-profile-form">
-                    <div class="nutrition-form-grid">
-                        <div class="nutrition-field">
-                            <label for="profile-formula-sex">Формула</label>
-                            <select id="profile-formula-sex" name="formula_sex" class="form-input" required>
-                                {% for value, label in formula_sexes.items() %}
-                                <option value="{{ value }}"{% if profile.formula_sex == value %} selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="profile-age">Возраст</label>
-                            <input id="profile-age" name="age" type="number" min="18" max="100" value="{{ profile.age }}" required>
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="profile-height">Рост, см</label>
-                            <input id="profile-height" name="height_cm" type="number" min="120" max="230" step="0.1" value="{{ profile.height_cm }}" required>
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="profile-weight">Вес, кг</label>
-                            <input id="profile-weight" name="weight_kg" type="number" min="30" max="300" step="0.1" value="{{ profile.weight_kg }}" required>
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="profile-target-weight">Желаемый вес, кг</label>
-                            <input id="profile-target-weight" name="target_weight_kg" type="number" min="30" max="300" step="0.1" value="{{ profile.target_weight_kg if profile.target_weight_kg else '' }}">
-                        </div>
-                        <div class="nutrition-field">
-                            <label for="profile-activity">Активность</label>
-                            <select id="profile-activity" name="activity_level" class="form-input" required>
-                                {% for value, item in activity_levels.items() %}
-                                <option value="{{ value }}"{% if profile.activity_level == value %} selected{% endif %}>{{ item[1] }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="nutrition-field nutrition-field-wide">
-                            <label for="profile-goal">Цель</label>
-                            <select id="profile-goal" name="goal" class="form-input" required>
-                                {% for value, item in nutrition_goals.items() %}
-                                <option value="{{ value }}"{% if profile.goal == value %} selected{% endif %}>{{ item[0] }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" class="nutrition-secondary-button nutrition-profile-save-button">Сохранить расчёт</button>
-                </form>
-            </details>
+            <a
+                href="{{ url_for('nutrition.edit_profile') }}"
+                class="nutrition-secondary-button nutrition-profile-edit-button"
+            >Изменить данные</a>
             {% else %}
             <p class="nutrition-empty-copy">После заполнения профиля здесь появятся цель, основной обмен и калории для поддержания веса.</p>
             {% endif %}
@@ -378,32 +329,6 @@
             {% endfor %}
         </div>
     </section>
-
-    <section class="nutrition-card nutrition-recommendations">
-        <div class="nutrition-section-heading">
-            <div>
-                <span class="nutrition-section-label">Полезные ориентиры</span>
-                <h2>Рекомендации</h2>
-            </div>
-            <a href="{{ url_for('workouts.index') }}" class="nutrition-text-link">Тренировки →</a>
-        </div>
-        <div class="nutrition-recommendation-grid">
-            {% for recommendation in recommendations %}
-            <article>
-                <span aria-hidden="true">{{ loop.index }}</span>
-                <div>
-                    <strong>{{ recommendation.title }}</strong>
-                    <p>{{ recommendation.text }}</p>
-                </div>
-            </article>
-            {% endfor %}
-        </div>
-    </section>
-
-    <aside class="nutrition-disclaimer">
-        <strong>Важно</strong>
-        <p>Расчёт предназначен для взрослых от 18 лет и является ориентировочным, а не медицинской рекомендацией. Пищевая ценность зависит от бренда и способа приготовления. При беременности, расстройствах пищевого поведения, хронических заболеваниях или назначенной диете обсудите рацион с врачом или диетологом.</p>
-    </aside>
 </section>
 {% endblock %}
 

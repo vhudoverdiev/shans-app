@@ -68,15 +68,16 @@ class WebPushSchedulingTests(unittest.TestCase):
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
+                is_system_admin INTEGER NOT NULL DEFAULT 0,
                 is_active INTEGER NOT NULL DEFAULT 1
             )
             """
         )
         conn.executemany(
-            "INSERT INTO users (id, username, is_active) VALUES (?, ?, ?)",
+            "INSERT INTO users (id, username, is_system_admin, is_active) VALUES (?, ?, ?, ?)",
             (
-                (1, "admin", 1),
-                (2, "vhudoverdiev", 1),
+                (1, "admin", 1, 1),
+                (2, "vhudoverdiev", 0, 1),
             ),
         )
         conn.commit()
@@ -509,7 +510,7 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(get_unread_push_notifications(1), ([], 0))
 
-    def test_external_telegram_notification_targets_selected_user(self):
+    def test_external_telegram_notification_targets_main_admin_only(self):
         save_subscription(
             1,
             self._subscription_payload(),
@@ -527,7 +528,6 @@ class WebPushSchedulingTests(unittest.TestCase):
                     "title": "Render finished",
                     "body": "The local script completed successfully.",
                     "navigate_path": "/",
-                    "user_id": 1,
                 }
             )
 
@@ -543,7 +543,7 @@ class WebPushSchedulingTests(unittest.TestCase):
         )
         self.assertEqual(get_unread_push_notifications(2), ([], 0))
 
-    def test_external_telegram_notification_targets_selected_username(self):
+    def test_external_telegram_notification_ignores_recipient_override(self):
         save_subscription(
             1,
             self._subscription_payload(),
@@ -561,14 +561,15 @@ class WebPushSchedulingTests(unittest.TestCase):
                     "title": "Render finished",
                     "body": "The local script completed successfully.",
                     "username": "vhudoverdiev",
+                    "user_id": 2,
                 }
             )
 
         self.assertEqual(result, (1, 0))
         send_mock.assert_called_once()
-        self.assertEqual(send_mock.call_args.args[0]["user_id"], 2)
-        self.assertEqual(get_unread_push_notifications(1), ([], 0))
-        self.assertEqual(get_unread_push_notifications(2)[1], 1)
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
+        self.assertEqual(get_unread_push_notifications(1)[1], 1)
+        self.assertEqual(get_unread_push_notifications(2), ([], 0))
 
     def test_external_telegram_push_route_uses_secret_without_csrf(self):
         Config.TELEGRAM_PUSH_SECRET = "test-secret"

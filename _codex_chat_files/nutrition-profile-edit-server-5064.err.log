@@ -1,0 +1,247 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5064
+Press CTRL+C to quit
+127.0.0.1 - - [03/Aug/2026 21:43:56] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/favicon.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /health?connection_check=1785782661473 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /nutrition HTTP/1.1" 302 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /login?next=/nutrition HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:21] "GET /health?connection_check=1785782661954 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:23] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /health?connection_check=1785782690222 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:44:50] "GET /health?connection_check=1785782690548 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:44:52] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /nutrition HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /static/js/nutrition.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:12] "GET /health?connection_check=1785782712984 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /nutrition/profile/edit HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:45:13] "GET /health?connection_check=1785782713311 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:45:14] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/favicon.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/pwa-icon-512.png HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /health?connection_check=1785782765748 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:05] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /health?connection_check=1785782766779 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:06] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /nutrition HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/js/nutrition.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /health?connection_check=1785782767682 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:07] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /nutrition/profile/edit HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:08] "GET /health?connection_check=1785782768698 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:09] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /health?connection_check=1785782800445 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/pwa-icon-512.png HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/favicon.png?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:40] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /health?connection_check=1785782801472 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:41] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /nutrition HTTP/1.1" 200 -
+[2026-08-03 21:46:42,281] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=81 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:42,285] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=82 window=60s
+[2026-08-03 21:46:42,288] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=83 window=60s
+[2026-08-03 21:46:42,288] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=84 window=60s
+[2026-08-03 21:46:42,289] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=85 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:42,291] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=86 window=60s
+[2026-08-03 21:46:42,293] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=87 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "[2026-08-03 21:46:42,298] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=88 window=60s
+GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:42,301] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=89 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "[2026-08-03 21:46:42,307] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=90 window=60s
+GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:42,308] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=91 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "[2026-08-03 21:46:42,309] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=92 window=60s
+GET /static/js/intro-loader.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:42,310] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=93 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/js/nutrition.js?v=c15bc5cdb730 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-03 21:46:42,372] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=94 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /health?connection_check=1785782802364 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:42] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /nutrition/profile/edit HTTP/1.1" 200 -
+[2026-08-03 21:46:43,351] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=95 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/css/style.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:43,356] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=96 window=60s
+[2026-08-03 21:46:43,358] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=97 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/css/mobile.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/css/planner.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:43,373] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=98 window=60s
+[2026-08-03 21:46:43,375] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=99 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/css/learning.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:43,378] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=100 window=60s
+[2026-08-03 21:46:43,380] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=101 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/css/nutrition.css?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:43,382] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=102 window=60s
+[2026-08-03 21:46:43,385] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=103 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/site.webmanifest?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/js/offline-support.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+[2026-08-03 21:46:43,389] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=104 window=60s
+[2026-08-03 21:46:43,394] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=105 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/logo.png?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/js/push-inbox.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/js/form-controls.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/js/ajax-forms.js?v=c15bc5cdb730 HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-03 21:46:43,419] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=106 window=60s
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /static/pwa-icon-512.png HTTP/1.1" 304 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /health?connection_check=1785782803412 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Aug/2026 21:46:43] "GET /service-worker.js HTTP/1.1" 200 -

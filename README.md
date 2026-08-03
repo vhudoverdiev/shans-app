@@ -38,8 +38,15 @@ cd shans-app
 - Уведомления личного графика доставляются через Web Push в установленное на экран «Домой» веб-приложение.
 - Сводка приходит в 10:00 за текущий день и в 20:00 за следующий день по московскому времени.
 - Для задач с указанным временем отдельное напоминание приходит за 2 часа.
-- Внешний скрипт, который уже отправляет сообщение в Telegram, может продублировать его в push на сайте через `POST https://shansplanner.ru/api/push/external/telegram`.
+- Внешний скрипт или Telegram-бот, который уже отправляет сообщение в Telegram, может продублировать его в push на сайте через `POST https://shansplanner.ru/api/push/external/telegram`.
 - На сервере нужно задать `TELEGRAM_PUSH_SECRET` в `.env`, а в запросе передавать тот же секрет в заголовке `X-Shans-Push-Secret`.
+- Внешний Telegram-push всегда доставляется только основному системному администратору, созданному через `create_admin.py`; `username` и `user_id` в запросе не нужны.
+
+Куда внести данные:
+
+- `.env` на сервере с CRM: `TELEGRAM_PUSH_SECRET=длинный_случайный_секрет`.
+- Окружение сервера, где работает Telegram-бот: тот же `TELEGRAM_PUSH_SECRET`.
+- Если CRM доступна не по `https://shansplanner.ru`, добавьте рядом с ботом `CRM_TELEGRAM_PUSH_URL=https://ваш-домен/api/push/external/telegram`.
 
 Пример запроса из скрипта:
 
@@ -48,14 +55,29 @@ curl -X POST "https://shansplanner.ru/api/push/external/telegram" \
   -H "Content-Type: application/json" \
   -H "X-Shans-Push-Secret: $TELEGRAM_PUSH_SECRET" \
   -d '{
-    "title": "Шанс - скрипт",
-    "body": "Скрипт завершился успешно.",
-    "navigate_path": "/",
-    "username": "vhudoverdiev"
+    "title": "Шанс - Telegram",
+    "body": "Бот прислал новое уведомление.",
+    "navigate_path": "/"
   }'
 ```
 
-`username` можно заменить на любой другой логин, если понадобится отправлять push конкретному пользователю.
+Готовый Python-клиент можно импортировать прямо в код бота:
+
+```python
+from telegram_crm_push import send_crm_push
+
+
+def notify_admin(text):
+    # здесь остаётся ваша текущая отправка сообщения в Telegram
+    # bot.send_message(chat_id=ADMIN_CHAT_ID, text=text)
+    send_crm_push(text, title="Шанс - Telegram", navigate_path="/")
+```
+
+Или проверить вручную с сервера:
+
+```bash
+python telegram_crm_push.py "Проверка push из Telegram-бота"
+```
 
 ## Деплой на сервер (main)
 

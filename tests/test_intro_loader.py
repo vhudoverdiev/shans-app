@@ -18,6 +18,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("'learning.it_day_test'", template)
         self.assertIn("'workouts.plan_detail'", template)
         self.assertIn("'workouts.edit_plan'", template)
+        self.assertIn("'nutrition.edit_profile'", template)
         self.assertIn("const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};", template)
         self.assertIn("if (skipIntroLoader) {", template)
         self.assertIn('document.documentElement.classList.remove("app-intro-pending");', template)

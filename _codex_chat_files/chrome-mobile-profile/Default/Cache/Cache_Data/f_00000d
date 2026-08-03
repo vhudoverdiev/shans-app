@@ -1,0 +1,3591 @@
+
+<!DOCTYPE html>
+<html lang="ru" class="app-intro-pending">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="q1_vSuoe6Ky3P9kGTmiYHKnxtEohtz4neWmXJdjTPPI">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Шанс">
+    <title>Питание | Шанс</title>
+    <script>
+        (function () {
+            const skipIntroLoader = false;
+            if (skipIntroLoader) {
+                document.documentElement.classList.remove("app-intro-pending");
+                window.__shansShouldRunIntro = false;
+                return;
+            }
+
+            function scheduleIntroFallback() {
+                window.__shansIntroFallbackTimer = window.setTimeout(function () {
+                    if (!document.documentElement.classList.contains("app-intro-running")) {
+                        document.documentElement.classList.remove("app-intro-pending");
+                    }
+                }, 8000);
+            }
+
+            try {
+                const standaloneDisplayMode = window.matchMedia
+                    && window.matchMedia("(display-mode: standalone)").matches;
+                const isStandaloneApp = standaloneDisplayMode
+                    || (window.navigator && window.navigator.standalone === true);
+                if (isStandaloneApp) {
+                    document.documentElement.classList.remove("app-intro-pending");
+                    window.__shansShouldRunIntro = false;
+                    return;
+                }
+
+                const introKey = "shans-intro-session-v1";
+                let introAlreadyShown = false;
+                try {
+                    introAlreadyShown = Boolean(
+                        window.sessionStorage
+                        && window.sessionStorage.getItem(introKey)
+                    );
+                    if (!introAlreadyShown && window.sessionStorage) {
+                        window.sessionStorage.setItem(introKey, "1");
+                    }
+                } catch (storageError) {
+                    introAlreadyShown = false;
+                }
+
+                if (introAlreadyShown) {
+                    document.documentElement.classList.remove("app-intro-pending");
+                    window.__shansShouldRunIntro = false;
+                    return;
+                }
+
+                window.__shansShouldRunIntro = true;
+                scheduleIntroFallback();
+            } catch (error) {
+                // Keep the first-visit intro available in constrained browser contexts.
+                window.__shansShouldRunIntro = true;
+                scheduleIntroFallback();
+            }
+        }());
+    </script>
+    <noscript>
+        <style>
+            html.app-intro-pending body > :not(#app-intro) {
+                visibility: visible !important;
+            }
+
+            html.app-intro-pending #app-intro {
+                display: none !important;
+            }
+        </style>
+    </noscript>
+    <style>
+        html.app-intro-pending,
+        html.app-intro-pending body {
+            overflow: hidden;
+        }
+
+        html.app-intro-pending body > :not(#app-intro) {
+            visibility: hidden !important;
+        }
+
+        html.app-intro-pending #app-intro {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: grid !important;
+            place-items: center;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 44%, rgba(219, 234, 254, 0.94) 0, rgba(238, 242, 255, 0.78) 28%, transparent 58%),
+                linear-gradient(145deg, #f8fbff 0%, #eef3ff 48%, #f7f5ff 100%);
+        }
+
+        html.app-intro-pending #app-intro[hidden] {
+            display: grid !important;
+        }
+
+        html.app-intro-pending .app-intro-stage {
+            position: relative;
+            width: min(82vw, 360px);
+            min-height: 310px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        html.app-intro-pending .app-intro-logo {
+            width: 96px;
+            height: 96px;
+            border-radius: 30px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background: transparent;
+            opacity: 0;
+            transform: translateY(8px) scale(0.94);
+        }
+
+        html.app-intro-pending .app-intro-logo-mark {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        html.app-intro-pending .app-intro-progress {
+            width: 104px;
+            height: 3px;
+            margin-top: 18px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.13);
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        html.app-intro-pending .app-intro-progress span {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+        }
+
+        @media (display-mode: standalone) {
+            html.app-intro-pending,
+            html.app-intro-pending body {
+                overflow: auto;
+            }
+
+            html.app-intro-pending body > :not(#app-intro) {
+                visibility: visible !important;
+            }
+
+            html.app-intro-pending #app-intro {
+                display: none !important;
+            }
+        }
+    </style>
+    
+    <link rel="icon" type="image/png" href="/static/favicon.png?v=80f0da4afe8e">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png?v=80f0da4afe8e">
+    <link
+        rel="apple-touch-startup-image"
+        media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+        href="/static/ios-startup-iphone-16-pro-max.png?v=80f0da4afe8e"
+    >
+    <link rel="manifest" href="/static/site.webmanifest?v=80f0da4afe8e">
+    <link rel="stylesheet" href="/static/css/style.css?v=80f0da4afe8e">
+    <link rel="stylesheet" href="/static/css/mobile.css?v=80f0da4afe8e">
+    <link rel="stylesheet" href="/static/css/planner.css?v=80f0da4afe8e">
+    <link rel="stylesheet" href="/static/css/learning.css?v=80f0da4afe8e">
+    
+<link rel="stylesheet" href="/static/css/nutrition.css?v=80f0da4afe8e">
+
+    
+    <script src="/static/js/intro-loader.js?v=80f0da4afe8e" defer onerror="document.documentElement.classList.remove('app-intro-pending')"></script>
+    
+    <script src="/static/js/offline-support.js?v=80f0da4afe8e" defer></script>
+    <script src="/static/js/push-inbox.js?v=80f0da4afe8e" defer></script>
+    <script src="/static/js/form-controls.js?v=80f0da4afe8e" defer></script>
+    <script src="/static/js/ajax-forms.js?v=80f0da4afe8e" defer></script>
+</head>
+<body class="app-body app-body-authenticated">
+    
+    <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
+        <div class="app-intro-stage">
+            <div class="app-intro-logo">
+                <img src="/static/logo.png?v=80f0da4afe8e" alt="" class="app-intro-logo-mark" aria-hidden="true">
+            </div>
+            <div class="app-intro-progress"><span></span></div>
+        </div>
+    </div>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a href="/" class="brand">
+                <span class="brand-badge">
+                    <img src="/static/logo.png?v=80f0da4afe8e" alt="Логотип Шанс">
+                </span>
+                <span class="brand-text">
+                    <span class="brand-title">Шанс</span>
+                    <span class="brand-subtitle">Личная система управления</span>
+                </span>
+            </a>
+
+            <button class="mobile-nav-toggle" type="button" id="mobile-nav-toggle" aria-expanded="false" aria-controls="top-nav-menu">
+                Меню
+            </button>
+
+            <nav class="top-nav" id="top-nav-menu">
+                <a href="/" class="top-nav-link ">Главная</a>
+                
+                <a href="/shootings" class="top-nav-link ">Съёмки</a>
+                
+                
+                <a href="/planner.schedule" class="top-nav-link ">График</a>
+                
+                
+                <a href="/study" class="top-nav-link ">Развитие</a>
+                
+                
+                <a href="/sport" class="top-nav-link top-nav-link-active">Спорт</a>
+                
+            </nav>
+
+            <div class="header-user-block">
+                <a href="/account/settings" class="header-avatar" title="Настройки аккаунта">
+                    
+                    A
+                    
+                </a>
+                <a href="/logout" class="btn btn-danger btn-small">Выйти</a>
+            </div>
+        </div>
+    </header>
+    
+
+    <main class="page-shell">
+        
+        
+        
+
+        
+<section class="nutrition-page">
+    <a href="/sport" class="nutrition-back-link">← Спорт</a>
+
+    <div class="nutrition-hero">
+        <div>
+            <p class="nutrition-kicker">Рацион и прогресс</p>
+            <h1>Питание</h1>
+            <p>Записывайте продукты, смотрите калории и БЖУ за любой день и двигайтесь к своей цели.</p>
+        </div>
+        <div class="nutrition-hero-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 3v7a3 3 0 0 0 3 3V3"></path>
+                <path d="M8.5 13v8"></path>
+                <path d="M15 3v18"></path>
+                <path d="M15 3c3 1 4 4 4 7v2h-4"></path>
+            </svg>
+        </div>
+    </div>
+
+    
+    <div class="nutrition-onboarding">
+        <div class="nutrition-onboarding-copy">
+            <span class="nutrition-section-label">Первый шаг</span>
+            <h2>Рассчитаем ваш ориентир</h2>
+            <p>Возраст, рост, вес, активность и цель нужны только для примерного расчёта дневной калорийности.</p>
+        </div>
+        <form method="post" action="/nutrition/profile" class="nutrition-profile-form" id="nutrition-profile">
+            <div class="nutrition-form-grid">
+                <div class="nutrition-field">
+                    <label for="formula-sex">Формула расчёта</label>
+                    <select id="formula-sex" name="formula_sex" class="form-input" required>
+                        <option value="">Выберите</option>
+                        
+                        <option value="male">Мужская формула</option>
+                        
+                        <option value="female">Женская формула</option>
+                        
+                    </select>
+                </div>
+                <div class="nutrition-field">
+                    <label for="age">Возраст</label>
+                    <input id="age" name="age" type="number" min="18" max="100" inputmode="numeric" placeholder="Например, 30" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="height-cm">Рост, см</label>
+                    <input id="height-cm" name="height_cm" type="number" min="120" max="230" step="0.1" inputmode="decimal" placeholder="Например, 180" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="weight-kg">Вес, кг</label>
+                    <input id="weight-kg" name="weight_kg" type="number" min="30" max="300" step="0.1" inputmode="decimal" placeholder="Например, 80" required>
+                </div>
+                <div class="nutrition-field">
+                    <label for="target-weight-kg">Желаемый вес, кг</label>
+                    <input id="target-weight-kg" name="target_weight_kg" type="number" min="30" max="300" step="0.1" inputmode="decimal" placeholder="Необязательно">
+                </div>
+                <div class="nutrition-field">
+                    <label for="activity-level">Активность</label>
+                    <select id="activity-level" name="activity_level" class="form-input" required>
+                        <option value="">Выберите</option>
+                        
+                        <option value="sedentary">Минимальная — В основном сидячий день</option>
+                        
+                        <option value="light">Лёгкая — 1–3 лёгкие тренировки в неделю</option>
+                        
+                        <option value="moderate">Средняя — 3–5 тренировок в неделю</option>
+                        
+                        <option value="high">Высокая — 6–7 активных дней в неделю</option>
+                        
+                        <option value="very_high">Очень высокая — Тяжёлая физическая работа или интенсивный спорт</option>
+                        
+                    </select>
+                </div>
+                <div class="nutrition-field nutrition-field-wide">
+                    <label for="nutrition-goal">Цель</label>
+                    <select id="nutrition-goal" name="goal" class="form-input" required>
+                        <option value="">Выберите</option>
+                        
+                        <option value="lose">Похудение</option>
+                        
+                        <option value="maintain">Поддержание веса</option>
+                        
+                        <option value="gain">Набор массы</option>
+                        
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="nutrition-primary-button">Рассчитать мою цель</button>
+        </form>
+    </div>
+    
+
+    <div class="nutrition-date-card">
+        <a href="/nutrition?date=2026-08-02" class="nutrition-date-button" aria-label="Предыдущий день">←</a>
+        <div class="nutrition-date-copy">
+            <span>Сегодня</span>
+            <strong>03.08.2026</strong>
+        </div>
+        
+        <span class="nutrition-date-button nutrition-date-button-disabled" aria-hidden="true">→</span>
+        
+    </div>
+
+    <section class="nutrition-summary-card" id="nutrition-summary">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Итог дня</span>
+                <h2>0 ккал</h2>
+            </div>
+            
+        </div>
+
+        
+        <p class="nutrition-empty-copy">Заполните профиль выше, чтобы увидеть личную дневную цель.</p>
+        
+
+        <div class="nutrition-macro-grid">
+            <div class="nutrition-macro nutrition-macro-protein">
+                <span>Белки</span>
+                <strong>0 г</strong>
+            </div>
+            <div class="nutrition-macro nutrition-macro-fat">
+                <span>Жиры</span>
+                <strong>0 г</strong>
+            </div>
+            <div class="nutrition-macro nutrition-macro-carbs">
+                <span>Углеводы</span>
+                <strong>0 г</strong>
+            </div>
+        </div>
+    </section>
+
+    <div class="nutrition-content-grid">
+        <section class="nutrition-card nutrition-quick-entry-card" id="add-food-entry">
+            <div class="nutrition-section-heading">
+                <div>
+                    <span class="nutrition-section-label">Быстрая запись</span>
+                    <h2>Добавить продукт</h2>
+                </div>
+                <span class="nutrition-count-pill">175 в базе</span>
+            </div>
+            <form
+                method="post"
+                action="/nutrition/entries"
+                class="nutrition-entry-form"
+                data-ajax-submit
+                data-ajax-update="#nutrition-summary, #diary, .nutrition-history"
+                data-ajax-reset="true"
+            >
+                <input type="hidden" name="eaten_on" value="2026-08-03">
+                <div class="nutrition-field nutrition-field-wide">
+                    <label for="food-query">Продукт или блюдо</label>
+                    <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
+                    <datalist id="nutrition-food-list">
+                        
+                        <option value="134 — Борщ">Готовые блюда</option>
+                        
+                        <option value="140 — Вареники с картофелем">Готовые блюда</option>
+                        
+                        <option value="152 — Винегрет">Готовые блюда</option>
+                        
+                        <option value="141 — Голубцы с мясом и рисом">Готовые блюда</option>
+                        
+                        <option value="148 — Гречка с курицей">Готовые блюда</option>
+                        
+                        <option value="145 — Картофельное пюре с молоком">Готовые блюда</option>
+                        
+                        <option value="144 — Котлета говяжья">Готовые блюда</option>
+                        
+                        <option value="143 — Котлета куриная">Готовые блюда</option>
+                        
+                        <option value="138 — Окрошка на кефире">Готовые блюда</option>
+                        
+                        <option value="149 — Омлет с молоком">Готовые блюда</option>
+                        
+                        <option value="139 — Пельмени отварные">Готовые блюда</option>
+                        
+                        <option value="142 — Перец фаршированный">Готовые блюда</option>
+                        
+                        <option value="153 — Пицца сырная">Готовые блюда</option>
+                        
+                        <option value="147 — Плов с говядиной">Готовые блюда</option>
+                        
+                        <option value="146 — Плов с курицей">Готовые блюда</option>
+                        
+                        <option value="151 — Салат «Оливье»">Готовые блюда</option>
+                        
+                        <option value="150 — Салат «Цезарь» с курицей">Готовые блюда</option>
+                        
+                        <option value="137 — Солянка мясная">Готовые блюда</option>
+                        
+                        <option value="136 — Суп гороховый">Готовые блюда</option>
+                        
+                        <option value="135 — Суп куриный с лапшой">Готовые блюда</option>
+                        
+                        <option value="63 — Булгур варёный">Крупы и бобовые</option>
+                        
+                        <option value="71 — Горох варёный">Крупы и бобовые</option>
+                        
+                        <option value="57 — Гречка варёная">Крупы и бобовые</option>
+                        
+                        <option value="56 — Гречка, сухая">Крупы и бобовые</option>
+                        
+                        <option value="65 — Киноа варёная">Крупы и бобовые</option>
+                        
+                        <option value="72 — Кукуруза консервированная">Крупы и бобовые</option>
+                        
+                        <option value="64 — Кускус варёный">Крупы и бобовые</option>
+                        
+                        <option value="67 — Макароны варёные">Крупы и бобовые</option>
+                        
+                        <option value="66 — Макароны из твёрдых сортов, сухие">Крупы и бобовые</option>
+                        
+                        <option value="69 — Нут варёный">Крупы и бобовые</option>
+                        
+                        <option value="55 — Овсяные хлопья, сухие">Крупы и бобовые</option>
+                        
+                        <option value="62 — Перловка варёная">Крупы и бобовые</option>
+                        
+                        <option value="61 — Пшённая каша на воде">Крупы и бобовые</option>
+                        
+                        <option value="59 — Рис белый варёный">Крупы и бобовые</option>
+                        
+                        <option value="58 — Рис белый, сухой">Крупы и бобовые</option>
+                        
+                        <option value="60 — Рис бурый варёный">Крупы и бобовые</option>
+                        
+                        <option value="70 — Фасоль красная варёная">Крупы и бобовые</option>
+                        
+                        <option value="68 — Чечевица варёная">Крупы и бобовые</option>
+                        
+                        <option value="16 — Брынза">Молочные продукты</option>
+                        
+                        <option value="8 — Йогурт греческий 2%">Молочные продукты</option>
+                        
+                        <option value="7 — Йогурт натуральный">Молочные продукты</option>
+                        
+                        <option value="4 — Кефир 1%">Молочные продукты</option>
+                        
+                        <option value="5 — Кефир 2,5%">Молочные продукты</option>
+                        
+                        <option value="18 — Масло сливочное 82,5%">Молочные продукты</option>
+                        
+                        <option value="1 — Молоко 1,5%">Молочные продукты</option>
+                        
+                        <option value="2 — Молоко 2,5%">Молочные продукты</option>
+                        
+                        <option value="3 — Молоко 3,2%">Молочные продукты</option>
+                        
+                        <option value="14 — Моцарелла">Молочные продукты</option>
+                        
+                        <option value="6 — Ряженка 2,5%">Молочные продукты</option>
+                        
+                        <option value="17 — Сливки 10%">Молочные продукты</option>
+                        
+                        <option value="12 — Сметана 10%">Молочные продукты</option>
+                        
+                        <option value="13 — Сметана 20%">Молочные продукты</option>
+                        
+                        <option value="15 — Сыр твёрдый">Молочные продукты</option>
+                        
+                        <option value="10 — Творог 5%">Молочные продукты</option>
+                        
+                        <option value="11 — Творог 9%">Молочные продукты</option>
+                        
+                        <option value="9 — Творог обезжиренный">Молочные продукты</option>
+                        
+                        <option value="31 — Ветчина нежирная">Мясо и птица</option>
+                        
+                        <option value="23 — Говядина постная, готовая">Мясо и птица</option>
+                        
+                        <option value="32 — Колбаса варёная">Мясо и птица</option>
+                        
+                        <option value="28 — Кролик, готовый">Мясо и птица</option>
+                        
+                        <option value="21 — Куриная голень, готовая">Мясо и птица</option>
+                        
+                        <option value="19 — Куриная грудка, готовая">Мясо и птица</option>
+                        
+                        <option value="20 — Куриное бедро без кожи, готовое">Мясо и птица</option>
+                        
+                        <option value="30 — Печень говяжья, готовая">Мясо и птица</option>
+                        
+                        <option value="29 — Печень куриная, готовая">Мясо и птица</option>
+                        
+                        <option value="26 — Свинина постная, готовая">Мясо и птица</option>
+                        
+                        <option value="27 — Свинина шейка, готовая">Мясо и птица</option>
+                        
+                        <option value="33 — Сосиски молочные">Мясо и птица</option>
+                        
+                        <option value="25 — Телятина, готовая">Мясо и птица</option>
+                        
+                        <option value="24 — Фарш говяжий 10% жира">Мясо и птица</option>
+                        
+                        <option value="22 — Филе индейки, готовое">Мясо и птица</option>
+                        
+                        <option value="167 — Вода">Напитки</option>
+                        
+                        <option value="174 — Какао на молоке">Напитки</option>
+                        
+                        <option value="173 — Квас">Напитки</option>
+                        
+                        <option value="172 — Кола с сахаром">Напитки</option>
+                        
+                        <option value="168 — Кофе без сахара">Напитки</option>
+                        
+                        <option value="175 — Протеиновый коктейль на воде">Напитки</option>
+                        
+                        <option value="170 — Сок апельсиновый">Напитки</option>
+                        
+                        <option value="171 — Сок яблочный">Напитки</option>
+                        
+                        <option value="169 — Чай без сахара">Напитки</option>
+                        
+                        <option value="101 — Авокадо">Овощи и зелень</option>
+                        
+                        <option value="92 — Баклажан">Овощи и зелень</option>
+                        
+                        <option value="89 — Брокколи">Овощи и зелень</option>
+                        
+                        <option value="102 — Зелёный горошек">Овощи и зелень</option>
+                        
+                        <option value="91 — Кабачок">Овощи и зелень</option>
+                        
+                        <option value="87 — Капуста белокочанная">Овощи и зелень</option>
+                        
+                        <option value="88 — Капуста краснокочанная">Овощи и зелень</option>
+                        
+                        <option value="83 — Картофель варёный">Овощи и зелень</option>
+                        
+                        <option value="84 — Картофель запечённый">Овощи и зелень</option>
+                        
+                        <option value="96 — Лук репчатый">Овощи и зелень</option>
+                        
+                        <option value="85 — Морковь">Овощи и зелень</option>
+                        
+                        <option value="94 — Огурец">Овощи и зелень</option>
+                        
+                        <option value="95 — Перец сладкий красный">Овощи и зелень</option>
+                        
+                        <option value="93 — Помидор">Овощи и зелень</option>
+                        
+                        <option value="100 — Салат листовой">Овощи и зелень</option>
+                        
+                        <option value="86 — Свёкла">Овощи и зелень</option>
+                        
+                        <option value="90 — Цветная капуста">Овощи и зелень</option>
+                        
+                        <option value="97 — Чеснок">Овощи и зелень</option>
+                        
+                        <option value="98 — Шампиньоны">Овощи и зелень</option>
+                        
+                        <option value="99 — Шпинат">Овощи и зелень</option>
+                        
+                        <option value="126 — Арахис">Орехи и семена</option>
+                        
+                        <option value="132 — Арахисовая паста без сахара">Орехи и семена</option>
+                        
+                        <option value="123 — Грецкий орех">Орехи и семена</option>
+                        
+                        <option value="124 — Кешью">Орехи и семена</option>
+                        
+                        <option value="122 — Миндаль">Орехи и семена</option>
+                        
+                        <option value="131 — Семена льна">Орехи и семена</option>
+                        
+                        <option value="130 — Семена чиа">Орехи и семена</option>
+                        
+                        <option value="128 — Семечки подсолнечника">Орехи и семена</option>
+                        
+                        <option value="129 — Семечки тыквенные">Орехи и семена</option>
+                        
+                        <option value="133 — Тахини">Орехи и семена</option>
+                        
+                        <option value="127 — Фисташки">Орехи и семена</option>
+                        
+                        <option value="125 — Фундук">Орехи и семена</option>
+                        
+                        <option value="43 — Горбуша, готовая">Рыба и морепродукты</option>
+                        
+                        <option value="45 — Кальмар варёный">Рыба и морепродукты</option>
+                        
+                        <option value="48 — Котлета рыбная">Рыба и морепродукты</option>
+                        
+                        <option value="47 — Крабовые палочки">Рыба и морепродукты</option>
+                        
+                        <option value="44 — Креветки варёные">Рыба и морепродукты</option>
+                        
+                        <option value="34 — Лосось запечённый">Рыба и морепродукты</option>
+                        
+                        <option value="46 — Мидии варёные">Рыба и морепродукты</option>
+                        
+                        <option value="37 — Минтай, готовый">Рыба и морепродукты</option>
+                        
+                        <option value="42 — Сардины консервированные">Рыба и морепродукты</option>
+                        
+                        <option value="40 — Сельдь слабосолёная">Рыба и морепродукты</option>
+                        
+                        <option value="39 — Скумбрия запечённая">Рыба и морепродукты</option>
+                        
+                        <option value="36 — Треска, готовая">Рыба и морепродукты</option>
+                        
+                        <option value="41 — Тунец консервированный в собственном соку">Рыба и морепродукты</option>
+                        
+                        <option value="35 — Форель запечённая">Рыба и морепродукты</option>
+                        
+                        <option value="38 — Хек, готовый">Рыба и морепродукты</option>
+                        
+                        <option value="164 — Горчица столовая">Сладости и соусы</option>
+                        
+                        <option value="156 — Зефир">Сладости и соусы</option>
+                        
+                        <option value="163 — Кетчуп">Сладости и соусы</option>
+                        
+                        <option value="162 — Майонез 67%">Сладости и соусы</option>
+                        
+                        <option value="157 — Мармелад">Сладости и соусы</option>
+                        
+                        <option value="165 — Масло оливковое">Сладости и соусы</option>
+                        
+                        <option value="166 — Масло подсолнечное">Сладости и соусы</option>
+                        
+                        <option value="159 — Мороженое пломбир">Сладости и соусы</option>
+                        
+                        <option value="160 — Мёд">Сладости и соусы</option>
+                        
+                        <option value="158 — Печенье овсяное">Сладости и соусы</option>
+                        
+                        <option value="161 — Сахар">Сладости и соусы</option>
+                        
+                        <option value="155 — Шоколад молочный">Сладости и соусы</option>
+                        
+                        <option value="154 — Шоколад тёмный 70%">Сладости и соусы</option>
+                        
+                        <option value="111 — Абрикос">Фрукты и ягоды</option>
+                        
+                        <option value="106 — Апельсин">Фрукты и ягоды</option>
+                        
+                        <option value="114 — Арбуз">Фрукты и ягоды</option>
+                        
+                        <option value="105 — Банан">Фрукты и ягоды</option>
+                        
+                        <option value="113 — Виноград">Фрукты и ягоды</option>
+                        
+                        <option value="119 — Вишня">Фрукты и ягоды</option>
+                        
+                        <option value="108 — Грейпфрут">Фрукты и ягоды</option>
+                        
+                        <option value="104 — Груша">Фрукты и ягоды</option>
+                        
+                        <option value="115 — Дыня">Фрукты и ягоды</option>
+                        
+                        <option value="121 — Изюм">Фрукты и ягоды</option>
+                        
+                        <option value="109 — Киви">Фрукты и ягоды</option>
+                        
+                        <option value="116 — Клубника">Фрукты и ягоды</option>
+                        
+                        <option value="120 — Курага">Фрукты и ягоды</option>
+                        
+                        <option value="117 — Малина">Фрукты и ягоды</option>
+                        
+                        <option value="107 — Мандарин">Фрукты и ягоды</option>
+                        
+                        <option value="110 — Персик">Фрукты и ягоды</option>
+                        
+                        <option value="112 — Слива">Фрукты и ягоды</option>
+                        
+                        <option value="118 — Черника">Фрукты и ягоды</option>
+                        
+                        <option value="103 — Яблоко">Фрукты и ягоды</option>
+                        
+                        <option value="81 — Блины">Хлеб и выпечка</option>
+                        
+                        <option value="79 — Бублик">Хлеб и выпечка</option>
+                        
+                        <option value="80 — Круассан без начинки">Хлеб и выпечка</option>
+                        
+                        <option value="77 — Лаваш тонкий">Хлеб и выпечка</option>
+                        
+                        <option value="82 — Сырники">Хлеб и выпечка</option>
+                        
+                        <option value="74 — Хлеб бородинский">Хлеб и выпечка</option>
+                        
+                        <option value="75 — Хлеб пшеничный">Хлеб и выпечка</option>
+                        
+                        <option value="73 — Хлеб ржаной">Хлеб и выпечка</option>
+                        
+                        <option value="76 — Хлеб цельнозерновой">Хлеб и выпечка</option>
+                        
+                        <option value="78 — Хлебцы ржаные">Хлеб и выпечка</option>
+                        
+                        <option value="50 — Белок яичный">Яйца и растительные белки</option>
+                        
+                        <option value="54 — Соевый текстурат, сухой">Яйца и растительные белки</option>
+                        
+                        <option value="53 — Темпе">Яйца и растительные белки</option>
+                        
+                        <option value="52 — Тофу">Яйца и растительные белки</option>
+                        
+                        <option value="49 — Яйцо куриное">Яйца и растительные белки</option>
+                        
+                        <option value="51 — Яйцо перепелиное">Яйца и растительные белки</option>
+                        
+                    </datalist>
+                </div>
+                <div class="nutrition-entry-fields">
+                    <div class="nutrition-field">
+                        <label for="food-grams">Количество, г/мл</label>
+                        <input id="food-grams" name="grams" type="number" min="1" max="3000" step="0.1" inputmode="decimal" value="100" required>
+                    </div>
+                    <div class="nutrition-field">
+                        <label for="meal-type">Приём пищи</label>
+                        <select id="meal-type" name="meal_type" class="form-input" required>
+                            
+                            <option value="breakfast">Завтрак</option>
+                            
+                            <option value="lunch">Обед</option>
+                            
+                            <option value="dinner">Ужин</option>
+                            
+                            <option value="snack">Перекус</option>
+                            
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="nutrition-primary-button">Добавить в сегодня</button>
+            </form>
+        </section>
+
+        <section class="nutrition-card" id="nutrition-profile">
+            <div class="nutrition-section-heading">
+                <div>
+                    <span class="nutrition-section-label">Личные данные</span>
+                    <h2>Профиль</h2>
+                </div>
+                
+            </div>
+
+            
+            <p class="nutrition-empty-copy">После заполнения профиля здесь появятся цель, основной обмен и калории для поддержания веса.</p>
+            
+        </section>
+    </div>
+
+    <section class="nutrition-card" id="diary">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Рацион</span>
+                <h2>Дневник за сегодня</h2>
+            </div>
+            <span class="nutrition-count-pill">0 записей</span>
+        </div>
+
+        
+        <div class="nutrition-empty-state">
+            <span aria-hidden="true">🥗</span>
+            <strong>Пока нет записей</strong>
+            <p>Выберите продукт выше — калории и БЖУ посчитаются автоматически.</p>
+        </div>
+        
+    </section>
+
+    <section class="nutrition-card nutrition-catalog-card">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Значения на 100 г или 100 мл</span>
+                <h2>База продуктов</h2>
+            </div>
+            <div class="nutrition-heading-actions">
+                <span class="nutrition-count-pill" id="nutrition-visible-count">175</span>
+                <a href="/nutrition/foods/new" class="nutrition-icon-button" aria-label="Добавить продукт вручную">+</a>
+            </div>
+        </div>
+        <div class="nutrition-catalog-toolbar">
+            <label class="nutrition-search">
+                <span class="sr-only">Поиск продукта</span>
+                <input type="search" id="nutrition-catalog-search" placeholder="Поиск по названию или категории" autocomplete="off">
+            </label>
+        </div>
+        <div class="nutrition-catalog" id="nutrition-catalog">
+            
+            <article class="nutrition-food-row" data-food-search="борщ готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="134 — Борщ">
+                    <span>
+                        <strong>Борщ</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">49 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.8 · Ж 2.2 · У 5.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="вареники с картофелем готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="140 — Вареники с картофелем">
+                    <span>
+                        <strong>Вареники с картофелем</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">190 ккал</span>
+                    <span class="nutrition-food-macros">Б 5.0 · Ж 4.0 · У 33.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="винегрет готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="152 — Винегрет">
+                    <span>
+                        <strong>Винегрет</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">122 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.7 · Ж 8.2 · У 10.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="голубцы с мясом и рисом готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="141 — Голубцы с мясом и рисом">
+                    <span>
+                        <strong>Голубцы с мясом и рисом</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">125 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.5 · Ж 6.0 · У 11.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="гречка с курицей готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="148 — Гречка с курицей">
+                    <span>
+                        <strong>Гречка с курицей</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">145 ккал</span>
+                    <span class="nutrition-food-macros">Б 10.0 · Ж 4.0 · У 18.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="картофельное пюре с молоком готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="145 — Картофельное пюре с молоком">
+                    <span>
+                        <strong>Картофельное пюре с молоком</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">113 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.1 · Ж 4.2 · У 16.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="котлета говяжья готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="144 — Котлета говяжья">
+                    <span>
+                        <strong>Котлета говяжья</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">250 ккал</span>
+                    <span class="nutrition-food-macros">Б 17.0 · Ж 18.0 · У 8.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="котлета куриная готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="143 — Котлета куриная">
+                    <span>
+                        <strong>Котлета куриная</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">222 ккал</span>
+                    <span class="nutrition-food-macros">Б 18.0 · Ж 14.0 · У 7.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="окрошка на кефире готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="138 — Окрошка на кефире">
+                    <span>
+                        <strong>Окрошка на кефире</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">55 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 2.5 · У 5.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="омлет с молоком готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="149 — Омлет с молоком">
+                    <span>
+                        <strong>Омлет с молоком</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">154 ккал</span>
+                    <span class="nutrition-food-macros">Б 10.0 · Ж 11.0 · У 2.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="пельмени отварные готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="139 — Пельмени отварные">
+                    <span>
+                        <strong>Пельмени отварные</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">275 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.0 · Ж 14.0 · У 25.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="перец фаршированный готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="142 — Перец фаршированный">
+                    <span>
+                        <strong>Перец фаршированный</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">133 ккал</span>
+                    <span class="nutrition-food-macros">Б 7.0 · Ж 7.0 · У 10.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="пицца сырная готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="153 — Пицца сырная">
+                    <span>
+                        <strong>Пицца сырная</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">266 ккал</span>
+                    <span class="nutrition-food-macros">Б 11.4 · Ж 10.4 · У 33.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="плов с говядиной готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="147 — Плов с говядиной">
+                    <span>
+                        <strong>Плов с говядиной</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">190 ккал</span>
+                    <span class="nutrition-food-macros">Б 7.5 · Ж 8.0 · У 22.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="плов с курицей готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="146 — Плов с курицей">
+                    <span>
+                        <strong>Плов с курицей</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">165 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.5 · Ж 5.0 · У 22.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="салат «оливье» готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="151 — Салат «Оливье»">
+                    <span>
+                        <strong>Салат «Оливье»</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">198 ккал</span>
+                    <span class="nutrition-food-macros">Б 5.5 · Ж 16.0 · У 7.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="салат «цезарь» с курицей готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="150 — Салат «Цезарь» с курицей">
+                    <span>
+                        <strong>Салат «Цезарь» с курицей</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">190 ккал</span>
+                    <span class="nutrition-food-macros">Б 14.0 · Ж 13.0 · У 5.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="солянка мясная готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="137 — Солянка мясная">
+                    <span>
+                        <strong>Солянка мясная</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">69 ккал</span>
+                    <span class="nutrition-food-macros">Б 5.2 · Ж 4.2 · У 2.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="суп гороховый готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="136 — Суп гороховый">
+                    <span>
+                        <strong>Суп гороховый</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">66 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.4 · Ж 2.2 · У 8.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="суп куриный с лапшой готовые блюда">
+                <button type="button" class="nutrition-food-select" data-select-food="135 — Суп куриный с лапшой">
+                    <span>
+                        <strong>Суп куриный с лапшой</strong>
+                        <small>Готовые блюда</small>
+                    </span>
+                    <span class="nutrition-food-calories">50 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.5 · Ж 1.8 · У 5.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="булгур варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="63 — Булгур варёный">
+                    <span>
+                        <strong>Булгур варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">83 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.1 · Ж 0.2 · У 18.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="горох варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="71 — Горох варёный">
+                    <span>
+                        <strong>Горох варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">118 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.3 · Ж 0.4 · У 21.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="гречка варёная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="57 — Гречка варёная">
+                    <span>
+                        <strong>Гречка варёная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">110 ккал</span>
+                    <span class="nutrition-food-macros">Б 4.2 · Ж 1.1 · У 21.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="гречка, сухая крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="56 — Гречка, сухая">
+                    <span>
+                        <strong>Гречка, сухая</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">343 ккал</span>
+                    <span class="nutrition-food-macros">Б 13.3 · Ж 3.4 · У 71.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="киноа варёная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="65 — Киноа варёная">
+                    <span>
+                        <strong>Киноа варёная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">120 ккал</span>
+                    <span class="nutrition-food-macros">Б 4.4 · Ж 1.9 · У 21.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кукуруза консервированная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="72 — Кукуруза консервированная">
+                    <span>
+                        <strong>Кукуруза консервированная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">79 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.4 · Ж 1.5 · У 14.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кускус варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="64 — Кускус варёный">
+                    <span>
+                        <strong>Кускус варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">112 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.8 · Ж 0.2 · У 23.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="макароны варёные крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="67 — Макароны варёные">
+                    <span>
+                        <strong>Макароны варёные</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">158 ккал</span>
+                    <span class="nutrition-food-macros">Б 5.8 · Ж 0.9 · У 30.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="макароны из твёрдых сортов, сухие крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="66 — Макароны из твёрдых сортов, сухие">
+                    <span>
+                        <strong>Макароны из твёрдых сортов, сухие</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">350 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.0 · Ж 1.5 · У 72.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="нут варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="69 — Нут варёный">
+                    <span>
+                        <strong>Нут варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">164 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.9 · Ж 2.6 · У 27.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="овсяные хлопья, сухие крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="55 — Овсяные хлопья, сухие">
+                    <span>
+                        <strong>Овсяные хлопья, сухие</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">366 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.3 · Ж 6.1 · У 59.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="перловка варёная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="62 — Перловка варёная">
+                    <span>
+                        <strong>Перловка варёная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">123 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.3 · Ж 0.4 · У 28.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="пшённая каша на воде крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="61 — Пшённая каша на воде">
+                    <span>
+                        <strong>Пшённая каша на воде</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">119 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.5 · Ж 1.0 · У 23.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="рис белый варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="59 — Рис белый варёный">
+                    <span>
+                        <strong>Рис белый варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">130 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.7 · Ж 0.3 · У 28.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="рис белый, сухой крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="58 — Рис белый, сухой">
+                    <span>
+                        <strong>Рис белый, сухой</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">344 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.7 · Ж 0.7 · У 78.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="рис бурый варёный крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="60 — Рис бурый варёный">
+                    <span>
+                        <strong>Рис бурый варёный</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">123 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.7 · Ж 1.0 · У 25.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="фасоль красная варёная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="70 — Фасоль красная варёная">
+                    <span>
+                        <strong>Фасоль красная варёная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">127 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.7 · Ж 0.5 · У 22.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="чечевица варёная крупы и бобовые">
+                <button type="button" class="nutrition-food-select" data-select-food="68 — Чечевица варёная">
+                    <span>
+                        <strong>Чечевица варёная</strong>
+                        <small>Крупы и бобовые</small>
+                    </span>
+                    <span class="nutrition-food-calories">116 ккал</span>
+                    <span class="nutrition-food-macros">Б 9.0 · Ж 0.4 · У 20.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="брынза молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="16 — Брынза">
+                    <span>
+                        <strong>Брынза</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">260 ккал</span>
+                    <span class="nutrition-food-macros">Б 17.9 · Ж 20.1 · У 0.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="йогурт греческий 2% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="8 — Йогурт греческий 2%">
+                    <span>
+                        <strong>Йогурт греческий 2%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">73 ккал</span>
+                    <span class="nutrition-food-macros">Б 9.9 · Ж 2.0 · У 3.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="йогурт натуральный молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="7 — Йогурт натуральный">
+                    <span>
+                        <strong>Йогурт натуральный</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">61 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.5 · Ж 3.3 · У 4.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кефир 1% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="4 — Кефир 1%">
+                    <span>
+                        <strong>Кефир 1%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">40 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 1.0 · У 4.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кефир 2,5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="5 — Кефир 2,5%">
+                    <span>
+                        <strong>Кефир 2,5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">53 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.9 · Ж 2.5 · У 4.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="масло сливочное 82,5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="18 — Масло сливочное 82,5%">
+                    <span>
+                        <strong>Масло сливочное 82,5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">748 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.5 · Ж 82.5 · У 0.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="молоко 1,5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="1 — Молоко 1,5%">
+                    <span>
+                        <strong>Молоко 1,5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">45 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 1.5 · У 4.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="молоко 2,5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="2 — Молоко 2,5%">
+                    <span>
+                        <strong>Молоко 2,5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">52 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 2.5 · У 4.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="молоко 3,2% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="3 — Молоко 3,2%">
+                    <span>
+                        <strong>Молоко 3,2%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">60 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 3.2 · У 4.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="моцарелла молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="14 — Моцарелла">
+                    <span>
+                        <strong>Моцарелла</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">280 ккал</span>
+                    <span class="nutrition-food-macros">Б 22.0 · Ж 21.0 · У 2.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="ряженка 2,5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="6 — Ряженка 2,5%">
+                    <span>
+                        <strong>Ряженка 2,5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">54 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.9 · Ж 2.5 · У 4.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сливки 10% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="17 — Сливки 10%">
+                    <span>
+                        <strong>Сливки 10%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">119 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 10.0 · У 4.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сметана 10% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="12 — Сметана 10%">
+                    <span>
+                        <strong>Сметана 10%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">119 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.0 · Ж 10.0 · У 3.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сметана 20% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="13 — Сметана 20%">
+                    <span>
+                        <strong>Сметана 20%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">206 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.8 · Ж 20.0 · У 3.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сыр твёрдый молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="15 — Сыр твёрдый">
+                    <span>
+                        <strong>Сыр твёрдый</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">350 ккал</span>
+                    <span class="nutrition-food-macros">Б 25.0 · Ж 27.0 · У 1.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="творог 5% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="10 — Творог 5%">
+                    <span>
+                        <strong>Творог 5%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">121 ккал</span>
+                    <span class="nutrition-food-macros">Б 17.0 · Ж 5.0 · У 1.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="творог 9% молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="11 — Творог 9%">
+                    <span>
+                        <strong>Творог 9%</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">159 ккал</span>
+                    <span class="nutrition-food-macros">Б 16.7 · Ж 9.0 · У 2.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="творог обезжиренный молочные продукты">
+                <button type="button" class="nutrition-food-select" data-select-food="9 — Творог обезжиренный">
+                    <span>
+                        <strong>Творог обезжиренный</strong>
+                        <small>Молочные продукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">71 ккал</span>
+                    <span class="nutrition-food-macros">Б 16.5 · Ж 0.2 · У 1.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="ветчина нежирная мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="31 — Ветчина нежирная">
+                    <span>
+                        <strong>Ветчина нежирная</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">145 ккал</span>
+                    <span class="nutrition-food-macros">Б 21.0 · Ж 5.5 · У 1.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="говядина постная, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="23 — Говядина постная, готовая">
+                    <span>
+                        <strong>Говядина постная, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">217 ккал</span>
+                    <span class="nutrition-food-macros">Б 26.1 · Ж 11.8 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="колбаса варёная мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="32 — Колбаса варёная">
+                    <span>
+                        <strong>Колбаса варёная</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">257 ккал</span>
+                    <span class="nutrition-food-macros">Б 13.0 · Ж 22.0 · У 1.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кролик, готовый мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="28 — Кролик, готовый">
+                    <span>
+                        <strong>Кролик, готовый</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">205 ккал</span>
+                    <span class="nutrition-food-macros">Б 30.0 · Ж 8.4 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="куриная голень, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="21 — Куриная голень, готовая">
+                    <span>
+                        <strong>Куриная голень, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">175 ккал</span>
+                    <span class="nutrition-food-macros">Б 27.0 · Ж 6.2 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="куриная грудка, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="19 — Куриная грудка, готовая">
+                    <span>
+                        <strong>Куриная грудка, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">165 ккал</span>
+                    <span class="nutrition-food-macros">Б 31.0 · Ж 3.6 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="куриное бедро без кожи, готовое мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="20 — Куриное бедро без кожи, готовое">
+                    <span>
+                        <strong>Куриное бедро без кожи, готовое</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">209 ккал</span>
+                    <span class="nutrition-food-macros">Б 26.0 · Ж 10.9 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="печень говяжья, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="30 — Печень говяжья, готовая">
+                    <span>
+                        <strong>Печень говяжья, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">191 ккал</span>
+                    <span class="nutrition-food-macros">Б 29.1 · Ж 5.3 · У 5.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="печень куриная, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="29 — Печень куриная, готовая">
+                    <span>
+                        <strong>Печень куриная, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">167 ккал</span>
+                    <span class="nutrition-food-macros">Б 24.5 · Ж 6.5 · У 0.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="свинина постная, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="26 — Свинина постная, готовая">
+                    <span>
+                        <strong>Свинина постная, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">195 ккал</span>
+                    <span class="nutrition-food-macros">Б 29.0 · Ж 7.5 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="свинина шейка, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="27 — Свинина шейка, готовая">
+                    <span>
+                        <strong>Свинина шейка, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">343 ккал</span>
+                    <span class="nutrition-food-macros">Б 23.0 · Ж 28.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сосиски молочные мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="33 — Сосиски молочные">
+                    <span>
+                        <strong>Сосиски молочные</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">266 ккал</span>
+                    <span class="nutrition-food-macros">Б 11.0 · Ж 24.0 · У 1.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="телятина, готовая мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="25 — Телятина, готовая">
+                    <span>
+                        <strong>Телятина, готовая</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">172 ккал</span>
+                    <span class="nutrition-food-macros">Б 30.0 · Ж 5.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="фарш говяжий 10% жира мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="24 — Фарш говяжий 10% жира">
+                    <span>
+                        <strong>Фарш говяжий 10% жира</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">217 ккал</span>
+                    <span class="nutrition-food-macros">Б 26.0 · Ж 12.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="филе индейки, готовое мясо и птица">
+                <button type="button" class="nutrition-food-select" data-select-food="22 — Филе индейки, готовое">
+                    <span>
+                        <strong>Филе индейки, готовое</strong>
+                        <small>Мясо и птица</small>
+                    </span>
+                    <span class="nutrition-food-calories">135 ккал</span>
+                    <span class="nutrition-food-macros">Б 29.0 · Ж 1.6 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="вода напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="167 — Вода">
+                    <span>
+                        <strong>Вода</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">0 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 0.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="какао на молоке напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="174 — Какао на молоке">
+                    <span>
+                        <strong>Какао на молоке</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">77 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.1 · Ж 2.7 · У 10.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="квас напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="173 — Квас">
+                    <span>
+                        <strong>Квас</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">27 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.2 · Ж 0.0 · У 5.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кола с сахаром напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="172 — Кола с сахаром">
+                    <span>
+                        <strong>Кола с сахаром</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">42 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 0.0 · У 10.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кофе без сахара напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="168 — Кофе без сахара">
+                    <span>
+                        <strong>Кофе без сахара</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">2 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.1 · Ж 0.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="протеиновый коктейль на воде напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="175 — Протеиновый коктейль на воде">
+                    <span>
+                        <strong>Протеиновый коктейль на воде</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">80 ккал</span>
+                    <span class="nutrition-food-macros">Б 16.0 · Ж 1.0 · У 2.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сок апельсиновый напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="170 — Сок апельсиновый">
+                    <span>
+                        <strong>Сок апельсиновый</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">45 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.2 · У 10.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сок яблочный напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="171 — Сок яблочный">
+                    <span>
+                        <strong>Сок яблочный</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">46 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.1 · Ж 0.1 · У 11.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="чай без сахара напитки">
+                <button type="button" class="nutrition-food-select" data-select-food="169 — Чай без сахара">
+                    <span>
+                        <strong>Чай без сахара</strong>
+                        <small>Напитки</small>
+                    </span>
+                    <span class="nutrition-food-calories">1 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 0.0 · У 0.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="авокадо овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="101 — Авокадо">
+                    <span>
+                        <strong>Авокадо</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">160 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.0 · Ж 14.7 · У 8.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="баклажан овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="92 — Баклажан">
+                    <span>
+                        <strong>Баклажан</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">25 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.0 · Ж 0.2 · У 5.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="брокколи овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="89 — Брокколи">
+                    <span>
+                        <strong>Брокколи</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">34 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.8 · Ж 0.4 · У 6.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="зелёный горошек овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="102 — Зелёный горошек">
+                    <span>
+                        <strong>Зелёный горошек</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">81 ккал</span>
+                    <span class="nutrition-food-macros">Б 5.4 · Ж 0.4 · У 14.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кабачок овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="91 — Кабачок">
+                    <span>
+                        <strong>Кабачок</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">17 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.2 · Ж 0.3 · У 3.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="капуста белокочанная овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="87 — Капуста белокочанная">
+                    <span>
+                        <strong>Капуста белокочанная</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">25 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.3 · Ж 0.1 · У 5.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="капуста краснокочанная овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="88 — Капуста краснокочанная">
+                    <span>
+                        <strong>Капуста краснокочанная</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">31 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.4 · Ж 0.2 · У 7.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="картофель варёный овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="83 — Картофель варёный">
+                    <span>
+                        <strong>Картофель варёный</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">87 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.9 · Ж 0.1 · У 20.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="картофель запечённый овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="84 — Картофель запечённый">
+                    <span>
+                        <strong>Картофель запечённый</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">93 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.5 · Ж 0.1 · У 21.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="лук репчатый овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="96 — Лук репчатый">
+                    <span>
+                        <strong>Лук репчатый</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">40 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.1 · Ж 0.1 · У 9.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="морковь овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="85 — Морковь">
+                    <span>
+                        <strong>Морковь</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">41 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.9 · Ж 0.2 · У 9.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="огурец овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="94 — Огурец">
+                    <span>
+                        <strong>Огурец</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">15 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.1 · У 3.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="перец сладкий красный овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="95 — Перец сладкий красный">
+                    <span>
+                        <strong>Перец сладкий красный</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">31 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.0 · Ж 0.3 · У 6.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="помидор овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="93 — Помидор">
+                    <span>
+                        <strong>Помидор</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">18 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.9 · Ж 0.2 · У 3.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="салат листовой овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="100 — Салат листовой">
+                    <span>
+                        <strong>Салат листовой</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">15 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.4 · Ж 0.2 · У 2.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="свёкла овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="86 — Свёкла">
+                    <span>
+                        <strong>Свёкла</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">43 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.6 · Ж 0.2 · У 9.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="цветная капуста овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="90 — Цветная капуста">
+                    <span>
+                        <strong>Цветная капуста</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">25 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.9 · Ж 0.3 · У 5.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="чеснок овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="97 — Чеснок">
+                    <span>
+                        <strong>Чеснок</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">149 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.4 · Ж 0.5 · У 33.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="шампиньоны овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="98 — Шампиньоны">
+                    <span>
+                        <strong>Шампиньоны</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">22 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.1 · Ж 0.3 · У 3.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="шпинат овощи и зелень">
+                <button type="button" class="nutrition-food-select" data-select-food="99 — Шпинат">
+                    <span>
+                        <strong>Шпинат</strong>
+                        <small>Овощи и зелень</small>
+                    </span>
+                    <span class="nutrition-food-calories">23 ккал</span>
+                    <span class="nutrition-food-macros">Б 2.9 · Ж 0.4 · У 3.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="арахис орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="126 — Арахис">
+                    <span>
+                        <strong>Арахис</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">567 ккал</span>
+                    <span class="nutrition-food-macros">Б 25.8 · Ж 49.2 · У 16.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="арахисовая паста без сахара орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="132 — Арахисовая паста без сахара">
+                    <span>
+                        <strong>Арахисовая паста без сахара</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">588 ккал</span>
+                    <span class="nutrition-food-macros">Б 25.0 · Ж 50.0 · У 20.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="грецкий орех орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="123 — Грецкий орех">
+                    <span>
+                        <strong>Грецкий орех</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">654 ккал</span>
+                    <span class="nutrition-food-macros">Б 15.2 · Ж 65.2 · У 13.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кешью орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="124 — Кешью">
+                    <span>
+                        <strong>Кешью</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">553 ккал</span>
+                    <span class="nutrition-food-macros">Б 18.2 · Ж 43.9 · У 30.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="миндаль орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="122 — Миндаль">
+                    <span>
+                        <strong>Миндаль</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">579 ккал</span>
+                    <span class="nutrition-food-macros">Б 21.2 · Ж 49.9 · У 21.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="семена льна орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="131 — Семена льна">
+                    <span>
+                        <strong>Семена льна</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">534 ккал</span>
+                    <span class="nutrition-food-macros">Б 18.3 · Ж 42.2 · У 28.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="семена чиа орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="130 — Семена чиа">
+                    <span>
+                        <strong>Семена чиа</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">486 ккал</span>
+                    <span class="nutrition-food-macros">Б 16.5 · Ж 30.7 · У 42.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="семечки подсолнечника орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="128 — Семечки подсолнечника">
+                    <span>
+                        <strong>Семечки подсолнечника</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">584 ккал</span>
+                    <span class="nutrition-food-macros">Б 20.8 · Ж 51.5 · У 20.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="семечки тыквенные орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="129 — Семечки тыквенные">
+                    <span>
+                        <strong>Семечки тыквенные</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">559 ккал</span>
+                    <span class="nutrition-food-macros">Б 30.2 · Ж 49.1 · У 10.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="тахини орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="133 — Тахини">
+                    <span>
+                        <strong>Тахини</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">595 ккал</span>
+                    <span class="nutrition-food-macros">Б 17.0 · Ж 53.8 · У 21.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="фисташки орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="127 — Фисташки">
+                    <span>
+                        <strong>Фисташки</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">560 ккал</span>
+                    <span class="nutrition-food-macros">Б 20.2 · Ж 45.3 · У 27.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="фундук орехи и семена">
+                <button type="button" class="nutrition-food-select" data-select-food="125 — Фундук">
+                    <span>
+                        <strong>Фундук</strong>
+                        <small>Орехи и семена</small>
+                    </span>
+                    <span class="nutrition-food-calories">628 ккал</span>
+                    <span class="nutrition-food-macros">Б 15.0 · Ж 60.8 · У 16.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="горбуша, готовая рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="43 — Горбуша, готовая">
+                    <span>
+                        <strong>Горбуша, готовая</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">168 ккал</span>
+                    <span class="nutrition-food-macros">Б 24.6 · Ж 7.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кальмар варёный рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="45 — Кальмар варёный">
+                    <span>
+                        <strong>Кальмар варёный</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">122 ккал</span>
+                    <span class="nutrition-food-macros">Б 21.2 · Ж 2.8 · У 2.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="котлета рыбная рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="48 — Котлета рыбная">
+                    <span>
+                        <strong>Котлета рыбная</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">168 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.5 · Ж 8.0 · У 11.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="крабовые палочки рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="47 — Крабовые палочки">
+                    <span>
+                        <strong>Крабовые палочки</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">95 ккал</span>
+                    <span class="nutrition-food-macros">Б 7.5 · Ж 0.5 · У 15.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="креветки варёные рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="44 — Креветки варёные">
+                    <span>
+                        <strong>Креветки варёные</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">99 ккал</span>
+                    <span class="nutrition-food-macros">Б 24.0 · Ж 0.3 · У 0.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="лосось запечённый рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="34 — Лосось запечённый">
+                    <span>
+                        <strong>Лосось запечённый</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">206 ккал</span>
+                    <span class="nutrition-food-macros">Б 22.0 · Ж 12.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="мидии варёные рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="46 — Мидии варёные">
+                    <span>
+                        <strong>Мидии варёные</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">172 ккал</span>
+                    <span class="nutrition-food-macros">Б 24.0 · Ж 4.5 · У 7.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="минтай, готовый рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="37 — Минтай, готовый">
+                    <span>
+                        <strong>Минтай, готовый</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">111 ккал</span>
+                    <span class="nutrition-food-macros">Б 23.5 · Ж 1.2 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сардины консервированные рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="42 — Сардины консервированные">
+                    <span>
+                        <strong>Сардины консервированные</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">208 ккал</span>
+                    <span class="nutrition-food-macros">Б 24.6 · Ж 11.5 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сельдь слабосолёная рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="40 — Сельдь слабосолёная">
+                    <span>
+                        <strong>Сельдь слабосолёная</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">217 ккал</span>
+                    <span class="nutrition-food-macros">Б 19.8 · Ж 15.4 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="скумбрия запечённая рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="39 — Скумбрия запечённая">
+                    <span>
+                        <strong>Скумбрия запечённая</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">262 ккал</span>
+                    <span class="nutrition-food-macros">Б 23.8 · Ж 17.8 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="треска, готовая рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="36 — Треска, готовая">
+                    <span>
+                        <strong>Треска, готовая</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">89 ккал</span>
+                    <span class="nutrition-food-macros">Б 19.9 · Ж 0.7 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="тунец консервированный в собственном соку рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="41 — Тунец консервированный в собственном соку">
+                    <span>
+                        <strong>Тунец консервированный в собственном соку</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">116 ккал</span>
+                    <span class="nutrition-food-macros">Б 25.5 · Ж 0.8 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="форель запечённая рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="35 — Форель запечённая">
+                    <span>
+                        <strong>Форель запечённая</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">168 ккал</span>
+                    <span class="nutrition-food-macros">Б 23.8 · Ж 7.4 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хек, готовый рыба и морепродукты">
+                <button type="button" class="nutrition-food-select" data-select-food="38 — Хек, готовый">
+                    <span>
+                        <strong>Хек, готовый</strong>
+                        <small>Рыба и морепродукты</small>
+                    </span>
+                    <span class="nutrition-food-calories">112 ккал</span>
+                    <span class="nutrition-food-macros">Б 20.1 · Ж 3.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="горчица столовая сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="164 — Горчица столовая">
+                    <span>
+                        <strong>Горчица столовая</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">66 ккал</span>
+                    <span class="nutrition-food-macros">Б 4.4 · Ж 3.3 · У 5.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="зефир сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="156 — Зефир">
+                    <span>
+                        <strong>Зефир</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">326 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.8 · Ж 0.1 · У 80.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="кетчуп сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="163 — Кетчуп">
+                    <span>
+                        <strong>Кетчуп</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">112 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.3 · Ж 0.2 · У 26.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="майонез 67% сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="162 — Майонез 67%">
+                    <span>
+                        <strong>Майонез 67%</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">624 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.1 · Ж 67.0 · У 2.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="мармелад сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="157 — Мармелад">
+                    <span>
+                        <strong>Мармелад</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">321 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.1 · Ж 0.0 · У 79.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="масло оливковое сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="165 — Масло оливковое">
+                    <span>
+                        <strong>Масло оливковое</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">884 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 100.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="масло подсолнечное сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="166 — Масло подсолнечное">
+                    <span>
+                        <strong>Масло подсолнечное</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">884 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 100.0 · У 0.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="мороженое пломбир сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="159 — Мороженое пломбир">
+                    <span>
+                        <strong>Мороженое пломбир</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">232 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.7 · Ж 15.0 · У 20.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="мёд сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="160 — Мёд">
+                    <span>
+                        <strong>Мёд</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">304 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.3 · Ж 0.0 · У 82.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="печенье овсяное сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="158 — Печенье овсяное">
+                    <span>
+                        <strong>Печенье овсяное</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">437 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.5 · Ж 14.4 · У 71.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сахар сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="161 — Сахар">
+                    <span>
+                        <strong>Сахар</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">387 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.0 · Ж 0.0 · У 100.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="шоколад молочный сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="155 — Шоколад молочный">
+                    <span>
+                        <strong>Шоколад молочный</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">535 ккал</span>
+                    <span class="nutrition-food-macros">Б 7.7 · Ж 29.7 · У 59.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="шоколад тёмный 70% сладости и соусы">
+                <button type="button" class="nutrition-food-select" data-select-food="154 — Шоколад тёмный 70%">
+                    <span>
+                        <strong>Шоколад тёмный 70%</strong>
+                        <small>Сладости и соусы</small>
+                    </span>
+                    <span class="nutrition-food-calories">598 ккал</span>
+                    <span class="nutrition-food-macros">Б 7.8 · Ж 42.6 · У 45.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="абрикос фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="111 — Абрикос">
+                    <span>
+                        <strong>Абрикос</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">48 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.4 · Ж 0.4 · У 11.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="апельсин фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="106 — Апельсин">
+                    <span>
+                        <strong>Апельсин</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">47 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.9 · Ж 0.1 · У 11.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="арбуз фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="114 — Арбуз">
+                    <span>
+                        <strong>Арбуз</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">30 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.6 · Ж 0.2 · У 7.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="банан фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="105 — Банан">
+                    <span>
+                        <strong>Банан</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">89 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.1 · Ж 0.3 · У 22.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="виноград фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="113 — Виноград">
+                    <span>
+                        <strong>Виноград</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">69 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.2 · У 18.1</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="вишня фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="119 — Вишня">
+                    <span>
+                        <strong>Вишня</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">50 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.0 · Ж 0.3 · У 12.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="грейпфрут фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="108 — Грейпфрут">
+                    <span>
+                        <strong>Грейпфрут</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">42 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.8 · Ж 0.1 · У 10.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="груша фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="104 — Груша">
+                    <span>
+                        <strong>Груша</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">57 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.4 · Ж 0.1 · У 15.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="дыня фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="115 — Дыня">
+                    <span>
+                        <strong>Дыня</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">34 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.8 · Ж 0.2 · У 8.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="изюм фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="121 — Изюм">
+                    <span>
+                        <strong>Изюм</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">299 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.1 · Ж 0.5 · У 79.2</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="киви фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="109 — Киви">
+                    <span>
+                        <strong>Киви</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">61 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.1 · Ж 0.5 · У 14.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="клубника фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="116 — Клубника">
+                    <span>
+                        <strong>Клубника</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">32 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.3 · У 7.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="курага фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="120 — Курага">
+                    <span>
+                        <strong>Курага</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">241 ккал</span>
+                    <span class="nutrition-food-macros">Б 3.4 · Ж 0.5 · У 62.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="малина фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="117 — Малина">
+                    <span>
+                        <strong>Малина</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">52 ккал</span>
+                    <span class="nutrition-food-macros">Б 1.2 · Ж 0.7 · У 11.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="мандарин фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="107 — Мандарин">
+                    <span>
+                        <strong>Мандарин</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">53 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.8 · Ж 0.3 · У 13.3</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="персик фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="110 — Персик">
+                    <span>
+                        <strong>Персик</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">39 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.9 · Ж 0.3 · У 9.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="слива фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="112 — Слива">
+                    <span>
+                        <strong>Слива</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">46 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.3 · У 11.4</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="черника фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="118 — Черника">
+                    <span>
+                        <strong>Черника</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">57 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.7 · Ж 0.3 · У 14.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="яблоко фрукты и ягоды">
+                <button type="button" class="nutrition-food-select" data-select-food="103 — Яблоко">
+                    <span>
+                        <strong>Яблоко</strong>
+                        <small>Фрукты и ягоды</small>
+                    </span>
+                    <span class="nutrition-food-calories">52 ккал</span>
+                    <span class="nutrition-food-macros">Б 0.3 · Ж 0.2 · У 13.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="блины хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="81 — Блины">
+                    <span>
+                        <strong>Блины</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">227 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.1 · Ж 9.2 · У 30.5</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="бублик хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="79 — Бублик">
+                    <span>
+                        <strong>Бублик</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">270 ккал</span>
+                    <span class="nutrition-food-macros">Б 9.0 · Ж 1.7 · У 53.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="круассан без начинки хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="80 — Круассан без начинки">
+                    <span>
+                        <strong>Круассан без начинки</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">406 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.2 · Ж 21.0 · У 45.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="лаваш тонкий хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="77 — Лаваш тонкий">
+                    <span>
+                        <strong>Лаваш тонкий</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">277 ккал</span>
+                    <span class="nutrition-food-macros">Б 9.1 · Ж 1.1 · У 56.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="сырники хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="82 — Сырники">
+                    <span>
+                        <strong>Сырники</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">242 ккал</span>
+                    <span class="nutrition-food-macros">Б 13.0 · Ж 11.0 · У 22.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хлеб бородинский хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="74 — Хлеб бородинский">
+                    <span>
+                        <strong>Хлеб бородинский</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">208 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.9 · Ж 1.3 · У 40.9</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хлеб пшеничный хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="75 — Хлеб пшеничный">
+                    <span>
+                        <strong>Хлеб пшеничный</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">265 ккал</span>
+                    <span class="nutrition-food-macros">Б 8.5 · Ж 3.2 · У 49.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хлеб ржаной хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="73 — Хлеб ржаной">
+                    <span>
+                        <strong>Хлеб ржаной</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">210 ккал</span>
+                    <span class="nutrition-food-macros">Б 6.6 · Ж 1.2 · У 40.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хлеб цельнозерновой хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="76 — Хлеб цельнозерновой">
+                    <span>
+                        <strong>Хлеб цельнозерновой</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">247 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.5 · Ж 3.4 · У 41.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="хлебцы ржаные хлеб и выпечка">
+                <button type="button" class="nutrition-food-select" data-select-food="78 — Хлебцы ржаные">
+                    <span>
+                        <strong>Хлебцы ржаные</strong>
+                        <small>Хлеб и выпечка</small>
+                    </span>
+                    <span class="nutrition-food-calories">330 ккал</span>
+                    <span class="nutrition-food-macros">Б 10.0 · Ж 2.0 · У 65.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="белок яичный яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="50 — Белок яичный">
+                    <span>
+                        <strong>Белок яичный</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">52 ккал</span>
+                    <span class="nutrition-food-macros">Б 10.9 · Ж 0.2 · У 0.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="соевый текстурат, сухой яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="54 — Соевый текстурат, сухой">
+                    <span>
+                        <strong>Соевый текстурат, сухой</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">330 ккал</span>
+                    <span class="nutrition-food-macros">Б 50.0 · Ж 1.0 · У 30.0</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="темпе яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="53 — Темпе">
+                    <span>
+                        <strong>Темпе</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">195 ккал</span>
+                    <span class="nutrition-food-macros">Б 19.9 · Ж 11.4 · У 7.6</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="тофу яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="52 — Тофу">
+                    <span>
+                        <strong>Тофу</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">144 ккал</span>
+                    <span class="nutrition-food-macros">Б 17.3 · Ж 8.7 · У 2.8</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="яйцо куриное яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="49 — Яйцо куриное">
+                    <span>
+                        <strong>Яйцо куриное</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">143 ккал</span>
+                    <span class="nutrition-food-macros">Б 12.6 · Ж 9.5 · У 0.7</span>
+                </button>
+                
+            </article>
+            
+            <article class="nutrition-food-row" data-food-search="яйцо перепелиное яйца и растительные белки">
+                <button type="button" class="nutrition-food-select" data-select-food="51 — Яйцо перепелиное">
+                    <span>
+                        <strong>Яйцо перепелиное</strong>
+                        <small>Яйца и растительные белки</small>
+                    </span>
+                    <span class="nutrition-food-calories">158 ккал</span>
+                    <span class="nutrition-food-macros">Б 13.1 · Ж 11.1 · У 0.4</span>
+                </button>
+                
+            </article>
+            
+        </div>
+        <p class="nutrition-no-results" id="nutrition-no-results" hidden>По вашему запросу продукты не найдены.</p>
+    </section>
+
+    <section class="nutrition-card">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Последние 14 дней</span>
+                <h2>История калорий</h2>
+            </div>
+        </div>
+        <div class="nutrition-history">
+            
+            <a href="/nutrition?date=2026-08-03" class="nutrition-history-day nutrition-history-day-active">
+                <span>Сегодня</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-08-02" class="nutrition-history-day">
+                <span>Вчера</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-08-01" class="nutrition-history-day">
+                <span>01.08.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-31" class="nutrition-history-day">
+                <span>31.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-30" class="nutrition-history-day">
+                <span>30.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-29" class="nutrition-history-day">
+                <span>29.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-28" class="nutrition-history-day">
+                <span>28.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-27" class="nutrition-history-day">
+                <span>27.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-26" class="nutrition-history-day">
+                <span>26.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-25" class="nutrition-history-day">
+                <span>25.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-24" class="nutrition-history-day">
+                <span>24.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-23" class="nutrition-history-day">
+                <span>23.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-22" class="nutrition-history-day">
+                <span>22.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+            <a href="/nutrition?date=2026-07-21" class="nutrition-history-day">
+                <span>21.07.2026</span>
+                <strong>0 ккал</strong>
+                <small>Б 0 · Ж 0 · У 0</small>
+            </a>
+            
+        </div>
+    </section>
+
+    <section class="nutrition-card nutrition-recommendations">
+        <div class="nutrition-section-heading">
+            <div>
+                <span class="nutrition-section-label">Полезные ориентиры</span>
+                <h2>Рекомендации</h2>
+            </div>
+            <a href="/workouts" class="nutrition-text-link">Тренировки →</a>
+        </div>
+        <div class="nutrition-recommendation-grid">
+            
+            <article>
+                <span aria-hidden="true">1</span>
+                <div>
+                    <strong>Заполните профиль</strong>
+                    <p>Возраст, рост, вес, активность и цель нужны для ориентировочного расчёта дневной калорийности.</p>
+                </div>
+            </article>
+            
+            <article>
+                <span aria-hidden="true">2</span>
+                <div>
+                    <strong>Собирайте разнообразный рацион</strong>
+                    <p>Чаще выбирайте овощи, фрукты, цельные крупы и разные источники белка. Для продуктов в упаковке используйте значения с этикетки.</p>
+                </div>
+            </article>
+            
+            <article>
+                <span aria-hidden="true">3</span>
+                <div>
+                    <strong>Двигайтесь регулярно</strong>
+                    <p>Для взрослых ориентир — 150–300 минут умеренной активности в неделю и силовые упражнения на основные группы мышц не менее двух дней.</p>
+                </div>
+            </article>
+            
+        </div>
+    </section>
+
+    <aside class="nutrition-disclaimer">
+        <strong>Важно</strong>
+        <p>Расчёт предназначен для взрослых от 18 лет и является ориентировочным, а не медицинской рекомендацией. Пищевая ценность зависит от бренда и способа приготовления. При беременности, расстройствах пищевого поведения, хронических заболеваниях или назначенной диете обсудите рацион с врачом или диетологом.</p>
+    </aside>
+</section>
+
+    </main>
+
+    
+    <nav class="app-bottom-nav" aria-label="Основная навигация">
+        
+        <a href="/planner.schedule" class="app-bottom-nav-link ">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="3"></rect>
+                <path d="M8 3v4M16 3v4M3 10h18M8 14h3M8 17h6"></path>
+            </svg>
+            <span>График</span>
+        </a>
+        
+        
+        <a href="/shootings-hub" class="app-bottom-nav-link ">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="6" width="14" height="13" rx="3"></rect>
+                <path d="m17 10 4-2v9l-4-2zM8 6l2-3h4l2 3"></path>
+            </svg>
+            <span>Съёмки</span>
+        </a>
+        
+        
+        <a href="/reports" class="app-bottom-nav-link ">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 20V10M12 20V4M19 20v-7"></path>
+                <path d="M3 20h18"></path>
+            </svg>
+            <span>Отчёт</span>
+        </a>
+        
+        
+        <a href="/study" class="app-bottom-nav-link ">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19V9M4 19h16"></path>
+                <path d="m8 15 3-3 3 2 5-7"></path>
+                <path d="M16 7h3v3"></path>
+            </svg>
+            <span>Развитие</span>
+        </a>
+        
+        
+        <a href="/sport" class="app-bottom-nav-link app-bottom-nav-link-active" aria-current="page">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"></path>
+                <path d="M9 18c1.1 1.3 4.9 1.3 6 0"></path>
+            </svg>
+            <span>Спорт</span>
+        </a>
+        
+        <a href="/account/settings" class="app-bottom-nav-link ">
+            <svg class="app-bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M4 21a8 8 0 0 1 16 0"></path>
+            </svg>
+            <span>Аккаунт</span>
+        </a>
+    </nav>
+
+    <button
+        type="button"
+        class="mobile-push-inbox-trigger"
+        id="mobile-push-inbox-trigger"
+        aria-label="Открыть непрочитанные уведомления"
+        aria-controls="mobile-push-inbox-sheet"
+        aria-expanded="false"
+        data-inbox-url="/api/push/inbox"
+        data-read-url="/api/push/inbox/read"
+        hidden
+    >
+        <span class="mobile-push-inbox-trigger-ring" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+        </svg>
+        <span class="mobile-push-inbox-count" id="mobile-push-inbox-count" aria-hidden="true"></span>
+    </button>
+
+    <div class="mobile-push-inbox-sheet" id="mobile-push-inbox-sheet" hidden>
+        <button type="button" class="mobile-push-inbox-backdrop" data-push-inbox-close aria-label="Закрыть уведомления"></button>
+        <section class="mobile-push-inbox-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-push-inbox-title">
+            <div class="mobile-push-inbox-handle" aria-hidden="true"></div>
+            <div class="mobile-push-inbox-header">
+                <div>
+                    <div class="mobile-push-inbox-eyebrow">Личный график</div>
+                    <h2 id="mobile-push-inbox-title">Уведомления</h2>
+                </div>
+                <button type="button" class="mobile-push-inbox-close" data-push-inbox-close aria-label="Закрыть">×</button>
+            </div>
+            <div class="mobile-push-inbox-list" id="mobile-push-inbox-list"></div>
+        </section>
+    </div>
+    
+
+    <div class="confirm-modal" id="confirm-modal" hidden>
+        <div class="confirm-modal-backdrop"></div>
+        <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+            <div class="confirm-modal-title" id="confirm-modal-title">Вы точно хотите удалить?</div>
+            <div class="confirm-modal-actions">
+                <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-modal-approve">Удалить</button>
+            </div>
+        </div>
+    </div>
+    <div class="validation-toast" id="validation-toast" role="status" aria-live="polite"></div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function applyAvatarFallback(image) {
+                if (!image) return;
+                const fallbackLetter = image.dataset && image.dataset.fallbackLetter ? image.dataset.fallbackLetter : "?";
+                const parent = image.parentElement;
+                if (!parent) return;
+                image.remove();
+                parent.textContent = fallbackLetter;
+            }
+
+            const avatarImages = document.querySelectorAll(".js-avatar-image");
+            avatarImages.forEach(function (image) {
+                image.addEventListener("error", function () {
+                    applyAvatarFallback(image);
+                });
+            });
+
+            const confirmModal = document.getElementById("confirm-modal");
+            const confirmModalApprove = document.getElementById("confirm-modal-approve");
+            const confirmModalCancel = document.getElementById("confirm-modal-cancel");
+            const validationToast = document.getElementById("validation-toast");
+            let confirmResolver = null;
+            let validationToastTimer = null;
+
+            function showValidationToast(message) {
+                if (!validationToast) return;
+                validationToast.textContent = message || "Заполните это поле.";
+                validationToast.classList.add("validation-toast-show");
+                if (validationToastTimer) {
+                    window.clearTimeout(validationToastTimer);
+                }
+                validationToastTimer = window.setTimeout(function () {
+                    validationToast.classList.remove("validation-toast-show");
+                }, 2200);
+            }
+
+            function openConfirmDialog() {
+                if (!confirmModal || !confirmModalApprove || !confirmModalCancel) {
+                    return Promise.resolve(window.confirm("Вы точно хотите удалить?"));
+                }
+                confirmModal.hidden = false;
+                return new Promise(function (resolve) {
+                    confirmResolver = resolve;
+                });
+            }
+
+            function closeConfirmDialog(approved) {
+                if (!confirmModal) return;
+                confirmModal.hidden = true;
+                if (confirmResolver) {
+                    confirmResolver(Boolean(approved));
+                    confirmResolver = null;
+                }
+            }
+
+            if (confirmModalApprove && confirmModalCancel && confirmModal) {
+                confirmModalApprove.addEventListener("click", function () { closeConfirmDialog(true); });
+                confirmModalCancel.addEventListener("click", function () { closeConfirmDialog(false); });
+                confirmModal.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("confirm-modal-backdrop")) {
+                        closeConfirmDialog(false);
+                    }
+                });
+            }
+
+            const csrfMeta = document.querySelector("meta[name='csrf-token']");
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+            function injectCsrfTokens(scope) {
+                if (!csrfToken) {
+                    return;
+                }
+                (scope || document).querySelectorAll("form").forEach(function (form) {
+                    const method = (form.getAttribute("method") || "GET").toUpperCase();
+                    if (method !== "POST") {
+                        return;
+                    }
+                    if (form.querySelector("input[name='_csrf_token']")) {
+                        return;
+                    }
+                    const hidden = document.createElement("input");
+                    hidden.type = "hidden";
+                    hidden.name = "_csrf_token";
+                    hidden.value = csrfToken;
+                    form.appendChild(hidden);
+                });
+            }
+
+            injectCsrfTokens(document);
+            document.addEventListener("shans:ajax-updated", function () {
+                injectCsrfTokens(document);
+            });
+
+            const navToggle = document.getElementById("mobile-nav-toggle");
+            const navMenu = document.getElementById("top-nav-menu");
+            if (navToggle && navMenu) {
+                navToggle.addEventListener("click", function () {
+                    const isOpen = navMenu.classList.toggle("top-nav-open");
+                    navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                });
+            }
+
+            document.querySelectorAll(".data-table").forEach(function (table) {
+                const headers = Array.from(table.querySelectorAll("thead th")).map(function (th) {
+                    return th.textContent.trim();
+                });
+
+                table.querySelectorAll("tbody tr").forEach(function (row) {
+                    row.querySelectorAll("td").forEach(function (cell, index) {
+                        if (headers[index]) {
+                            cell.setAttribute("data-label", headers[index]);
+                        }
+                    });
+                });
+            });
+
+            document.querySelectorAll(".table-card").forEach(function (card) {
+                const bulkActions = card.querySelector(".bulk-table-actions");
+                if (!bulkActions) return;
+
+                const hasDataRows = card.querySelectorAll(".bulk-row-checkbox").length > 0;
+                if (!hasDataRows) {
+                    card.classList.add("bulk-selection-hidden");
+                    bulkActions.classList.add("bulk-actions-hidden");
+                }
+            });
+
+            document.querySelectorAll(".bulk-table").forEach(function (wrapper) {
+                const scope = wrapper.closest(".table-card") || wrapper.parentElement || wrapper;
+                const selectedForm = scope.querySelector(".bulk-delete-selected-form");
+                const allForm = scope.querySelector(".bulk-delete-all-form");
+                const bulkActions = (selectedForm && selectedForm.closest(".table-actions"))
+                    || (allForm && allForm.closest(".table-actions"));
+                const selectAll = wrapper.querySelector(".bulk-select-all");
+                const checkboxes = Array.from(wrapper.querySelectorAll(".bulk-row-checkbox"));
+                const rows = Array.from(wrapper.querySelectorAll("tbody tr"));
+                const hasBulkControls = Boolean(selectedForm || allForm);
+                const hasDataRows = checkboxes.length > 0;
+                let selectionMode = false;
+                let actionsVisible = false;
+                let cancelBtn = null;
+
+                if (hasBulkControls && bulkActions && hasDataRows) {
+                    cancelBtn = document.createElement("button");
+                    cancelBtn.type = "button";
+                    cancelBtn.className = "btn btn-small bulk-cancel-selection-btn";
+                    cancelBtn.textContent = "Отмена";
+                    bulkActions.appendChild(cancelBtn);
+                }
+
+                function setSelectionMode(enabled) {
+                    if (!hasBulkControls || !bulkActions || !hasDataRows) return;
+                    selectionMode = enabled;
+                    scope.classList.toggle("bulk-selection-hidden", !enabled);
+                    actionsVisible = false;
+                    bulkActions.classList.add("bulk-actions-hidden");
+                }
+
+                function syncState() {
+                    const checked = checkboxes.filter(function (item) { return item.checked; }).length;
+                    if (selectedForm) {
+                        const idsField = selectedForm.querySelector(".bulk-selected-ids");
+                        if (idsField) {
+                            idsField.value = checkboxes
+                                .filter(function (item) { return item.checked; })
+                                .map(function (item) { return item.value; })
+                                .join(",");
+                        }
+                        const btn = selectedForm.querySelector("button[type='submit']");
+                        if (btn) {
+                            btn.disabled = checked === 0;
+                        }
+                    }
+                    if (selectAll) {
+                        selectAll.checked = checked > 0 && checked === checkboxes.length;
+                        selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+                    }
+                }
+
+                function resetSelection() {
+                    if (selectAll) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    }
+                    checkboxes.forEach(function (item) {
+                        item.checked = false;
+                    });
+                    syncState();
+                }
+
+                function showBulkActions() {
+                    if (!hasBulkControls || !bulkActions || !selectionMode || !hasDataRows) return;
+                    if (!actionsVisible) {
+                        bulkActions.classList.remove("bulk-actions-hidden");
+                        actionsVisible = true;
+                    }
+                }
+
+                function toggleBulkActionsBySelection() {
+                    if (!hasBulkControls || !bulkActions || !selectionMode || !hasDataRows) return;
+                    const checked = checkboxes.filter(function (item) { return item.checked; }).length;
+                    if (checked === 0) {
+                        bulkActions.classList.add("bulk-actions-hidden");
+                        actionsVisible = false;
+                        return;
+                    }
+                    showBulkActions();
+                }
+
+                function hideEverything() {
+                    resetSelection();
+                    setSelectionMode(false);
+                }
+
+                if (selectAll) {
+                    selectAll.addEventListener("change", function () {
+                        checkboxes.forEach(function (item) { item.checked = selectAll.checked; });
+                        syncState();
+                        toggleBulkActionsBySelection();
+                    });
+                }
+
+                checkboxes.forEach(function (item) {
+                    item.addEventListener("change", function () {
+                        syncState();
+                        toggleBulkActionsBySelection();
+                    });
+                });
+
+                rows.forEach(function (row) {
+                    row.addEventListener("dblclick", function () {
+                        if (!hasDataRows) return;
+                        if (selectionMode) {
+                            hideEverything();
+                            return;
+                        }
+                        setSelectionMode(true);
+                    });
+                });
+
+                if (cancelBtn) {
+                    cancelBtn.addEventListener("click", function () {
+                        hideEverything();
+                    });
+                }
+
+                if (selectedForm) {
+                    selectedForm.addEventListener("submit", async function (event) {
+                        const idsField = selectedForm.querySelector(".bulk-selected-ids");
+                        if (!idsField || !idsField.value) {
+                            event.preventDefault();
+                            return;
+                        }
+                        event.preventDefault();
+                        const approved = await openConfirmDialog();
+                        if (!approved) {
+                            return;
+                        }
+                        selectedForm.submit();
+                    });
+                }
+
+                if (allForm) {
+                    allForm.addEventListener("submit", async function (event) {
+                        event.preventDefault();
+                        if (selectionMode && hasDataRows) {
+                            if (selectAll) {
+                                selectAll.checked = true;
+                                selectAll.indeterminate = false;
+                            }
+                            checkboxes.forEach(function (item) { item.checked = true; });
+                            syncState();
+                        }
+                        const approved = await openConfirmDialog();
+                        if (!approved) {
+                            return;
+                        }
+                        allForm.submit();
+                    });
+                }
+
+                if (!hasDataRows) {
+                    scope.classList.add("bulk-selection-hidden");
+                    if (bulkActions) {
+                        bulkActions.classList.add("bulk-actions-hidden");
+                    }
+                } else {
+                    setSelectionMode(false);
+                }
+                syncState();
+            });
+
+            document.addEventListener("submit", async function (event) {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (form.dataset.confirmHandled === "1") return;
+
+                const onsubmit = form.getAttribute("onsubmit") || "";
+                const action = form.getAttribute("action") || "";
+                const button = event.submitter;
+                const submitTitle = button && button.getAttribute ? (button.getAttribute("title") || "").toLowerCase() : "";
+                const hasDeleteIntent = /confirm\(/i.test(onsubmit) || action.includes("/delete") || submitTitle.includes("удал");
+                if (!hasDeleteIntent) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const approved = await openConfirmDialog();
+                if (!approved) return;
+
+                form.dataset.confirmHandled = "1";
+                form.submit();
+                form.dataset.confirmHandled = "0";
+            }, true);
+
+            document.querySelectorAll("tr[data-href]").forEach(function (row) {
+                row.addEventListener("click", function (event) {
+                    if (event.target.closest("form, button, a, input, label")) return;
+
+                    const tableCard = row.closest(".table-card");
+                    const bulkActions = tableCard ? tableCard.querySelector(".bulk-table-actions") : null;
+                    if (bulkActions && !bulkActions.classList.contains("bulk-actions-hidden")) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    const href = row.dataset.href;
+                    if (href) {
+                        window.location.href = href;
+                    }
+                });
+            });
+
+            const strictDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+            document.querySelectorAll("input[type='date']").forEach(function (input) {
+                function validateDateField() {
+                    if (!input.value) {
+                        input.setCustomValidity("");
+                        return;
+                    }
+
+                    if (!strictDatePattern.test(input.value)) {
+                        input.setCustomValidity("Год должен состоять строго из 4 цифр.");
+                        return;
+                    }
+
+                    const [year, month, day] = input.value.split("-").map(function (value) {
+                        return Number(value);
+                    });
+                    const candidate = new Date(Date.UTC(year, month - 1, day));
+                    const isValidDate = candidate.getUTCFullYear() === year
+                        && candidate.getUTCMonth() === month - 1
+                        && candidate.getUTCDate() === day;
+                    input.setCustomValidity(isValidDate ? "" : "Введите корректную дату.");
+                }
+
+                input.addEventListener("input", validateDateField);
+                input.addEventListener("change", validateDateField);
+                validateDateField();
+            });
+
+            document.addEventListener("invalid", function (event) {
+                const input = event.target;
+                if (!(input instanceof HTMLElement)) return;
+                const message = input.validationMessage || "Заполните это поле.";
+                showValidationToast(message);
+            }, true);
+
+            document.addEventListener("input", function (event) {
+                const input = event.target;
+                if (!(input instanceof HTMLElement)) return;
+                if (!input.matches("input, textarea, select")) return;
+                if (input.checkValidity()) {
+                    if (validationToastTimer) {
+                        window.clearTimeout(validationToastTimer);
+                        validationToastTimer = null;
+                    }
+                    if (validationToast) {
+                        validationToast.classList.remove("validation-toast-show");
+                    }
+                }
+            });
+        });
+    </script>
+    
+<script src="/static/js/nutrition.js?v=80f0da4afe8e" defer></script>
+
+</body>
+</html>

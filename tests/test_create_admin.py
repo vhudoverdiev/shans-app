@@ -45,6 +45,9 @@ class CreateAdminTests(unittest.TestCase):
         self.assertTrue(check_password_hash(user["password_hash"], "MainAdmin-2026"))
         self.assertTrue(user["otp_secret"])
         self.assertEqual(user["otp_enabled"], 0)
+        self.assertEqual(user["display_name"], "site_admin")
+        self.assertEqual(user["is_system_admin"], 1)
+        self.assertEqual(user["is_active"], 1)
         self.assertEqual(import_setting["value"], "ImportAdmin-2026")
 
     def test_updates_existing_admin_without_duplicate_and_closes_sessions(self):
@@ -103,6 +106,8 @@ class CreateAdminTests(unittest.TestCase):
         self.assertEqual(len(users), 1)
         self.assertTrue(check_password_hash(users[0]["password_hash"], "NewMain-2026"))
         self.assertEqual(users[0]["otp_secret"], original_otp_secret)
+        self.assertEqual(users[0]["is_system_admin"], 1)
+        self.assertEqual(users[0]["is_active"], 1)
         self.assertEqual(session["is_active"], 0)
         self.assertEqual(import_setting["value"], "NewImport-2026")
 

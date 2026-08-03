@@ -59,15 +59,17 @@ class WorkoutsTests(unittest.TestCase):
         app.jinja_loader = DictLoader(
             {
                 "workouts.html": (
-                    "{{ plans|length }}|{{ workout_results|length }}|"
+                    "{{ plans|length }}|{{ plans[0].description_display }}|"
                     "{{ weight_entries|length }}|{{ summary.result_count }}"
                 ),
                 "workout_plan_detail.html": (
-                    "{{ plan.name }}|{{ workout_results|length }}"
+                    "{{ plan.name }}|{{ workout_results|length }}|"
+                    "{{ plan.description_display }}"
                 ),
                 "workout_plan_edit.html": (
                     "Редактировать тренировку|← Назад к тренировке|"
-                    "<select name=\"weekday\"></select>"
+                    "<select name=\"weekday\"></select>|"
+                    "{{ plan.description_form_value }}"
                 ),
             }
         )
@@ -148,7 +150,9 @@ class WorkoutsTests(unittest.TestCase):
 
         response = client.get("/workouts")
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.get_data(as_text=True).startswith("3|0|0|0"))
+        overview_parts = response.get_data(as_text=True).split("|")
+        self.assertEqual(overview_parts[0], "3")
+        self.assertEqual(overview_parts[2:], ["0", "0"])
 
         plan_id = get_workout_plans(1)[0]["id"]
         response = client.post(
@@ -416,9 +420,15 @@ class WorkoutsTests(unittest.TestCase):
         ensure_default_workout_plans(1)
         plan = get_workout_plans(1)[0]
 
+        self.assertTrue(
+            update_workout_plan(1, plan["id"], plan["name"], "Нет", plan["weekday"])
+        )
         detail_response = client.get(f"/workouts/plans/{plan['id']}")
         self.assertEqual(detail_response.status_code, 200)
-        self.assertIn("Тренировка 1|0", detail_response.get_data(as_text=True))
+        self.assertEqual(
+            detail_response.get_data(as_text=True),
+            "Тренировка 1|0|добавьте описание",
+        )
 
         edit_response = client.get(f"/workouts/plans/{plan['id']}/edit")
         edit_html = edit_response.get_data(as_text=True)
@@ -426,6 +436,7 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("Редактировать тренировку", edit_html)
         self.assertIn("← Назад к тренировке", edit_html)
         self.assertIn('name="weekday"', edit_html)
+        self.assertTrue(edit_html.endswith("|"))
 
         response = client.post(
             f"/workouts/plans/{plan['id']}",
@@ -466,8 +477,12 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("История веса", overview)
         self.assertIn("График веса", overview)
         self.assertIn("Записать вес", overview)
-        self.assertIn("внесите описание", overview)
-        self.assertIn("внесите описание", detail)
+        self.assertIn("plan.description_display", overview)
+        self.assertIn("plan.description_display", detail)
+        self.assertIn("добавьте описание", workouts_source)
+        self.assertNotIn("внесите описание", overview)
+        self.assertNotIn("внесите описание", detail)
+        self.assertIn('class="workout-plan-description"', detail)
         self.assertLess(overview.index('id="weight-chart"'), overview.index('id="weight-kg"'))
         self.assertNotIn("Еженедельное расписание", overview)
         self.assertNotIn("Откройте тренировку, выберите день недели", overview)
@@ -482,10 +497,10 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("Редактировать", detail)
         self.assertNotIn('target="_blank"', detail)
         self.assertNotIn('rel="noopener"', detail)
-        self.assertNotIn("workout-plan-detail-schedule", detail)
+        self.assertIn("workout-plan-detail-status", detail)
         self.assertNotIn("День недели", detail)
-        self.assertNotIn("plan.weekday_label", detail)
-        self.assertNotIn("Ближайшая:", detail)
+        self.assertIn("plan.weekday_label", detail)
+        self.assertIn("Ближайшая:", detail)
         self.assertNotIn("Добавляйте результат после конкретной тренировки", detail)
         self.assertNotIn("workout-plan-settings", detail)
         self.assertNotIn("Настройки", detail)
@@ -506,6 +521,7 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn('name="name"', edit)
         self.assertIn('name="weekday"', edit)
         self.assertIn('maxlength="5000"', edit)
+        self.assertIn("plan.description_form_value", edit)
         self.assertIn(">Сохранить</button>", edit)
         self.assertNotIn("Сохранить и обновить график", edit)
         self.assertNotIn(
@@ -563,9 +579,13 @@ class WorkoutsTests(unittest.TestCase):
         self.assertNotIn(".workout-plan-detail-side", styles)
         self.assertNotIn(".workout-plan-sync-steps", styles)
         self.assertNotIn(".workout-plan-detail-schedule", styles)
+        self.assertIn(".workout-plan-detail-status", styles)
+        self.assertIn("place-items: center;", styles)
         self.assertIn(".workout-plan-detail-toolbar", styles)
         self.assertIn(".workout-plan-edit-card", styles)
         self.assertIn(".workout-plan-edit-link::after", styles)
+        self.assertIn(".workout-plan-description", styles)
+        self.assertIn("margin: 15px 0 0 18px;", styles)
         desktop_theme = styles.split(
             "/* Desktop sport/training pages use the neutral site surface. */",
             1,

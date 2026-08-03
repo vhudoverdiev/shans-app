@@ -1,4 +1,4 @@
-{% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test', 'workouts.plan_detail', 'workouts.edit_plan'] %}
+{% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test', 'workouts.plan_detail', 'workouts.edit_plan', 'nutrition.edit_profile'] %}
 <!DOCTYPE html>
 <html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
 <head>
@@ -453,8 +453,11 @@
             const csrfMeta = document.querySelector("meta[name='csrf-token']");
             const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
 
-            if (csrfToken) {
-                document.querySelectorAll("form").forEach(function (form) {
+            function injectCsrfTokens(scope) {
+                if (!csrfToken) {
+                    return;
+                }
+                (scope || document).querySelectorAll("form").forEach(function (form) {
                     const method = (form.getAttribute("method") || "GET").toUpperCase();
                     if (method !== "POST") {
                         return;
@@ -469,6 +472,11 @@
                     form.appendChild(hidden);
                 });
             }
+
+            injectCsrfTokens(document);
+            document.addEventListener("shans:ajax-updated", function () {
+                injectCsrfTokens(document);
+            });
 
             const navToggle = document.getElementById("mobile-nav-toggle");
             const navMenu = document.getElementById("top-nav-menu");
