@@ -482,10 +482,6 @@ a {
     display: none !important;
 }
 
-.account-settings-page .account-push-card {
-    display: none;
-}
-
 .account-tab-content {
     display: none;
 }
@@ -5823,8 +5819,7 @@ select.form-input option:checked {
 }
 
 .custom-date-input {
-    width: 100%;
-    padding-right: 54px !important;
+    width: 1px;
 }
 
 .form-input.custom-date-input[type="date"]::-webkit-calendar-picker-indicator {
@@ -5861,19 +5856,26 @@ select.form-input option:checked {
 }
 
 .custom-date-button {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 8px 6px 14px;
     border: 1px solid #d6e6ff;
-    border-radius: 11px;
-    background: #edf5ff;
-    color: #1d4ed8;
+    border-radius: 14px;
+    background:
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    color: #172033;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1;
+    text-align: left;
     cursor: pointer;
-    transform: translateY(-50%);
+    box-shadow:
+        0 7px 18px rgba(37, 99, 235, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
     transition:
         background-color 0.18s ease,
         border-color 0.18s ease,
@@ -5882,34 +5884,57 @@ select.form-input option:checked {
 
 .custom-date-button:hover,
 .custom-control-open .custom-date-button {
-    background: #dbeafe;
+    background:
+        linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
     border-color: #93c5fd;
+    box-shadow:
+        0 10px 24px rgba(37, 99, 235, 0.12),
+        0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
-.custom-date-button span {
+.custom-date-button:disabled,
+.custom-control-disabled .custom-date-button {
+    background: #f4f7fb;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.custom-date-value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-date-icon {
+    flex: 0 0 17px;
     width: 17px;
     height: 17px;
     display: block;
     border: 2px solid currentColor;
     border-radius: 4px;
     position: relative;
+    color: #1d4ed8;
+    margin: 0 8px;
 }
 
-.custom-date-button span::before,
-.custom-date-button span::after {
+.custom-date-icon::before,
+.custom-date-icon::after {
     content: "";
     position: absolute;
     background: currentColor;
 }
 
-.custom-date-button span::before {
+.custom-date-icon::before {
     left: 2px;
     right: 2px;
     top: 4px;
     height: 2px;
 }
 
-.custom-date-button span::after {
+.custom-date-icon::after {
     left: 3px;
     right: 3px;
     top: -5px;
@@ -6112,14 +6137,14 @@ select.form-input option:checked {
 }
 
 .custom-control-invalid .custom-select-button,
-.custom-control-invalid.custom-date,
-.custom-control-invalid .custom-date-input {
+.custom-control-invalid .custom-date-button {
     border-color: #ef4444 !important;
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
 }
 
 @media (max-width: 768px) and (pointer: coarse) {
-    .custom-select-button {
+    .custom-select-button,
+    .custom-date-button {
         min-height: 50px;
         border-radius: 14px;
         font-size: 16px;

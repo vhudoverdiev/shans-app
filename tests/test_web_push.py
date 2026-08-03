@@ -19,6 +19,8 @@ from app import create_app
 from app.database import _dict_row_factory
 from app.schedule_notifications import build_personal_tasks_text, build_work_tasks_text
 from app.learning import init_learning_db
+from app.nutrition import init_nutrition_db
+from app.workouts import init_workouts_db
 from app.web_push import (
     PushCandidate,
     _build_declarative_payload,
@@ -86,6 +88,8 @@ class WebPushSchedulingTests(unittest.TestCase):
         conn.commit()
         conn.close()
         init_learning_db()
+        init_workouts_db()
+        init_nutrition_db()
         init_web_push_db()
         self.moscow_timezone = timezone(timedelta(hours=3), name="Europe/Moscow")
 
@@ -107,13 +111,15 @@ class WebPushSchedulingTests(unittest.TestCase):
         calendar_type="personal",
         status="planned",
         workout_user_id=None,
+        workout_plan_id=None,
     ):
         conn = self._connect()
         cursor = conn.execute(
             """
             INSERT INTO schedule_tasks (
-                title, task_date, start_time, calendar_type, status, workout_user_id
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                title, task_date, start_time, calendar_type, status,
+                workout_user_id, workout_plan_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 title,
@@ -122,6 +128,7 @@ class WebPushSchedulingTests(unittest.TestCase):
                 calendar_type,
                 status,
                 workout_user_id,
+                workout_plan_id,
             ),
         )
         conn.commit()
@@ -348,6 +355,108 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertNotIn("English", learning_candidate.body)
         self.assertIn("IT — день 1", learning_candidate.body)
         self.assertEqual(learning_candidate.navigate_path, "/study/it/day/1")
+
+    def test_evening_health_reminders_detect_missing_nutrition_and_workout_results(self):
+        conn = self._connect()
+        try:
+            plan_id = conn.execute(
+                """
+                INSERT INTO workout_plans (
+                    user_id, name, description, weekday, position
+                ) VALUES (1, 'Силовая тренировка', '', 1, 1)
+                """
+            ).lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+        self._add_task(
+            "Силовая тренировка",
+            "2026-07-21",
+            calendar_type="personal",
+            status="done",
+            workout_user_id=1,
+            workout_plan_id=plan_id,
+        )
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 0, tzinfo=self.moscow_timezone),
+            user_ids={1, 2},
+        )
+        nutrition_candidates = [
+            item for item in candidates if item.key == "nutrition:missing:2026-07-21"
+        ]
+        workout_candidates = [
+            item for item in candidates if item.key == "workout-results:missing:2026-07-21"
+        ]
+
+        self.assertEqual({item.user_id for item in nutrition_candidates}, {1, 2})
+        self.assertTrue(
+            all("питания ещё нет ни одной записи" in item.body for item in nutrition_candidates)
+        )
+        self.assertEqual(len(workout_candidates), 1)
+        self.assertEqual(workout_candidates[0].user_id, 1)
+        self.assertIn("Силовая тренировка", workout_candidates[0].body)
+        self.assertEqual(workout_candidates[0].navigate_path, "/workouts")
+
+    def test_evening_health_reminders_skip_completed_daily_tracking(self):
+        conn = self._connect()
+        try:
+            food_id = conn.execute(
+                """
+                SELECT id
+                FROM nutrition_foods
+                WHERE is_builtin = 1
+                ORDER BY id ASC
+                LIMIT 1
+                """
+            ).fetchone()["id"]
+            conn.execute(
+                """
+                INSERT INTO nutrition_entries (
+                    user_id, food_id, food_name, grams, calories, protein,
+                    fat, carbs, meal_type, eaten_on
+                ) VALUES (1, ?, 'Овсянка', 100, 100, 3, 2, 18, 'breakfast', '2026-07-21')
+                """,
+                (food_id,),
+            )
+            plan_id = conn.execute(
+                """
+                INSERT INTO workout_plans (
+                    user_id, name, description, weekday, position
+                ) VALUES (1, 'Силовая тренировка', '', 1, 1)
+                """
+            ).lastrowid
+            conn.execute(
+                """
+                INSERT INTO workout_results (
+                    user_id, workout_plan_id, exercise, result, performed_on, notes
+                ) VALUES (1, ?, 'Жим лёжа', '3 × 10', '2026-07-21', '')
+                """,
+                (plan_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        self._add_task(
+            "Силовая тренировка",
+            "2026-07-21",
+            calendar_type="personal",
+            workout_user_id=1,
+            workout_plan_id=plan_id,
+        )
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 0, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+        self.assertFalse(any(item.key.startswith("nutrition:missing:") for item in candidates))
+        self.assertFalse(any(item.key.startswith("workout-results:missing:") for item in candidates))
+
+        after_window = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 5, tzinfo=self.moscow_timezone),
+            user_ids={2},
+        )
+        self.assertFalse(any(item.key.startswith("nutrition:missing:") for item in after_window))
 
     def test_task_after_midnight_is_reminded_two_hours_before(self):
         task_id = self._add_task("Ночная поездка", "2026-07-22", "01:00")
@@ -966,6 +1075,15 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertNotIn("window.navigator.standalone", push_client)
         self.assertNotIn("display-mode: standalone", push_client)
         self.assertNotIn("экран домой", push_client)
+
+    def test_browser_push_subscription_errors_are_user_friendly(self):
+        push_client = (
+            PROJECT_ROOT / "app" / "static" / "js" / "push-notifications.js"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("registration.pushManager.subscribe", push_client)
+        self.assertIn("Не удалось включить уведомления в браузере", push_client)
+        self.assertIn("Проверьте разрешение уведомлений для сайта", push_client)
 
 
 if __name__ == "__main__":

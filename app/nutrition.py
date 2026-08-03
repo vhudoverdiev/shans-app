@@ -342,9 +342,13 @@ def get_food_catalog(user_id: int):
                 protein,
                 fat,
                 carbs,
-                is_builtin
+                is_builtin,
+                user_id,
+                CASE
+                    WHEN is_builtin = 0 AND user_id = ? THEN 1
+                    ELSE 0
+                END AS can_delete
             FROM nutrition_foods
-            WHERE is_builtin = 1 OR user_id = ?
             ORDER BY is_builtin DESC, category, name
             """,
             (user_id,),
@@ -358,11 +362,11 @@ def get_food(user_id: int, food_id: int):
     try:
         return conn.execute(
             """
-            SELECT id, name, category, calories, protein, fat, carbs, is_builtin
+            SELECT id, name, category, calories, protein, fat, carbs, is_builtin, user_id
             FROM nutrition_foods
-            WHERE id = ? AND (is_builtin = 1 OR user_id = ?)
+            WHERE id = ?
             """,
-            (food_id, user_id),
+            (food_id,),
         ).fetchone()
     finally:
         conn.close()
@@ -667,13 +671,13 @@ def _resolve_food_query(user_id: int, raw_query: str):
     try:
         return conn.execute(
             """
-            SELECT id, name, category, calories, protein, fat, carbs, is_builtin
+            SELECT id, name, category, calories, protein, fat, carbs, is_builtin, user_id
             FROM nutrition_foods
-            WHERE LOWER(name) = LOWER(?) AND (is_builtin = 1 OR user_id = ?)
+            WHERE LOWER(name) = LOWER(?)
             ORDER BY is_builtin DESC
             LIMIT 1
             """,
-            (normalized, user_id),
+            (normalized,),
         ).fetchone()
     finally:
         conn.close()
@@ -911,7 +915,7 @@ def create_custom_food():
         flash(str(error), "error")
         return redirect(url_for("nutrition.new_custom_food"))
 
-    flash("Личный продукт добавлен. Теперь его можно выбрать в дневнике.", "success")
+    flash("Продукт добавлен в общую базу. Теперь его можно выбрать в дневнике.", "success")
     return redirect(url_for("nutrition.index", _anchor="add-food-entry"))
 
 
@@ -920,5 +924,5 @@ def create_custom_food():
 def remove_custom_food(food_id: int):
     if not delete_custom_food(int(current_user.id), food_id):
         abort(404)
-    flash("Личный продукт удалён. Старые записи дневника сохранены.", "success")
+    flash("Добавленный продукт удалён. Старые записи дневника сохранены.", "success")
     return redirect(url_for("nutrition.index", _anchor="nutrition-catalog"))

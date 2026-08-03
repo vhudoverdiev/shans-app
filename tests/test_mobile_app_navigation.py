@@ -173,6 +173,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr));", mobile_styles)
         self.assertIn("bottom: 0;", mobile_styles)
         self.assertIn("padding: 7px 7px calc(7px + env(safe-area-inset-bottom));", mobile_styles)
+        self.assertIn("html.shans-standalone-app .app-bottom-nav", mobile_styles)
+        self.assertIn("padding: 7px;", mobile_styles)
+        self.assertIn("html.shans-standalone-app .mobile-push-inbox-trigger", mobile_styles)
+        self.assertIn("bottom: 91px;", mobile_styles)
         self.assertIn("border-radius: 24px 24px 0 0;", mobile_styles)
         self.assertNotIn("bottom: max(9px, env(safe-area-inset-bottom));", mobile_styles)
         self.assertIn("is_reports_section", base)
@@ -211,7 +215,7 @@ class MobileAppNavigationTests(unittest.TestCase):
             styles,
             r"\.account-logout-btn\s*\{\s*display:\s*none\s*!important;",
         )
-        self.assertRegex(
+        self.assertNotRegex(
             styles,
             r"\.account-settings-page\s+\.account-push-card\s*\{\s*display:\s*none;",
         )

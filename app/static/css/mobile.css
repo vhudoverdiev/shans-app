@@ -791,6 +791,10 @@
         -webkit-backdrop-filter: blur(18px);
     }
 
+    html.shans-standalone-app .app-bottom-nav {
+        padding: 7px;
+    }
+
     .app-bottom-nav-link {
         min-width: 0;
         min-height: 58px;
@@ -851,6 +855,10 @@
         box-shadow: none;
         -webkit-tap-highlight-color: transparent;
         animation: mobile-push-inbox-arrived 1.8s ease-in-out infinite;
+    }
+
+    html.shans-standalone-app .mobile-push-inbox-trigger {
+        bottom: 91px;
     }
 
     .mobile-push-inbox-trigger[hidden],

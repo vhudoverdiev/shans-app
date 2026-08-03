@@ -54,6 +54,19 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             r"\.account-2fa-disable-form\[hidden\]\s*\{\s*display:\s*none;",
         )
 
+    def test_push_notifications_card_is_available_on_desktop(self):
+        template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn('id="push-notifications-card"', template)
+        self.assertIn('id="push-notifications-toggle"', template)
+        self.assertIn('id="push-notifications-test"', template)
+        self.assertIn("push-notifications.js", template)
+        self.assertNotRegex(
+            stylesheet,
+            r"\.account-settings-page\s+\.account-push-card\s*\{\s*display:\s*none;",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

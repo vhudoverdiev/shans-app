@@ -13,6 +13,12 @@
     <script>
         (function () {
             const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};
+            const standaloneDisplayMode = window.matchMedia
+                && window.matchMedia("(display-mode: standalone)").matches;
+            const isStandaloneApp = standaloneDisplayMode
+                || (window.navigator && window.navigator.standalone === true);
+            isStandaloneApp && document.documentElement.classList.add("shans-standalone-app");
+
             if (skipIntroLoader) {
                 document.documentElement.classList.remove("app-intro-pending");
                 window.__shansShouldRunIntro = false;
@@ -28,10 +34,6 @@
             }
 
             try {
-                const standaloneDisplayMode = window.matchMedia
-                    && window.matchMedia("(display-mode: standalone)").matches;
-                const isStandaloneApp = standaloneDisplayMode
-                    || (window.navigator && window.navigator.standalone === true);
                 if (isStandaloneApp) {
                     document.documentElement.classList.remove("app-intro-pending");
                     window.__shansShouldRunIntro = false;
@@ -169,11 +171,11 @@
     </style>
     {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png', v=static_asset_version) }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v=static_asset_version) }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon-shans-v2.png', v=static_asset_version) }}">
     <link
         rel="apple-touch-startup-image"
         media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-        href="{{ url_for('static', filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version) }}"
+        href="{{ url_for('static', filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version) }}"
     >
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">

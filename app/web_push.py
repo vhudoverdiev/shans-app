@@ -24,6 +24,7 @@ _TIMEZONE_NAME = "Europe/Moscow"
 _SUMMARY_WINDOW = timedelta(minutes=5)
 _WORK_SUMMARY_HOUR = 9
 _LEARNING_REMINDER_HOUR = 19
+_DAILY_HEALTH_REMINDER_HOUR = 21
 _SCHEDULER_INTERVAL_SECONDS = 30
 _MAX_PUSH_PAYLOAD_BYTES = 3500
 _INBOX_HISTORY_DAYS = 3
@@ -316,6 +317,20 @@ def _is_workday(target_date: date) -> bool:
     return target_date.weekday() < 5
 
 
+def _table_exists(conn, table_name: str) -> bool:
+    return bool(
+        conn.execute(
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table' AND name = ?
+            LIMIT 1
+            """,
+            (table_name,),
+        ).fetchone()
+    )
+
+
 def _get_due_task_candidates(
     now_local: datetime,
     user_ids=None,
@@ -531,6 +546,140 @@ def _get_due_learning_candidates(
     return candidates
 
 
+def _get_due_nutrition_candidates(
+    now_local: datetime,
+    user_ids,
+) -> list[PushCandidate]:
+    if not _summary_is_due(now_local, _DAILY_HEALTH_REMINDER_HOUR):
+        return []
+
+    safe_user_ids = sorted({int(user_id) for user_id in user_ids})
+    if not safe_user_ids:
+        return []
+
+    target_date = now_local.date()
+    candidates: list[PushCandidate] = []
+    conn = get_connection()
+    try:
+        if not _table_exists(conn, "nutrition_entries"):
+            return []
+
+        for user_id in safe_user_ids:
+            entry_exists = conn.execute(
+                """
+                SELECT 1
+                FROM nutrition_entries
+                WHERE user_id = ? AND eaten_on = ?
+                LIMIT 1
+                """,
+                (user_id, target_date.isoformat()),
+            ).fetchone()
+            if entry_exists:
+                continue
+
+            candidates.append(
+                PushCandidate(
+                    key=f"nutrition:missing:{target_date.isoformat()}",
+                    title="Шанс — питание за сегодня",
+                    body="За сегодня в разделе питания ещё нет ни одной записи.",
+                    navigate_path=f"/nutrition?date={target_date.isoformat()}#add-food-entry",
+                    tag=f"nutrition-missing-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
+            )
+    finally:
+        conn.close()
+    return candidates
+
+
+def _get_due_workout_result_candidates(
+    now_local: datetime,
+    user_ids,
+) -> list[PushCandidate]:
+    if not _summary_is_due(now_local, _DAILY_HEALTH_REMINDER_HOUR):
+        return []
+
+    safe_user_ids = sorted({int(user_id) for user_id in user_ids})
+    if not safe_user_ids:
+        return []
+
+    target_date = now_local.date()
+    placeholders = ", ".join("?" for _user_id in safe_user_ids)
+    candidates: list[PushCandidate] = []
+    conn = get_connection()
+    try:
+        if not (
+            _table_exists(conn, "schedule_tasks")
+            and _table_exists(conn, "workout_results")
+        ):
+            return []
+
+        schedule_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(schedule_tasks)").fetchall()
+        }
+        if not {"workout_plan_id", "workout_user_id"}.issubset(schedule_columns):
+            return []
+
+        rows = conn.execute(
+            f"""
+            SELECT DISTINCT
+                tasks.workout_user_id AS user_id,
+                tasks.workout_plan_id AS plan_id,
+                tasks.title AS workout_name
+            FROM schedule_tasks AS tasks
+            WHERE tasks.task_date = ?
+              AND tasks.calendar_type = 'personal'
+              AND tasks.workout_plan_id IS NOT NULL
+              AND tasks.workout_user_id IN ({placeholders})
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM workout_results AS results
+                  WHERE results.user_id = tasks.workout_user_id
+                    AND results.workout_plan_id = tasks.workout_plan_id
+                    AND results.performed_on = tasks.task_date
+                  LIMIT 1
+              )
+            ORDER BY tasks.workout_user_id ASC, tasks.id ASC
+            """,
+            (target_date.isoformat(), *safe_user_ids),
+        ).fetchall()
+
+        missed_by_user: dict[int, list[str]] = {}
+        for row in rows:
+            user_id = int(row["user_id"])
+            workout_name = (row["workout_name"] or "тренировка").strip()
+            if workout_name not in missed_by_user.setdefault(user_id, []):
+                missed_by_user[user_id].append(workout_name)
+
+        for user_id, workout_names in missed_by_user.items():
+            if len(workout_names) == 1:
+                body = (
+                    f"Сегодня была тренировка «{workout_names[0]}», "
+                    "но данные по упражнениям ещё не внесены."
+                )
+            else:
+                body = (
+                    "Сегодня были тренировки без данных по упражнениям: "
+                    + ", ".join(workout_names)
+                    + "."
+                )
+
+            candidates.append(
+                PushCandidate(
+                    key=f"workout-results:missing:{target_date.isoformat()}",
+                    title="Шанс — отчёт по тренировке",
+                    body=body,
+                    navigate_path="/workouts",
+                    tag=f"workout-results-missing-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
+            )
+    finally:
+        conn.close()
+    return candidates
+
+
 def collect_due_candidates(
     now_local: datetime | None = None,
     user_ids=None,
@@ -602,6 +751,8 @@ def collect_due_candidates(
     candidates.extend(_get_due_task_candidates(now_local, user_ids=user_ids))
     if user_ids is not None:
         candidates.extend(_get_due_learning_candidates(now_local, user_ids))
+        candidates.extend(_get_due_nutrition_candidates(now_local, user_ids))
+        candidates.extend(_get_due_workout_result_candidates(now_local, user_ids))
     return candidates
 
 
@@ -615,7 +766,7 @@ def _build_declarative_payload(candidate: PushCandidate, app_origin: str) -> str
         "navigate": navigate_url,
         "silent": False,
         "tag": candidate.tag,
-        "icon": urljoin(f"{app_origin}/", "static/logo.png"),
+        "icon": urljoin(f"{app_origin}/", "static/pwa-icon-512-shans-v2.png"),
     }
     payload = {"web_push": 8030, "notification": notification}
     encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))

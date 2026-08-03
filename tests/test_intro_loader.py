@@ -31,6 +31,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn('window.matchMedia("(display-mode: standalone)").matches', template)
         self.assertIn("const isStandaloneApp = standaloneDisplayMode", template)
         self.assertIn("window.navigator.standalone === true", template)
+        self.assertIn('classList.add("shans-standalone-app")', template)
         self.assertIn("if (isStandaloneApp) {", template)
         self.assertIn("window.__shansShouldRunIntro = false", template)
         self.assertIn('const introKey = "shans-intro-session-v1"', template)

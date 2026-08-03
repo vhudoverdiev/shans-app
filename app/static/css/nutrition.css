@@ -635,6 +635,10 @@
     background: #ffffff;
 }
 
+.nutrition-food-row[hidden] {
+    display: none;
+}
+
 .nutrition-food-select {
     min-width: 0;
     display: grid;

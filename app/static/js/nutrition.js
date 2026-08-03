@@ -30,6 +30,7 @@
         }
 
         search.addEventListener("input", applyFilter);
+        search.addEventListener("search", applyFilter);
         applyFilter();
     }
 

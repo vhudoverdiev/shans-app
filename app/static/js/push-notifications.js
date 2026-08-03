@@ -164,10 +164,15 @@
             throw new Error("Настройки уведомлений ещё не загружены.");
         }
 
-        const newSubscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicKey),
-        });
+        let newSubscription = null;
+        try {
+            newSubscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey),
+            });
+        } catch (_error) {
+            throw new Error("Не удалось включить уведомления в браузере. Проверьте разрешение уведомлений для сайта и попробуйте ещё раз.");
+        }
         try {
             await apiRequest(card.dataset.subscribeUrl, {
                 subscription: newSubscription.toJSON(),

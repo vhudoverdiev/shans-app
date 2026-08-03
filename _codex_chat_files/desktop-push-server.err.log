@@ -1,0 +1,565 @@
+[2026-08-04 00:27:26,533] INFO in web_push: Web Push scheduler started
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /health?connection_check=1785792522201 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:42] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /health?connection_check=1785792524388 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:44] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:46] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /health?connection_check=1785792534456 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:54] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /health?connection_check=1785792535611 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:28:55] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /health?connection_check=1785792564906 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:24] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /health?connection_check=1785792567143 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:27] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:28] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:29:37,188] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=81 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:37,192] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=82 window=60s
+" 304 -
+[2026-08-04 00:29:37,193] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=83 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:29:37,195] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=84 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "[2026-08-04 00:29:37,199] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=85 window=60s
+GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:29:37,226] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=86 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /health?connection_check=1785792577220 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:37] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /login HTTP/1.1" 200 -
+[2026-08-04 00:29:38,059] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=87 window=60s
+[2026-08-04 00:29:38,059] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=88 window=60s
+[2026-08-04 00:29:38,060] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=89 window=60s
+[2026-08-04 00:29:38,062] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=90 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:38,063] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=91 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:38,065] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=92 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:38,069] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=93 window=60s
+[2026-08-04 00:29:38,070] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=94 window=60s
+[2026-08-04 00:29:38,071] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=95 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:38,074] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=96 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:38,096] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=97 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /health?connection_check=1785792578092 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /service-worker.js HTTP/1.1" 200 -
+[2026-08-04 00:29:38,107] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=98 window=60s
+[2026-08-04 00:29:38,108] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=99 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:38] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET / HTTP/1.1" 200 -
+[2026-08-04 00:29:40,244] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=100 window=60s
+[2026-08-04 00:29:40,245] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=101 window=60s
+[2026-08-04 00:29:40,246] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=102 window=60s
+[2026-08-04 00:29:40,247] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=103 window=60s
+[2026-08-04 00:29:40,249] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=104 window=60s
+[2026-08-04 00:29:40,250] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=105 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:40,257] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=106 window=60s
+" 304 -
+[2026-08-04 00:29:40,258] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=108 window=60s
+[2026-08-04 00:29:40,258] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=107 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "[2026-08-04 00:29:40,262] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=109 window=60s
+GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /health?connection_check=1785792580271 HTTP/1.1" 200 -
+[2026-08-04 00:29:40,286] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=110 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:40] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:42] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /account/settings HTTP/1.1" 200 -
+[2026-08-04 00:29:50,295] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=87 window=60s
+[2026-08-04 00:29:50,295] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=88 window=60s
+[2026-08-04 00:29:50,296] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=89 window=60s
+[2026-08-04 00:29:50,296] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=90 window=60s
+[2026-08-04 00:29:50,297] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=91 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:50,299] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=92 window=60s
+" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:50,304] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=93 window=60s
+" 304 -
+[2026-08-04 00:29:50,305] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=94 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:29:50,309] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=95 window=60s
+[2026-08-04 00:29:50,311] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=96 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:50,312] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=97 window=60s
+" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /health?connection_check=1785792590333 HTTP/1.1" 200 -
+[2026-08-04 00:29:50,348] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=98 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /account/settings HTTP/1.1" 200 -
+[2026-08-04 00:29:50,931] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=99 window=60s
+[2026-08-04 00:29:50,932] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=100 window=60s
+[2026-08-04 00:29:50,933] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=101 window=60s
+[2026-08-04 00:29:50,935] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=102 window=60s
+[2026-08-04 00:29:50,936] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=103 window=60s
+[2026-08-04 00:29:50,937] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=104 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "[2026-08-04 00:29:50,943] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=105 window=60s
+GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:29:50,944] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=106 window=60s
+[2026-08-04 00:29:50,945] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=107 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:29:50,948] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=108 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:29:50,949] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=109 window=60s
+" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:29:50,972] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=110 window=60s
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /health?connection_check=1785792590964 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:29:50] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /login HTTP/1.1" 200 -
+[2026-08-04 00:30:06,073] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=85 window=60s
+[2026-08-04 00:30:06,075] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=86 window=60s
+[2026-08-04 00:30:06,078] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=87 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,079] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=88 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,081] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=89 window=60s
+[2026-08-04 00:30:06,084] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=90 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,091] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=91 window=60s
+[2026-08-04 00:30:06,093] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=92 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,094] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=93 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,096] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=94 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:06,120] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=95 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /health?connection_check=1785792606116 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /service-worker.js HTTP/1.1" 200 -
+[2026-08-04 00:30:06,133] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=96 window=60s
+[2026-08-04 00:30:06,134] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=97 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:06] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET / HTTP/1.1" 200 -
+[2026-08-04 00:30:08,324] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=98 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:08,328] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=99 window=60s
+[2026-08-04 00:30:08,329] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=100 window=60s
+[2026-08-04 00:30:08,331] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=101 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:08,335] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=102 window=60s
+" 304 -
+[2026-08-04 00:30:08,337] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=103 window=60s
+[2026-08-04 00:30:08,338] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=104 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:08,344] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=105 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:08,347] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=106 window=60s
+" 304 -
+[2026-08-04 00:30:08,348] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=107 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:08,404] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=108 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /health?connection_check=1785792608386 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:08] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:10] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /account/settings HTTP/1.1" 200 -
+[2026-08-04 00:30:18,373] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=109 window=60s
+[2026-08-04 00:30:18,374] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=110 window=60s
+[2026-08-04 00:30:18,376] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=111 window=60s
+[2026-08-04 00:30:18,378] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=112 window=60s
+[2026-08-04 00:30:18,379] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=113 window=60s
+[2026-08-04 00:30:18,380] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=114 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:18,386] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=115 window=60s
+[2026-08-04 00:30:18,386] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=116 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:18,389] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=117 window=60s
+" 304 -
+[2026-08-04 00:30:18,391] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=118 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:18,392] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=119 window=60s
+" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:30:18,420] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=120 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /health?connection_check=1785792618414 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:18] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /login HTTP/1.1" 200 -
+[2026-08-04 00:30:19,265] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=121 window=60s
+[2026-08-04 00:30:19,266] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=122 window=60s
+[2026-08-04 00:30:19,267] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=123 window=60s
+[2026-08-04 00:30:19,269] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=124 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:19,270] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=125 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:19,272] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=126 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:19,275] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=127 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:19,276] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=128 window=60s
+[2026-08-04 00:30:19,279] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=129 window=60s
+[2026-08-04 00:30:19,281] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=130 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:19,303] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=131 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /health?connection_check=1785792619299 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /service-worker.js HTTP/1.1" 200 -
+[2026-08-04 00:30:19,314] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=132 window=60s
+[2026-08-04 00:30:19,315] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=133 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:19] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET / HTTP/1.1" 200 -
+[2026-08-04 00:30:21,950] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=134 window=60s
+[2026-08-04 00:30:21,951] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=135 window=60s
+[2026-08-04 00:30:21,952] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=136 window=60s
+[2026-08-04 00:30:21,954] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=137 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:21,955] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=138 window=60s
+" 304 -
+[2026-08-04 00:30:21,956] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=139 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:21,961] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=140 window=60s
+" 304 -
+[2026-08-04 00:30:21,964] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=141 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "[2026-08-04 00:30:21,966] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=142 window=60s
+GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:21,967] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=143 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /health?connection_check=1785792621979 HTTP/1.1" 200 -
+[2026-08-04 00:30:21,993] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=144 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:21] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:23] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:31] "GET /account/settings HTTP/1.1" 200 -
+[2026-08-04 00:30:31,996] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=121 window=60s
+[2026-08-04 00:30:31,997] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=122 window=60s
+[2026-08-04 00:30:31,998] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=123 window=60s
+[2026-08-04 00:30:32,000] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=124 window=60s
+[2026-08-04 00:30:32,000] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=125 window=60s
+[2026-08-04 00:30:32,000] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=126 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,008] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=127 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "[2026-08-04 00:30:32,010] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=128 window=60s
+GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,011] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=129 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+[2026-08-04 00:30:32,015] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=130 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,018] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=131 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:30:32,049] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=132 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /health?connection_check=1785792632041 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /account/settings HTTP/1.1" 200 -
+[2026-08-04 00:30:32,636] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=133 window=60s
+[2026-08-04 00:30:32,637] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=134 window=60s
+[2026-08-04 00:30:32,638] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=135 window=60s
+[2026-08-04 00:30:32,641] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=136 window=60s
+[2026-08-04 00:30:32,643] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=137 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:30:32,645] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=138 window=60s
+" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,650] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=139 window=60s
+[2026-08-04 00:30:32,652] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=140 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "[2026-08-04 00:30:32,660] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=141 window=60s
+GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,664] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=142 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:30:32,665] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=143 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:30:32,689] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=144 window=60s
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /health?connection_check=1785792632683 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:30:32] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:35] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /health?connection_check=1785792696059 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:36] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:38] "GET /health?connection_check=1785792698260 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:40] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /health?connection_check=1785792708304 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:48] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /login HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /health?connection_check=1785792709207 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/offline.html HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /static/logo.png HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:49] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "POST /login HTTP/1.1" 302 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /health?connection_check=1785792711896 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:31:51] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:31:53] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /api/push/inbox HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /health?connection_check=1785792721967 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:01] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /account/settings HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/css/mobile.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/css/style.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/css/planner.css?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/logo.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/css/learning.css?v=0b5f0e0606e0 HTTP/1.1[2026-08-04 00:32:02,610] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=81 window=60s
+" 304 -
+[2026-08-04 00:32:02,612] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=82 window=60s
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/push-notifications.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+[2026-08-04 00:32:02,614] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=83 window=60s
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/intro-loader.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/offline-support.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/push-inbox.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/form-controls.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/js/ajax-forms.js?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /api/push/config HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /api/push/inbox HTTP/1.1" 200 -
+[2026-08-04 00:32:02,632] WARNING in logging_setup: Suspicious frequent requests: ip=127.0.0.1 endpoint=static count=84 window=60s
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /service-worker.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /health?connection_check=1785792722626 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /static/favicon.png?v=0b5f0e0606e0 HTTP/1.1" 304 -
+127.0.0.1 - - [04/Aug/2026 00:32:02] "GET /service-worker.js HTTP/1.1" 200 -

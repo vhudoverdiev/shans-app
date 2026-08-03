@@ -10,9 +10,10 @@ BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 MANIFEST = PROJECT_ROOT / "app" / "static" / "site.webmanifest"
 LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.png"
-APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon.png"
-PWA_ICON = PROJECT_ROOT / "app" / "static" / "pwa-icon-512.png"
-IPHONE_16_PRO_MAX_STARTUP = PROJECT_ROOT / "app" / "static" / "ios-startup-iphone-16-pro-max.png"
+APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon-shans-v2.png"
+PWA_ICON = PROJECT_ROOT / "app" / "static" / "pwa-icon-512-shans-v2.png"
+IPHONE_16_PRO_MAX_STARTUP = PROJECT_ROOT / "app" / "static" / "ios-startup-iphone-16-pro-max-shans-v2.png"
+LEGACY_INTRO_LOGO = PROJECT_ROOT / "app" / "static" / "logo-intro.png"
 
 
 class PwaInstallationTests(unittest.TestCase):
@@ -35,13 +36,13 @@ class PwaInstallationTests(unittest.TestCase):
             'rel="apple-touch-icon" sizes="180x180"',
             template,
         )
-        self.assertIn("filename='apple-touch-icon.png', v=static_asset_version", template)
+        self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", template)
         self.assertNotIn('rel="apple-touch-icon" href="{{ url_for(\'static\', filename=\'logo.png\'', template)
         self.assertIn('rel="apple-touch-startup-image"', template)
         self.assertIn("device-width: 440px", template)
         self.assertIn("device-height: 956px", template)
         self.assertIn("-webkit-device-pixel-ratio: 3", template)
-        self.assertIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
+        self.assertIn("filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version", template)
         self.assertIn("filename='site.webmanifest'", template)
 
     def test_manifest_describes_standalone_shans_app(self):
@@ -53,7 +54,7 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(manifest["start_url"], "/")
         self.assertIn(
             {
-                "src": "/static/pwa-icon-512.png",
+                "src": "/static/pwa-icon-512-shans-v2.png",
                 "sizes": "512x512",
                 "type": "image/png",
                 "purpose": "any",
@@ -72,10 +73,14 @@ class PwaInstallationTests(unittest.TestCase):
         ]
 
         self.assertNotIn("/static/logo.png", install_icon_sources)
-        self.assertIn("/static/pwa-icon-512.png", install_icon_sources)
-        self.assertIn("filename='apple-touch-icon.png', v=static_asset_version", template)
-        self.assertIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
+        self.assertNotIn("/static/pwa-icon-512.png", install_icon_sources)
+        self.assertIn("/static/pwa-icon-512-shans-v2.png", install_icon_sources)
+        self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", template)
+        self.assertIn("filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version", template)
+        self.assertNotIn("filename='apple-touch-icon.png', v=static_asset_version", template)
+        self.assertNotIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
         self.assertNotIn("filename='logo.png', v=static_asset_version", template.split('rel="manifest"', 1)[0])
+        self.assertFalse(LEGACY_INTRO_LOGO.exists())
 
     def test_browser_favicon_is_a_rounded_square(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

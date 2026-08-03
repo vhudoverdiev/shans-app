@@ -68,6 +68,9 @@ class FormControlStylingTests(unittest.TestCase):
             ".custom-select-button",
             ".custom-select-menu",
             ".custom-select-option",
+            ".custom-date-button",
+            ".custom-date-value",
+            ".custom-date-icon",
             ".custom-date-panel",
             ".custom-date-calendar",
             ".custom-date-day-selected",
@@ -84,6 +87,30 @@ class FormControlStylingTests(unittest.TestCase):
         self.assertIn('panel.style.minWidth = shouldMatchAnchorWidth ? rect.width + "px" : "";', script)
         self.assertIn("dispatchNativeChange", script)
         self.assertIn("MutationObserver", script)
+
+    def test_custom_date_control_uses_single_visible_picker_surface(self):
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+        script = FORM_CONTROLS_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn('input.classList.add("custom-date-input", "custom-native-control")', script)
+        self.assertIn('input.classList.add("custom-date-input", "custom-month-input", "custom-native-control")', script)
+        self.assertIn("input.tabIndex = -1;", script)
+        self.assertNotIn('input.addEventListener("focus", open);', script)
+        self.assertIn('buttonText.className = "custom-date-value";', script)
+        self.assertIn('buttonIcon.className = "custom-date-icon";', script)
+        self.assertIn("button.focus();", script)
+        self.assertIn("formatDateButtonText", script)
+        self.assertIn("formatMonthButtonText", script)
+
+        self.assertRegex(
+            stylesheet,
+            r"\.custom-date-button\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.custom-date-button\s*\{[^}]*line-height:\s*1;",
+        )
+        self.assertIn(".custom-control-invalid .custom-date-button", stylesheet)
 
 
 if __name__ == "__main__":

@@ -248,13 +248,22 @@ class NutritionTests(unittest.TestCase):
         self.assertEqual(updated["weight_kg"], 65.5)
         self.assertEqual(updated["goal"], "maintain")
 
-    def test_custom_food_is_private_and_history_survives_catalog_delete(self):
+    def test_custom_food_is_shared_and_only_owner_can_delete_it(self):
         custom_id = add_custom_food(1, "Мой йогурт", 88, 7, 3, 9)
-        first_user_names = {item["name"] for item in get_food_catalog(1)}
-        second_user_names = {item["name"] for item in get_food_catalog(2)}
+        first_user_food = next(
+            item for item in get_food_catalog(1)
+            if item["id"] == custom_id
+        )
+        second_user_food = next(
+            item for item in get_food_catalog(2)
+            if item["id"] == custom_id
+        )
 
-        self.assertIn("Мой йогурт", first_user_names)
-        self.assertNotIn("Мой йогурт", second_user_names)
+        self.assertEqual(first_user_food["name"], "Мой йогурт")
+        self.assertEqual(second_user_food["name"], "Мой йогурт")
+        self.assertEqual(first_user_food["can_delete"], 1)
+        self.assertEqual(second_user_food["can_delete"], 0)
+        self.assertFalse(delete_custom_food(2, custom_id))
 
         entry_id = add_nutrition_entry(
             1,
@@ -263,13 +272,23 @@ class NutritionTests(unittest.TestCase):
             "breakfast",
             date.today().isoformat(),
         )
+        second_entry_id = add_nutrition_entry(
+            2,
+            custom_id,
+            100,
+            "snack",
+            date.today().isoformat(),
+        )
         self.assertTrue(delete_custom_food(1, custom_id))
-        self.assertFalse(delete_custom_food(2, custom_id))
 
         entries = get_nutrition_entries(1, date.today().isoformat())
         self.assertEqual(entries[0]["id"], entry_id)
         self.assertEqual(entries[0]["food_name"], "Мой йогурт")
         self.assertAlmostEqual(entries[0]["calories"], 132)
+        second_entries = get_nutrition_entries(2, date.today().isoformat())
+        self.assertEqual(second_entries[0]["id"], second_entry_id)
+        self.assertEqual(second_entries[0]["food_name"], "Мой йогурт")
+        self.assertAlmostEqual(second_entries[0]["calories"], 88)
 
     def test_diary_scales_macros_and_history_includes_empty_days(self):
         food = next(
@@ -464,6 +483,12 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("request.endpoint.startswith('nutrition.')", base)
         self.assertIn("url_for('sport_hub')", base)
         self.assertIn("База продуктов", template)
+        catalog_block = template.split(
+            '<section class="nutrition-card nutrition-catalog-card">',
+            1,
+        )[1]
+        self.assertNotIn("Поиск продукта", catalog_block)
+        self.assertIn('id="nutrition-catalog-search"', catalog_block)
         self.assertIn("Добавить продукт вручную", template)
         quick_entry_block = template.split('id="add-food-entry"', 1)[1].split(
             'id="nutrition-profile"',
@@ -478,6 +503,8 @@ class NutritionTests(unittest.TestCase):
         self.assertNotIn("nutrition-foldout-button", template)
         self.assertNotIn("<details", quick_entry_block)
         self.assertNotIn("<summary", quick_entry_block)
+        self.assertIn(">Добавить</button>", quick_entry_block)
+        self.assertNotIn("Добавить в", quick_entry_block)
         profile_card_block = template.split(
             '<section class="nutrition-card" id="nutrition-profile">',
             1,
@@ -494,6 +521,9 @@ class NutritionTests(unittest.TestCase):
         self.assertNotIn('name="formula_sex"', profile_card_block)
         self.assertIn("url_for('nutrition.new_custom_food')", template)
         self.assertIn('class="nutrition-icon-button"', template)
+        self.assertIn("food.can_delete", template)
+        self.assertIn("добавлен пользователем", template)
+        self.assertNotIn("мой продукт", template)
         self.assertNotIn("data-open-custom-food", template)
         self.assertNotIn('id="custom-food" hidden', template)
         self.assertNotIn("По этикетке", template)
@@ -592,9 +622,16 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("white-space: nowrap;", styles)
         self.assertIn("text-decoration: none;", styles)
         self.assertIn(".nutrition-custom-food-card", styles)
+        self.assertIn(".nutrition-food-row[hidden]", styles)
+        self.assertRegex(
+            styles,
+            r"\.nutrition-food-row\[hidden\]\s*\{\s*display:\s*none;",
+        )
         self.assertNotIn(".nutrition-recommendation-grid", styles)
         self.assertNotIn(".nutrition-disclaimer", styles)
         self.assertNotIn(".nutrition-text-link", styles)
+        self.assertIn('search.addEventListener("input", applyFilter);', script)
+        self.assertIn('search.addEventListener("search", applyFilter);', script)
         self.assertNotIn("entryCard.open = true;", script)
         self.assertNotIn("customCard.hidden", script)
         self.assertNotIn('trigger.setAttribute("aria-expanded"', script)

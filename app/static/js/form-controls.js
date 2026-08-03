@@ -67,6 +67,27 @@
         return parts.length > 1 && parts[1] ? parts[1] : "00:00";
     }
 
+    function formatDateButtonText(input) {
+        const date = parseIsoDate(datePart(input.value));
+        if (!date) return input.getAttribute("placeholder") || "";
+
+        const dateText = [
+            padNumber(date.getDate()),
+            padNumber(date.getMonth() + 1),
+            date.getFullYear(),
+        ].join(".");
+        if (input.type !== "datetime-local") return dateText;
+
+        return dateText + " " + timePart(input.value);
+    }
+
+    function formatMonthButtonText(input) {
+        const selected = parseIsoMonth(input.value);
+        if (!selected) return input.getAttribute("placeholder") || "";
+
+        return padNumber(selected.monthIndex + 1) + "." + selected.year;
+    }
+
     function compareIsoDates(first, second) {
         if (!first || !second) return 0;
         if (first === second) return 0;
@@ -314,13 +335,19 @@
         wrapper.className = "custom-date";
         input.parentNode.insertBefore(wrapper, input);
         wrapper.appendChild(input);
-        input.classList.add("custom-date-input");
+        input.classList.add("custom-date-input", "custom-native-control");
+        input.tabIndex = -1;
 
         const button = document.createElement("button");
         button.type = "button";
         button.className = "custom-date-button";
         button.setAttribute("aria-label", "Открыть календарь");
-        button.innerHTML = "<span aria-hidden=\"true\"></span>";
+        const buttonText = document.createElement("span");
+        buttonText.className = "custom-date-value";
+        const buttonIcon = document.createElement("span");
+        buttonIcon.className = "custom-date-icon";
+        buttonIcon.setAttribute("aria-hidden", "true");
+        button.append(buttonText, buttonIcon);
         wrapper.appendChild(button);
 
         const panel = document.createElement("div");
@@ -368,9 +395,16 @@
             } else {
                 input.value = isoValue;
             }
+            syncButton();
             dispatchNativeChange(input);
             close();
-            input.focus();
+            button.focus();
+        }
+
+        function syncButton() {
+            buttonText.textContent = formatDateButtonText(input);
+            button.disabled = input.disabled || input.readOnly;
+            wrapper.classList.toggle("custom-control-disabled", input.disabled || input.readOnly);
         }
 
         function renderPanel() {
@@ -513,13 +547,13 @@
         }
 
         button.addEventListener("click", open);
-        input.addEventListener("focus", open);
         input.addEventListener("keydown", function (event) {
             if (event.key === "Escape") {
                 close();
             }
         });
         input.addEventListener("change", function () {
+            syncButton();
             if (!panel.hidden) {
                 setVisibleFromValue();
                 renderPanel();
@@ -528,18 +562,22 @@
         });
         input.addEventListener("invalid", function () {
             wrapper.classList.add("custom-control-invalid");
+            button.focus();
         });
         input.addEventListener("input", function () {
+            syncButton();
             wrapper.classList.remove("custom-control-invalid");
         });
         input.form && input.form.addEventListener("reset", function () {
             window.setTimeout(function () {
                 setVisibleFromValue();
                 renderPanel();
+                syncButton();
             }, 0);
         });
         window.addEventListener("resize", reposition);
         window.addEventListener("scroll", reposition, true);
+        syncButton();
     }
 
     function enhanceMonthInput(input) {
@@ -550,13 +588,19 @@
         wrapper.className = "custom-date custom-month";
         input.parentNode.insertBefore(wrapper, input);
         wrapper.appendChild(input);
-        input.classList.add("custom-date-input", "custom-month-input");
+        input.classList.add("custom-date-input", "custom-month-input", "custom-native-control");
+        input.tabIndex = -1;
 
         const button = document.createElement("button");
         button.type = "button";
         button.className = "custom-date-button";
         button.setAttribute("aria-label", "Открыть выбор месяца");
-        button.innerHTML = "<span aria-hidden=\"true\"></span>";
+        const buttonText = document.createElement("span");
+        buttonText.className = "custom-date-value";
+        const buttonIcon = document.createElement("span");
+        buttonIcon.className = "custom-date-icon";
+        buttonIcon.setAttribute("aria-hidden", "true");
+        button.append(buttonText, buttonIcon);
         wrapper.appendChild(button);
 
         const panel = document.createElement("div");
@@ -600,9 +644,16 @@
 
         function setInputMonth(isoValue) {
             input.value = isoValue;
+            syncButton();
             dispatchNativeChange(input);
             close();
-            input.focus();
+            button.focus();
+        }
+
+        function syncButton() {
+            buttonText.textContent = formatMonthButtonText(input);
+            button.disabled = input.disabled || input.readOnly;
+            wrapper.classList.toggle("custom-control-disabled", input.disabled || input.readOnly);
         }
 
         function renderPanel() {
@@ -723,13 +774,13 @@
         }
 
         button.addEventListener("click", open);
-        input.addEventListener("focus", open);
         input.addEventListener("keydown", function (event) {
             if (event.key === "Escape") {
                 close();
             }
         });
         input.addEventListener("change", function () {
+            syncButton();
             if (!panel.hidden) {
                 setVisibleFromValue();
                 renderPanel();
@@ -738,18 +789,22 @@
         });
         input.addEventListener("invalid", function () {
             wrapper.classList.add("custom-control-invalid");
+            button.focus();
         });
         input.addEventListener("input", function () {
+            syncButton();
             wrapper.classList.remove("custom-control-invalid");
         });
         input.form && input.form.addEventListener("reset", function () {
             window.setTimeout(function () {
                 setVisibleFromValue();
                 renderPanel();
+                syncButton();
             }, 0);
         });
         window.addEventListener("resize", reposition);
         window.addEventListener("scroll", reposition, true);
+        syncButton();
     }
 
     function initFormControls(root) {
