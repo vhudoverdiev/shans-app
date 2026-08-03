@@ -174,29 +174,16 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn(">Развитие</a>", base_source)
         self.assertIn(">Спорт</a>", base_source)
 
-    def test_learning_hub_is_neutral_on_desktop_and_keeps_purple_touch_palette(self):
+    def test_learning_hub_uses_neutral_header_without_hero_block(self):
+        study_source = (TEMPLATES / "study_hub.html").read_text(encoding="utf-8")
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
-        desktop_hub_theme = styles.split(
-            "/* Desktop development hub stays neutral;",
-            1,
-        )[1]
 
-        self.assertIn(
-            "@media (hover: hover) and (pointer: fine)",
-            desktop_hub_theme,
-        )
-        self.assertIn(".learning-page .learning-hero-compact", desktop_hub_theme)
-        self.assertIn("background: #ffffff;", desktop_hub_theme)
-        self.assertIn("border-color: #e5eaf2;", desktop_hub_theme)
-        self.assertIn(
-            ".learning-page .study-direction-grid .dashboard-card",
-            desktop_hub_theme,
-        )
-        self.assertNotIn("#9333ea", desktop_hub_theme)
-        self.assertIn(
-            "linear-gradient(135deg, #4338ca 0%, #6d28d9 52%, #9333ea 100%)",
-            styles,
-        )
+        self.assertIn("section-styled-page", study_source)
+        self.assertIn("<h1>Развитие</h1>", study_source)
+        self.assertNotIn("learning-hero-compact", study_source)
+        self.assertNotIn("learning-hero", study_source)
+        self.assertNotIn("learning-kicker", study_source)
+        self.assertIn(".learning-page .study-direction-grid .dashboard-card", styles)
 
     def test_it_and_english_desktop_theme_replaces_purple_accents_with_blue(self):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")

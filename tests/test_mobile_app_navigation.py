@@ -37,6 +37,13 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn('<div class="dashboard-card-title">Учёба</div>', body)
         self.assertIn('<div class="dashboard-card-title">Спорт</div>', body)
 
+    def test_dashboard_does_not_render_welcome_purple_block(self):
+        source = (TEMPLATES / "index.html").read_text(encoding="utf-8")
+
+        self.assertNotIn("welcome-card", source)
+        self.assertNotIn("welcome-name", source)
+        self.assertNotIn("Добро пожаловать", source)
+
     def test_mobile_dashboard_has_only_requested_sections(self):
         source = (TEMPLATES / "index.html").read_text(encoding="utf-8")
         mobile_grid = source.split(
@@ -133,6 +140,7 @@ class MobileAppNavigationTests(unittest.TestCase):
             "reports_hub.html",
             "sport_hub.html",
             "account_settings.html",
+            "study_hub.html",
         ):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn("section-styled-page", source)

@@ -10,13 +10,6 @@
         </h1>
     </div>
 
-    <div class="welcome-card">
-        <div class="welcome-name">Добро пожаловать</div>
-        <p class="welcome-label">
-            Выбери нужный раздел ниже для работы
-        </p>
-    </div>
-
     <div class="dashboard-grid dashboard-grid-desktop">
         {% if has_section_access('budget') %}
         <a href="{{ url_for('budget') }}" class="dashboard-card">

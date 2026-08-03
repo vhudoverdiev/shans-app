@@ -13,6 +13,7 @@ class IntroLoaderTests(unittest.TestCase):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn("skip_intro_loader", template)
+        self.assertIn("request.endpoint == 'login'", template)
         self.assertIn("request.endpoint in [", template)
         self.assertIn("'learning.english_day_test'", template)
         self.assertIn("'learning.it_day_test'", template)
@@ -52,6 +53,20 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn(">Шанс</div>", template)
         self.assertIn("{% if not skip_intro_loader %}", template)
         self.assertIn("filename='js/intro-loader.js'", template)
+
+    def test_login_page_does_not_consume_first_app_intro(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        skip_expression = template.split("{% set skip_intro_loader =", 1)[1].split(
+            "%}",
+            1,
+        )[0]
+        skip_block = template.split("if (skipIntroLoader) {", 1)[1].split("}", 1)[0]
+
+        self.assertIn("request.endpoint == 'login'", skip_expression)
+        self.assertLess(template.index("if (skipIntroLoader) {"), template.index('const introKey = "shans-intro-session-v1"'))
+        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', skip_block)
+        self.assertIn("window.__shansShouldRunIntro = false;", skip_block)
+        self.assertIn("return;", skip_block)
 
     def test_day_test_pages_do_not_render_intro_loader_markup(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
