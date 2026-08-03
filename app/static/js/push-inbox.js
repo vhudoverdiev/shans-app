@@ -9,16 +9,20 @@
     const sheet = document.getElementById("mobile-push-inbox-sheet");
     const list = document.getElementById("mobile-push-inbox-list");
     const closeButtons = document.querySelectorAll("[data-push-inbox-close]");
+    const clearAllButton = document.querySelector("[data-push-inbox-clear-all]");
     const csrfMeta = document.querySelector("meta[name='csrf-token']");
     const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
     const syncChannelName = "shans-push-inbox-sync";
     const syncStorageKey = "shans-push-inbox-state";
+    const logoUrl = sheet ? String(sheet.dataset.logoUrl || "").trim() : "";
     const apiTrigger = triggers.find(function (trigger) {
-        return trigger.dataset.inboxUrl && trigger.dataset.readUrl;
+        return trigger.dataset.inboxUrl && trigger.dataset.readUrl
+            && trigger.dataset.deleteUrl && trigger.dataset.clearUrl;
     });
     let notifications = [];
     let requestInProgress = false;
     let markReadInProgress = false;
+    let deleteInProgress = false;
     let broadcastChannel = null;
 
     if (!triggers.length || !apiTrigger || !sheet || !list) {
@@ -50,9 +54,11 @@
         }).format(date);
     }
 
-    function safeNavigatePath(value) {
-        const path = String(value || "").trim();
-        return path.startsWith("/") && !path.startsWith("//") ? path : "";
+    function normalizeNotificationTitle(value) {
+        const title = String(value || "Шанс").trim();
+        return title === "Шанс - скрипт" || title === "Шанс-скрипт"
+            ? "Вк аккануты"
+            : title;
     }
 
     function broadcastUnreadCount(unreadCount) {
@@ -81,7 +87,8 @@
             trigger.dataset.unreadCount = String(unreadCount);
             trigger.classList.toggle("push-inbox-has-unread", unreadCount > 0);
             if (trigger.hasAttribute("data-push-inbox-floating")) {
-                trigger.hidden = unreadCount === 0;
+                trigger.hidden = unreadCount === 0
+                    && trigger.dataset.pushInboxFloatingPersistent !== "true";
             }
             trigger.setAttribute(
                 "aria-label",
@@ -123,14 +130,34 @@
         const icon = document.createElement("span");
         icon.className = "mobile-push-inbox-item-icon";
         icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "Ш";
+        if (logoUrl) {
+            const logo = document.createElement("img");
+            logo.src = logoUrl;
+            logo.alt = "";
+            icon.appendChild(logo);
+        } else {
+            icon.textContent = "Ш";
+        }
 
         const content = document.createElement("div");
         content.className = "mobile-push-inbox-item-content";
 
+        const titleRow = document.createElement("div");
+        titleRow.className = "mobile-push-inbox-item-title-row";
+
         const title = document.createElement("h3");
-        title.textContent = String(notification.title || "Шанс");
-        content.appendChild(title);
+        title.textContent = normalizeNotificationTitle(notification.title);
+        titleRow.appendChild(title);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "mobile-push-inbox-delete";
+        deleteButton.dataset.notificationId = String(notification.id || "");
+        deleteButton.setAttribute("aria-label", "Удалить уведомление");
+        deleteButton.title = "Удалить";
+        deleteButton.textContent = "×";
+        titleRow.appendChild(deleteButton);
+        content.appendChild(titleRow);
 
         const body = document.createElement("p");
         body.textContent = String(notification.body || "");
@@ -146,14 +173,6 @@
             footer.appendChild(time);
         }
 
-        const navigatePath = safeNavigatePath(notification.navigatePath);
-        if (navigatePath) {
-            const link = document.createElement("a");
-            link.href = navigatePath;
-            link.textContent = "Открыть";
-            footer.appendChild(link);
-        }
-
         content.appendChild(footer);
         card.appendChild(icon);
         card.appendChild(content);
@@ -162,6 +181,9 @@
 
     function renderNotifications() {
         list.replaceChildren();
+        if (clearAllButton) {
+            clearAllButton.hidden = notifications.length === 0;
+        }
         if (!notifications.length) {
             list.appendChild(createEmptyState());
             return;
@@ -225,6 +247,61 @@
         }
     }
 
+    async function deleteNotification(notificationId) {
+        const id = Number.parseInt(notificationId, 10);
+        if (!id || deleteInProgress) return;
+        deleteInProgress = true;
+        try {
+            const response = await window.fetch(apiTrigger.dataset.deleteUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ id: id }),
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            notifications = notifications.filter(function (notification) {
+                return Number.parseInt(notification.id, 10) !== id;
+            });
+            renderNotifications();
+            setUnreadCount(payload.unreadCount, true);
+        } catch (_error) {
+            // The list will be refreshed by the next polling cycle.
+        } finally {
+            deleteInProgress = false;
+        }
+    }
+
+    async function clearNotifications() {
+        if (!notifications.length || deleteInProgress) return;
+        deleteInProgress = true;
+        try {
+            const response = await window.fetch(apiTrigger.dataset.clearUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: "{}",
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            notifications = [];
+            renderNotifications();
+            setUnreadCount(payload.unreadCount, true);
+        } catch (_error) {
+            // The list will be refreshed by the next polling cycle.
+        } finally {
+            deleteInProgress = false;
+        }
+    }
+
     function openSheet(event) {
         const opener = event ? event.currentTarget : null;
         sheet.hidden = false;
@@ -263,6 +340,21 @@
     triggers.forEach(function (trigger) {
         trigger.addEventListener("click", openSheet);
     });
+    list.addEventListener("click", function (event) {
+        const target = event.target instanceof Element
+            ? event.target
+            : event.target.parentElement;
+        const deleteButton = target ? target.closest("[data-notification-id]") : null;
+        if (!deleteButton) return;
+        event.preventDefault();
+        event.stopPropagation();
+        deleteNotification(deleteButton.dataset.notificationId);
+    });
+    if (clearAllButton) {
+        clearAllButton.addEventListener("click", function () {
+            clearNotifications();
+        });
+    }
     closeButtons.forEach(function (button) {
         button.addEventListener("click", closeSheet);
     });
@@ -309,7 +401,7 @@
 
     setUnreadCount(0, false);
     floatingTriggers.forEach(function (trigger) {
-        trigger.hidden = true;
+        trigger.hidden = trigger.dataset.pushInboxFloatingPersistent !== "true";
     });
     loadNotifications(true);
 })();

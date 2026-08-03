@@ -347,8 +347,11 @@
         aria-expanded="false"
         data-inbox-url="{{ url_for('web_push_inbox') }}"
         data-read-url="{{ url_for('web_push_inbox_read') }}"
+        data-delete-url="{{ url_for('web_push_inbox_delete') }}"
+        data-clear-url="{{ url_for('web_push_inbox_clear') }}"
         data-push-inbox-trigger
         data-push-inbox-floating
+        data-push-inbox-floating-persistent="{% if is_account_page %}true{% else %}false{% endif %}"
         hidden
     >
         <span class="mobile-push-inbox-trigger-ring" aria-hidden="true"></span>
@@ -359,7 +362,7 @@
         <span class="mobile-push-inbox-count" id="mobile-push-inbox-count" data-push-inbox-count aria-hidden="true"></span>
     </button>
 
-    <div class="mobile-push-inbox-sheet" id="mobile-push-inbox-sheet" hidden>
+    <div class="mobile-push-inbox-sheet" id="mobile-push-inbox-sheet" data-logo-url="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" hidden>
         <button type="button" class="mobile-push-inbox-backdrop" data-push-inbox-close aria-label="Закрыть уведомления"></button>
         <section class="mobile-push-inbox-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-push-inbox-title">
             <div class="mobile-push-inbox-handle" aria-hidden="true"></div>
@@ -368,7 +371,10 @@
                     <div class="mobile-push-inbox-eyebrow">За последние 3 дня</div>
                     <h2 id="mobile-push-inbox-title">Уведомления</h2>
                 </div>
-                <button type="button" class="mobile-push-inbox-close" data-push-inbox-close aria-label="Закрыть">×</button>
+                <div class="mobile-push-inbox-header-actions">
+                    <button type="button" class="mobile-push-inbox-clear-all" data-push-inbox-clear-all hidden>Очистить все</button>
+                    <button type="button" class="mobile-push-inbox-close" data-push-inbox-close aria-label="Закрыть">×</button>
+                </div>
             </div>
             <div class="mobile-push-inbox-list" id="mobile-push-inbox-list"></div>
         </section>

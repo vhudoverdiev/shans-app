@@ -876,6 +876,38 @@ def mark_all_push_notifications_read(user_id: int) -> int:
         conn.close()
 
 
+def delete_push_notification(user_id: int, notification_id: int) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            DELETE FROM web_push_inbox
+            WHERE user_id = ? AND id = ?
+            """,
+            (user_id, notification_id),
+        )
+        conn.commit()
+        return max(cursor.rowcount, 0)
+    finally:
+        conn.close()
+
+
+def delete_all_push_notifications(user_id: int) -> int:
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            DELETE FROM web_push_inbox
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+        conn.commit()
+        return max(cursor.rowcount, 0)
+    finally:
+        conn.close()
+
+
 def deliver_candidate(candidate: PushCandidate, subscriptions=None) -> tuple[int, int]:
     subscriptions = subscriptions if subscriptions is not None else _get_subscriptions()
     sent_count = 0
@@ -1159,6 +1191,33 @@ def register_web_push_routes(app) -> None:
     def web_push_inbox_read():
         marked_count = mark_all_push_notifications_read(int(current_user.id))
         return jsonify({"ok": True, "markedCount": marked_count, "unreadCount": 0})
+
+    @app.post("/api/push/inbox/delete")
+    @login_required
+    def web_push_inbox_delete():
+        payload = request.get_json(silent=True) or {}
+        try:
+            notification_id = int(payload.get("id") or 0)
+        except (TypeError, ValueError):
+            notification_id = 0
+        if notification_id < 1:
+            return jsonify({"ok": False, "message": "Notification id is required."}), 400
+
+        deleted_count = delete_push_notification(int(current_user.id), notification_id)
+        _notifications, unread_count = get_recent_push_notifications(int(current_user.id))
+        return jsonify(
+            {
+                "ok": True,
+                "deletedCount": deleted_count,
+                "unreadCount": unread_count,
+            }
+        )
+
+    @app.post("/api/push/inbox/clear")
+    @login_required
+    def web_push_inbox_clear():
+        deleted_count = delete_all_push_notifications(int(current_user.id))
+        return jsonify({"ok": True, "deletedCount": deleted_count, "unreadCount": 0})
 
     @app.post("/api/push/test")
     @login_required

@@ -26,6 +26,8 @@ from app.web_push import (
     _get_subscriptions,
     _send_to_subscription,
     collect_due_candidates,
+    delete_all_push_notifications,
+    delete_push_notification,
     deliver_candidate,
     get_recent_push_notifications,
     get_unread_push_notifications,
@@ -450,6 +452,50 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertIsNone(notifications[0]["read_at"])
         self.assertIsNotNone(notifications[1]["read_at"])
 
+    def test_push_notification_delete_is_scoped_to_current_user(self):
+        conn = self._connect()
+        try:
+            first_id = conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now'), NULL)
+                """,
+                (1, "first", "First", "Body", "/"),
+            ).lastrowid
+            second_id = conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now'), NULL)
+                """,
+                (1, "second", "Second", "Body", "/"),
+            ).lastrowid
+            other_user_id = conn.execute(
+                """
+                INSERT INTO web_push_inbox (
+                    user_id, notification_key, title, body, navigate_path,
+                    created_at, read_at
+                ) VALUES (?, ?, ?, ?, ?, datetime('now'), NULL)
+                """,
+                (2, "other", "Other", "Body", "/"),
+            ).lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+
+        self.assertEqual(delete_push_notification(1, other_user_id), 0)
+        self.assertEqual(delete_push_notification(1, first_id), 1)
+        notifications, unread_count = get_recent_push_notifications(1)
+        self.assertEqual(unread_count, 1)
+        self.assertEqual([notification["title"] for notification in notifications], ["Second"])
+        self.assertEqual(delete_all_push_notifications(1), 1)
+        self.assertEqual(get_recent_push_notifications(1), ([], 0))
+        self.assertEqual(get_recent_push_notifications(2)[0][0]["id"], other_user_id)
+        self.assertEqual(delete_push_notification(2, second_id), 0)
+
     def test_existing_device_delivery_is_migrated_to_user_deduplication(self):
         save_subscription(
             1,
@@ -820,12 +866,13 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn('id="push-notifications-toggle"', template)
         self.assertIn("data-push-toggle-mobile-label>Включить</span>", template)
         self.assertIn('id="push-notifications-status"', template)
-        self.assertIn('id="account-push-inbox-trigger"', template)
-        self.assertIn('data-push-inbox-trigger', template)
+        self.assertNotIn('id="account-push-inbox-trigger"', template)
+        self.assertNotIn('account-notifications-btn', template)
         self.assertIn("push-notifications.js", template)
         self.assertIn('id="push-notifications-test"', template)
         self.assertIn("account-push-desktop-only", template)
         self.assertIn(".account-push-desktop-only", mobile_styles)
+        self.assertIn("grid-template-columns: 1fr;", mobile_styles)
         self.assertIn(
             '.account-push-status:not([data-state="error"]):not([data-state="info"])',
             mobile_styles,
@@ -858,17 +905,33 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertIn("js/push-inbox.js", base_template)
         self.assertIn("data-inbox-url", base_template)
         self.assertIn("data-read-url", base_template)
+        self.assertIn("data-delete-url", base_template)
+        self.assertIn("data-clear-url", base_template)
+        self.assertIn("data-logo-url", base_template)
+        self.assertIn("data-push-inbox-floating-persistent", base_template)
+        self.assertIn("Очистить все", base_template)
         self.assertIn("За последние 3 дня", base_template)
         self.assertIn("shans-push-received", push_client)
         self.assertIn('window.fetch(apiTrigger.dataset.inboxUrl', push_client)
         self.assertIn('window.fetch(apiTrigger.dataset.readUrl', push_client)
+        self.assertIn('window.fetch(apiTrigger.dataset.deleteUrl', push_client)
+        self.assertIn('window.fetch(apiTrigger.dataset.clearUrl', push_client)
+        self.assertIn("normalizeNotificationTitle", push_client)
+        self.assertIn('logo.src = logoUrl;', push_client)
+        self.assertNotIn('link.textContent = "Открыть"', push_client)
+        self.assertNotIn("safeNavigatePath", push_client)
+        self.assertIn('trigger.dataset.pushInboxFloatingPersistent !== "true"', push_client)
         self.assertIn("BroadcastChannel", push_client)
         self.assertIn("localStorage.setItem", push_client)
         self.assertIn("За последние 3 дня уведомлений нет.", push_client)
         self.assertIn('CREATE TABLE IF NOT EXISTS web_push_inbox', push_module)
         self.assertIn("def get_recent_push_notifications", push_module)
+        self.assertIn("def delete_push_notification", push_module)
+        self.assertIn("def delete_all_push_notifications", push_module)
         self.assertIn('@app.get("/api/push/inbox")', push_module)
         self.assertIn('@app.post("/api/push/inbox/read")', push_module)
+        self.assertIn('@app.post("/api/push/inbox/delete")', push_module)
+        self.assertIn('@app.post("/api/push/inbox/clear")', push_module)
 
     def test_client_recovers_from_changed_vapid_key_and_rejected_subscription(self):
         push_client = (
