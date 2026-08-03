@@ -151,7 +151,9 @@ a {
 }
 
 .app-intro-running .app-intro-logo {
-    animation: app-intro-logo-in 0.42s ease-out 0.08s both;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: app-intro-logo-in 0.32s ease-out both;
 }
 
 .app-intro-running .app-intro-progress {
@@ -159,6 +161,11 @@ a {
 }
 
 @keyframes app-intro-logo-in {
+    from {
+        opacity: 1;
+        transform: translateY(4px) scale(0.98);
+    }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);

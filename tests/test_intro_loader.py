@@ -13,7 +13,6 @@ class IntroLoaderTests(unittest.TestCase):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
         self.assertIn("skip_intro_loader", template)
-        self.assertIn("request.endpoint == 'login'", template)
         self.assertIn("request.endpoint in [", template)
         self.assertIn("'learning.english_day_test'", template)
         self.assertIn("'learning.it_day_test'", template)
@@ -54,19 +53,29 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("{% if not skip_intro_loader %}", template)
         self.assertIn("filename='js/intro-loader.js'", template)
 
-    def test_login_page_does_not_consume_first_app_intro(self):
+    def test_login_page_keeps_first_launch_logo_intro_enabled(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
         skip_expression = template.split("{% set skip_intro_loader =", 1)[1].split(
             "%}",
             1,
         )[0]
-        skip_block = template.split("if (skipIntroLoader) {", 1)[1].split("}", 1)[0]
 
-        self.assertIn("request.endpoint == 'login'", skip_expression)
-        self.assertLess(template.index("if (skipIntroLoader) {"), template.index('const introKey = "shans-intro-session-v1"'))
-        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', skip_block)
-        self.assertIn("window.__shansShouldRunIntro = false;", skip_block)
-        self.assertIn("return;", skip_block)
+        self.assertNotIn("request.endpoint == 'login'", skip_expression)
+        self.assertIn("{% if request.endpoint == 'login' %} login-centered-document{% endif %}", template)
+        self.assertIn(
+            '<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == \'login\' %}',
+            template,
+        )
+        self.assertIn(
+            "{% if not skip_intro_loader %}\n"
+            "    <script src=\"{{ url_for('static', filename='js/intro-loader.js'",
+            template,
+        )
+        self.assertIn(
+            "{% if not skip_intro_loader %}\n"
+            "    <div class=\"app-intro\" id=\"app-intro\"",
+            template,
+        )
 
     def test_day_test_pages_do_not_render_intro_loader_markup(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
@@ -242,6 +251,23 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", stylesheet)
         self.assertIn("@keyframes app-intro-logo-in", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)
+
+    def test_intro_running_logo_is_visible_without_start_delay(self):
+        stylesheet = STYLESHEET.read_text(encoding="utf-8")
+        running_logo = stylesheet.split(".app-intro-running .app-intro-logo {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        logo_keyframes = stylesheet.split("@keyframes app-intro-logo-in {", 1)[1].split(
+            "@keyframes app-intro-progress-in",
+            1,
+        )[0]
+
+        self.assertIn("opacity: 1;", running_logo)
+        self.assertIn("transform: translateY(0) scale(1);", running_logo)
+        self.assertIn("animation: app-intro-logo-in 0.32s ease-out both;", running_logo)
+        self.assertNotIn("0.08s", running_logo)
+        self.assertNotIn("opacity: 0;", logo_keyframes)
 
     def test_intro_progress_bar_does_not_slide_in_from_the_left(self):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
