@@ -132,12 +132,20 @@ a {
 .app-intro-progress {
     position: relative;
     z-index: 3;
-    width: 104px;
-    height: 3px;
-    margin-top: 18px;
+    width: clamp(126px, 16vw, 152px);
+    height: 8px;
+    margin-top: 22px;
+    padding: 2px;
     overflow: hidden;
     border-radius: 999px;
-    background: rgba(99, 102, 241, 0.13);
+    border: 1px solid rgba(124, 58, 237, 0.16);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 242, 255, 0.72)),
+        rgba(99, 102, 241, 0.13);
+    box-shadow:
+        0 12px 28px rgba(79, 70, 229, 0.18),
+        inset 0 1px 2px rgba(255, 255, 255, 0.88),
+        inset 0 -1px 2px rgba(79, 70, 229, 0.12);
     opacity: 0;
     transform: translateY(6px);
 }
@@ -147,7 +155,14 @@ a {
     width: 100%;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    background: linear-gradient(90deg, #2563eb 0%, #4f46e5 34%, #8b5cf6 68%, #6d28d9 100%);
+    background-size: 220% 100%;
+    box-shadow:
+        0 0 14px rgba(124, 58, 237, 0.36),
+        0 0 4px rgba(37, 99, 235, 0.36);
+    transform: scaleX(0.72);
+    transform-origin: center;
+    animation: app-intro-progress-flow 1.08s ease-in-out infinite;
 }
 
 .app-intro-running .app-intro-logo {
@@ -179,6 +194,23 @@ a {
     }
 }
 
+@keyframes app-intro-progress-flow {
+    0% {
+        background-position: 0% 50%;
+        transform: scaleX(0.72);
+    }
+
+    50% {
+        background-position: 100% 50%;
+        transform: scaleX(1);
+    }
+
+    100% {
+        background-position: 0% 50%;
+        transform: scaleX(0.72);
+    }
+}
+
 @media (max-width: 768px) and (pointer: coarse) {
     .app-intro-stage {
         width: 88vw;
@@ -205,9 +237,11 @@ a {
     }
 
     .app-intro-running .app-intro-logo,
-    .app-intro-running .app-intro-progress {
+    .app-intro-running .app-intro-progress,
+    .app-intro-running .app-intro-progress span {
         opacity: 1;
         transform: none;
+        background-position: 50% 50%;
     }
 }
 

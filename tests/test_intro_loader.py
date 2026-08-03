@@ -288,9 +288,21 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn("0.08s", running_logo)
         self.assertNotIn("opacity: 0;", logo_keyframes)
 
-    def test_intro_progress_bar_does_not_slide_in_from_the_left(self):
+    def test_intro_progress_bar_is_styled_loader_not_plain_line(self):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        progress_block = stylesheet.split(".app-intro-progress {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        progress_fill_block = stylesheet.split(".app-intro-progress span {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        progress_flow_keyframes = stylesheet.split("@keyframes app-intro-progress-flow {", 1)[1].split(
+            "@media (max-width: 768px)",
+            1,
+        )[0]
 
         self.assertNotIn("translateX(-105%)", stylesheet)
         self.assertNotIn("@keyframes app-intro-progress {", stylesheet)
@@ -298,7 +310,16 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn("app-intro-orbit", stylesheet)
         self.assertNotIn("app-intro-glow", template)
         self.assertNotIn("app-intro-glow", stylesheet)
+        self.assertIn("height: 8px;", progress_block)
+        self.assertIn("padding: 2px;", progress_block)
+        self.assertIn("border: 1px solid rgba(124, 58, 237, 0.16);", progress_block)
+        self.assertIn("box-shadow:", progress_block)
+        self.assertIn("background-size: 220% 100%;", progress_fill_block)
+        self.assertIn("animation: app-intro-progress-flow 1.08s ease-in-out infinite;", progress_fill_block)
         self.assertIn("@keyframes app-intro-progress-in", stylesheet)
+        self.assertIn("@keyframes app-intro-progress-flow", stylesheet)
+        self.assertIn("background-position: 100% 50%;", progress_flow_keyframes)
+        self.assertIn("transform: scaleX(1);", progress_flow_keyframes)
 
     def test_intro_uses_dynamic_viewport_without_standalone_second_logo(self):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
