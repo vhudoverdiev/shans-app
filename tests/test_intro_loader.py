@@ -20,6 +20,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("'workouts.edit_plan'", template)
         self.assertIn("'nutrition.edit_profile'", template)
         self.assertIn("const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};", template)
+        self.assertIn("const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
         self.assertIn("if (skipIntroLoader) {", template)
         self.assertIn('document.documentElement.classList.remove("app-intro-pending");', template)
         self.assertIn("window.__shansShouldRunIntro = false;", template)
@@ -61,6 +62,7 @@ class IntroLoaderTests(unittest.TestCase):
         )[0]
 
         self.assertNotIn("request.endpoint == 'login'", skip_expression)
+        self.assertIn("const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};", template)
         self.assertIn("{% if request.endpoint == 'login' %} login-centered-document{% endif %}", template)
         self.assertIn(
             '<html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == \'login\' %}',
@@ -76,6 +78,24 @@ class IntroLoaderTests(unittest.TestCase):
             "    <div class=\"app-intro\" id=\"app-intro\"",
             template,
         )
+
+    def test_login_intro_ignores_existing_session_storage_marker(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        storage_block = template.split('const introKey = "shans-intro-session-v1"', 1)[1].split(
+            "if (!forceIntroLoader && introAlreadyShown) {",
+            1,
+        )[0]
+        skip_existing_block = template.split("if (!forceIntroLoader && introAlreadyShown) {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+
+        self.assertIn("if (!forceIntroLoader) {", storage_block)
+        self.assertIn("window.sessionStorage.getItem(introKey)", storage_block)
+        self.assertIn("window.sessionStorage.setItem(introKey, \"1\")", storage_block)
+        self.assertIn('document.documentElement.classList.remove("app-intro-pending");', skip_existing_block)
+        self.assertIn("window.__shansShouldRunIntro = false;", skip_existing_block)
+        self.assertIn("return;", skip_existing_block)
 
     def test_day_test_pages_do_not_render_intro_loader_markup(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

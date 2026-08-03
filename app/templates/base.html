@@ -13,6 +13,7 @@
     <script>
         (function () {
             const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};
+            const forceIntroLoader = {{ 'true' if request.endpoint == 'login' else 'false' }};
             const standaloneDisplayMode = window.matchMedia
                 && window.matchMedia("(display-mode: standalone)").matches;
             const isStandaloneApp = standaloneDisplayMode
@@ -43,18 +44,20 @@
                 const introKey = "shans-intro-session-v1";
                 let introAlreadyShown = false;
                 try {
-                    introAlreadyShown = Boolean(
-                        window.sessionStorage
-                        && window.sessionStorage.getItem(introKey)
-                    );
-                    if (!introAlreadyShown && window.sessionStorage) {
+                    if (!forceIntroLoader) {
+                        introAlreadyShown = Boolean(
+                            window.sessionStorage
+                            && window.sessionStorage.getItem(introKey)
+                        );
+                    }
+                    if (window.sessionStorage) {
                         window.sessionStorage.setItem(introKey, "1");
                     }
                 } catch (storageError) {
                     introAlreadyShown = false;
                 }
 
-                if (introAlreadyShown) {
+                if (!forceIntroLoader && introAlreadyShown) {
                     document.documentElement.classList.remove("app-intro-pending");
                     window.__shansShouldRunIntro = false;
                     return;
