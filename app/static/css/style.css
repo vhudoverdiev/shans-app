@@ -5965,8 +5965,7 @@ select.form-input option:checked {
     margin: 0 8px;
 }
 
-.custom-date-icon::before,
-.custom-date-icon::after {
+.custom-date-icon::before {
     content: "";
     position: absolute;
     background: currentColor;
@@ -5977,15 +5976,6 @@ select.form-input option:checked {
     right: 2px;
     top: 4px;
     height: 2px;
-}
-
-.custom-date-icon::after {
-    left: 3px;
-    right: 3px;
-    top: -5px;
-    height: 6px;
-    border-radius: 999px;
-    box-shadow: 7px 0 0 currentColor;
 }
 
 .custom-date-panel {

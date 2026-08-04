@@ -724,6 +724,17 @@
         padding-bottom: calc(106px + env(safe-area-inset-bottom));
     }
 
+    html.shans-standalone-app,
+    html.shans-standalone-app body {
+        min-height: 100dvh;
+        overscroll-behavior-y: none;
+    }
+
+    html.shans-standalone-app .app-body-authenticated .page-shell {
+        min-height: 100dvh;
+        padding-bottom: 106px;
+    }
+
     .dashboard-grid-desktop {
         display: none !important;
     }
@@ -792,7 +803,14 @@
     }
 
     html.shans-standalone-app .app-bottom-nav {
+        bottom: 0;
         padding: 7px;
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+    }
+
+    html.shans-standalone-app .account-settings-page {
+        min-height: calc(100dvh - 106px);
     }
 
     .app-bottom-nav-link {

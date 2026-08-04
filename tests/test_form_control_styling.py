@@ -112,6 +112,22 @@ class FormControlStylingTests(unittest.TestCase):
         )
         self.assertIn(".custom-control-invalid .custom-date-button", stylesheet)
 
+    def test_custom_date_icon_has_no_top_binding_dots(self):
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+        icon_block = stylesheet.split(".custom-date-icon {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        before_block = stylesheet.rsplit(".custom-date-icon::before {", 1)[1].split(
+            "}",
+            1,
+        )[0]
+
+        self.assertIn("border: 2px solid currentColor;", icon_block)
+        self.assertIn("height: 2px;", before_block)
+        self.assertNotIn(".custom-date-icon::after", stylesheet)
+        self.assertNotIn("box-shadow: 7px 0 0 currentColor;", stylesheet)
+
 
 if __name__ == "__main__":
     unittest.main()
