@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
-import JSZip from "C:/Users/Владимир/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/jszip/lib/index.js";
+import { pathToFileURL } from "node:url";
+
+const { default: JSZip } = await import(pathToFileURL("C:/Users/Владимир/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/jszip/lib/index.js").href);
 
 const args = process.argv.slice(2);
 const listMode = args[0] === "-Z1";

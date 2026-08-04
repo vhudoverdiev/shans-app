@@ -1,0 +1,3 @@
+Slide 1: removed the product screenshot and converted the inherited dark panel into a textual capability index. Replaced selling language with a neutral CRM overview.
+Slide 2: expanded the inherited module descriptions to four concrete capabilities per direction while retaining the three-column structure.
+Slide 3: removed the settings screenshot and converted the inherited right panel into a platform-services list. Replaced sales-readiness claims with factual security, notification, export, and architecture information.

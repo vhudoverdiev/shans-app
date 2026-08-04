@@ -9,6 +9,21 @@ ACCOUNT_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "account_settings.html"
 
 
 class AccountSettingsLayoutTests(unittest.TestCase):
+    def test_account_settings_hides_redundant_security_tab_button(self):
+        template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
+        mobile_styles = (
+            PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('data-account-panel="security"', template)
+        self.assertNotIn('data-account-tab="security"', template)
+        self.assertNotIn(">Безопасность</button>", template)
+        self.assertIn('const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "security";', template)
+        self.assertRegex(
+            mobile_styles,
+            r"\.account-nav\s*\{\s*display:\s*none;",
+        )
+
     def test_profile_card_starts_without_removed_hero_gap(self):
         stylesheet = STYLE_FILE.read_text(encoding="utf-8")
 
@@ -64,12 +79,11 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             '<div class="card account-card">',
             1,
         )[0]
-        self.assertIn("data-push-toggle-mobile-label>Включить</span>", push_card)
+        self.assertIn("data-push-toggle-mobile-label>Включить уведомления</span>", push_card)
         self.assertIn('id="push-notifications-status"', push_card)
         self.assertIn('aria-live="polite" hidden', push_card)
         self.assertNotIn("Уведомления личного графика", push_card)
         self.assertNotIn("В 10:00", push_card)
-        self.assertNotIn("Включить уведомления", push_card)
         self.assertNotIn('id="push-notifications-test"', push_card)
         self.assertIn("push-notifications.js", template)
         self.assertNotRegex(

@@ -1,0 +1,23 @@
+Communication job: by the end, a viewer should understand what CRM Shans can do, how its modules are grouped, and which platform services support everyday use.
+
+Source deck structure:
+- 3 slides, 1280x720, all content is slide-local; no charts or tables.
+- Slide 1: light overview area plus a dark right-hand feature panel.
+- Slide 2: light three-column capability structure.
+- Slide 3: dark platform and infrastructure structure.
+
+Typography and spacing:
+- Arial-like sans-serif hierarchy; large bold titles, 16-22 pt body text.
+- Equal 72 px outer margins, restrained blue/violet/green accents.
+- Footer line and page number are retained.
+
+Brand and assets:
+- Authentic Shans logo is retained on every slide.
+- Product screenshots are removed as requested.
+- No new external images are introduced.
+
+Insertion contract:
+- Each output slide duplicates the corresponding source slide.
+- Existing text frames and panels are rewritten or repositioned in place.
+- Screenshot image objects are deleted; the freed panel space is filled using inherited text frames.
+- Speaker notes are rewritten with local repository sources only.

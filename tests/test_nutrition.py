@@ -527,11 +527,11 @@ class NutritionTests(unittest.TestCase):
         self.assertNotIn("data-open-custom-food", template)
         self.assertNotIn('id="custom-food" hidden', template)
         self.assertNotIn("По этикетке", template)
-        self.assertIn('class="btn btn-secondary nutrition-back-link"', custom_template)
+        self.assertIn('class="nutrition-back-link nutrition-edit-back-link"', custom_template)
         self.assertIn("← Назад к питанию", custom_template)
         self.assertIn("url_for('nutrition.create_custom_food')", custom_template)
         self.assertIn("Сохранить продукт", custom_template)
-        self.assertIn('class="btn btn-secondary nutrition-back-link"', profile_edit_template)
+        self.assertIn('class="nutrition-back-link nutrition-edit-back-link"', profile_edit_template)
         self.assertIn("← Назад к питанию", profile_edit_template)
         self.assertIn("url_for('nutrition.save_profile')", profile_edit_template)
         self.assertIn('name="profile_source" value="edit"', profile_edit_template)
@@ -561,9 +561,22 @@ class NutritionTests(unittest.TestCase):
         self.assertIn(".nutrition-back-link {\n        display: none;", mobile_block)
         self.assertIn(".nutrition-custom-food-page .nutrition-back-link", mobile_block)
         self.assertIn(".nutrition-profile-edit-page .nutrition-back-link", mobile_block)
-        self.assertIn("display: inline-flex;", mobile_block)
-        self.assertIn("width: 100%;", mobile_block)
-        self.assertIn("justify-content: center;", mobile_block)
+        edit_back_rule = mobile_block.split(".nutrition-custom-food-page .nutrition-back-link,", 1)[1].split(
+            "}",
+            1,
+        )[0]
+        self.assertIn("display: inline-flex;", edit_back_rule)
+        self.assertNotIn("width: 100%;", edit_back_rule)
+        self.assertNotIn("justify-content: center;", edit_back_rule)
+
+    def test_nutrition_edit_back_buttons_match_learning_back_link_style(self):
+        styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn(".nutrition-edit-back-link {", styles)
+        self.assertIn("color: #6d28d9;", styles)
+        self.assertIn(".nutrition-edit-back-link:hover", styles)
+        self.assertIn("color: #4c1d95;", styles)
+        self.assertIn(".nutrition-edit-back-link {\n        color: var(--nutrition-blue);", styles)
 
     def test_custom_food_page_is_separate_from_catalog(self):
         app = self._create_app()

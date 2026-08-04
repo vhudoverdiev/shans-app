@@ -1,0 +1,1268 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/s49l6m",
+    "id": "s49l6m",
+    "slide": 3,
+    "layoutId": "/ppt/slideLayouts/slideLayout1.xml",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#0B1220",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "fontScheme": {
+      "name": "Office",
+      "majorFont": {
+        "latinTypeface": "Calibri Light",
+        "eastAsianTypeface": "Calibri Light",
+        "complexScriptTypeface": "Calibri Light"
+      },
+      "minorFont": {
+        "latinTypeface": "Calibri",
+        "eastAsianTypeface": "Calibri",
+        "complexScriptTypeface": "Calibri"
+      }
+    },
+    "typefaces": [
+      "Calibri",
+      "Calibri Light"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "/ppt/slideLayouts/slideLayout1.xml",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "/ppt/slideMasters/slideMaster1.xml",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sf6p8jip",
+      "id": "26",
+      "bbox": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#0B1220",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/e9cfmx47",
+      "id": "27",
+      "bbox": [
+        72,
+        46,
+        44,
+        44
+      ],
+      "geometry": "roundRect",
+      "contentType": "image/png",
+      "imageCrop": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 27273"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "/ppt/media/image4.png",
+        "contentType": "image/png",
+        "byteLength": 931286
+      },
+      "fillImage": {
+        "assetId": "/ppt/media/image4.png",
+        "contentType": "image/png",
+        "byteLength": 931286
+      }
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tgnmpc3i",
+      "id": "3",
+      "bbox": [
+        132,
+        48,
+        120,
+        22
+      ],
+      "geometry": "rect",
+      "text": "SHANS",
+      "textPreview": "SHANS",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "SHANS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "SHANS",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#FFFFFF",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "SHANS",
+              "fontSize": 16,
+              "color": "#FFFFFF",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i9c3ax4v",
+      "id": "4",
+      "bbox": [
+        132,
+        70,
+        220,
+        18
+      ],
+      "geometry": "rect",
+      "text": "personal operating system",
+      "textPreview": "personal operating system",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "personal operating system"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "personal operating system",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#C7D2FE"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "personal operating system",
+              "fontSize": 11,
+              "color": "#C7D2FE"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jal4j2lg",
+      "id": "5",
+      "bbox": [
+        72,
+        136,
+        650,
+        96
+      ],
+      "geometry": "rect",
+      "text": "Почему проект можно продавать и развивать дальше",
+      "textPreview": "Почему проект можно продавать и развивать дальше",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Почему проект можно продавать"
+          },
+          {
+            "index": 2,
+            "text": "и развивать дальше"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Почему проект можно продавать и развивать дальше",
+          "resolvedTextStyle": {
+            "fontSize": 43,
+            "color": "#FFFFFF",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Почему проект можно продавать и развивать дальше",
+              "fontSize": 43,
+              "color": "#FFFFFF",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kbulc7m1",
+      "id": "6",
+      "bbox": [
+        72,
+        262,
+        586,
+        76
+      ],
+      "geometry": "rect",
+      "text": "У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.",
+      "textPreview": "У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "У Shans уже есть признаки зрелого продукта: мобильный"
+          },
+          {
+            "index": 2,
+            "text": "сценарий, безопасность, уведомления, экспорт данных и"
+          },
+          {
+            "index": 3,
+            "text": "модульная архитектура Flask."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "color": "#CBD5E1"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.",
+              "fontSize": 21,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5c3mls3m",
+      "id": "7",
+      "bbox": [
+        72,
+        392,
+        176,
+        104
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#111C31",
+      "lineColor": "#27364F",
+      "lineWidth": 1
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/als36d4z",
+      "id": "8",
+      "bbox": [
+        280,
+        392,
+        176,
+        104
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#111C31",
+      "lineColor": "#27364F",
+      "lineWidth": 1
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vm14fil4",
+      "id": "9",
+      "bbox": [
+        488,
+        392,
+        176,
+        104
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#111C31",
+      "lineColor": "#27364F",
+      "lineWidth": 1
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7et43axk",
+      "id": "10",
+      "bbox": [
+        96,
+        416,
+        120,
+        28
+      ],
+      "geometry": "rect",
+      "text": "PWA",
+      "textPreview": "PWA",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "PWA"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "PWA",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#A7C7FF",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "PWA",
+              "fontSize": 25,
+              "color": "#A7C7FF",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mdk3u5gz",
+      "id": "11",
+      "bbox": [
+        96,
+        450,
+        126,
+        20
+      ],
+      "geometry": "rect",
+      "text": "установка на экран",
+      "textPreview": "установка на экран",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "установка на"
+          },
+          {
+            "index": 2,
+            "text": "экран"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "установка на экран",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#CBD5E1"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "установка на экран",
+              "fontSize": 14,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9gbm5kfq",
+      "id": "12",
+      "bbox": [
+        304,
+        416,
+        120,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Push",
+      "textPreview": "Push",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Push"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Push",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#DDD6FE",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Push",
+              "fontSize": 25,
+              "color": "#DDD6FE",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8f2lwfy5",
+      "id": "13",
+      "bbox": [
+        304,
+        450,
+        130,
+        20
+      ],
+      "geometry": "rect",
+      "text": "события и Telegram",
+      "textPreview": "события и Telegram",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "события и"
+          },
+          {
+            "index": 2,
+            "text": "Telegram"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "события и Telegram",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#CBD5E1"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "события и Telegram",
+              "fontSize": 14,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vid47uxw",
+      "id": "14",
+      "bbox": [
+        512,
+        416,
+        120,
+        28
+      ],
+      "geometry": "rect",
+      "text": "2FA",
+      "textPreview": "2FA",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "2FA"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "2FA",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#A7F3D0",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2FA",
+              "fontSize": 25,
+              "color": "#A7F3D0",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/uhknypgb",
+      "id": "15",
+      "bbox": [
+        512,
+        450,
+        126,
+        20
+      ],
+      "geometry": "rect",
+      "text": "защита доступа",
+      "textPreview": "защита доступа",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "защита доступа"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "защита доступа",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#CBD5E1"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "защита доступа",
+              "fontSize": 14,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hkvm9kfm",
+      "id": "16",
+      "bbox": [
+        72,
+        532,
+        592,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#334155",
+      "lineWidth": 1
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wjm50fyh",
+      "id": "17",
+      "bbox": [
+        72,
+        560,
+        260,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Главный продающий тезис",
+      "textPreview": "Главный продающий тезис",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Главный продающий тезис"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Главный продающий тезис",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#93C5FD",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Главный продающий тезис",
+              "fontSize": 17,
+              "color": "#93C5FD",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bm94vqxc",
+      "id": "18",
+      "bbox": [
+        72,
+        592,
+        624,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.",
+      "textPreview": "Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans показывает конкретный порядок: что запланировано, что сделано,"
+          },
+          {
+            "index": 2,
+            "text": "где деньги, где прогресс и что требует внимания."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "color": "#FFFFFF"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.",
+              "fontSize": 19,
+              "color": "#FFFFFF"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/al03mlg7",
+      "id": "19",
+      "bbox": [
+        754,
+        102,
+        416,
+        516
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#111C31",
+      "lineColor": "#27364F",
+      "lineWidth": 1
+    },
+    {
+      "order": 20,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/l87y9wnm",
+      "id": "28",
+      "bbox": [
+        778,
+        126,
+        368,
+        300
+      ],
+      "geometry": "roundRect",
+      "contentType": "image/png",
+      "imageCrop": {
+        "left": 0,
+        "top": 0.11511,
+        "right": 0,
+        "bottom": 0.11511
+      },
+      "imageMask": {
+        "geometry": "roundRect",
+        "adjustmentList": [
+          {
+            "name": "adj",
+            "formula": "val 7333"
+          }
+        ]
+      },
+      "asset": {
+        "assetId": "/ppt/media/image5.png",
+        "contentType": "image/png",
+        "byteLength": 101399
+      },
+      "fillImage": {
+        "assetId": "/ppt/media/image5.png",
+        "contentType": "image/png",
+        "byteLength": 101399
+      }
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/f2ho3yh0",
+      "id": "21",
+      "bbox": [
+        782,
+        468,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Готовность к реальному использованию",
+      "textPreview": "Готовность к реальному использованию",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Готовность к реальному"
+          },
+          {
+            "index": 2,
+            "text": "использованию"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Готовность к реальному использованию",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#FFFFFF",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Готовность к реальному использованию",
+              "fontSize": 24,
+              "color": "#FFFFFF",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/03qpc3il",
+      "id": "22",
+      "bbox": [
+        782,
+        544,
+        336,
+        58
+      ],
+      "geometry": "rect",
+      "text": "Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.",
+      "textPreview": "Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Проект уже выглядит как продукт, который"
+          },
+          {
+            "index": 2,
+            "text": "можно демонстрировать, упаковывать и"
+          },
+          {
+            "index": 3,
+            "text": "постепенно выводить к аудитории."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#CBD5E1"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.",
+              "fontSize": 16,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/14zq58z6",
+      "id": "23",
+      "bbox": [
+        72,
+        668,
+        1136,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#344054",
+      "lineWidth": 1
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6do76t0j",
+      "id": "24",
+      "bbox": [
+        72,
+        686,
+        44,
+        18
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "color": "#CBD5E1",
+            "bold": true
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 12,
+              "color": "#CBD5E1",
+              "bold": true
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rexozeh4",
+      "id": "25",
+      "bbox": [
+        1020,
+        686,
+        188,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Shans · sales presentation",
+      "textPreview": "Shans · sales presentation",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "Calibri",
+        "color": "tx1",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Shans · sales presentation"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Shans · sales presentation",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "color": "#CBD5E1",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Shans · sales presentation",
+              "fontSize": 11,
+              "color": "#CBD5E1"
+            }
+          ],
+          "bulletCharacter": "",
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

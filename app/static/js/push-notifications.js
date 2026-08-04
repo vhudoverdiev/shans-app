@@ -31,11 +31,14 @@
         if (toggleButton) {
             toggleButton.dataset.enabled = enabled ? "true" : "false";
             toggleButton.setAttribute("aria-pressed", enabled ? "true" : "false");
+            const toggleLabel = enabled ? "Выключить уведомления" : "Включить уведомления";
+            toggleButton.setAttribute("aria-label", toggleLabel);
+            toggleButton.setAttribute("title", toggleLabel);
             if (toggleMobileLabel) {
-                toggleMobileLabel.textContent = enabled ? "Выключить" : "Включить";
+                toggleMobileLabel.textContent = toggleLabel;
             }
             if (toggleDesktopLabel) {
-                toggleDesktopLabel.textContent = enabled ? "Отключить уведомления" : "Включить уведомления";
+                toggleDesktopLabel.textContent = toggleLabel;
             }
             toggleButton.classList.toggle("btn-danger", enabled);
             toggleButton.classList.toggle("btn-primary", !enabled);

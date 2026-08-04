@@ -1,0 +1,45 @@
+{
+  "sourcePptx": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\Shans_sales_presentation_3_slides.pptx",
+  "mapPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-frame-map.json",
+  "output": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter.pptx",
+  "outputBytes": 3066202,
+  "sourceSlideCount": 3,
+  "slideCount": 3,
+  "previewDir": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-preview",
+  "layoutDir": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-layout",
+  "slides": [
+    {
+      "outputSlide": 1,
+      "sourceSlide": 1,
+      "narrativeRole": "capability overview",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 3,
+      "previewPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-preview\\starter-slide-01.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-01.png",
+      "layoutPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-layout\\starter-slide-01.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-01.layout.json"
+    },
+    {
+      "outputSlide": 2,
+      "sourceSlide": 2,
+      "narrativeRole": "module map",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 2,
+      "previewPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-preview\\starter-slide-02.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-02.png",
+      "layoutPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-layout\\starter-slide-02.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-02.layout.json"
+    },
+    {
+      "outputSlide": 3,
+      "sourceSlide": 3,
+      "narrativeRole": "platform services and security",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 3,
+      "previewPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-preview\\starter-slide-03.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-03.png",
+      "layoutPath": "C:\\Users\\Владимир\\Desktop\\Сайты\\Shans\\.codex_artifacts\\shans_crm_deck_edit\\template-starter-layout\\starter-slide-03.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-03.layout.json"
+    }
+  ]
+}

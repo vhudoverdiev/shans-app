@@ -972,7 +972,7 @@ class WebPushAssetsTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn('id="push-notifications-toggle"', template)
-        self.assertIn("<span data-push-toggle-mobile-label>Включить</span>", template)
+        self.assertIn("<span data-push-toggle-mobile-label>Включить уведомления</span>", template)
         self.assertIn('id="push-notifications-status"', template)
         self.assertIn('aria-live="polite" hidden', template)
         self.assertNotIn('id="account-push-inbox-trigger"', template)
@@ -981,14 +981,15 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertNotIn('id="push-notifications-test"', template)
         self.assertNotIn("account-push-desktop-only", template)
         self.assertNotIn("Уведомления личного графика", template)
-        self.assertNotIn("Включить уведомления", template)
+        self.assertIn("Включить уведомления", template)
         self.assertIn(".account-push-desktop-only", mobile_styles)
         self.assertIn("grid-template-columns: 1fr;", mobile_styles)
         self.assertIn(
             '.account-push-status:not([data-state="error"]):not([data-state="info"])',
             mobile_styles,
         )
-        self.assertIn('enabled ? "Выключить" : "Включить"', push_client)
+        self.assertIn('const toggleLabel = enabled ? "Выключить уведомления" : "Включить уведомления";', push_client)
+        self.assertIn('toggleButton.setAttribute("aria-label", toggleLabel);', push_client)
 
     def test_service_worker_handles_push_and_notification_click(self):
         service_worker = (

@@ -19,6 +19,14 @@
     text-decoration: none;
 }
 
+.nutrition-edit-back-link {
+    color: #6d28d9;
+}
+
+.nutrition-edit-back-link:hover {
+    color: #4c1d95;
+}
+
 .nutrition-hero {
     position: relative;
     display: flex;
@@ -756,8 +764,6 @@
     .nutrition-custom-food-page .nutrition-back-link,
     .nutrition-profile-edit-page .nutrition-back-link {
         display: inline-flex;
-        width: 100%;
-        justify-content: center;
         margin-bottom: 12px;
     }
 
@@ -985,6 +991,14 @@
     .nutrition-section-label,
     .nutrition-back-link {
         color: #475569;
+    }
+
+    .nutrition-edit-back-link {
+        color: var(--nutrition-blue);
+    }
+
+    .nutrition-edit-back-link:hover {
+        color: var(--nutrition-blue-dark);
     }
 
     .nutrition-hero-mark {
