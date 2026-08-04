@@ -753,6 +753,14 @@
         display: none;
     }
 
+    .nutrition-custom-food-page .nutrition-back-link,
+    .nutrition-profile-edit-page .nutrition-back-link {
+        display: inline-flex;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+
     .nutrition-hero {
         min-height: 0;
         padding: 26px 24px;

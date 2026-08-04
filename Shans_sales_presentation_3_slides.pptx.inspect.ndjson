@@ -1,0 +1,81 @@
+{"kind":"deck","id":"pr/uwk7am","name":"Deck"}
+{"kind":"layout","layoutId":"f43de275-0299-4c22-829e-eb4747c7e448","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"c5193b56-8f05-491b-9ef5-1b773a4cf4aa","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/o8lahc","slide":1,"title":"SHANS","textShapes":13}
+{"kind":"shape","id":"sh/1wzu5w7m","slide":1,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/etobuhov","slide":1,"bbox":[768,0,512,720]}
+{"kind":"textbox","id":"sh/cr6tsr6p","slide":1,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[132,48,120,22]}
+{"kind":"textbox","id":"sh/dsfa1c7a","slide":1,"text":"personal operating system","textPreview":"personal operating system","textChars":25,"textLines":1,"bbox":[132,70,220,18]}
+{"kind":"textbox","id":"sh/q5obqhoz","slide":1,"text":"Продающая презентация проекта","textPreview":"Продающая презентация проекта","textChars":29,"textLines":1,"bbox":[72,124,430,26]}
+{"kind":"textbox","id":"sh/r6xszmp4","slide":1,"text":"Shans превращает личные процессы в управляемую систему","textPreview":"Shans превращает личные процессы в управляемую систему","textChars":54,"textLines":1,"bbox":[72,178,635,188]}
+{"kind":"textbox","id":"sh/436to76t","slide":1,"text":"Единое веб-приложение для расписания, проектов, финансов, авто, обучения, спорта и питания. Не просто список функций, а рабочий контур на каждый день.","textPreview":"Единое веб-приложение для расписания, проектов, финансов, авто, обучения, спорта и питания. Не просто список функций, а рабочий контур на...","textChars":150,"textLines":1,"bbox":[72,396,600,86]}
+{"kind":"shape","id":"sh/p4faxc7e","slide":1,"bbox":[72,536,126,34]}
+{"kind":"textbox","id":"sh/t07u9kzi","slide":1,"text":"PWA","textPreview":"PWA","textChars":3,"textLines":1,"bbox":[72,544,126,18]}
+{"kind":"shape","id":"sh/szetgfyx","slide":1,"bbox":[212,536,126,34]}
+{"kind":"textbox","id":"sh/ry5c7uhs","slide":1,"text":"Push","textPreview":"Push","textChars":4,"textLines":1,"bbox":[212,544,126,18]}
+{"kind":"shape","id":"sh/6xwbepg7","slide":1,"bbox":[352,536,126,34]}
+{"kind":"textbox","id":"sh/5wnu5kzm","slide":1,"text":"2FA","textPreview":"2FA","textChars":3,"textLines":1,"bbox":[352,544,126,18]}
+{"kind":"shape","id":"sh/kvetcfy1","slide":1,"bbox":[492,536,126,34]}
+{"kind":"textbox","id":"sh/ju5c3ahg","slide":1,"text":"Excel","textPreview":"Excel","textChars":5,"textLines":1,"bbox":[492,544,126,18]}
+{"kind":"shape","id":"sh/itwba5gv","slide":1,"bbox":[812,88,430,528]}
+{"kind":"textbox","id":"sh/wrut8vy5","slide":1,"text":"1 интерфейс","textPreview":"1 интерфейс","textChars":11,"textLines":1,"bbox":[842,438,180,28]}
+{"kind":"textbox","id":"sh/obydof6l","slide":1,"text":"для всех ежедневных решений","textPreview":"для всех ежедневных решений","textChars":27,"textLines":1,"bbox":[842,474,278,24]}
+{"kind":"shape","id":"sh/9c7ux076","slide":1,"bbox":[72,668,1136,0]}
+{"kind":"textbox","id":"sh/m9gbm5ov","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[72,686,44,18]}
+{"kind":"textbox","id":"sh/napcvapg","slide":1,"text":"Shans · sales presentation","textPreview":"Shans · sales presentation","textChars":26,"textLines":1,"bbox":[1020,686,188,18]}
+{"kind":"image","id":"im/6lwjmt87","slide":1,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,46,44,44]}
+{"kind":"image","id":"im/i54fetwv","slide":1,"name":"","geometry":"roundRect","alt":"Интерфейс раздела обучения Shans","bbox":[834,112,386,254]}
+{"kind":"notes","id":"nt/o8lahc","slide":1,"text":"[Sources]\nЛокальный проект Shans: README.md, app/templates/*.html, app/routes.py. Визуальный источник: _codex_chat_files/english-desktop-blue-theme.png, app/static/logo.png."}
+{"kind":"slide","id":"sl/kx1ltl","slide":2,"title":"SHANS","textShapes":16}
+{"kind":"shape","id":"sh/4nal0r65","slide":2,"bbox":[0,0,1280,720]}
+{"kind":"textbox","id":"sh/ils3yhof","slide":2,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[132,48,120,22]}
+{"kind":"textbox","id":"sh/ds3mxwn2","slide":2,"text":"personal operating system","textPreview":"personal operating system","textChars":25,"textLines":1,"bbox":[132,70,220,18]}
+{"kind":"textbox","id":"sh/srul4b6h","slide":2,"text":"Три направления закрывают полный цикл дня","textPreview":"Три направления закрывают полный цикл дня","textChars":41,"textLines":1,"bbox":[72,128,920,50]}
+{"kind":"textbox","id":"sh/rql4v65w","slide":2,"text":"Shans связывает планирование, учет и развитие в одной логике: пользователь ставит задачи, фиксирует факты и видит прогресс без разрозненных инструментов.","textPreview":"Shans связывает планирование, учет и развитие в одной логике: пользователь ставит задачи, фиксирует факты и видит прогресс без разрозненн...","textChars":153,"textLines":1,"bbox":[72,188,920,58]}
+{"kind":"shape","id":"sh/qps321ob","slide":2,"bbox":[66,286,1110,248]}
+{"kind":"textbox","id":"sh/twz2lcni","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[106,324,44,24]}
+{"kind":"shape","id":"sh/8vqls76d","slide":2,"bbox":[162,336,232,0]}
+{"kind":"textbox","id":"sh/ut8nido7","slide":2,"text":"Планирование","textPreview":"Планирование","textChars":12,"textLines":1,"bbox":[106,366,290,34]}
+{"kind":"textbox","id":"sh/vuhobipc","slide":2,"text":"График, задачи, съемки и проекты собираются в один операционный день.","textPreview":"График, задачи, съемки и проекты собираются в один операционный день.","textChars":69,"textLines":1,"bbox":[106,412,292,76]}
+{"kind":"textbox","id":"sh/gfq5kn6x","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[446,324,44,24]}
+{"kind":"shape","id":"sh/hgz6ds7i","slide":2,"bbox":[502,336,232,0]}
+{"kind":"textbox","id":"sh/2h8nmxo3","slide":2,"text":"Учет","textPreview":"Учет","textChars":4,"textLines":1,"bbox":[446,366,290,34]}
+{"kind":"textbox","id":"sh/3ihof2po","slide":2,"text":"Бюджет, автомобиль, отчеты и Excel-экспорт превращают данные в контроль.","textPreview":"Бюджет, автомобиль, отчеты и Excel-экспорт превращают данные в контроль.","textChars":72,"textLines":1,"bbox":[446,412,292,76]}
+{"kind":"textbox","id":"sh/4japo769","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[786,324,44,24]}
+{"kind":"shape","id":"sh/pkj6hs7u","slide":2,"bbox":[842,336,232,0]}
+{"kind":"textbox","id":"sh/qls7qxof","slide":2,"text":"Развитие","textPreview":"Развитие","textChars":8,"textLines":1,"bbox":[786,366,290,34]}
+{"kind":"textbox","id":"sh/rm1oj2pk","slide":2,"text":"Обучение, тренировки и питание делают прогресс измеримым и регулярным.","textPreview":"Обучение, тренировки и питание делают прогресс измеримым и регулярным.","textChars":70,"textLines":1,"bbox":[786,412,292,76]}
+{"kind":"shape","id":"sh/nql472ls","slide":2,"bbox":[116,566,950,54]}
+{"kind":"textbox","id":"sh/mpsnex47","slide":2,"text":"Единая траектория: план → действие → факт → прогресс","textPreview":"Единая траектория: план → действие → факт → прогресс","textChars":52,"textLines":1,"bbox":[150,581,880,24]}
+{"kind":"shape","id":"sh/9c3m9c3y","slide":2,"bbox":[72,668,1136,0]}
+{"kind":"textbox","id":"sh/oru5g7md","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[72,686,44,18]}
+{"kind":"textbox","id":"sh/zm14325w","slide":2,"text":"Shans · sales presentation","textPreview":"Shans · sales presentation","textChars":26,"textLines":1,"bbox":[1020,686,188,18]}
+{"kind":"image","id":"im/y5of2x4n","slide":2,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,46,44,44]}
+{"kind":"notes","id":"nt/kx1ltl","slide":2,"text":"[Sources]\nЛокальный проект Shans: app/planner.py, app/routes.py, app/workouts.py, app/nutrition.py, app/learning.py. Визуальный источник: app/static/logo.png."}
+{"kind":"slide","id":"sl/yvwd1s","slide":3,"title":"SHANS","textShapes":16}
+{"kind":"shape","id":"sh/ml8j6pcz","slide":3,"bbox":[0,0,1280,720]}
+{"kind":"textbox","id":"sh/o7q18zu5","slide":3,"text":"SHANS","textPreview":"SHANS","textChars":5,"textLines":1,"bbox":[132,48,120,22]}
+{"kind":"textbox","id":"sh/zihkbato","slide":3,"text":"personal operating system","textPreview":"personal operating system","textChars":25,"textLines":1,"bbox":[132,70,220,18]}
+{"kind":"textbox","id":"sh/ehoj2pc3","slide":3,"text":"Почему проект можно продавать и развивать дальше","textPreview":"Почему проект можно продавать и развивать дальше","textChars":48,"textLines":1,"bbox":[72,136,650,96]}
+{"kind":"textbox","id":"sh/1kz2dkbu","slide":3,"text":"У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.","textPreview":"У Shans уже есть признаки зрелого продукта: мобильный сценарий, безопасность, уведомления, экспорт данных и модульная архитектура Flask.","textChars":136,"textLines":1,"bbox":[72,262,586,76]}
+{"kind":"shape","id":"sh/0jq14fu9","slide":3,"bbox":[72,392,176,104]}
+{"kind":"shape","id":"sh/je1knets","slide":3,"bbox":[280,392,176,104]}
+{"kind":"shape","id":"sh/yds3e9s7","slide":3,"bbox":[488,392,176,104]}
+{"kind":"textbox","id":"sh/cnqps76l","slide":3,"text":"PWA","textPreview":"PWA","textChars":3,"textLines":1,"bbox":[96,416,120,28]}
+{"kind":"textbox","id":"sh/doz6lc76","slide":3,"text":"установка на экран","textPreview":"установка на экран","textChars":18,"textLines":1,"bbox":[96,450,126,20]}
+{"kind":"textbox","id":"sh/q18nqxov","slide":3,"text":"Push","textPreview":"Push","textChars":4,"textLines":1,"bbox":[304,416,120,28]}
+{"kind":"textbox","id":"sh/bmhoj2pg","slide":3,"text":"события и Telegram","textPreview":"события и Telegram","textChars":18,"textLines":1,"bbox":[304,450,130,20]}
+{"kind":"textbox","id":"sh/ozq5on6p","slide":3,"text":"2FA","textPreview":"2FA","textChars":3,"textLines":1,"bbox":[512,416,120,28]}
+{"kind":"textbox","id":"sh/p0z6hs7a","slide":3,"text":"защита доступа","textPreview":"защита доступа","textChars":14,"textLines":1,"bbox":[512,450,126,20]}
+{"kind":"shape","id":"sh/2x8nmdoj","slide":3,"bbox":[72,532,592,0]}
+{"kind":"textbox","id":"sh/3yhofip4","slide":3,"text":"Главный продающий тезис","textPreview":"Главный продающий тезис","textChars":23,"textLines":1,"bbox":[72,560,260,24]}
+{"kind":"textbox","id":"sh/gv65kn6t","slide":3,"text":"Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.","textPreview":"Shans показывает конкретный порядок: что запланировано, что сделано, где деньги, где прогресс и что требует внимания.","textChars":117,"textLines":1,"bbox":[72,592,624,56]}
+{"kind":"shape","id":"sh/1wf6ds7y","slide":3,"bbox":[754,102,416,516]}
+{"kind":"textbox","id":"sh/wryl8zyh","slide":3,"text":"Готовность к реальному использованию","textPreview":"Готовность к реальному использованию","textChars":36,"textLines":1,"bbox":[782,468,330,62]}
+{"kind":"textbox","id":"sh/vqp4fehw","slide":3,"text":"Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.","textPreview":"Проект уже выглядит как продукт, который можно демонстрировать, упаковывать и постепенно выводить к аудитории.","textChars":110,"textLines":1,"bbox":[782,544,336,58]}
+{"kind":"shape","id":"sh/upg369gb","slide":3,"bbox":[72,668,1136,0]}
+{"kind":"textbox","id":"sh/9o7md4zq","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[72,686,44,18]}
+{"kind":"textbox","id":"sh/8nyl4zy5","slide":3,"text":"Shans · sales presentation","textPreview":"Shans · sales presentation","textChars":26,"textLines":1,"bbox":[1020,686,188,18]}
+{"kind":"image","id":"im/ojetsve5","slide":3,"name":"","geometry":"roundRect","alt":"Логотип Shans","bbox":[72,46,44,44]}
+{"kind":"image","id":"im/ixcny9sb","slide":3,"name":"","geometry":"roundRect","alt":"Настройки уведомлений и безопасности Shans","bbox":[778,126,368,300]}
+{"kind":"notes","id":"nt/yvwd1s","slide":3,"text":"[Sources]\nЛокальный проект Shans: app/static/site.webmanifest, app/static/service-worker.js, app/web_push.py, app/auth.py, app/routes.py, telegram_crm_push.py, README.md. Визуальный источник: _codex_chat_files/desktop-push-settings.png, app/static/logo.png."}

@@ -527,9 +527,11 @@ class NutritionTests(unittest.TestCase):
         self.assertNotIn("data-open-custom-food", template)
         self.assertNotIn('id="custom-food" hidden', template)
         self.assertNotIn("По этикетке", template)
+        self.assertIn('class="btn btn-secondary nutrition-back-link"', custom_template)
         self.assertIn("← Назад к питанию", custom_template)
         self.assertIn("url_for('nutrition.create_custom_food')", custom_template)
         self.assertIn("Сохранить продукт", custom_template)
+        self.assertIn('class="btn btn-secondary nutrition-back-link"', profile_edit_template)
         self.assertIn("← Назад к питанию", profile_edit_template)
         self.assertIn("url_for('nutrition.save_profile')", profile_edit_template)
         self.assertIn('name="profile_source" value="edit"', profile_edit_template)
@@ -548,6 +550,20 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("progress_insight.day_text", template)
         self.assertIn("progress_insight.protein_message", template)
         self.assertNotIn("autofocus", template)
+
+    def test_nutrition_edit_pages_keep_back_button_visible_on_mobile(self):
+        styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
+        mobile_block = styles.split("@media (max-width: 900px) and (pointer: coarse)", 1)[1].split(
+            "@media (hover: hover) and (pointer: fine)",
+            1,
+        )[0]
+
+        self.assertIn(".nutrition-back-link {\n        display: none;", mobile_block)
+        self.assertIn(".nutrition-custom-food-page .nutrition-back-link", mobile_block)
+        self.assertIn(".nutrition-profile-edit-page .nutrition-back-link", mobile_block)
+        self.assertIn("display: inline-flex;", mobile_block)
+        self.assertIn("width: 100%;", mobile_block)
+        self.assertIn("justify-content: center;", mobile_block)
 
     def test_custom_food_page_is_separate_from_catalog(self):
         app = self._create_app()
