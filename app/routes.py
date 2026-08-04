@@ -46,6 +46,7 @@ from app.access_control import (
     create_managed_user,
     get_managed_users,
     is_system_admin_user,
+    is_main_admin_user,
     update_managed_user,
 )
 from config import Config
@@ -1504,7 +1505,7 @@ def register_routes(app):
                 "current": item.get("current", False),
             })
         recovery_codes = session.get("account_recovery_codes", [])
-        can_manage_users = is_system_admin_user(current_user)
+        can_manage_users = is_main_admin_user(current_user)
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
@@ -1636,7 +1637,7 @@ def register_routes(app):
     @app.route("/account/settings/users/create", methods=["POST"])
     @login_required
     def create_account_user():
-        if not is_system_admin_user(current_user):
+        if not is_main_admin_user(current_user):
             return redirect(url_for("index"))
 
         form = build_managed_user_form(request.form)
@@ -1652,7 +1653,7 @@ def register_routes(app):
     @app.route("/account/settings/users/<int:user_id>", methods=["POST"])
     @login_required
     def update_account_user(user_id):
-        if not is_system_admin_user(current_user):
+        if not is_main_admin_user(current_user):
             return redirect(url_for("index"))
 
         display_name = request.form.get("display_name", "")

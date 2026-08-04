@@ -11,6 +11,7 @@ from app.access_control import (
     ManagedUserForm,
     create_managed_user,
     get_user_permissions,
+    is_main_admin_user,
 )
 from app.auth import load_user_from_db
 from app.database import get_connection, get_master_connection
@@ -188,6 +189,34 @@ class UserManagementTests(unittest.TestCase):
         self.assertNotIn('data-account-tab="users"', user_html)
         self.assertNotIn('data-account-panel="users"', user_html)
         self.assertNotIn("Создать пользователя", user_html)
+
+    def test_configured_admin_keeps_user_management_when_legacy_flag_is_missing(self):
+        admin_id = self._user_id("admin")
+        conn = get_master_connection()
+        try:
+            conn.execute(
+                "UPDATE users SET is_system_admin = 0 WHERE id = ?",
+                (admin_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        with self.app.test_request_context("/account/settings?tab=users"):
+            from flask_login import login_user
+
+            login_user(load_user_from_db(admin_id))
+            self.assertTrue(is_main_admin_user())
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            response = client.get("/account/settings?tab=users")
+            html = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('data-account-tab="users"', html)
+        self.assertIn('data-account-panel="users"', html)
+        self.assertIn('action="/account/settings/users/create"', html)
 
     def test_logout_all_devices_does_not_flash_service_notification(self):
         admin_id = self._user_id("admin")

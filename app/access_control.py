@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 import re
 from pathlib import Path
 
@@ -186,7 +187,86 @@ def normalize_username(value: str) -> str:
 
 def is_system_admin_user(user=None) -> bool:
     candidate = user or current_user
-    return bool(getattr(candidate, "is_system_admin", False))
+    return bool(getattr(candidate, "is_system_admin", False)) or is_main_admin_user(candidate)
+
+
+def _users_table_columns(conn) -> set[str]:
+    return {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+
+
+def _configured_main_admin_username() -> str:
+    return normalize_username(
+        os.getenv("MAIN_ADMIN_USERNAME")
+        or os.getenv("ADMIN_USERNAME")
+        or "admin"
+    )
+
+
+def _root_account_filter(columns: set[str]) -> str:
+    filters = ["COALESCE(is_active, 1) = 1"]
+    if "data_database_name" in columns:
+        filters.append("COALESCE(TRIM(data_database_name), '') = ''")
+    if "created_by_user_id" in columns:
+        filters.append("created_by_user_id IS NULL")
+    return " AND ".join(filters)
+
+
+def get_main_admin_user_id() -> int | None:
+    conn = get_master_connection()
+    try:
+        columns = _users_table_columns(conn)
+        configured_username = _configured_main_admin_username()
+        if configured_username:
+            row = conn.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE LOWER(username) = ?
+                  AND COALESCE(is_active, 1) = 1
+                LIMIT 1
+                """,
+                (configured_username,),
+            ).fetchone()
+            if row:
+                return int(row["id"])
+
+        root_filter = _root_account_filter(columns)
+        row = conn.execute(
+            f"""
+            SELECT id
+            FROM users
+            WHERE COALESCE(is_system_admin, 0) = 1
+              AND {root_filter}
+            ORDER BY id ASC
+            LIMIT 1
+            """
+        ).fetchone()
+        if row:
+            return int(row["id"])
+
+        row = conn.execute(
+            f"""
+            SELECT id
+            FROM users
+            WHERE {root_filter}
+            ORDER BY id ASC
+            LIMIT 1
+            """
+        ).fetchone()
+        return int(row["id"]) if row else None
+    finally:
+        conn.close()
+
+
+def is_main_admin_user(user=None) -> bool:
+    candidate = user or current_user
+    if not getattr(candidate, "is_authenticated", False):
+        return False
+    try:
+        candidate_id = int(getattr(candidate, "id"))
+    except (TypeError, ValueError):
+        return False
+    return candidate_id == get_main_admin_user_id()
 
 
 def is_managed_user(user_id: int) -> bool:

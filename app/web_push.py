@@ -17,6 +17,7 @@ from flask_login import current_user, login_required
 from pywebpush import WebPushException, webpush
 
 from app.database import get_connection
+from app.access_control import get_main_admin_user_id
 from app.schedule_notifications import build_personal_tasks_text, build_work_tasks_text
 
 
@@ -1192,23 +1193,10 @@ def _clean_external_push_text(value: object, fallback: str, max_length: int) -> 
 
 
 def _resolve_system_admin_user_ids() -> list[int]:
-    conn = get_connection()
-    try:
-        rows = conn.execute(
-            """
-            SELECT id
-            FROM users
-            WHERE COALESCE(is_system_admin, 0) = 1
-              AND COALESCE(is_active, 1) = 1
-            ORDER BY id ASC
-            """
-        ).fetchall()
-    finally:
-        conn.close()
-    user_ids = [int(row["id"]) for row in rows]
-    if not user_ids:
+    user_id = get_main_admin_user_id()
+    if user_id is None:
         raise LookupError("System administrator is not configured.")
-    return user_ids
+    return [user_id]
 
 
 def _resolve_external_push_user_ids(_payload: dict) -> list[int]:

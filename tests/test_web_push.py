@@ -48,9 +48,11 @@ class WebPushSchedulingTests(unittest.TestCase):
     def setUp(self):
         self.original_database_name = Config.DATABASE_NAME
         self.original_telegram_push_secret = Config.TELEGRAM_PUSH_SECRET
+        self.original_admin_username = os.environ.get("ADMIN_USERNAME")
         self.temp_directory = tempfile.TemporaryDirectory()
         Config.DATABASE_NAME = str(Path(self.temp_directory.name) / "test.db")
         Config.TELEGRAM_PUSH_SECRET = ""
+        os.environ["ADMIN_USERNAME"] = "admin"
         conn = self._connect()
         conn.execute(
             """
@@ -100,6 +102,10 @@ class WebPushSchedulingTests(unittest.TestCase):
     def tearDown(self):
         Config.DATABASE_NAME = self.original_database_name
         Config.TELEGRAM_PUSH_SECRET = self.original_telegram_push_secret
+        if self.original_admin_username is None:
+            os.environ.pop("ADMIN_USERNAME", None)
+        else:
+            os.environ["ADMIN_USERNAME"] = self.original_admin_username
         self.temp_directory.cleanup()
 
     def _connect(self):
@@ -714,7 +720,7 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(get_unread_push_notifications(1), ([], 0))
 
-    def test_external_telegram_notification_targets_active_system_admins(self):
+    def test_external_telegram_notification_targets_only_main_admin(self):
         conn = self._connect()
         conn.execute("UPDATE users SET is_system_admin = 1 WHERE id = 2")
         conn.commit()
@@ -740,12 +746,9 @@ class WebPushSchedulingTests(unittest.TestCase):
                 }
             )
 
-        self.assertEqual(result, (2, 0))
-        self.assertEqual(send_mock.call_count, 2)
-        self.assertEqual(
-            {call.args[0]["user_id"] for call in send_mock.call_args_list},
-            {1, 2},
-        )
+        self.assertEqual(result, (1, 0))
+        send_mock.assert_called_once()
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
         notifications, unread_count = get_unread_push_notifications(1)
         self.assertEqual(unread_count, 1)
         self.assertEqual(notifications[0]["title"], "Render finished")
@@ -753,9 +756,7 @@ class WebPushSchedulingTests(unittest.TestCase):
             notifications[0]["body"],
             "The local script completed successfully.",
         )
-        second_notifications, second_unread_count = get_unread_push_notifications(2)
-        self.assertEqual(second_unread_count, 1)
-        self.assertEqual(second_notifications[0]["title"], "Render finished")
+        self.assertEqual(get_unread_push_notifications(2), ([], 0))
 
     def test_external_telegram_notification_uses_vk_accounts_fallback_title(self):
         save_subscription(
@@ -776,6 +777,39 @@ class WebPushSchedulingTests(unittest.TestCase):
         notifications, unread_count = get_unread_push_notifications(1)
         self.assertEqual(unread_count, 1)
         self.assertEqual(notifications[0]["title"], "Вк аккануты")
+
+    def test_external_telegram_notification_targets_configured_legacy_admin(self):
+        conn = self._connect()
+        conn.execute("UPDATE users SET is_system_admin = 0 WHERE id = 1")
+        conn.execute("UPDATE users SET is_system_admin = 1 WHERE id = 2")
+        conn.commit()
+        conn.close()
+
+        save_subscription(
+            1,
+            self._subscription_payload(),
+            "https://shans.example.test",
+        )
+        save_subscription(
+            2,
+            self._subscription_payload("https://push.example.test/subscription/2"),
+            "https://shans.example.test",
+        )
+
+        with patch("app.web_push._send_to_subscription") as send_mock:
+            result = send_external_telegram_notification(
+                {
+                    "title": "Render finished",
+                    "body": "The local script completed successfully.",
+                    "navigate_path": "/",
+                }
+            )
+
+        self.assertEqual(result, (1, 0))
+        send_mock.assert_called_once()
+        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
+        self.assertEqual(get_unread_push_notifications(1)[1], 1)
+        self.assertEqual(get_unread_push_notifications(2), ([], 0))
 
     def test_external_telegram_notification_ignores_recipient_override_for_non_admin(self):
         save_subscription(
