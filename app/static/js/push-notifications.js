@@ -109,6 +109,14 @@
         return subscription;
     }
 
+    async function refreshServerSubscriptionState() {
+        if (!subscription || !card.dataset.statusUrl) return true;
+        const payload = await apiRequest(card.dataset.statusUrl, {
+            endpoint: subscription.endpoint,
+        });
+        return Boolean(payload.serverSubscribed);
+    }
+
     async function initialize() {
         if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
             setStatus("Это устройство не поддерживает Web Push.", "error");
@@ -148,6 +156,11 @@
                 subscription: subscription.toJSON(),
                 origin: window.location.origin,
             });
+            const serverSubscribed = await refreshServerSubscriptionState();
+            if (!serverSubscribed) {
+                setStatus("Браузер разрешил уведомления, но CRM не видит подписку. Нажмите «Выключить», затем снова «Включить».", "error");
+                return;
+            }
             setStatus("Уведомления личного графика включены на этом устройстве.", "success");
         } else if (subscriptionKeyWasUpdated) {
             setStatus("Ключ уведомлений обновлён. Нажмите «Включить уведомления», чтобы восстановить подписку.", "info");
@@ -187,6 +200,10 @@
         }
         subscription = newSubscription;
         await refreshSubscriptionState();
+        const serverSubscribed = await refreshServerSubscriptionState();
+        if (!serverSubscribed) {
+            throw new Error("CRM не сохранила push-подписку. Нажмите «Выключить», затем снова «Включить».");
+        }
         setStatus("Уведомления личного графика включены на этом устройстве.", "success");
     }
 

@@ -264,6 +264,25 @@ def delete_subscription(user_id: int, endpoint: str) -> bool:
         conn.close()
 
 
+def has_subscription(user_id: int, endpoint: str) -> bool:
+    if not endpoint:
+        return False
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT 1
+            FROM web_push_subscriptions
+            WHERE user_id = ? AND endpoint = ?
+            LIMIT 1
+            """,
+            (user_id, endpoint),
+        ).fetchone()
+        return row is not None
+    finally:
+        conn.close()
+
+
 def _get_subscriptions(user_id: int | None = None, endpoint: str | None = None):
     clauses = []
     params: list[object] = []
@@ -1307,6 +1326,20 @@ def register_web_push_routes(app) -> None:
         except ValueError as exc:
             return jsonify({"ok": False, "message": str(exc)}), 400
         return jsonify({"ok": True, "message": "Уведомления включены."})
+
+    @app.post("/api/push/status")
+    @login_required
+    def web_push_status():
+        payload = request.get_json(silent=True) or {}
+        endpoint = str(payload.get("endpoint") or "").strip()
+        if not endpoint:
+            return jsonify({"ok": True, "serverSubscribed": False})
+        return jsonify(
+            {
+                "ok": True,
+                "serverSubscribed": has_subscription(int(current_user.id), endpoint),
+            }
+        )
 
     @app.post("/api/push/unsubscribe")
     @login_required

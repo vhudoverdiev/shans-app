@@ -73,6 +73,10 @@ class WebPushSchedulingTests(unittest.TestCase):
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL DEFAULT 'test-password-hash',
+                otp_enabled INTEGER NOT NULL DEFAULT 0,
+                avatar_filename TEXT,
+                display_name TEXT,
                 is_system_admin INTEGER NOT NULL DEFAULT 0,
                 is_active INTEGER NOT NULL DEFAULT 1
             )
@@ -850,6 +854,41 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(payload["sent"], 0)
         self.assertEqual(payload["failed"], 0)
 
+    def test_push_status_reports_whether_server_has_current_subscription(self):
+        with patch.dict(os.environ, {"WERKZEUG_RUN_MAIN": "false"}):
+            app = create_app()
+        app.config["TESTING"] = True
+        csrf_token = "test-csrf-token"
+        subscription = self._subscription_payload()
+
+        with app.test_client() as client:
+            with client.session_transaction() as session:
+                session["_user_id"] = "1"
+                session["_fresh"] = True
+                session["_csrf_token"] = csrf_token
+
+            missing_response = client.post(
+                "/api/push/status",
+                json={"endpoint": subscription["endpoint"]},
+                headers={"X-CSRFToken": csrf_token},
+            )
+
+            save_subscription(
+                1,
+                subscription,
+                "https://shans.example.test",
+            )
+            present_response = client.post(
+                "/api/push/status",
+                json={"endpoint": subscription["endpoint"]},
+                headers={"X-CSRFToken": csrf_token},
+            )
+
+        self.assertEqual(missing_response.status_code, 200)
+        self.assertFalse(missing_response.get_json()["serverSubscribed"])
+        self.assertEqual(present_response.status_code, 200)
+        self.assertTrue(present_response.get_json()["serverSubscribed"])
+
     def test_payload_is_declarative_and_has_absolute_navigation_url(self):
         candidate = PushCandidate(
             key="task:1:2026-07-21:12:00",
@@ -1005,6 +1044,7 @@ class WebPushAssetsTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn('id="push-notifications-toggle"', template)
+        self.assertIn('data-status-url', template)
         self.assertIn("<span data-push-toggle-mobile-label>Включить</span>", template)
         self.assertIn('id="push-notifications-status"', template)
         self.assertIn('aria-live="polite" hidden', template)
@@ -1023,6 +1063,9 @@ class WebPushAssetsTests(unittest.TestCase):
         )
         self.assertIn('const toggleLabel = enabled ? "Выключить" : "Включить";', push_client)
         self.assertIn('toggleButton.setAttribute("aria-label", toggleLabel);', push_client)
+        self.assertIn("refreshServerSubscriptionState", push_client)
+        self.assertIn("serverSubscribed", push_client)
+        self.assertIn("CRM не видит подписку", push_client)
 
     def test_service_worker_handles_push_and_notification_click(self):
         service_worker = (
