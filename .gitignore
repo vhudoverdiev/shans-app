@@ -9,3 +9,8 @@ logs/
 backups/
 instance/
 app/static/uploads/
+_tmp/
+_chat_files/
+.agents/
+.pytest_cache/
+.*artifacts*/
