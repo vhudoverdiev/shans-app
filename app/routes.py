@@ -117,11 +117,13 @@ from app.models import (
     update_shooting,
     get_user_by_id,
     get_login_session_owner,
+    get_car_name,
     get_system_password,
     set_user_avatar_filename,
     set_user_last_login_ip,
     set_user_otp,
     set_user_password_hash,
+    set_car_name,
     set_system_password,
     upsert_user_login_session,
     deactivate_user_login_session,
@@ -1198,7 +1200,11 @@ def register_routes(app):
     @app.route("/")
     @login_required
     def index():
-        return render_template("index.html", username=current_user.username)
+        return render_template(
+            "index.html",
+            username=current_user.username,
+            car_name=get_car_name(),
+        )
 
     @app.route("/shootings-hub")
     @login_required
@@ -1666,8 +1672,13 @@ def register_routes(app):
         try:
             update_managed_user(user_id, display_name, password, permissions)
         except ValueError as exc:
+            if request.headers.get("X-Requested-With") == "fetch":
+                return jsonify({"ok": False, "message": str(exc)}), 400
             flash(str(exc), "danger")
             return redirect(url_for("account_settings", tab="users"))
+
+        if request.headers.get("X-Requested-With") == "fetch":
+            return jsonify({"ok": True, "message": "Пользователь обновлён."})
 
         flash("Пользователь обновлён.", "success")
         return redirect(url_for("account_settings", tab="users"))
@@ -2733,7 +2744,22 @@ def register_routes(app):
             max_mileage=max_mileage,
             planned_count=len(prepared_planned_services),
             done_count=len(prepared_done_services),
+            car_name=get_car_name(),
         )
+
+    @app.route("/car/name", methods=["GET", "POST"])
+    @login_required
+    def car_name_edit():
+        if request.method == "POST":
+            car_name = request.form.get("car_name", "").strip()
+            if not set_car_name(car_name):
+                flash("Укажите марку и модель машины не длиннее 80 символов.", "error")
+                return redirect(url_for("car_name_edit"))
+
+            flash("Марка машины обновлена.", "success")
+            return redirect(url_for("car"))
+
+        return render_template("car_name_edit.html", car_name=get_car_name())
 
     @app.route("/car/import-excel", methods=["POST"])
     @login_required
@@ -3065,7 +3091,7 @@ def register_routes(app):
 
             return redirect(url_for("car"))
 
-        return render_template("car_manage.html")
+        return render_template("car_manage.html", car_name=get_car_name())
 
     @app.route("/car/done/edit/<int:service_id>", methods=["GET", "POST"])
     @login_required
@@ -3295,6 +3321,7 @@ def register_routes(app):
             need_replacement_count=len(need_notifications),
             soon_count=len(soon_notifications),
             archive_count=len(archived_notifications),
+            car_name=get_car_name(),
         )
         
     @app.route("/car/notifications/to-work", methods=["POST"])

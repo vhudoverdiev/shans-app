@@ -294,7 +294,7 @@
                 {% if managed_users %}
                 <div class="account-managed-users">
                     {% for user in managed_users %}
-                    <form method="post" action="{{ url_for('update_account_user', user_id=user.id) }}" class="account-managed-user-card">
+                    <form method="post" action="{{ url_for('update_account_user', user_id=user.id) }}" class="account-managed-user-card" data-managed-user-form>
                         <div class="account-managed-user-head">
                             <div>
                                 <div class="account-managed-user-login">{{ user.username }}</div>
@@ -326,7 +326,7 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary">Сохранить пользователя</button>
+                        <p class="account-managed-user-save-status" data-managed-user-save-status role="status" aria-live="polite" hidden></p>
                     </form>
                     {% endfor %}
                 </div>
@@ -389,21 +389,113 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    function activateTab(target) {
+    function syncTabUrl(target) {
+        if (!target || !allowedTabs.has(target) || !window.history || !window.history.replaceState) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", target);
+        window.history.replaceState(null, "", url);
+    }
+
+    function activateTab(target, shouldSyncUrl) {
         if (!target) return;
         tabButtons.forEach(function (btn) { btn.classList.toggle("btn-tab-active", btn.dataset.accountTab === target); });
         tabPanels.forEach(function (panel) { panel.classList.toggle("account-tab-content-active", panel.dataset.accountPanel === target); });
+        if (shouldSyncUrl) syncTabUrl(target);
     }
 
     tabButtons.forEach(function (button) {
         button.addEventListener("click", function () {
-            activateTab(button.dataset.accountTab);
+            activateTab(button.dataset.accountTab, true);
         });
     });
 
     const tabFromUrl = new URLSearchParams(window.location.search).get("tab");
     const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "security";
     activateTab(initialTab);
+
+    function setManagedUserStatus(statusElement, message, isError) {
+        if (!statusElement) return;
+        statusElement.textContent = message;
+        statusElement.hidden = !message;
+        statusElement.classList.toggle("account-managed-user-save-status-error", Boolean(isError));
+    }
+
+    async function autosaveManagedUserForm(form) {
+        if (!form) return;
+        if (form.dataset.managedUserSaving === "1") {
+            form.dataset.managedUserPending = "1";
+            return;
+        }
+
+        const statusElement = form.querySelector("[data-managed-user-save-status]");
+        const csrfMeta = document.querySelector("meta[name='csrf-token']");
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+        const passwordInput = form.querySelector('input[name="password"]');
+
+        if (passwordInput && passwordInput.value && passwordInput.value.length < 8) {
+            setManagedUserStatus(statusElement, "Пароль должен быть не короче 8 символов.", true);
+            return;
+        }
+
+        form.dataset.managedUserSaving = "1";
+        setManagedUserStatus(statusElement, "Сохраняем...", false);
+
+        try {
+            const formData = new FormData(form);
+            if (csrfToken && !formData.has("_csrf_token")) {
+                formData.append("_csrf_token", csrfToken);
+            }
+
+            const response = await window.fetch(form.action, {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin",
+                headers: {
+                    "X-Requested-With": "fetch",
+                    "X-CSRFToken": csrfToken,
+                },
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                throw new Error(payload.message || "Не удалось сохранить.");
+            }
+
+            if (passwordInput) passwordInput.value = "";
+            setManagedUserStatus(statusElement, "Сохранено", false);
+            window.setTimeout(function () {
+                if (form.dataset.managedUserSaving !== "1") {
+                    setManagedUserStatus(statusElement, "", false);
+                }
+            }, 1800);
+        } catch (error) {
+            setManagedUserStatus(statusElement, error.message || "Не удалось сохранить.", true);
+        } finally {
+            form.dataset.managedUserSaving = "0";
+            if (form.dataset.managedUserPending === "1") {
+                form.dataset.managedUserPending = "0";
+                autosaveManagedUserForm(form);
+            }
+        }
+    }
+
+    document.querySelectorAll("[data-managed-user-form]").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            autosaveManagedUserForm(form);
+        });
+
+        form.querySelectorAll('input[name="permissions"]').forEach(function (checkbox) {
+            checkbox.addEventListener("change", function () {
+                autosaveManagedUserForm(form);
+            });
+        });
+
+        form.querySelectorAll('input[name="display_name"], input[name="password"]').forEach(function (input) {
+            input.addEventListener("change", function () {
+                autosaveManagedUserForm(form);
+            });
+        });
+    });
 
     const avatarInput = document.getElementById("avatar_file");
     const avatarForm = document.getElementById("avatar-upload-form");

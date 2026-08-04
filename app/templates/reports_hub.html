@@ -5,6 +5,7 @@
 {% block content %}
 <section class="dashboard-page hub-page section-styled-page">
     <div class="dashboard-grid hub-grid hub-grid-compact">
+        {% if has_section_access('budget') %}
         <a href="{{ url_for('budget') }}" class="dashboard-card dashboard-card-featured">
             <div class="dashboard-card-icon dashboard-card-icon-green" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -16,7 +17,9 @@
             <div class="dashboard-card-text">Доходы, расходы, баланс и подробные финансовые отчёты.</div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
 
+        {% if has_section_access('car') %}
         <a href="{{ url_for('car') }}" class="dashboard-card">
             <div class="dashboard-card-icon dashboard-card-icon-slate" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -29,6 +32,7 @@
             <div class="dashboard-card-text">Обслуживание, запланированные работы и история автомобиля.</div>
             <span class="dashboard-card-arrow" aria-hidden="true">→</span>
         </a>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

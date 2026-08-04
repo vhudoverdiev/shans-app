@@ -787,11 +787,13 @@
     }
 
     .app-bottom-nav {
+        --app-bottom-nav-width: 720px;
         position: fixed;
-        left: max(10px, env(safe-area-inset-left));
-        right: max(10px, env(safe-area-inset-right));
+        left: 50%;
+        right: auto;
         bottom: 0;
         z-index: 260;
+        width: min(calc(100vw - 20px), var(--app-bottom-nav-width));
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 4px;
@@ -802,12 +804,46 @@
         box-shadow: 0 18px 46px rgba(15, 23, 42, 0.2);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
+        transform: translate3d(-50%, 0, 0);
+    }
+
+    .app-bottom-nav[data-nav-count="1"] {
+        --app-bottom-nav-width: 224px;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-bottom-nav[data-nav-count="2"] {
+        --app-bottom-nav-width: 336px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .app-bottom-nav[data-nav-count="3"] {
+        --app-bottom-nav-width: 454px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .app-bottom-nav[data-nav-count="4"] {
+        --app-bottom-nav-width: 560px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .app-bottom-nav[data-nav-count="5"] {
+        --app-bottom-nav-width: 640px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .app-bottom-nav[data-nav-count="1"] .app-bottom-nav-link,
+    .app-bottom-nav[data-nav-count="2"] .app-bottom-nav-link {
+        min-height: 56px;
+        flex-direction: row;
+        gap: 8px;
+        padding: 8px 14px;
     }
 
     html.shans-standalone-app .app-bottom-nav {
         bottom: 0;
         padding: 7px;
-        transform: translate3d(0, 0, 0);
+        transform: translate3d(-50%, 0, 0);
         will-change: transform;
     }
 
@@ -855,6 +891,11 @@
         line-height: 1.1;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .app-bottom-nav[data-nav-count="1"] .app-bottom-nav-link span,
+    .app-bottom-nav[data-nav-count="2"] .app-bottom-nav-link span {
+        font-size: 12px;
     }
 
     .mobile-push-inbox-trigger {

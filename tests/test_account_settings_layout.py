@@ -6,6 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
 ACCOUNT_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "account_settings.html"
+SETUP_2FA_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "setup_2fa.html"
 
 
 class AccountSettingsLayoutTests(unittest.TestCase):
@@ -19,6 +20,9 @@ class AccountSettingsLayoutTests(unittest.TestCase):
         self.assertNotIn('data-account-tab="security"', template)
         self.assertNotIn(">Безопасность</button>", template)
         self.assertIn('const initialTab = tabFromUrl && allowedTabs.has(tabFromUrl) ? tabFromUrl : "security";', template)
+        self.assertIn("function syncTabUrl(target)", template)
+        self.assertIn("window.history.replaceState", template)
+        self.assertIn("activateTab(button.dataset.accountTab, true)", template)
         self.assertRegex(
             mobile_styles,
             r"\.account-nav\s*\{\s*display:\s*none;",
@@ -36,6 +40,11 @@ class AccountSettingsLayoutTests(unittest.TestCase):
         self.assertIn("account-users-desktop-only", template)
         self.assertIn("url_for('create_account_user')", template)
         self.assertIn("available_sections.items()", template)
+        self.assertIn("data-managed-user-form", template)
+        self.assertIn("data-managed-user-save-status", template)
+        self.assertIn("autosaveManagedUserForm", template)
+        self.assertIn("managedUserPending", template)
+        self.assertNotIn("Сохранить пользователя", template)
         self.assertRegex(
             mobile_styles,
             r"\.account-users-desktop-only\s*\{\s*display:\s*none\s*!important;",
@@ -55,6 +64,14 @@ class AccountSettingsLayoutTests(unittest.TestCase):
         self.assertRegex(
             stylesheet,
             r"\.account-inline-notice\[hidden\]\s*\{\s*display:\s*none;\s*\}",
+        )
+
+    def test_logout_all_devices_button_has_room_below_login_history(self):
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            stylesheet,
+            r"\.account-card\s+\.account-logout-all-form\s*\{[^}]*display:\s*block;[^}]*margin-top:\s*24px;",
         )
 
     def test_authenticator_code_is_hidden_until_disable_is_requested(self):
@@ -85,6 +102,12 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             stylesheet,
             r"\.account-2fa-disable-form\[hidden\]\s*\{\s*display:\s*none;",
         )
+
+    def test_setup_2fa_page_has_back_button_to_account_settings(self):
+        template = SETUP_2FA_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn("url_for('account_settings')", template)
+        self.assertIn('class="btn btn-secondary">Назад</a>', template)
 
     def test_push_notifications_card_is_available_on_desktop(self):
         template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")

@@ -555,10 +555,7 @@ class WorkoutsTests(unittest.TestCase):
             '<div class="dashboard-grid dashboard-grid-mobile dashboard-primary-grid">',
             1,
         )
-        top_nav, bottom_nav = base.split(
-            '<nav class="app-bottom-nav" aria-label="Основная навигация">',
-            1,
-        )
+        top_nav, bottom_nav = base.split('<nav class="app-bottom-nav"', 1)
 
         self.assertIn("url_for('learning.study_hub')", desktop_grid)
         self.assertIn("url_for('learning.study_hub')", mobile_grid)

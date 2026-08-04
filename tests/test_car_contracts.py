@@ -13,6 +13,7 @@ from app.models import (
     create_car_planned_service_from_notification,
     delete_archived_car_notification,
     get_archived_car_notifications,
+    get_car_name,
     get_car_done_service_by_id,
     get_car_done_services,
     get_car_last_mileage,
@@ -26,6 +27,7 @@ from app.models import (
     init_car_notification_archive,
     is_car_notification_hidden,
     move_planned_to_done,
+    set_car_name,
     update_car_done_service,
     update_car_planned_service,
 )
@@ -173,6 +175,17 @@ class CarModelContractTests(unittest.TestCase):
 
         self.assertEqual([row["service_name"] for row in planned], ["Inspection"])
         self.assertEqual([row["service_name"] for row in done], ["Oil"])
+
+    def test_car_name_setting_has_default_and_can_be_updated_once_for_all_car_pages(self):
+        self.assertEqual(get_car_name(), "Volkswagen Polo 2018")
+
+        self.assertTrue(set_car_name("Toyota Camry 2020"))
+
+        self.assertEqual(get_car_name(), "Toyota Camry 2020")
+        self.assertFalse(set_car_name("   "))
+        self.assertEqual(get_car_name(), "Toyota Camry 2020")
+        self.assertFalse(set_car_name("A" * 81))
+        self.assertEqual(get_car_name(), "Toyota Camry 2020")
 
 
 class CarRouteContractTests(unittest.TestCase):
@@ -329,6 +342,32 @@ class CarRouteContractTests(unittest.TestCase):
         self.assertEqual(planned_response.status_code, 302)
         self.assertEqual([row["service_name"] for row in get_car_done_services()], ["Tires"])
         self.assertEqual([row["service_name"] for row in get_car_planned_services()], ["Detail"])
+
+    def test_car_name_edit_updates_shared_title_across_car_views(self):
+        with self.app.test_client() as client:
+            self._login(client)
+
+            default_car_page = client.get("/car").get_data(as_text=True)
+            self.assertIn("Volkswagen Polo 2018", default_car_page)
+            self.assertIn('href="/car/name"', default_car_page)
+
+            empty_response = client.post(
+                "/car/name",
+                data={"_csrf_token": "test-token", "car_name": "   "},
+            )
+            self.assertEqual(empty_response.status_code, 302)
+            self.assertEqual(get_car_name(), "Volkswagen Polo 2018")
+
+            update_response = client.post(
+                "/car/name",
+                data={"_csrf_token": "test-token", "car_name": "Toyota Camry 2020"},
+            )
+            self.assertEqual(update_response.status_code, 302)
+
+            for path in ("/", "/car", "/car/manage", "/car/notifications"):
+                html = client.get(path).get_data(as_text=True)
+                self.assertIn("Toyota Camry 2020", html)
+                self.assertNotIn("Volkswagen Polo 2018", html)
 
 
 if __name__ == "__main__":

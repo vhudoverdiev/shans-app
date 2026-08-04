@@ -200,6 +200,37 @@ def set_system_password(new_password):
     conn.close()
 
 
+DEFAULT_CAR_NAME = "Volkswagen Polo 2018"
+
+
+def get_car_name():
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT value FROM app_settings WHERE key = 'car_name'"
+    ).fetchone()
+    conn.close()
+    return ((row["value"] if row else "") or DEFAULT_CAR_NAME).strip()
+
+
+def set_car_name(car_name):
+    normalized_name = (car_name or "").strip()
+    if not normalized_name or len(normalized_name) > 80:
+        return False
+
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value)
+        VALUES ('car_name', ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (normalized_name,),
+    )
+    conn.commit()
+    conn.close()
+    return True
+
+
 # =========================================================
 # BUDGET
 # =========================================================

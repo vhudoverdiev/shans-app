@@ -591,8 +591,9 @@ a {
     flex: 1 1 190px;
 }
 
-.account-logout-all-form {
-    margin-top: 16px;
+.account-card .account-logout-all-form {
+    display: block;
+    margin-top: 24px;
 }
 
 .account-push-mobile-only {
@@ -948,6 +949,21 @@ a {
     color: #0f172a;
     font-size: 17px;
     font-weight: 800;
+}
+
+.account-managed-user-save-status {
+    margin: 2px 0 0;
+    color: #059669;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.account-managed-user-save-status[hidden] {
+    display: none;
+}
+
+.account-managed-user-save-status-error {
+    color: #dc2626;
 }
 
 .avatar-file-label:visited,
@@ -3531,6 +3547,11 @@ html.login-centered-document .page-shell {
 
 .car-stats-grid {
     margin-bottom: 24px;
+}
+
+.car-page .page-title,
+.car-page .car-form-head-title {
+    overflow-wrap: anywhere;
 }
 
 .car-tab-bar {

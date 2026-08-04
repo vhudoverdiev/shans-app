@@ -106,6 +106,32 @@ class SectionAccessContractTests(unittest.TestCase):
         self.assertEqual(delete_all_response.status_code, 403)
         self.assertEqual(len(get_all_budget_entries()), 1)
 
+    def test_reports_hub_only_shows_cards_for_granted_report_sections(self):
+        budget_user_id = self._create_managed_user("budget_report_only", {"budget"})
+        car_user_id = self._create_managed_user("car_report_only", {"car"})
+
+        with self.app.test_client() as client:
+            self._login(client, budget_user_id)
+            budget_response = client.get("/reports")
+            budget_html = budget_response.get_data(as_text=True)
+
+        self.assertEqual(budget_response.status_code, 200)
+        self.assertIn('href="/budget"', budget_html)
+        self.assertIn("Бюджет", budget_html)
+        self.assertNotIn('href="/car"', budget_html)
+        self.assertNotIn("Машина", budget_html)
+
+        with self.app.test_client() as client:
+            self._login(client, car_user_id)
+            car_response = client.get("/reports")
+            car_html = car_response.get_data(as_text=True)
+
+        self.assertEqual(car_response.status_code, 200)
+        self.assertIn('href="/car"', car_html)
+        self.assertIn("Машина", car_html)
+        self.assertNotIn('href="/budget"', car_html)
+        self.assertNotIn("Бюджет", car_html)
+
     def test_schedule_bulk_delete_endpoints_require_schedule_permission(self):
         user_id = self._create_managed_user("budget_only", {"budget"})
         create_task("Personal protected", "2026-07-21", calendar_type=CALENDAR_PERSONAL)

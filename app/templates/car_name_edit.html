@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать марку | Шанс{% endblock %}
+
+{% block content %}
+<section class="car-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Редактировать марку</h1>
+        </div>
+
+        <div class="page-actions">
+            <a href="{{ url_for('car') }}" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+    <div class="card edit-card car-form-card">
+        <div class="car-form-head">
+            <div class="car-form-head-title">{{ car_name }}</div>
+            <div class="car-form-head-text">Название будет обновлено во всех разделах машины</div>
+        </div>
+
+        <form method="post" class="form-block">
+            <div class="car-form-grid">
+                <div class="form-group car-form-full">
+                    <label for="car_name">Марка и модель</label>
+                    <input
+                        type="text"
+                        id="car_name"
+                        name="car_name"
+                        class="form-input"
+                        value="{{ car_name }}"
+                        maxlength="80"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="car-form-actions">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('car') }}" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

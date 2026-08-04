@@ -230,6 +230,14 @@ def init_db(database_name=None):
             "INSERT INTO app_settings (key, value) VALUES (?, ?)",
             ("system_password", default_import_password),
         )
+    existing_car_name = cursor.execute(
+        "SELECT value FROM app_settings WHERE key = 'car_name'"
+    ).fetchone()
+    if not existing_car_name:
+        cursor.execute(
+            "INSERT INTO app_settings (key, value) VALUES (?, ?)",
+            ("car_name", "Volkswagen Polo 2018"),
+        )
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (
@@ -252,12 +260,40 @@ def init_db(database_name=None):
         )
     """)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS car_notification_hidden (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        notification_key TEXT NOT NULL UNIQUE,
-        created_at TEXT NOT NULL
-    )
+        CREATE TABLE IF NOT EXISTS car_hidden_notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_key TEXT NOT NULL UNIQUE
+        )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS car_notification_archive (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_key TEXT NOT NULL UNIQUE,
+            title TEXT,
+            status TEXT,
+            period_type TEXT,
+            detail_description TEXT,
+            last_service_date_text TEXT,
+            work_kind TEXT,
+            archived_at TEXT NOT NULL
+        )
+    """)
+    legacy_hidden_notifications = cursor.execute(
+        """
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table' AND name = 'car_notification_hidden'
+        """
+    ).fetchone()
+    if legacy_hidden_notifications:
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO car_hidden_notifications (notification_key)
+            SELECT notification_key
+            FROM car_notification_hidden
+            WHERE notification_key IS NOT NULL AND notification_key != ''
+            """
+        )
 
     # =========================================================
     # BUDGET BALANCE HISTORY
@@ -437,6 +473,5 @@ def init_db(database_name=None):
         "created_at",
         "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     )
-
     conn.commit()
     conn.close()

@@ -190,6 +190,125 @@ class UserManagementTests(unittest.TestCase):
         self.assertNotIn('data-account-panel="users"', user_html)
         self.assertNotIn("Создать пользователя", user_html)
 
+    def test_admin_can_autosave_managed_user_permissions(self):
+        with self.app.app_context():
+            admin_id = self._user_id("admin")
+            user_id = create_managed_user(
+                ManagedUserForm(
+                    username="autosave_user",
+                    display_name="Autosave user",
+                    password="AutosavePass-2026",
+                    permissions={"schedule"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            with client.session_transaction() as session:
+                session["_csrf_token"] = "test-token"
+
+            response = client.post(
+                f"/account/settings/users/{user_id}",
+                data={
+                    "_csrf_token": "test-token",
+                    "display_name": "Autosave user",
+                    "permissions": ["budget", "car"],
+                },
+                headers={
+                    "X-Requested-With": "fetch",
+                    "X-CSRFToken": "test-token",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {"ok": True, "message": "Пользователь обновлён."},
+        )
+        self.assertEqual(get_user_permissions(user_id), {"budget", "car"})
+
+    def test_autosave_managed_user_returns_json_error(self):
+        with self.app.app_context():
+            admin_id = self._user_id("admin")
+            user_id = create_managed_user(
+                ManagedUserForm(
+                    username="autosave_error_user",
+                    display_name="Autosave error",
+                    password="AutosaveErrorPass-2026",
+                    permissions={"schedule"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            with client.session_transaction() as session:
+                session["_csrf_token"] = "test-token"
+
+            response = client.post(
+                f"/account/settings/users/{user_id}",
+                data={
+                    "_csrf_token": "test-token",
+                    "display_name": "",
+                    "permissions": ["budget"],
+                },
+                headers={
+                    "X-Requested-With": "fetch",
+                    "X-CSRFToken": "test-token",
+                },
+            )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.get_json()
+        self.assertFalse(payload["ok"])
+        self.assertTrue(payload["message"])
+        self.assertEqual(get_user_permissions(user_id), {"schedule"})
+
+    def test_mobile_bottom_navigation_adapts_to_available_sections(self):
+        with self.app.app_context():
+            admin_id = self._user_id("admin")
+            schedule_only_id = create_managed_user(
+                ManagedUserForm(
+                    username="schedule_only_mobile",
+                    display_name="Schedule only",
+                    password="ScheduleOnlyPass-2026",
+                    permissions={"schedule"},
+                ),
+                created_by_user_id=admin_id,
+            )
+            four_item_id = create_managed_user(
+                ManagedUserForm(
+                    username="four_item_mobile",
+                    display_name="Four item",
+                    password="FourItemPass-2026",
+                    permissions={"schedule", "budget", "study"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        with self.app.test_client() as client:
+            self._login_client(client, schedule_only_id)
+            schedule_html = client.get("/account/settings").get_data(as_text=True)
+            schedule_nav = schedule_html.split('<nav class="app-bottom-nav"', 1)[1].split("</nav>", 1)[0]
+
+        self.assertIn('data-nav-count="2"', schedule_nav)
+        self.assertIn("<span>График</span>", schedule_nav)
+        self.assertIn("<span>Аккаунт</span>", schedule_nav)
+        for label in ("Съёмки", "Отчёт", "Развитие", "Спорт"):
+            self.assertNotIn(f"<span>{label}</span>", schedule_nav)
+
+        with self.app.test_client() as client:
+            self._login_client(client, four_item_id)
+            four_item_html = client.get("/account/settings").get_data(as_text=True)
+            four_item_nav = four_item_html.split('<nav class="app-bottom-nav"', 1)[1].split("</nav>", 1)[0]
+
+        self.assertIn('data-nav-count="4"', four_item_nav)
+        for label in ("График", "Отчёт", "Развитие", "Аккаунт"):
+            self.assertIn(f"<span>{label}</span>", four_item_nav)
+        self.assertNotIn("<span>Съёмки</span>", four_item_nav)
+        self.assertNotIn("<span>Спорт</span>", four_item_nav)
+
     def test_configured_admin_keeps_user_management_when_legacy_flag_is_missing(self):
         admin_id = self._user_id("admin")
         conn = get_master_connection()
