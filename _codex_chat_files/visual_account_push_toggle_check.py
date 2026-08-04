@@ -37,9 +37,12 @@ def main():
             otp_enabled=True,
             login_history=[],
             recovery_codes=[],
-            can_manage_users=False,
+            can_manage_users=True,
             managed_users=[],
-            available_sections={},
+            available_sections={
+                "schedule": "График",
+                "budget": "Бюджет",
+            },
         )
 
     server = make_server("127.0.0.1", 5092, app)
@@ -70,7 +73,6 @@ def main():
 const { chromium } = require("playwright");
 
 async function checkViewport(page, name, width, height) {
-  await page.setViewportSize({ width, height });
   await page.goto("http://127.0.0.1:5092/__visual_account_settings", { waitUntil: "networkidle" });
   const card = page.locator("#push-notifications-card");
   await card.waitFor({ state: "visible" });
@@ -104,6 +106,32 @@ async function checkViewport(page, name, width, height) {
     throw new Error(`${name}: hidden status/test button contract failed`);
   }
 
+  const usersState = await page.evaluate(() => {
+    const usersTab = document.querySelector('[data-account-tab="users"]');
+    const usersPanel = document.querySelector('[data-account-panel="users"]');
+    const tabStyle = usersTab ? window.getComputedStyle(usersTab) : null;
+    const panelStyle = usersPanel ? window.getComputedStyle(usersPanel) : null;
+    return {
+      hasUsersTab: Boolean(usersTab),
+      hasUsersPanel: Boolean(usersPanel),
+      usersTabDisplay: tabStyle ? tabStyle.display : "",
+      usersPanelDisplay: panelStyle ? panelStyle.display : "",
+    };
+  });
+
+  if (name === "desktop") {
+    if (!usersState.hasUsersTab || usersState.usersTabDisplay === "none") {
+      throw new Error(`${name}: users tab is not visible`);
+    }
+    await page.locator('[data-account-tab="users"]').click();
+    const createTitle = page.locator('[data-account-panel="users"] h2').filter({ hasText: "Создать пользователя" });
+    await createTitle.waitFor({ state: "visible" });
+  } else if (usersState.hasUsersTab && usersState.usersTabDisplay !== "none") {
+    throw new Error(`${name}: users tab must be hidden`);
+  } else if (usersState.hasUsersPanel && usersState.usersPanelDisplay !== "none") {
+    throw new Error(`${name}: users panel must be hidden`);
+  }
+
   await page.screenshot({
     path: `C:/Users/Владимир/Desktop/Сайты/Shans/_codex_chat_files/account-push-${name}.png`,
     fullPage: true,
@@ -113,9 +141,19 @@ async function checkViewport(page, name, width, height) {
 (async () => {
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   try {
-    const page = await browser.newPage();
-    await checkViewport(page, "desktop", 1365, 900);
-    await checkViewport(page, "mobile", 390, 844);
+    const desktopContext = await browser.newContext({ viewport: { width: 1365, height: 900 } });
+    const desktopPage = await desktopContext.newPage();
+    await checkViewport(desktopPage, "desktop", 1365, 900);
+    await desktopContext.close();
+
+    const mobileContext = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const mobilePage = await mobileContext.newPage();
+    await checkViewport(mobilePage, "mobile", 390, 844);
+    await mobileContext.close();
   } finally {
     await browser.close();
   }

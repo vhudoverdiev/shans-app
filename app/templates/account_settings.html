@@ -36,7 +36,7 @@
         <div class="account-nav" role="tablist" aria-label="Разделы настроек">
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
             {% if can_manage_users %}
-            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="users">Пользователи</button>
+            <button type="button" class="btn btn-tab account-tab-btn account-users-desktop-only" data-account-tab="users">Пользователи</button>
             {% endif %}
             <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
         </div>
@@ -157,7 +157,7 @@
                 </p>
                 <div class="account-push-actions">
                     <button type="button" class="btn btn-primary" id="push-notifications-toggle">
-                        <span data-push-toggle-mobile-label>Включить уведомления</span>
+                        <span data-push-toggle-mobile-label>Включить</span>
                     </button>
                 </div>
             </div>
@@ -251,7 +251,7 @@
     </div>
 
     {% if can_manage_users %}
-    <div class="account-tab-content" data-account-panel="users">
+    <div class="account-tab-content account-users-desktop-only" data-account-panel="users">
         <div class="account-grid">
             <div class="card account-card account-card-glow">
                 <h2 class="section-title">Создать пользователя</h2>

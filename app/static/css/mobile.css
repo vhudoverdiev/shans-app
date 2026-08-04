@@ -130,6 +130,10 @@
         display: none;
     }
 
+    .account-users-desktop-only {
+        display: none !important;
+    }
+
     .account-codes-grid {
         grid-template-columns: 1fr;
     }

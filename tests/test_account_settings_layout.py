@@ -24,6 +24,23 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             r"\.account-nav\s*\{\s*display:\s*none;",
         )
 
+    def test_managed_users_section_is_desktop_only(self):
+        template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
+        mobile_styles = (
+            PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("{% if can_manage_users %}", template)
+        self.assertIn('data-account-tab="users"', template)
+        self.assertIn('data-account-panel="users"', template)
+        self.assertIn("account-users-desktop-only", template)
+        self.assertIn("url_for('create_account_user')", template)
+        self.assertIn("available_sections.items()", template)
+        self.assertRegex(
+            mobile_styles,
+            r"\.account-users-desktop-only\s*\{\s*display:\s*none\s*!important;",
+        )
+
     def test_profile_card_starts_without_removed_hero_gap(self):
         stylesheet = STYLE_FILE.read_text(encoding="utf-8")
 
@@ -79,7 +96,7 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             '<div class="card account-card">',
             1,
         )[0]
-        self.assertIn("data-push-toggle-mobile-label>Включить уведомления</span>", push_card)
+        self.assertIn("data-push-toggle-mobile-label>Включить</span>", push_card)
         self.assertIn('id="push-notifications-status"', push_card)
         self.assertIn('aria-live="polite" hidden', push_card)
         self.assertNotIn("Уведомления личного графика", push_card)

@@ -155,6 +155,40 @@ class UserManagementTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_account_settings_user_management_is_only_for_main_admin(self):
+        with self.app.app_context():
+            admin_id = self._user_id("admin")
+            user_id = create_managed_user(
+                ManagedUserForm(
+                    username="assistant",
+                    display_name="Assistant",
+                    password="AssistantPass-2026",
+                    permissions={"schedule"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            admin_response = client.get("/account/settings?tab=users")
+            admin_html = admin_response.get_data(as_text=True)
+
+        self.assertEqual(admin_response.status_code, 200)
+        self.assertIn('data-account-tab="users"', admin_html)
+        self.assertIn('data-account-panel="users"', admin_html)
+        self.assertIn("Создать пользователя", admin_html)
+        self.assertIn("Доступ к разделам", admin_html)
+
+        with self.app.test_client() as client:
+            self._login_client(client, user_id)
+            user_response = client.get("/account/settings?tab=users")
+            user_html = user_response.get_data(as_text=True)
+
+        self.assertEqual(user_response.status_code, 200)
+        self.assertNotIn('data-account-tab="users"', user_html)
+        self.assertNotIn('data-account-panel="users"', user_html)
+        self.assertNotIn("Создать пользователя", user_html)
+
     def test_logout_all_devices_does_not_flash_service_notification(self):
         admin_id = self._user_id("admin")
 

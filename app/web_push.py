@@ -1172,51 +1172,60 @@ def _clean_external_push_text(value: object, fallback: str, max_length: int) -> 
     return text[:max_length].strip()
 
 
-def _resolve_main_admin_user_id() -> int:
+def _resolve_system_admin_user_ids() -> list[int]:
     conn = get_connection()
     try:
-        row = conn.execute(
+        rows = conn.execute(
             """
             SELECT id
             FROM users
             WHERE COALESCE(is_system_admin, 0) = 1
               AND COALESCE(is_active, 1) = 1
             ORDER BY id ASC
-            LIMIT 1
             """
-        ).fetchone()
+        ).fetchall()
     finally:
         conn.close()
-    if not row:
-        raise LookupError("Main administrator is not configured.")
-    return int(row["id"])
+    user_ids = [int(row["id"]) for row in rows]
+    if not user_ids:
+        raise LookupError("System administrator is not configured.")
+    return user_ids
 
 
-def _resolve_external_push_user_id(_payload: dict) -> int:
-    return _resolve_main_admin_user_id()
+def _resolve_external_push_user_ids(_payload: dict) -> list[int]:
+    return _resolve_system_admin_user_ids()
 
 
 def send_external_telegram_notification(payload: dict) -> tuple[int, int]:
     timestamp = time.time_ns()
-    user_id = _resolve_external_push_user_id(payload)
-
-    candidate = PushCandidate(
-        key=f"telegram:{timestamp}",
-        title=_clean_external_push_text(
-            payload.get("title"),
-            "Вк аккануты",
-            80,
-        ),
-        body=_clean_external_push_text(
-            payload.get("body") or payload.get("text") or payload.get("message"),
-            "Script finished.",
-            800,
-        ),
-        navigate_path=_clean_external_push_text(payload.get("navigate_path"), "/", 300),
-        tag=f"telegram-{timestamp}",
-        user_id=user_id,
+    user_ids = _resolve_external_push_user_ids(payload)
+    title = _clean_external_push_text(
+        payload.get("title"),
+        "Вк аккануты",
+        80,
     )
-    return deliver_candidate(candidate)
+    body = _clean_external_push_text(
+        payload.get("body") or payload.get("text") or payload.get("message"),
+        "Script finished.",
+        800,
+    )
+    navigate_path = _clean_external_push_text(payload.get("navigate_path"), "/", 300)
+
+    sent_count = 0
+    failed_count = 0
+    for user_id in user_ids:
+        candidate = PushCandidate(
+            key=f"telegram:{timestamp}:{user_id}",
+            title=title,
+            body=body,
+            navigate_path=navigate_path,
+            tag=f"telegram-{timestamp}",
+            user_id=user_id,
+        )
+        sent, failed = deliver_candidate(candidate)
+        sent_count += sent
+        failed_count += failed
+    return sent_count, failed_count
 
 
 def _scheduler_worker(app) -> None:
@@ -1426,4 +1435,8 @@ def register_web_push_routes(app) -> None:
         except LookupError as exc:
             return jsonify({"ok": False, "message": str(exc)}), 400
 
-        return jsonify({"ok": True, "sent": sent_count, "failed": failed_count})
+        ok = sent_count > 0 and failed_count == 0
+        response_payload = {"ok": ok, "sent": sent_count, "failed": failed_count}
+        if not ok:
+            response_payload["message"] = "No Web Push subscriptions received the notification."
+        return jsonify(response_payload)

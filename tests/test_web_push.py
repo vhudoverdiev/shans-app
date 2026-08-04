@@ -710,7 +710,12 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(get_unread_push_notifications(1), ([], 0))
 
-    def test_external_telegram_notification_targets_main_admin_only(self):
+    def test_external_telegram_notification_targets_active_system_admins(self):
+        conn = self._connect()
+        conn.execute("UPDATE users SET is_system_admin = 1 WHERE id = 2")
+        conn.commit()
+        conn.close()
+
         save_subscription(
             1,
             self._subscription_payload(),
@@ -731,9 +736,12 @@ class WebPushSchedulingTests(unittest.TestCase):
                 }
             )
 
-        self.assertEqual(result, (1, 0))
-        send_mock.assert_called_once()
-        self.assertEqual(send_mock.call_args.args[0]["user_id"], 1)
+        self.assertEqual(result, (2, 0))
+        self.assertEqual(send_mock.call_count, 2)
+        self.assertEqual(
+            {call.args[0]["user_id"] for call in send_mock.call_args_list},
+            {1, 2},
+        )
         notifications, unread_count = get_unread_push_notifications(1)
         self.assertEqual(unread_count, 1)
         self.assertEqual(notifications[0]["title"], "Render finished")
@@ -741,7 +749,9 @@ class WebPushSchedulingTests(unittest.TestCase):
             notifications[0]["body"],
             "The local script completed successfully.",
         )
-        self.assertEqual(get_unread_push_notifications(2), ([], 0))
+        second_notifications, second_unread_count = get_unread_push_notifications(2)
+        self.assertEqual(second_unread_count, 1)
+        self.assertEqual(second_notifications[0]["title"], "Render finished")
 
     def test_external_telegram_notification_uses_vk_accounts_fallback_title(self):
         save_subscription(
@@ -763,7 +773,7 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(unread_count, 1)
         self.assertEqual(notifications[0]["title"], "Вк аккануты")
 
-    def test_external_telegram_notification_ignores_recipient_override(self):
+    def test_external_telegram_notification_ignores_recipient_override_for_non_admin(self):
         save_subscription(
             1,
             self._subscription_payload(),
@@ -816,6 +826,29 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertEqual(ok_response.status_code, 200)
         self.assertEqual(ok_response.get_json()["sent"], 1)
         send_mock.assert_called_once_with({"body": "done"})
+
+    def test_external_telegram_push_route_reports_missing_subscriptions(self):
+        Config.TELEGRAM_PUSH_SECRET = "test-secret"
+        with patch.dict(os.environ, {"WERKZEUG_RUN_MAIN": "false"}):
+            app = create_app()
+        app.config["TESTING"] = True
+        app.config["TELEGRAM_PUSH_SECRET"] = "test-secret"
+
+        with (
+            app.test_client() as client,
+            patch("app.web_push.send_external_telegram_notification", return_value=(0, 0)),
+        ):
+            response = client.post(
+                "/api/push/external/telegram",
+                json={"body": "done"},
+                headers={"X-Shans-Push-Secret": "test-secret"},
+            )
+
+        payload = response.get_json()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["sent"], 0)
+        self.assertEqual(payload["failed"], 0)
 
     def test_payload_is_declarative_and_has_absolute_navigation_url(self):
         candidate = PushCandidate(
@@ -972,7 +1005,7 @@ class WebPushAssetsTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn('id="push-notifications-toggle"', template)
-        self.assertIn("<span data-push-toggle-mobile-label>Включить уведомления</span>", template)
+        self.assertIn("<span data-push-toggle-mobile-label>Включить</span>", template)
         self.assertIn('id="push-notifications-status"', template)
         self.assertIn('aria-live="polite" hidden', template)
         self.assertNotIn('id="account-push-inbox-trigger"', template)
@@ -981,14 +1014,14 @@ class WebPushAssetsTests(unittest.TestCase):
         self.assertNotIn('id="push-notifications-test"', template)
         self.assertNotIn("account-push-desktop-only", template)
         self.assertNotIn("Уведомления личного графика", template)
-        self.assertIn("Включить уведомления", template)
+        self.assertNotIn("Включить уведомления</span>", template)
         self.assertIn(".account-push-desktop-only", mobile_styles)
         self.assertIn("grid-template-columns: 1fr;", mobile_styles)
         self.assertIn(
             '.account-push-status:not([data-state="error"]):not([data-state="info"])',
             mobile_styles,
         )
-        self.assertIn('const toggleLabel = enabled ? "Выключить уведомления" : "Включить уведомления";', push_client)
+        self.assertIn('const toggleLabel = enabled ? "Выключить" : "Включить";', push_client)
         self.assertIn('toggleButton.setAttribute("aria-label", toggleLabel);', push_client)
 
     def test_service_worker_handles_push_and_notification_click(self):

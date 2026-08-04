@@ -31,7 +31,7 @@
         if (toggleButton) {
             toggleButton.dataset.enabled = enabled ? "true" : "false";
             toggleButton.setAttribute("aria-pressed", enabled ? "true" : "false");
-            const toggleLabel = enabled ? "Выключить уведомления" : "Включить уведомления";
+            const toggleLabel = enabled ? "Выключить" : "Включить";
             toggleButton.setAttribute("aria-label", toggleLabel);
             toggleButton.setAttribute("title", toggleLabel);
             if (toggleMobileLabel) {
