@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -191,6 +192,55 @@ class BugReportTests(unittest.TestCase):
         self.assertIn('document.querySelector("[data-bug-report-trigger]")', bug_client)
         self.assertIn('window.fetch(sheet.dataset.submitUrl', bug_client)
         self.assertIn("html.shans-push-inbox-floating-active .bug-report-trigger", stylesheet)
+        trigger_rule = stylesheet.split(".bug-report-trigger {", 1)[1].split("}", 1)[0]
+        self.assertIn("background: #2563eb;", trigger_rule)
+        self.assertIn("color: #ffffff;", trigger_rule)
+        self.assertIn("rgba(37, 99, 235, 0.22)", trigger_rule)
+
+    def test_bug_report_dialog_opens_without_text_input_autofocus(self):
+        base_template = (PROJECT_ROOT / "app" / "templates" / "base.html").read_text(
+            encoding="utf-8"
+        )
+        bug_client = (PROJECT_ROOT / "app" / "static" / "js" / "bug-report.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('class="bug-report-panel"', base_template)
+        self.assertIn('tabindex="-1"', base_template)
+        self.assertIn('sheet.querySelector(".bug-report-panel")', bug_client)
+        self.assertIn("panel.focus({ preventScroll: true });", bug_client)
+        self.assertNotIn("nameInput.focus", bug_client)
+        self.assertNotIn("descriptionInput.focus", bug_client)
+        self.assertNotRegex(
+            bug_client,
+            r"querySelector\([^)]*\[name=['\"](?:name|description)['\"]\][^)]*\)\.focus\(",
+        )
+
+    def test_bug_report_mobile_dialog_stays_centered(self):
+        mobile_stylesheet = (
+            PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+        ).read_text(encoding="utf-8")
+
+        sheet_rule = re.search(
+            r"\.bug-report-sheet\s*\{(?P<body>.*?)\n\s*\}",
+            mobile_stylesheet,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(sheet_rule)
+        self.assertIn("align-items: center;", sheet_rule.group("body"))
+        self.assertIn("place-items: center;", sheet_rule.group("body"))
+        self.assertIn("min-height: 100dvh;", sheet_rule.group("body"))
+        self.assertNotIn("align-items: end;", sheet_rule.group("body"))
+
+        panel_rule = re.search(
+            r"\.bug-report-panel\s*\{(?P<body>.*?)\n\s*\}",
+            mobile_stylesheet,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(panel_rule)
+        self.assertIn("width: min(100%, 480px);", panel_rule.group("body"))
+        self.assertIn("border-radius: 20px;", panel_rule.group("body"))
+        self.assertIn("overscroll-behavior: contain;", panel_rule.group("body"))
 
 
 if __name__ == "__main__":

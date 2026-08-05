@@ -138,13 +138,18 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("car-header-actions", car_template)
         self.assertEqual(car_template.count("car-header-icon-link"), 3)
         for label in ("Редактировать марку", "Периодические ТО", "Добавить работу"):
-            self.assertIn(f'title="{label}"', car_template)
+            self.assertNotIn(f'title="{label}"', car_template)
             self.assertIn(f'aria-label="{label}"', car_template)
             self.assertIn(f'data-tooltip="{label}"', car_template)
             self.assertNotIn(f">{label}</a>", car_template)
 
         self.assertIn(".car-header-icon-link::after", styles)
         self.assertIn("content: attr(data-tooltip);", styles)
+        car_header_rule = styles.split(".car-header-actions {", 1)[1].split("}", 1)[0]
+        self.assertIn("z-index: 60;", car_header_rule)
+        self.assertIn("overflow: visible;", car_header_rule)
+        tooltip_rule = styles.split(".car-header-icon-link::after {", 1)[1].split("}", 1)[0]
+        self.assertIn("z-index: 10000;", tooltip_rule)
         self.assertIn(".car-header-actions {", mobile_styles)
         car_header_mobile_rule = mobile_styles.split(".car-header-actions {", 1)[1].split("}", 1)[0]
         self.assertIn("display: grid;", car_header_mobile_rule)

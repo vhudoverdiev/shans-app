@@ -5,6 +5,7 @@
     const sheet = document.getElementById("bug-report-sheet");
     const form = document.getElementById("bug-report-form");
     const status = document.getElementById("bug-report-status");
+    const panel = sheet ? sheet.querySelector(".bug-report-panel") : null;
     const closeButtons = document.querySelectorAll("[data-bug-report-close]");
     const csrfMeta = document.querySelector("meta[name='csrf-token']");
     const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
@@ -29,9 +30,8 @@
         window.requestAnimationFrame(function () {
             sheet.classList.add("bug-report-sheet-open");
         });
-        const nameInput = form.querySelector("[name='name']");
-        if (nameInput) {
-            nameInput.focus();
+        if (panel) {
+            panel.focus({ preventScroll: true });
         }
     }
 

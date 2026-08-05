@@ -382,7 +382,7 @@
 
     <div class="bug-report-sheet" id="bug-report-sheet" data-submit-url="{{ url_for('submit_bug_report') }}" hidden>
         <button type="button" class="bug-report-backdrop" data-bug-report-close aria-label="Закрыть форму ошибки"></button>
-        <section class="bug-report-panel" role="dialog" aria-modal="true" aria-labelledby="bug-report-title">
+        <section class="bug-report-panel" role="dialog" aria-modal="true" aria-labelledby="bug-report-title" tabindex="-1">
             <div class="bug-report-header">
                 <div>
                     <div class="bug-report-eyebrow">Обратная связь</div>

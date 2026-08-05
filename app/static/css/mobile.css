@@ -981,16 +981,18 @@
     }
 
     .bug-report-sheet {
-        align-items: end;
-        padding: 12px;
-        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+        align-items: center;
+        place-items: center;
+        min-height: 100dvh;
+        padding: calc(16px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
     }
 
     .bug-report-panel {
-        width: 100%;
-        max-height: calc(100vh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        width: min(100%, 480px);
+        max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         overflow: auto;
-        border-radius: 20px 20px 16px 16px;
+        border-radius: 20px;
+        overscroll-behavior: contain;
     }
 
     .bug-report-header h2 {
