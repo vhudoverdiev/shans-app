@@ -101,25 +101,27 @@
         }
 
         html.app-intro-pending .app-intro-stage {
+            --app-intro-logo-size: 96px;
             position: relative;
             width: min(82vw, 360px);
             min-height: 310px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            place-items: center;
         }
 
         html.app-intro-pending .app-intro-logo {
-            width: 96px;
-            height: 96px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--app-intro-logo-size);
+            height: var(--app-intro-logo-size);
             border-radius: 30px;
             display: grid;
             place-items: center;
             overflow: hidden;
             background: transparent;
             opacity: 0;
-            transform: translateY(8px) scale(0.94);
+            transform: translate(-50%, -50%) scale(0.94);
         }
 
         html.app-intro-pending .app-intro-logo-mark {
@@ -130,14 +132,16 @@
         }
 
         html.app-intro-pending .app-intro-progress {
+            position: absolute;
+            top: calc(50% + (var(--app-intro-logo-size) / 2) + 18px);
+            left: 50%;
             width: 104px;
             height: 3px;
-            margin-top: 18px;
             overflow: hidden;
             border-radius: 999px;
             background: rgba(99, 102, 241, 0.13);
             opacity: 0;
-            transform: translateY(6px);
+            transform: translate(-50%, 6px);
         }
 
         html.app-intro-pending .app-intro-progress span {

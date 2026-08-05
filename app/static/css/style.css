@@ -79,21 +79,22 @@ a {
 }
 
 .app-intro-stage {
+    --app-intro-logo-size: clamp(92px, 10vw, 116px);
     position: relative;
     width: min(82vw, 360px);
     min-height: 310px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     isolation: isolate;
 }
 
 .app-intro-logo {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     z-index: 3;
-    width: clamp(92px, 10vw, 116px);
-    height: clamp(92px, 10vw, 116px);
+    width: var(--app-intro-logo-size);
+    height: var(--app-intro-logo-size);
     border: 1px solid rgba(255, 255, 255, 0.62);
     border-radius: 32%;
     display: grid;
@@ -106,7 +107,7 @@ a {
     font-weight: 800;
     letter-spacing: -0.06em;
     opacity: 0;
-    transform: translateY(8px) scale(0.94);
+    transform: translate(-50%, -50%) scale(0.94);
 }
 
 .app-intro-logo::after {
@@ -130,11 +131,12 @@ a {
 }
 
 .app-intro-progress {
-    position: relative;
+    position: absolute;
+    top: calc(50% + (var(--app-intro-logo-size) / 2) + 22px);
+    left: 50%;
     z-index: 3;
     width: clamp(126px, 16vw, 152px);
     height: 8px;
-    margin-top: 22px;
     padding: 2px;
     overflow: hidden;
     border-radius: 999px;
@@ -147,7 +149,7 @@ a {
         inset 0 1px 2px rgba(255, 255, 255, 0.88),
         inset 0 -1px 2px rgba(79, 70, 229, 0.12);
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate(-50%, 6px);
 }
 
 .app-intro-progress span {
@@ -167,7 +169,7 @@ a {
 
 .app-intro-running .app-intro-logo {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, -50%) scale(1);
     animation: app-intro-logo-in 0.32s ease-out both;
 }
 
@@ -178,19 +180,19 @@ a {
 @keyframes app-intro-logo-in {
     from {
         opacity: 1;
-        transform: translateY(4px) scale(0.98);
+        transform: translate(-50%, -50%) scale(0.98);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
 @keyframes app-intro-progress-in {
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, 0);
     }
 }
 
@@ -213,13 +215,12 @@ a {
 
 @media (max-width: 768px) and (pointer: coarse) {
     .app-intro-stage {
+        --app-intro-logo-size: 96px;
         width: 88vw;
         min-height: 280px;
     }
 
     .app-intro-logo {
-        width: 96px;
-        height: 96px;
         border-radius: 30px;
         font-size: 46px;
     }
@@ -240,8 +241,15 @@ a {
     .app-intro-running .app-intro-progress,
     .app-intro-running .app-intro-progress span {
         opacity: 1;
-        transform: none;
         background-position: 50% 50%;
+    }
+
+    .app-intro-running .app-intro-logo {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .app-intro-running .app-intro-progress {
+        transform: translate(-50%, 0);
     }
 }
 
