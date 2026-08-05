@@ -666,6 +666,9 @@ def _resolve_food_query(user_id: int, raw_query: str):
     match = re.match(r"^(\d+)\s*[—-]", normalized)
     if match:
         return get_food(user_id, int(match.group(1)))
+    display_match = re.match(r"^(.+?)\s*\(\d+(?:[.,]\d+)?\s*ккал\)", normalized, re.IGNORECASE)
+    if display_match:
+        normalized = display_match.group(1).strip()
 
     conn = get_connection()
     try:

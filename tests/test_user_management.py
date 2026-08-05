@@ -177,6 +177,8 @@ class UserManagementTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn('data-account-tab="users"', admin_html)
         self.assertIn('data-account-panel="users"', admin_html)
+        self.assertNotIn("user_databases", admin_html)
+        self.assertNotIn("data_database_name", admin_html)
         self.assertIn("Создать пользователя", admin_html)
         self.assertIn("Доступ к разделам", admin_html)
 

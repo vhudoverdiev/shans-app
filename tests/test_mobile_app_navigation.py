@@ -130,6 +130,28 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("url_for('car')", car_notifications)
         self.assertIn('class="btn btn-secondary">Назад</a>', car_notifications)
 
+    def test_car_header_actions_are_compact_icon_buttons_on_mobile(self):
+        car_template = (TEMPLATES / "car.html").read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn("car-header-actions", car_template)
+        self.assertEqual(car_template.count("car-header-icon-link"), 3)
+        for label in ("Редактировать марку", "Периодические ТО", "Добавить работу"):
+            self.assertIn(f'title="{label}"', car_template)
+            self.assertIn(f'aria-label="{label}"', car_template)
+            self.assertIn(f'data-tooltip="{label}"', car_template)
+            self.assertNotIn(f">{label}</a>", car_template)
+
+        self.assertIn(".car-header-icon-link::after", styles)
+        self.assertIn("content: attr(data-tooltip);", styles)
+        self.assertIn(".car-header-actions {", mobile_styles)
+        car_header_mobile_rule = mobile_styles.split(".car-header-actions {", 1)[1].split("}", 1)[0]
+        self.assertIn("display: grid;", car_header_mobile_rule)
+        self.assertIn("grid-template-columns: minmax(76px, 1fr) repeat(3, 52px);", car_header_mobile_rule)
+        self.assertIn("overflow: visible;", car_header_mobile_rule)
+        self.assertNotIn("overflow-x: auto;", car_header_mobile_rule)
+
     def test_service_sections_do_not_render_hero_headers(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
@@ -277,6 +299,29 @@ class MobileAppNavigationTests(unittest.TestCase):
             styles,
             r"\.page-header\s*>\s*:not\(\.page-actions\)",
         )
+
+    def test_flash_messages_are_full_width_at_the_bottom(self):
+        styles = STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertRegex(
+            styles,
+            r"\.flash-stack\s*\{"
+            r"[^}]*left:\s*24px;"
+            r"[^}]*right:\s*24px;"
+            r"[^}]*width:\s*auto;",
+        )
+        mobile_flash_rule = styles.split(
+            "bottom: calc(86px + env(safe-area-inset-bottom, 0px));",
+            1,
+        )[0].rsplit(".flash-stack {", 1)[1]
+        self.assertIn("left: 14px;", mobile_flash_rule)
+        self.assertIn("right: 14px;", mobile_flash_rule)
+        mobile_flash_rule_after_bottom = styles.split(
+            "bottom: calc(86px + env(safe-area-inset-bottom, 0px));",
+            1,
+        )[1].split("}", 1)[0]
+        self.assertIn("width: auto;", mobile_flash_rule_after_bottom)
+        self.assertNotIn("width: min(340px", mobile_flash_rule)
 
     def test_mobile_blue_buttons_use_bottom_navigation_purple_theme(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")

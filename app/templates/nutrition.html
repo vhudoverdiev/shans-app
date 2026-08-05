@@ -183,7 +183,7 @@
                     <input id="food-query" name="food_query" type="text" list="nutrition-food-list" autocomplete="off" placeholder="Начните вводить название" required>
                     <datalist id="nutrition-food-list">
                         {% for food in foods %}
-                        <option value="{{ food.id }} — {{ food.name }}">{{ food.category }}</option>
+                        <option value="{{ food.name }} ({{ food.calories|round(0)|int }}ккал)(б-{{ food.protein|round(1) }},ж-{{ food.fat|round(1) }},у-{{ food.carbs|round(1) }})">{{ food.category }}</option>
                         {% endfor %}
                     </datalist>
                 </div>
@@ -292,7 +292,7 @@
         <div class="nutrition-catalog" id="nutrition-catalog">
             {% for food in foods %}
             <article class="nutrition-food-row" data-food-search="{{ (food.name ~ ' ' ~ food.category)|lower }}">
-                <button type="button" class="nutrition-food-select" data-select-food="{{ food.id }} — {{ food.name }}">
+                <button type="button" class="nutrition-food-select" data-select-food="{{ food.name }} ({{ food.calories|round(0)|int }}ккал)(б-{{ food.protein|round(1) }},ж-{{ food.fat|round(1) }},у-{{ food.carbs|round(1) }})">
                     <span>
                         <strong>{{ food.name }}</strong>
                         <small>{{ food.category }}{% if not food.is_builtin %} · добавлен пользователем{% endif %}</small>

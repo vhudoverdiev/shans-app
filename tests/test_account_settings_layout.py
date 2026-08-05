@@ -44,6 +44,7 @@ class AccountSettingsLayoutTests(unittest.TestCase):
         self.assertIn("data-managed-user-save-status", template)
         self.assertIn("autosaveManagedUserForm", template)
         self.assertIn("managedUserPending", template)
+        self.assertNotIn("user.data_database_name", template)
         self.assertNotIn("Сохранить пользователя", template)
         self.assertRegex(
             mobile_styles,
@@ -57,6 +58,19 @@ class AccountSettingsLayoutTests(unittest.TestCase):
             stylesheet,
             r"\.account-hero-card\s*\{[^}]*margin-top:\s*0;",
         )
+
+    def test_mobile_login_and_logout_button_gap_is_compact(self):
+        mobile_styles = (
+            PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+        ).read_text(encoding="utf-8")
+
+        profile_rule = mobile_styles.split(".account-profile-main-line {", 1)[1].split("}", 1)[0]
+        logout_rule = mobile_styles.split(".account-logout-btn {", 1)[1].split("}", 1)[0]
+
+        self.assertIn("margin-bottom: 6px;", profile_rule)
+        self.assertIn("margin-top: 8px;", logout_rule)
+        self.assertNotIn("margin-bottom: 12px;", profile_rule)
+        self.assertNotIn("margin-top: 16px;", logout_rule)
 
     def test_hidden_inline_notice_does_not_reserve_vertical_space(self):
         stylesheet = STYLE_FILE.read_text(encoding="utf-8")

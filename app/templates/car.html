@@ -9,11 +9,28 @@
             <h1 class="page-title">{{ car_name }}</h1>
         </div>
 
-        <div class="page-actions car-mobile-tabs-row">
+        <div class="page-actions car-mobile-tabs-row car-header-actions">
             <a href="{{ url_for('reports_hub') }}" class="btn btn-secondary">Назад</a>
-            <a href="{{ url_for('car_name_edit') }}" class="car-tab-link">Редактировать марку</a>
-            <a href="{{ url_for('car_notifications') }}" class="car-tab-link">Переодические ТО</a>
-            <a href="{{ url_for('car_manage') }}" class="car-tab-link">Добавить работу</a>
+            <a href="{{ url_for('car_name_edit') }}" class="car-tab-link car-header-icon-link" title="Редактировать марку" aria-label="Редактировать марку" data-tooltip="Редактировать марку">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"></path>
+                </svg>
+            </a>
+            <a href="{{ url_for('car_notifications') }}" class="car-tab-link car-header-icon-link" title="Периодические ТО" aria-label="Периодические ТО" data-tooltip="Периодические ТО">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 11a8.1 8.1 0 0 0-15.5-2"></path>
+                    <path d="M4 5v4h4"></path>
+                    <path d="M4 13a8.1 8.1 0 0 0 15.5 2"></path>
+                    <path d="M20 19v-4h-4"></path>
+                </svg>
+            </a>
+            <a href="{{ url_for('car_manage') }}" class="car-tab-link car-header-icon-link" title="Добавить работу" aria-label="Добавить работу" data-tooltip="Добавить работу">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+            </a>
         </div>
     </div>
 

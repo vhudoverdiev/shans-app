@@ -95,6 +95,7 @@
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.92);
         align-items: center;
+        margin-bottom: 6px;
     }
 
     .account-avatar-preview-wrap {
@@ -514,6 +515,32 @@
         min-width: max-content;
     }
 
+    .car-header-actions {
+        display: grid;
+        grid-template-columns: minmax(76px, 1fr) repeat(3, 52px);
+        align-items: center;
+        overflow: visible;
+        gap: 8px;
+    }
+
+    .car-header-actions .btn {
+        min-width: 0;
+        padding-inline: 10px;
+        white-space: nowrap;
+    }
+
+    .car-header-actions .car-header-icon-link {
+        width: 52px;
+        min-width: 0;
+        height: 46px;
+        padding: 0;
+    }
+
+    .car-header-actions .car-header-icon-link svg {
+        width: 22px;
+        height: 22px;
+    }
+
     .shootings-mobile-tab-bar {
         flex-wrap: nowrap;
         align-items: center;
@@ -783,7 +810,7 @@
     .account-logout-btn {
         display: inline-flex !important;
         width: 100%;
-        margin-top: 16px;
+        margin-top: 8px;
     }
 
     .app-bottom-nav {
@@ -918,17 +945,56 @@
         animation: mobile-push-inbox-arrived 1.8s ease-in-out infinite;
     }
 
+    .bug-report-trigger {
+        right: max(16px, env(safe-area-inset-right));
+        bottom: calc(91px + env(safe-area-inset-bottom));
+        width: 56px;
+        height: 56px;
+        border-radius: 19px;
+        box-shadow: none;
+    }
+
     html.shans-standalone-app .mobile-push-inbox-trigger {
         bottom: 91px;
     }
 
+    html.shans-standalone-app .bug-report-trigger {
+        bottom: 91px;
+    }
+
     .mobile-push-inbox-trigger[hidden],
-    .mobile-push-inbox-sheet[hidden] {
+    .mobile-push-inbox-sheet[hidden],
+    .bug-report-sheet[hidden] {
+        display: none !important;
+    }
+
+    html.shans-push-inbox-floating-active .bug-report-trigger {
         display: none !important;
     }
 
     .mobile-push-inbox-trigger:active {
         transform: scale(0.94);
+    }
+
+    .bug-report-trigger:active {
+        transform: scale(0.94);
+    }
+
+    .bug-report-sheet {
+        align-items: end;
+        padding: 12px;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .bug-report-panel {
+        width: 100%;
+        max-height: calc(100vh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        overflow: auto;
+        border-radius: 20px 20px 16px 16px;
+    }
+
+    .bug-report-header h2 {
+        font-size: 22px;
     }
 
     .mobile-push-inbox-trigger > svg {

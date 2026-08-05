@@ -37,6 +37,7 @@
             <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="import">Импорт</button>
             {% if can_manage_users %}
             <button type="button" class="btn btn-tab account-tab-btn account-users-desktop-only" data-account-tab="users">Пользователи</button>
+            <button type="button" class="btn btn-tab account-tab-btn" data-account-tab="errors">Ошибки</button>
             {% endif %}
             <a href="{{ url_for('site_logs') }}" class="btn btn-tab account-tab-link account-tab-link-logs">Логи</a>
         </div>
@@ -298,7 +299,6 @@
                         <div class="account-managed-user-head">
                             <div>
                                 <div class="account-managed-user-login">{{ user.username }}</div>
-                                <div class="muted-text">База: {{ user.data_database_name }}</div>
                             </div>
                             <span class="account-status-chip">Активен</span>
                         </div>
@@ -338,6 +338,39 @@
     </div>
     {% endif %}
 
+    {% if can_manage_users %}
+    <div class="account-tab-content" data-account-panel="errors">
+        <div class="account-grid">
+            <div class="card account-card account-card-wide">
+                <h2 class="section-title">Ошибки</h2>
+                {% if bug_reports %}
+                <div class="account-bug-reports">
+                    {% for report in bug_reports %}
+                    <article class="account-bug-report-card">
+                        <div class="account-bug-report-head">
+                            <div>
+                                <h3>{{ report.name }}</h3>
+                                <p class="muted-text">
+                                    {{ report.created_at }}{% if report.username %} · {{ report.username }}{% endif %}{% if report.ip_address %} · IP: {{ report.ip_address }}{% endif %}
+                                </p>
+                            </div>
+                            <span class="account-status-chip">Новая</span>
+                        </div>
+                        <p class="account-bug-report-description">{{ report.description }}</p>
+                        {% if report.page_url %}
+                        <div class="account-bug-report-url">{{ report.page_url }}</div>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="muted-text">Пока нет сообщений об ошибках.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </section>
 
 <script>
@@ -351,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const disable2faOtpInput = document.getElementById("disable_2fa_otp");
     const allowedTabs = isMobileViewport
         ? new Set(["security"])
-        : new Set(["security", "import"{% if can_manage_users %}, "users"{% endif %}]);
+        : new Set(["security", "import"{% if can_manage_users %}, "users", "errors"{% endif %}]);
 
     function closeDisable2faForm() {
         if (!disable2faForm || !showDisable2faButton) return;

@@ -167,6 +167,7 @@
     {% endif %}
     <script src="{{ url_for('static', filename='js/offline-support.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/push-inbox.js', v=static_asset_version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/bug-report.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/form-controls.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/ajax-forms.js', v=static_asset_version) }}" defer></script>
 </head>
@@ -364,6 +365,43 @@
                 </div>
             </div>
             <div class="mobile-push-inbox-list" id="mobile-push-inbox-list"></div>
+        </section>
+    </div>
+
+    <button
+        type="button"
+        class="bug-report-trigger"
+        id="bug-report-trigger"
+        aria-label="Сообщить об ошибке"
+        aria-controls="bug-report-sheet"
+        aria-expanded="false"
+        data-bug-report-trigger
+    >
+        <span aria-hidden="true">?</span>
+    </button>
+
+    <div class="bug-report-sheet" id="bug-report-sheet" data-submit-url="{{ url_for('submit_bug_report') }}" hidden>
+        <button type="button" class="bug-report-backdrop" data-bug-report-close aria-label="Закрыть форму ошибки"></button>
+        <section class="bug-report-panel" role="dialog" aria-modal="true" aria-labelledby="bug-report-title">
+            <div class="bug-report-header">
+                <div>
+                    <div class="bug-report-eyebrow">Обратная связь</div>
+                    <h2 id="bug-report-title">Сообщить об ошибке</h2>
+                </div>
+                <button type="button" class="bug-report-close" data-bug-report-close aria-label="Закрыть">×</button>
+            </div>
+            <form class="bug-report-form" id="bug-report-form">
+                <div class="form-group">
+                    <label for="bug_report_name">Имя</label>
+                    <input type="text" id="bug_report_name" name="name" class="form-input" maxlength="80" autocomplete="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="bug_report_description">Описание ошибки</label>
+                    <textarea id="bug_report_description" name="description" class="form-input bug-report-description" rows="5" maxlength="2000" required></textarea>
+                </div>
+                <p class="bug-report-status" id="bug-report-status" role="status" aria-live="polite" hidden></p>
+                <button type="submit" class="btn btn-primary bug-report-submit">Отправить</button>
+            </form>
         </section>
     </div>
     {% endif %}

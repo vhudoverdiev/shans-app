@@ -60,7 +60,7 @@ def configure_admins(
     connection = get_connection()
     try:
         existing_user = connection.execute(
-            "SELECT id, otp_secret FROM users WHERE username = ?",
+            "SELECT id, otp_secret FROM users WHERE LOWER(username) = LOWER(?)",
             (username,),
         ).fetchone()
         password_hash = generate_password_hash(admin_password)

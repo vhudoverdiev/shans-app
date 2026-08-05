@@ -17,6 +17,10 @@ from app.models import get_user_by_id
 logger = logging.getLogger(__name__)
 
 
+def normalize_login_username(username) -> str:
+    return (username or "").strip().lower()
+
+
 class User(UserMixin):
     """
     Класс пользователя для Flask-Login.
@@ -51,7 +55,7 @@ def create_admin_if_not_exists():
     Создаёт администратора при первом запуске,
     если его ещё нет в базе.
     """
-    admin_username = os.getenv("ADMIN_USERNAME", "admin")
+    admin_username = (os.getenv("ADMIN_USERNAME", "admin") or "admin").strip() or "admin"
     admin_password = os.getenv("ADMIN_PASSWORD")
     generated_password = None
 
@@ -66,7 +70,7 @@ def create_admin_if_not_exists():
     cursor = conn.cursor()
 
     existing_user = cursor.execute(
-        "SELECT * FROM users WHERE username = ?",
+        "SELECT * FROM users WHERE LOWER(username) = LOWER(?)",
         (admin_username,)
     ).fetchone()
 
@@ -113,13 +117,13 @@ def disable_otp_for_username(username: str) -> bool:
     Отключает 2FA для пользователя по логину.
     Возвращает True, если настройки были изменены.
     """
-    normalized_username = (username or "").strip()
+    normalized_username = normalize_login_username(username)
     if not normalized_username:
         return False
 
     conn = get_master_connection()
     user = conn.execute(
-        "SELECT id, otp_enabled FROM users WHERE username = ?",
+        "SELECT id, otp_enabled FROM users WHERE LOWER(username) = LOWER(?)",
         (normalized_username,),
     ).fetchone()
 
@@ -141,13 +145,14 @@ def _utcnow_iso():
 
 
 def register_failed_login(username, ip_address):
+    normalized_username = normalize_login_username(username)
     conn = get_master_connection()
     conn.execute(
         """
         INSERT INTO login_attempts (username, ip_address, attempted_at)
         VALUES (?, ?, ?)
         """,
-        (username, ip_address, _utcnow_iso()),
+        (normalized_username, ip_address, _utcnow_iso()),
     )
     conn.commit()
     conn.close()
@@ -160,7 +165,7 @@ def clear_failed_logins_for_username(username: str) -> int:
     Удаляет все записи неудачных попыток входа для указанного логина.
     Возвращает количество удалённых строк.
     """
-    normalized_username = (username or "").strip()
+    normalized_username = normalize_login_username(username)
     if not normalized_username:
         return 0
 
@@ -177,16 +182,18 @@ def clear_failed_logins_for_username(username: str) -> int:
     return deleted_rows
 
 def clear_failed_logins(username, ip_address):
+    normalized_username = normalize_login_username(username)
     conn = get_master_connection()
     conn.execute(
         "DELETE FROM login_attempts WHERE username = ? AND ip_address = ?",
-        (username, ip_address),
+        (normalized_username, ip_address),
     )
     conn.commit()
     conn.close()
 
 
 def is_login_rate_limited(username, ip_address):
+    normalized_username = normalize_login_username(username)
     window_seconds = Config.LOGIN_RATE_LIMIT_WINDOW_SECONDS
     max_attempts = Config.LOGIN_RATE_LIMIT_MAX_ATTEMPTS
     lower_bound = (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
@@ -198,7 +205,7 @@ def is_login_rate_limited(username, ip_address):
         FROM login_attempts
         WHERE username = ? AND ip_address = ? AND attempted_at >= ?
         """,
-        (username, ip_address, lower_bound),
+        (normalized_username, ip_address, lower_bound),
     ).fetchone()
     conn.close()
 
@@ -210,10 +217,11 @@ def verify_user(username, password):
     """
     Проверяет логин и пароль пользователя.
     """
+    normalized_username = (username or "").strip()
     conn = get_master_connection()
     user = conn.execute(
-        "SELECT * FROM users WHERE username = ?",
-        (username,)
+        "SELECT * FROM users WHERE LOWER(username) = LOWER(?)",
+        (normalized_username,)
     ).fetchone()
     conn.close()
 

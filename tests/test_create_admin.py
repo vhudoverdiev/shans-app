@@ -111,6 +111,29 @@ class CreateAdminTests(unittest.TestCase):
         self.assertEqual(session["is_active"], 0)
         self.assertEqual(import_setting["value"], "NewImport-2026")
 
+    def test_updates_existing_admin_without_duplicate_when_case_changes(self):
+        configure_admins("vladimir", "OldMain-2026", "OldImport-2026")
+
+        result = configure_admins(
+            "Vladimir",
+            "NewMain-2026",
+            "NewImport-2026",
+        )
+
+        connection = get_connection()
+        try:
+            users = connection.execute(
+                "SELECT * FROM users WHERE LOWER(username) = LOWER(?)",
+                ("vladimir",),
+            ).fetchall()
+        finally:
+            connection.close()
+
+        self.assertEqual(result, "updated")
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["username"], "vladimir")
+        self.assertTrue(check_password_hash(users[0]["password_hash"], "NewMain-2026"))
+
     def test_rejects_short_or_reused_passwords_before_writing_database(self):
         with self.assertRaisesRegex(ValueError, "не менее 8"):
             configure_admins("site_admin", "short", "ImportAdmin-2026")

@@ -18,10 +18,11 @@ def get_current_year():
 # =========================================================
 
 def get_user_by_username(username):
+    normalized_username = (username or "").strip()
     conn = get_master_connection()
     user = conn.execute(
-        "SELECT * FROM users WHERE username = ?",
-        (username,)
+        "SELECT * FROM users WHERE LOWER(username) = LOWER(?)",
+        (normalized_username,)
     ).fetchone()
     conn.close()
     return user
@@ -200,7 +201,7 @@ def set_system_password(new_password):
     conn.close()
 
 
-DEFAULT_CAR_NAME = "Volkswagen Polo 2018"
+DEFAULT_CAR_NAME = "Нет марки"
 
 
 def get_car_name():

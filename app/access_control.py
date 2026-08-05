@@ -405,7 +405,7 @@ def create_managed_user(form: ManagedUserForm, created_by_user_id: int) -> int:
     conn = get_master_connection()
     try:
         existing = conn.execute(
-            "SELECT id FROM users WHERE username = ?",
+            "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
             (username,),
         ).fetchone()
         if existing:

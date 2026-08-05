@@ -13,7 +13,7 @@ from app.auth import (
     verify_user,
 )
 from app.database import get_connection, get_master_connection, init_db, use_database
-from app.models import create_budget_entry, get_all_budget_entries
+from app.models import create_budget_entry, get_all_budget_entries, get_user_by_username
 from config import Config
 
 
@@ -69,6 +69,17 @@ class AuthAndDatabaseContractTests(unittest.TestCase):
         self.assertTrue(user.is_system_admin)
         self.assertTrue(user.is_active)
 
+    def test_verify_user_and_lookup_ignore_username_case(self):
+        user_id = self._insert_user("vladimir", "AdminPass-2026", is_system_admin=1)
+
+        user = verify_user("Vladimir", "AdminPass-2026")
+        looked_up_user = get_user_by_username("VLADIMIR")
+
+        self.assertIsNotNone(user)
+        self.assertEqual(int(user.id), user_id)
+        self.assertIsNotNone(looked_up_user)
+        self.assertEqual(int(looked_up_user["id"]), user_id)
+
     def test_verify_user_rejects_wrong_password_and_inactive_account(self):
         self._insert_user("active", "ActivePass-2026")
         self._insert_user("disabled", "DisabledPass-2026", is_active=0)
@@ -79,9 +90,10 @@ class AuthAndDatabaseContractTests(unittest.TestCase):
 
     def test_login_rate_limit_is_scoped_by_username_and_ip(self):
         for _ in range(3):
-            register_failed_login("admin", "127.0.0.1")
+            register_failed_login("Admin", "127.0.0.1")
 
         self.assertTrue(is_login_rate_limited("admin", "127.0.0.1"))
+        self.assertTrue(is_login_rate_limited("ADMIN", "127.0.0.1"))
         self.assertFalse(is_login_rate_limited("admin", "10.0.0.1"))
         self.assertFalse(is_login_rate_limited("other", "127.0.0.1"))
 

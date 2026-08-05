@@ -236,8 +236,37 @@ def init_db(database_name=None):
     if not existing_car_name:
         cursor.execute(
             "INSERT INTO app_settings (key, value) VALUES (?, ?)",
-            ("car_name", "Volkswagen Polo 2018"),
+            ("car_name", "Нет марки"),
         )
+    elif (existing_car_name["value"] or "").strip() == "Volkswagen Polo 2018":
+        cursor.execute(
+            "UPDATE app_settings SET value = ? WHERE key = 'car_name'",
+            ("Нет марки",),
+        )
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS bug_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            rate_limit_key TEXT,
+            user_agent TEXT,
+            page_url TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    _add_column_if_not_exists(cursor, "bug_reports", "rate_limit_key", "TEXT")
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_bug_reports_created_at ON bug_reports(created_at DESC)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_bug_reports_ip_created_at ON bug_reports(ip_address, created_at)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_bug_reports_rate_limit_created_at ON bug_reports(rate_limit_key, created_at)"
+    )
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS login_attempts (

@@ -94,9 +94,10 @@ class DesktopLayoutLockTests(unittest.TestCase):
             stylesheet,
             r"\.flash-stack\s*\{"
             r"[^}]*position:\s*fixed;"
+            r"[^}]*left:\s*24px;"
             r"[^}]*right:\s*24px;"
             r"[^}]*bottom:\s*24px;"
-            r"[^}]*width:\s*min\(360px,\s*calc\(100vw - 32px\)\);",
+            r"[^}]*width:\s*auto;",
         )
         self.assertIn('<div class="flash-stack" role="status" aria-live="polite">', base_template)
         self.assertLess(

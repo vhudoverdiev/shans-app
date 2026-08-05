@@ -358,6 +358,28 @@ class NutritionTests(unittest.TestCase):
             1,
         )
 
+    def test_routes_accept_display_food_label_with_nutrients(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+
+        food = next(item for item in get_food_catalog(1) if item["name"] == "Борщ")
+        response = client.post(
+            "/nutrition/entries",
+            data={
+                "food_query": "Борщ (49ккал)(б-1.8,ж-2.2,у-5.4)",
+                "grams": "100",
+                "meal_type": "lunch",
+                "eaten_on": date.today().isoformat(),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        entries = get_nutrition_entries(1, date.today().isoformat())
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["food_name"], food["name"])
+        self.assertEqual(entries[0]["calories"], food["calories"])
+
     def test_invalid_profile_and_future_entry_do_not_write(self):
         app = self._create_app()
         client = app.test_client()
@@ -489,6 +511,11 @@ class NutritionTests(unittest.TestCase):
         )[1]
         self.assertNotIn("Поиск продукта", catalog_block)
         self.assertIn('id="nutrition-catalog-search"', catalog_block)
+        self.assertIn(
+            "{{ food.name }} ({{ food.calories|round(0)|int }}ккал)(б-{{ food.protein|round(1) }},ж-{{ food.fat|round(1) }},у-{{ food.carbs|round(1) }})",
+            template,
+        )
+        self.assertNotIn("{{ food.id }} — {{ food.name }}", template)
         self.assertIn("Добавить продукт вручную", template)
         quick_entry_block = template.split('id="add-food-entry"', 1)[1].split(
             'id="nutrition-profile"',

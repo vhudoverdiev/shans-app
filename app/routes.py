@@ -129,6 +129,11 @@ from app.models import (
     deactivate_user_login_session,
     deactivate_all_user_login_sessions,
 )
+from app.bug_reports import (
+    BugReportLimitExceeded,
+    create_bug_report,
+    get_recent_bug_reports,
+)
 from app.utils import build_budget_excel, build_shootings_excel, build_scenarios_excel
 from app.logging_setup import log_audit, log_invalid_form, log_import_result
 from app.planner import (
@@ -1155,6 +1160,30 @@ def register_routes(app):
             return forwarded.split(",")[0].strip()
         return request.remote_addr or "unknown"
 
+    @app.post("/api/bug-reports")
+    @login_required
+    def submit_bug_report():
+        payload = request.get_json(silent=True) or {}
+        try:
+            report_id = create_bug_report(
+                user_id=current_user.id,
+                name=payload.get("name", ""),
+                description=payload.get("description", ""),
+                ip_address=_get_request_ip(),
+                user_agent=request.headers.get("User-Agent", ""),
+                page_url=payload.get("page_url", ""),
+            )
+        except BugReportLimitExceeded as exc:
+            return jsonify({"ok": False, "message": str(exc)}), 429
+        except ValueError as exc:
+            return jsonify({"ok": False, "message": str(exc)}), 400
+
+        return jsonify({
+            "ok": True,
+            "id": report_id,
+            "message": "Спасибо, сообщение отправлено.",
+        }), 201
+
     def _register_current_login_session(user_id: int) -> str:
         now_iso = datetime.now().isoformat(timespec="seconds")
         device_name, browser_name = _detect_device_and_browser(request.headers.get("User-Agent"))
@@ -1512,6 +1541,7 @@ def register_routes(app):
             })
         recovery_codes = session.get("account_recovery_codes", [])
         can_manage_users = is_main_admin_user(current_user)
+        bug_reports = get_recent_bug_reports(days=30) if can_manage_users else []
         return render_template(
             "account_settings.html",
             avatar_letter=_build_avatar_letter(current_user.username),
@@ -1522,6 +1552,7 @@ def register_routes(app):
             can_manage_users=can_manage_users,
             managed_users=get_managed_users() if can_manage_users else [],
             available_sections=SECTION_LABELS,
+            bug_reports=bug_reports,
         )
 
     @app.route("/account/settings/avatar", methods=["POST"])

@@ -97,6 +97,13 @@
                     : "Открыть уведомления за последние 3 дня"
             );
         });
+        const hasVisibleFloatingTrigger = floatingTriggers.some(function (trigger) {
+            return !trigger.hidden;
+        });
+        document.documentElement.classList.toggle(
+            "shans-push-inbox-floating-active",
+            hasVisibleFloatingTrigger
+        );
         if (shouldBroadcast) {
             broadcastUnreadCount(unreadCount);
         }
@@ -403,5 +410,11 @@
     floatingTriggers.forEach(function (trigger) {
         trigger.hidden = trigger.dataset.pushInboxFloatingPersistent !== "true";
     });
+    document.documentElement.classList.toggle(
+        "shans-push-inbox-floating-active",
+        floatingTriggers.some(function (trigger) {
+            return !trigger.hidden;
+        })
+    );
     loadNotifications(true);
 })();
