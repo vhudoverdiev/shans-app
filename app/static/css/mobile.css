@@ -995,6 +995,13 @@
         overscroll-behavior: contain;
     }
 
+    .bug-report-description.form-input {
+        min-height: 92px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        line-height: 1.4;
+    }
+
     .bug-report-header h2 {
         font-size: 22px;
     }

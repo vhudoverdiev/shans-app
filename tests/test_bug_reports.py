@@ -242,6 +242,16 @@ class BugReportTests(unittest.TestCase):
         self.assertIn("border-radius: 20px;", panel_rule.group("body"))
         self.assertIn("overscroll-behavior: contain;", panel_rule.group("body"))
 
+        description_rule = re.search(
+            r"\.bug-report-description\.form-input\s*\{(?P<body>.*?)\n\s*\}",
+            mobile_stylesheet,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(description_rule)
+        self.assertIn("min-height: 92px;", description_rule.group("body"))
+        self.assertIn("padding-top: 12px;", description_rule.group("body"))
+        self.assertIn("padding-bottom: 12px;", description_rule.group("body"))
+
 
 if __name__ == "__main__":
     unittest.main()
