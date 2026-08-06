@@ -64,7 +64,7 @@ class WorkoutsTests(unittest.TestCase):
                 "workouts.html": (
                     "{{ plans|length }}|{{ plans[0].description_display }}|"
                     "{{ weight_entries|length }}|{{ summary.result_count }}|"
-                    "{{ weight_plan.planned_on if weight_plan else '' }}"
+                    "{{ weight_plan.weekday if weight_plan else '' }}"
                 ),
                 "workout_plan_detail.html": (
                     "{{ plan.name }}|{{ workout_results|length }}|"
@@ -214,43 +214,75 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
         self.assertEqual(get_weight_entries(1), [])
 
-    def test_weight_measurement_plan_is_saved_and_rendered(self):
+    def test_weight_measurement_plan_weekday_is_saved_and_rendered(self):
         app = self._create_app()
         client = app.test_client()
         self._login(client)
 
         response = client.post(
             "/workouts/weight-plan",
-            data={"planned_on": "2026-08-13"},
+            data={"weekday": "3"},
         )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
-        self.assertEqual(get_weight_measurement_plan(1)["planned_on"], "2026-08-13")
-        set_weight_measurement_plan(2, "2026-08-15")
-        self.assertEqual(get_weight_measurement_plan(2)["planned_on"], "2026-08-15")
-        self.assertEqual(get_weight_measurement_plan(1)["planned_on"], "2026-08-13")
+        self.assertEqual(get_weight_measurement_plan(1)["weekday"], 3)
+        set_weight_measurement_plan(2, 5)
+        self.assertEqual(get_weight_measurement_plan(2)["weekday"], 5)
+        self.assertEqual(get_weight_measurement_plan(1)["weekday"], 3)
         self.assertEqual(
-            next_weight_measurement_due_date("2026-08-13", date(2026, 8, 20)),
+            next_weight_measurement_due_date(3, date(2026, 8, 20)),
             date(2026, 8, 20),
+        )
+        self.assertEqual(
+            next_weight_measurement_due_date(0, date(2026, 8, 20)),
+            date(2026, 8, 24),
         )
 
         overview = client.get("/workouts").get_data(as_text=True)
-        self.assertTrue(overview.endswith("|2026-08-13"))
+        self.assertTrue(overview.endswith("|3"))
 
-    def test_invalid_weight_measurement_plan_date_is_rejected(self):
+    def test_invalid_weight_measurement_plan_weekday_is_rejected(self):
         app = self._create_app()
         client = app.test_client()
         self._login(client)
 
         response = client.post(
             "/workouts/weight-plan",
-            data={"planned_on": "13.08.2026"},
+            data={"weekday": "9"},
         )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
         self.assertIsNone(get_weight_measurement_plan(1))
+
+    def test_legacy_weight_measurement_plan_date_migrates_to_weekday(self):
+        conn = get_connection()
+        try:
+            conn.execute("DROP TABLE weight_measurement_plans")
+            conn.execute(
+                """
+                CREATE TABLE weight_measurement_plans (
+                    user_id INTEGER PRIMARY KEY,
+                    planned_on TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.execute(
+                """
+                INSERT INTO weight_measurement_plans (user_id, planned_on)
+                VALUES (1, '2026-08-13')
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        init_workouts_db()
+
+        self.assertEqual(get_weight_measurement_plan(1)["weekday"], 3)
 
     def test_weekly_plan_syncs_to_personal_schedule_without_duplicates(self):
         ensure_default_workout_plans(1)
@@ -521,8 +553,10 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("Записать вес", overview)
         self.assertIn("Плановый замер", overview)
         self.assertIn("workouts.save_weight_plan", overview)
-        self.assertIn('id="weight-plan-date"', overview)
-        self.assertIn("Ближайший:", overview)
+        self.assertIn('id="weight-plan-weekday"', overview)
+        self.assertIn('onchange="this.form.requestSubmit()"', overview)
+        self.assertIn("Сохраняется автоматически", overview)
+        self.assertNotIn("Сохранить дату", overview)
         self.assertIn("plan.description_display", overview)
         self.assertIn("plan.description_display", detail)
         self.assertIn("добавьте описание", workouts_source)

@@ -442,8 +442,10 @@
     align-items: center;
 }
 
-.workouts-weight-plan-controls .btn {
-    min-height: 44px;
+.workouts-weight-plan-status {
+    color: #7b8799;
+    font-size: 12px;
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -1108,8 +1110,8 @@
         grid-template-columns: 1fr;
     }
 
-    .workouts-weight-plan-controls .btn {
-        width: 100%;
+    .workouts-weight-plan-status {
+        white-space: normal;
     }
 
     .weight-chart {

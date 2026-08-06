@@ -724,9 +724,10 @@ def _get_due_weight_measurement_candidates(
 
         rows = conn.execute(
             f"""
-            SELECT user_id, planned_on
+            SELECT user_id, weekday
             FROM weight_measurement_plans
             WHERE user_id IN ({placeholders})
+              AND weekday BETWEEN 0 AND 6
             ORDER BY user_id ASC
             """,
             tuple(safe_user_ids),
@@ -734,12 +735,10 @@ def _get_due_weight_measurement_candidates(
 
         for row in rows:
             try:
-                planned_date = date.fromisoformat(row["planned_on"])
+                weekday = int(row["weekday"])
             except (TypeError, ValueError):
                 continue
-            if target_date < planned_date:
-                continue
-            if (target_date - planned_date).days % 7 != 0:
+            if target_date.weekday() != weekday:
                 continue
 
             user_id = int(row["user_id"])

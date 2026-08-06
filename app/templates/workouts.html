@@ -138,22 +138,28 @@
                 <div class="workouts-weight-plan-copy">
                     <span>Плановый замер</span>
                     {% if weight_plan %}
-                        <strong>Ближайший: {{ weight_plan.next_due_display }}</strong>
+                        <strong>{{ weight_plan.weekday_label }} · ближайший: {{ weight_plan.next_due_display }}</strong>
                     {% else %}
-                        <strong>Выберите дату, повтор каждую неделю</strong>
+                        <strong>Выберите день недели, повтор каждую неделю</strong>
                     {% endif %}
                 </div>
                 <div class="workouts-weight-plan-controls">
-                    <label class="sr-only" for="weight-plan-date">Плановая дата замера веса</label>
-                    <input
-                        type="date"
-                        id="weight-plan-date"
-                        name="planned_on"
+                    <label class="sr-only" for="weight-plan-weekday">День планового замера веса</label>
+                    <select
+                        id="weight-plan-weekday"
+                        name="weekday"
                         class="form-input"
-                        value="{{ weight_plan.planned_on if weight_plan else today }}"
+                        onchange="this.form.requestSubmit()"
                         required
                     >
-                    <button type="submit" class="btn btn-secondary">Сохранить дату</button>
+                        <option value="" disabled {% if not weight_plan %}selected{% endif %}>Выберите день недели</option>
+                        {% for weekday_value, weekday_label in weekdays %}
+                        <option value="{{ weekday_value }}" {% if weight_plan and weight_plan.weekday == weekday_value %}selected{% endif %}>{{ weekday_label }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="workouts-weight-plan-status" aria-live="polite">
+                        Сохраняется автоматически
+                    </span>
                 </div>
             </form>
 

@@ -118,12 +118,40 @@ def init_workouts_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS weight_measurement_plans (
                 user_id INTEGER PRIMARY KEY,
-                planned_on TEXT NOT NULL,
+                weekday INTEGER NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+        weight_plan_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(weight_measurement_plans)").fetchall()
+        }
+        if "weekday" not in weight_plan_columns:
+            conn.execute("ALTER TABLE weight_measurement_plans ADD COLUMN weekday INTEGER")
+            if "planned_on" in weight_plan_columns:
+                legacy_rows = conn.execute(
+                    """
+                    SELECT user_id, planned_on
+                    FROM weight_measurement_plans
+                    WHERE planned_on IS NOT NULL
+                      AND TRIM(planned_on) <> ''
+                    """
+                ).fetchall()
+                for row in legacy_rows:
+                    try:
+                        weekday = date.fromisoformat(row["planned_on"]).weekday()
+                    except (TypeError, ValueError):
+                        continue
+                    conn.execute(
+                        """
+                        UPDATE weight_measurement_plans
+                        SET weekday = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE user_id = ?
+                        """,
+                        (weekday, row["user_id"]),
+                    )
         conn.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_workout_results_user_date
@@ -537,18 +565,18 @@ def upsert_weight_entry(
         conn.close()
 
 
-def set_weight_measurement_plan(user_id: int, planned_on: str) -> None:
+def set_weight_measurement_plan(user_id: int, weekday: int) -> None:
     conn = get_connection()
     try:
         conn.execute(
             """
-            INSERT INTO weight_measurement_plans (user_id, planned_on)
+            INSERT INTO weight_measurement_plans (user_id, weekday)
             VALUES (?, ?)
             ON CONFLICT(user_id) DO UPDATE SET
-                planned_on = excluded.planned_on,
+                weekday = excluded.weekday,
                 updated_at = CURRENT_TIMESTAMP
             """,
-            (user_id, planned_on),
+            (user_id, weekday),
         )
         conn.commit()
     finally:
@@ -560,9 +588,10 @@ def get_weight_measurement_plan(user_id: int):
     try:
         return conn.execute(
             """
-            SELECT user_id, planned_on
+            SELECT user_id, weekday
             FROM weight_measurement_plans
             WHERE user_id = ?
+              AND weekday BETWEEN 0 AND 6
             """,
             (user_id,),
         ).fetchone()
@@ -571,16 +600,15 @@ def get_weight_measurement_plan(user_id: int):
 
 
 def next_weight_measurement_due_date(
-    planned_on: str,
+    weekday: int,
     reference_date: date | None = None,
 ) -> date:
-    planned_date = date.fromisoformat(planned_on)
+    safe_weekday = int(weekday)
+    if safe_weekday not in WEEKDAY_LABELS:
+        raise ValueError("Укажите корректный день недели для замера веса.")
     reference = reference_date or date.today()
-    if reference <= planned_date:
-        return planned_date
-    days_since_plan = (reference - planned_date).days
-    completed_weeks = (days_since_plan + 6) // 7
-    return planned_date + timedelta(days=completed_weeks * 7)
+    days_until_due = (safe_weekday - reference.weekday()) % 7
+    return reference + timedelta(days=days_until_due)
 
 
 def get_weight_entries(user_id: int):
@@ -689,15 +717,15 @@ def _validate_weight(raw_value: str) -> float:
     return round(weight, 2)
 
 
-def _validate_weight_plan_date(raw_value: str) -> str:
+def _validate_weight_plan_weekday(raw_value: str) -> int:
     normalized = (raw_value or "").strip()
     try:
-        parsed = datetime.strptime(normalized, "%Y-%m-%d").date()
-    except ValueError as exc:
-        raise ValueError("Укажите корректную плановую дату замера веса.") from exc
-    if parsed.isoformat() != normalized:
-        raise ValueError("Укажите корректную плановую дату замера веса.")
-    return parsed.isoformat()
+        weekday = int(normalized)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Выберите корректный день недели для замера веса.") from exc
+    if weekday not in WEEKDAY_LABELS:
+        raise ValueError("Выберите корректный день недели для замера веса.")
+    return weekday
 
 
 def _format_date_ru(value: str) -> str:
@@ -745,9 +773,10 @@ def index():
     weight_plan_row = get_weight_measurement_plan(user_id)
     weight_plan = dict(weight_plan_row) if weight_plan_row else None
     if weight_plan:
-        next_weight_date = next_weight_measurement_due_date(weight_plan["planned_on"])
+        next_weight_date = next_weight_measurement_due_date(weight_plan["weekday"])
         weight_plan["next_due_date"] = next_weight_date.isoformat()
         weight_plan["next_due_display"] = _format_date_ru(next_weight_date.isoformat())
+        weight_plan["weekday_label"] = WEEKDAY_LABELS.get(weight_plan["weekday"])
     chart_points = [
         {
             "date": item["measured_on"],
@@ -765,6 +794,7 @@ def index():
         weight_entries=weight_history,
         weight_chart_points=chart_points,
         weight_plan=weight_plan,
+        weekdays=WEEKDAYS,
         summary=build_workout_summary(all_results, weight_entries),
         today=date.today().isoformat(),
     )
@@ -948,13 +978,13 @@ def save_weight():
 def save_weight_plan():
     user_id = int(current_user.id)
     try:
-        planned_on = _validate_weight_plan_date(request.form.get("planned_on", ""))
-        set_weight_measurement_plan(user_id, planned_on)
+        weekday = _validate_weight_plan_weekday(request.form.get("weekday", ""))
+        set_weight_measurement_plan(user_id, weekday)
     except ValueError as error:
         flash(str(error), "error")
         return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
-    flash("Плановая дата замера веса сохранена. Напоминание придёт раз в неделю, если вес не записан.", "success")
+    flash("День планового замера веса сохранён. Напоминание придёт раз в неделю, если вес не записан.", "success")
     return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
 

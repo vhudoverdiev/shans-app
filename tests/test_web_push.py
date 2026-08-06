@@ -469,8 +469,8 @@ class WebPushSchedulingTests(unittest.TestCase):
         self.assertFalse(any(item.key.startswith("nutrition:missing:") for item in after_window))
 
     def test_weight_measurement_reminder_is_weekly_and_skips_recorded_weight(self):
-        set_weight_measurement_plan(1, "2026-07-14")
-        set_weight_measurement_plan(2, "2026-07-16")
+        set_weight_measurement_plan(1, 1)
+        set_weight_measurement_plan(2, 3)
 
         candidates = collect_due_candidates(
             datetime(2026, 7, 21, 21, 0, tzinfo=self.moscow_timezone),
