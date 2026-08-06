@@ -14,6 +14,7 @@
     const WEEKDAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
     let activeControl = null;
+    let customControlId = 0;
 
     function closeActiveControl() {
         if (activeControl && typeof activeControl.close === "function") {
@@ -138,8 +139,42 @@
         });
     }
 
+    function nextCustomControlId(prefix) {
+        customControlId += 1;
+        return prefix + "-" + customControlId;
+    }
+
+    function resetEnhancedSelect(select) {
+        const menuId = select.dataset.customControlMenuId || "";
+        const menu = menuId ? document.getElementById(menuId) : null;
+        const wrapper = select.closest(".custom-select");
+
+        if (menu) {
+            menu.remove();
+        }
+        if (wrapper && wrapper.parentNode) {
+            wrapper.parentNode.insertBefore(select, wrapper);
+            wrapper.remove();
+        }
+
+        select.classList.remove("custom-native-control");
+        select.removeAttribute("data-custom-control-ready");
+        select.removeAttribute("data-custom-control-menu-id");
+        select.removeAttribute("tabindex");
+    }
+
+    function selectNeedsRebuild(select) {
+        const wrapper = select.closest(".custom-select");
+        const button = wrapper ? wrapper.querySelector(".custom-select-button") : null;
+        const menuId = select.dataset.customControlMenuId || "";
+        return !wrapper || !button || !menuId || !document.getElementById(menuId);
+    }
+
     function enhanceSelect(select) {
-        if (select.dataset.customControlReady === "select") return;
+        if (select.dataset.customControlReady === "select") {
+            if (!selectNeedsRebuild(select)) return;
+            resetEnhancedSelect(select);
+        }
         select.dataset.customControlReady = "select";
 
         const wrapper = document.createElement("div");
@@ -166,6 +201,8 @@
 
         const menu = document.createElement("div");
         menu.className = "custom-select-menu custom-floating-panel";
+        menu.id = nextCustomControlId("custom-select-menu");
+        select.dataset.customControlMenuId = menu.id;
         menu.setAttribute("role", "listbox");
         menu.hidden = true;
         document.body.appendChild(menu);
@@ -848,5 +885,9 @@
             });
             observer.observe(document.body, { childList: true, subtree: true });
         }
+    });
+
+    document.addEventListener("shans:ajax-updated", function () {
+        initFormControls(document);
     });
 }());

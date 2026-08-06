@@ -47,6 +47,10 @@ MEAL_TYPES = {
 }
 
 
+def _normalize_food_name(value: str) -> str:
+    return re.sub(r"\s+", " ", (value or "").strip()).casefold()
+
+
 def init_nutrition_db() -> None:
     conn = get_connection()
     try:
@@ -332,7 +336,7 @@ def upsert_nutrition_profile(
 def get_food_catalog(user_id: int):
     conn = get_connection()
     try:
-        return conn.execute(
+        rows = conn.execute(
             """
             SELECT
                 id,
@@ -349,10 +353,24 @@ def get_food_catalog(user_id: int):
                     ELSE 0
                 END AS can_delete
             FROM nutrition_foods
-            ORDER BY is_builtin DESC, category, name
+            ORDER BY
+                is_builtin DESC,
+                CASE WHEN user_id = ? THEN 0 ELSE 1 END,
+                category,
+                TRIM(name),
+                id
             """,
-            (user_id,),
+            (user_id, user_id),
         ).fetchall()
+        catalog = []
+        seen_names = set()
+        for row in rows:
+            normalized_name = _normalize_food_name(row["name"])
+            if normalized_name in seen_names:
+                continue
+            seen_names.add(normalized_name)
+            catalog.append(row)
+        return catalog
     finally:
         conn.close()
 
@@ -396,6 +414,18 @@ def add_custom_food(
 
     conn = get_connection()
     try:
+        existing_foods = conn.execute(
+            """
+            SELECT id, name
+            FROM nutrition_foods
+            ORDER BY is_builtin DESC, id ASC
+            """
+        ).fetchall()
+        normalized_lookup = _normalize_food_name(normalized_name)
+        for food in existing_foods:
+            if _normalize_food_name(food["name"]) == normalized_lookup:
+                return int(food["id"])
+
         cursor = conn.execute(
             """
             INSERT INTO nutrition_foods (

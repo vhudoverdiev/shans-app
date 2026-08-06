@@ -88,6 +88,16 @@ class FormControlStylingTests(unittest.TestCase):
         self.assertIn("dispatchNativeChange", script)
         self.assertIn("MutationObserver", script)
 
+    def test_custom_select_recovers_when_ajax_removes_floating_menu(self):
+        script = FORM_CONTROLS_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("function resetEnhancedSelect(select)", script)
+        self.assertIn("function selectNeedsRebuild(select)", script)
+        self.assertIn('select.dataset.customControlMenuId = menu.id;', script)
+        self.assertIn('!document.getElementById(menuId)', script)
+        self.assertIn('document.addEventListener("shans:ajax-updated"', script)
+        self.assertIn("initFormControls(document);", script)
+
     def test_custom_date_control_uses_single_visible_picker_surface(self):
         stylesheet = STYLE_FILE.read_text(encoding="utf-8")
         script = FORM_CONTROLS_SCRIPT.read_text(encoding="utf-8")

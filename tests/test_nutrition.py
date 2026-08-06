@@ -290,6 +290,48 @@ class NutritionTests(unittest.TestCase):
         self.assertEqual(second_entries[0]["food_name"], "Мой йогурт")
         self.assertAlmostEqual(second_entries[0]["calories"], 88)
 
+    def test_custom_food_catalog_deduplicates_repeated_additions(self):
+        first_id = add_custom_food(1, "  Мой творог  ", 120, 18, 5, 3)
+        second_id = add_custom_food(1, "мой   творог", 130, 19, 6, 4)
+
+        self.assertEqual(second_id, first_id)
+        matches = [
+            item for item in get_food_catalog(1)
+            if item["name"].strip().casefold() == "мой творог"
+        ]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["calories"], 120)
+
+    def test_food_catalog_hides_existing_duplicate_rows_from_legacy_data(self):
+        conn = get_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO nutrition_foods (
+                    catalog_key, user_id, name, category, calories,
+                    protein, fat, carbs, is_builtin
+                ) VALUES (NULL, 1, 'Дубликат', 'Мои продукты', 100, 10, 1, 2, 0)
+                """
+            )
+            conn.execute(
+                """
+                INSERT INTO nutrition_foods (
+                    catalog_key, user_id, name, category, calories,
+                    protein, fat, carbs, is_builtin
+                ) VALUES (NULL, 1, '  дубликат  ', 'Мои продукты', 200, 20, 2, 4, 0)
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        matches = [
+            item for item in get_food_catalog(1)
+            if item["name"].strip().casefold() == "дубликат"
+        ]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["calories"], 100)
+
     def test_diary_scales_macros_and_history_includes_empty_days(self):
         food = next(
             item for item in get_food_catalog(1)
