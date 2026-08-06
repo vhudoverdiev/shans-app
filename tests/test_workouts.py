@@ -14,11 +14,14 @@ from app.workouts import (
     delete_weight_entry,
     ensure_default_workout_plans,
     get_workout_plan,
+    get_weight_measurement_plan,
     get_weight_entries,
     get_workout_plans,
     get_workout_results,
     init_workouts_db,
+    next_weight_measurement_due_date,
     next_workout_date,
+    set_weight_measurement_plan,
     sync_workout_plan_schedule,
     update_workout_plan,
     upsert_weight_entry,
@@ -60,7 +63,8 @@ class WorkoutsTests(unittest.TestCase):
             {
                 "workouts.html": (
                     "{{ plans|length }}|{{ plans[0].description_display }}|"
-                    "{{ weight_entries|length }}|{{ summary.result_count }}"
+                    "{{ weight_entries|length }}|{{ summary.result_count }}|"
+                    "{{ weight_plan.planned_on if weight_plan else '' }}"
                 ),
                 "workout_plan_detail.html": (
                     "{{ plan.name }}|{{ workout_results|length }}|"
@@ -152,7 +156,7 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         overview_parts = response.get_data(as_text=True).split("|")
         self.assertEqual(overview_parts[0], "3")
-        self.assertEqual(overview_parts[2:], ["0", "0"])
+        self.assertEqual(overview_parts[2:], ["0", "0", ""])
 
         plan_id = get_workout_plans(1)[0]["id"]
         response = client.post(
@@ -209,6 +213,44 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
         self.assertEqual(get_weight_entries(1), [])
+
+    def test_weight_measurement_plan_is_saved_and_rendered(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+
+        response = client.post(
+            "/workouts/weight-plan",
+            data={"planned_on": "2026-08-13"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
+        self.assertEqual(get_weight_measurement_plan(1)["planned_on"], "2026-08-13")
+        set_weight_measurement_plan(2, "2026-08-15")
+        self.assertEqual(get_weight_measurement_plan(2)["planned_on"], "2026-08-15")
+        self.assertEqual(get_weight_measurement_plan(1)["planned_on"], "2026-08-13")
+        self.assertEqual(
+            next_weight_measurement_due_date("2026-08-13", date(2026, 8, 20)),
+            date(2026, 8, 20),
+        )
+
+        overview = client.get("/workouts").get_data(as_text=True)
+        self.assertTrue(overview.endswith("|2026-08-13"))
+
+    def test_invalid_weight_measurement_plan_date_is_rejected(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+
+        response = client.post(
+            "/workouts/weight-plan",
+            data={"planned_on": "13.08.2026"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/workouts#weight-progress")
+        self.assertIsNone(get_weight_measurement_plan(1))
 
     def test_weekly_plan_syncs_to_personal_schedule_without_duplicates(self):
         ensure_default_workout_plans(1)
@@ -477,6 +519,10 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("История веса", overview)
         self.assertIn("График веса", overview)
         self.assertIn("Записать вес", overview)
+        self.assertIn("Плановый замер", overview)
+        self.assertIn("workouts.save_weight_plan", overview)
+        self.assertIn('id="weight-plan-date"', overview)
+        self.assertIn("Ближайший:", overview)
         self.assertIn("plan.description_display", overview)
         self.assertIn("plan.description_display", detail)
         self.assertIn("добавьте описание", workouts_source)

@@ -403,6 +403,61 @@
     padding-top: 6px;
 }
 
+.workouts-weight-plan {
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+    gap: 14px;
+    align-items: center;
+    background: linear-gradient(135deg, #f8fbff 0%, #fbf9ff 100%);
+}
+
+.workouts-weight-plan-copy span,
+.workouts-weight-plan-copy strong {
+    display: block;
+}
+
+.workouts-weight-plan-copy span {
+    color: var(--workout-purple);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.workouts-weight-plan-copy strong {
+    margin-top: 4px;
+    color: var(--workout-ink);
+    font-size: 16px;
+    line-height: 1.3;
+}
+
+.workouts-weight-plan-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.workouts-weight-plan-controls .btn {
+    min-height: 44px;
+    white-space: nowrap;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .workouts-foldout-summary {
     display: flex;
     align-items: center;
@@ -1046,6 +1101,15 @@
 
     .workouts-form-row {
         grid-template-columns: 1fr;
+    }
+
+    .workouts-weight-plan,
+    .workouts-weight-plan-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .workouts-weight-plan-controls .btn {
+        width: 100%;
     }
 
     .weight-chart {

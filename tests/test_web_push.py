@@ -20,7 +20,7 @@ from app.database import _dict_row_factory
 from app.schedule_notifications import build_personal_tasks_text, build_work_tasks_text
 from app.learning import init_learning_db
 from app.nutrition import init_nutrition_db
-from app.workouts import init_workouts_db
+from app.workouts import init_workouts_db, set_weight_measurement_plan, upsert_weight_entry
 from app.web_push import (
     PushCandidate,
     _build_declarative_payload,
@@ -467,6 +467,41 @@ class WebPushSchedulingTests(unittest.TestCase):
             user_ids={2},
         )
         self.assertFalse(any(item.key.startswith("nutrition:missing:") for item in after_window))
+
+    def test_weight_measurement_reminder_is_weekly_and_skips_recorded_weight(self):
+        set_weight_measurement_plan(1, "2026-07-14")
+        set_weight_measurement_plan(2, "2026-07-16")
+
+        candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 0, tzinfo=self.moscow_timezone),
+            user_ids={1, 2},
+        )
+        weight_candidates = [
+            item for item in candidates if item.key == "weight-measurement:missing:2026-07-21"
+        ]
+
+        self.assertEqual(len(weight_candidates), 1)
+        self.assertEqual(weight_candidates[0].user_id, 1)
+        self.assertEqual(weight_candidates[0].navigate_path, "/workouts#weight-progress")
+        self.assertIn("плановый замер веса", weight_candidates[0].body)
+
+        upsert_weight_entry(1, "2026-07-21", 78.4, "")
+        completed_candidates = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 0, tzinfo=self.moscow_timezone),
+            user_ids={1, 2},
+        )
+        self.assertFalse(
+            any(
+                item.key == "weight-measurement:missing:2026-07-21"
+                for item in completed_candidates
+            )
+        )
+
+        after_window = collect_due_candidates(
+            datetime(2026, 7, 21, 21, 5, tzinfo=self.moscow_timezone),
+            user_ids={1},
+        )
+        self.assertFalse(any(item.key.startswith("weight-measurement:") for item in after_window))
 
     def test_task_after_midnight_is_reminded_two_hours_before(self):
         task_id = self._add_task("Ночная поездка", "2026-07-22", "01:00")

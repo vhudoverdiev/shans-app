@@ -236,12 +236,15 @@ class IntroLoaderTests(unittest.TestCase):
 
         self.assertIn("opacity: 0;", critical_logo)
         self.assertIn("position: absolute;", critical_logo)
-        self.assertIn("top: 50%;", critical_logo)
+        self.assertIn("top: calc(50% - var(--app-intro-composition-offset));", critical_logo)
         self.assertIn("left: 50%;", critical_logo)
         self.assertIn("transform: translate(-50%, -50%) scale(0.94);", critical_logo)
         self.assertIn("background: transparent;", critical_logo)
         self.assertIn("position: absolute;", critical_progress)
-        self.assertIn("top: calc(50% + (var(--app-intro-logo-size) / 2) + 18px);", critical_progress)
+        self.assertIn(
+            "top: calc(50% + (var(--app-intro-logo-size) / 2) + var(--app-intro-progress-gap) - var(--app-intro-composition-offset));",
+            critical_progress,
+        )
         self.assertIn("left: 50%;", critical_progress)
         self.assertIn("opacity: 0;", critical_progress)
         self.assertIn("transform: translate(-50%, 6px);", critical_progress)
@@ -314,16 +317,22 @@ class IntroLoaderTests(unittest.TestCase):
 
         for stage_block in (critical_stage, runtime_stage):
             self.assertIn("--app-intro-logo-size:", stage_block)
+            self.assertIn("--app-intro-progress-gap:", stage_block)
+            self.assertIn("--app-intro-progress-height:", stage_block)
+            self.assertIn("--app-intro-composition-offset:", stage_block)
             self.assertIn("display: grid;", stage_block)
             self.assertIn("place-items: center;", stage_block)
             self.assertNotIn("flex-direction: column;", stage_block)
 
         self.assertIn("position: absolute;", runtime_logo)
-        self.assertIn("top: 50%;", runtime_logo)
+        self.assertIn("top: calc(50% - var(--app-intro-composition-offset));", runtime_logo)
         self.assertIn("left: 50%;", runtime_logo)
         self.assertIn("transform: translate(-50%, -50%) scale(0.94);", runtime_logo)
         self.assertIn("position: absolute;", runtime_progress)
-        self.assertIn("top: calc(50% + (var(--app-intro-logo-size) / 2) + 22px);", runtime_progress)
+        self.assertIn(
+            "top: calc(50% + (var(--app-intro-logo-size) / 2) + var(--app-intro-progress-gap) - var(--app-intro-composition-offset));",
+            runtime_progress,
+        )
         self.assertIn("left: 50%;", runtime_progress)
         self.assertNotIn("margin-top:", runtime_progress)
 
@@ -349,9 +358,12 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertNotIn("app-intro-orbit", stylesheet)
         self.assertNotIn("app-intro-glow", template)
         self.assertNotIn("app-intro-glow", stylesheet)
-        self.assertIn("height: 8px;", progress_block)
+        self.assertIn("height: var(--app-intro-progress-height);", progress_block)
         self.assertIn("padding: 2px;", progress_block)
-        self.assertIn("top: calc(50% + (var(--app-intro-logo-size) / 2) + 22px);", progress_block)
+        self.assertIn(
+            "top: calc(50% + (var(--app-intro-logo-size) / 2) + var(--app-intro-progress-gap) - var(--app-intro-composition-offset));",
+            progress_block,
+        )
         self.assertIn("border: 1px solid rgba(124, 58, 237, 0.16);", progress_block)
         self.assertIn("box-shadow:", progress_block)
         self.assertIn("background-size: 220% 100%;", progress_fill_block)

@@ -102,6 +102,9 @@
 
         html.app-intro-pending .app-intro-stage {
             --app-intro-logo-size: 96px;
+            --app-intro-progress-gap: 18px;
+            --app-intro-progress-height: 3px;
+            --app-intro-composition-offset: calc((var(--app-intro-progress-gap) + var(--app-intro-progress-height)) / 2);
             position: relative;
             width: min(82vw, 360px);
             min-height: 310px;
@@ -111,7 +114,7 @@
 
         html.app-intro-pending .app-intro-logo {
             position: absolute;
-            top: 50%;
+            top: calc(50% - var(--app-intro-composition-offset));
             left: 50%;
             width: var(--app-intro-logo-size);
             height: var(--app-intro-logo-size);
@@ -133,10 +136,10 @@
 
         html.app-intro-pending .app-intro-progress {
             position: absolute;
-            top: calc(50% + (var(--app-intro-logo-size) / 2) + 18px);
+            top: calc(50% + (var(--app-intro-logo-size) / 2) + var(--app-intro-progress-gap) - var(--app-intro-composition-offset));
             left: 50%;
             width: 104px;
-            height: 3px;
+            height: var(--app-intro-progress-height);
             overflow: hidden;
             border-radius: 999px;
             background: rgba(99, 102, 241, 0.13);

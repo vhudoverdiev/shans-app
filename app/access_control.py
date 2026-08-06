@@ -129,6 +129,7 @@ SECTION_ENDPOINTS = {
         "workouts.create_result",
         "workouts.remove_result",
         "workouts.save_weight",
+        "workouts.save_weight_plan",
         "workouts.remove_weight",
     },
     "nutrition": {

@@ -128,6 +128,35 @@
         {% endif %}
 
         <div class="workouts-weight-form-block">
+            <form
+                method="post"
+                action="{{ url_for('workouts.save_weight_plan') }}"
+                class="workouts-weight-plan"
+                data-ajax-submit
+                data-ajax-update=".workouts-weight-section"
+            >
+                <div class="workouts-weight-plan-copy">
+                    <span>Плановый замер</span>
+                    {% if weight_plan %}
+                        <strong>Ближайший: {{ weight_plan.next_due_display }}</strong>
+                    {% else %}
+                        <strong>Выберите дату, повтор каждую неделю</strong>
+                    {% endif %}
+                </div>
+                <div class="workouts-weight-plan-controls">
+                    <label class="sr-only" for="weight-plan-date">Плановая дата замера веса</label>
+                    <input
+                        type="date"
+                        id="weight-plan-date"
+                        name="planned_on"
+                        class="form-input"
+                        value="{{ weight_plan.planned_on if weight_plan else today }}"
+                        required
+                    >
+                    <button type="submit" class="btn btn-secondary">Сохранить дату</button>
+                </div>
+            </form>
+
             <div class="workouts-section-heading workouts-section-heading-compact">
                 <div>
                     <p class="workouts-section-kicker">Вес</p>

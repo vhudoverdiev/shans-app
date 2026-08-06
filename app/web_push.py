@@ -700,6 +700,76 @@ def _get_due_workout_result_candidates(
     return candidates
 
 
+def _get_due_weight_measurement_candidates(
+    now_local: datetime,
+    user_ids,
+) -> list[PushCandidate]:
+    if not _summary_is_due(now_local, _DAILY_HEALTH_REMINDER_HOUR):
+        return []
+
+    safe_user_ids = sorted({int(user_id) for user_id in user_ids})
+    if not safe_user_ids:
+        return []
+
+    target_date = now_local.date()
+    placeholders = ", ".join("?" for _user_id in safe_user_ids)
+    candidates: list[PushCandidate] = []
+    conn = get_connection()
+    try:
+        if not (
+            _table_exists(conn, "weight_measurement_plans")
+            and _table_exists(conn, "weight_entries")
+        ):
+            return []
+
+        rows = conn.execute(
+            f"""
+            SELECT user_id, planned_on
+            FROM weight_measurement_plans
+            WHERE user_id IN ({placeholders})
+            ORDER BY user_id ASC
+            """,
+            tuple(safe_user_ids),
+        ).fetchall()
+
+        for row in rows:
+            try:
+                planned_date = date.fromisoformat(row["planned_on"])
+            except (TypeError, ValueError):
+                continue
+            if target_date < planned_date:
+                continue
+            if (target_date - planned_date).days % 7 != 0:
+                continue
+
+            user_id = int(row["user_id"])
+            entry_exists = conn.execute(
+                """
+                SELECT 1
+                FROM weight_entries
+                WHERE user_id = ? AND measured_on = ?
+                LIMIT 1
+                """,
+                (user_id, target_date.isoformat()),
+            ).fetchone()
+            if entry_exists:
+                continue
+
+            candidates.append(
+                PushCandidate(
+                    key=f"weight-measurement:missing:{target_date.isoformat()}",
+                    title="Шанс — плановый замер веса",
+                    body="Сегодня плановый замер веса. Запишите значение, чтобы график оставался точным.",
+                    navigate_path="/workouts#weight-progress",
+                    tag=f"weight-measurement-missing-{target_date.isoformat()}",
+                    user_id=user_id,
+                )
+            )
+    finally:
+        conn.close()
+    return candidates
+
+
 def collect_due_candidates(
     now_local: datetime | None = None,
     user_ids=None,
@@ -773,6 +843,7 @@ def collect_due_candidates(
         candidates.extend(_get_due_learning_candidates(now_local, user_ids))
         candidates.extend(_get_due_nutrition_candidates(now_local, user_ids))
         candidates.extend(_get_due_workout_result_candidates(now_local, user_ids))
+        candidates.extend(_get_due_weight_measurement_candidates(now_local, user_ids))
     return candidates
 
 

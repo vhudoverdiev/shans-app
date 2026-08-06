@@ -116,6 +116,16 @@ def init_workouts_db() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS weight_measurement_plans (
+                user_id INTEGER PRIMARY KEY,
+                planned_on TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_workout_results_user_date
             ON workout_results (user_id, performed_on DESC, id DESC)
             """
@@ -527,6 +537,52 @@ def upsert_weight_entry(
         conn.close()
 
 
+def set_weight_measurement_plan(user_id: int, planned_on: str) -> None:
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT INTO weight_measurement_plans (user_id, planned_on)
+            VALUES (?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                planned_on = excluded.planned_on,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, planned_on),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_weight_measurement_plan(user_id: int):
+    conn = get_connection()
+    try:
+        return conn.execute(
+            """
+            SELECT user_id, planned_on
+            FROM weight_measurement_plans
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def next_weight_measurement_due_date(
+    planned_on: str,
+    reference_date: date | None = None,
+) -> date:
+    planned_date = date.fromisoformat(planned_on)
+    reference = reference_date or date.today()
+    if reference <= planned_date:
+        return planned_date
+    days_since_plan = (reference - planned_date).days
+    completed_weeks = (days_since_plan + 6) // 7
+    return planned_date + timedelta(days=completed_weeks * 7)
+
+
 def get_weight_entries(user_id: int):
     conn = get_connection()
     try:
@@ -633,6 +689,17 @@ def _validate_weight(raw_value: str) -> float:
     return round(weight, 2)
 
 
+def _validate_weight_plan_date(raw_value: str) -> str:
+    normalized = (raw_value or "").strip()
+    try:
+        parsed = datetime.strptime(normalized, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise ValueError("Укажите корректную плановую дату замера веса.") from exc
+    if parsed.isoformat() != normalized:
+        raise ValueError("Укажите корректную плановую дату замера веса.")
+    return parsed.isoformat()
+
+
 def _format_date_ru(value: str) -> str:
     try:
         return datetime.strptime(value, "%Y-%m-%d").strftime("%d.%m.%Y")
@@ -675,6 +742,12 @@ def index():
         plans.append(plan)
     all_results = get_workout_results(user_id, limit=None)
     weight_entries = get_weight_entries(user_id)
+    weight_plan_row = get_weight_measurement_plan(user_id)
+    weight_plan = dict(weight_plan_row) if weight_plan_row else None
+    if weight_plan:
+        next_weight_date = next_weight_measurement_due_date(weight_plan["planned_on"])
+        weight_plan["next_due_date"] = next_weight_date.isoformat()
+        weight_plan["next_due_display"] = _format_date_ru(next_weight_date.isoformat())
     chart_points = [
         {
             "date": item["measured_on"],
@@ -691,6 +764,7 @@ def index():
         plans=plans,
         weight_entries=weight_history,
         weight_chart_points=chart_points,
+        weight_plan=weight_plan,
         summary=build_workout_summary(all_results, weight_entries),
         today=date.today().isoformat(),
     )
@@ -866,6 +940,21 @@ def save_weight():
         return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
     flash("Вес сохранён. Повторная запись за ту же дату обновляет значение.", "success")
+    return redirect(url_for("workouts.index", _anchor="weight-progress"))
+
+
+@workouts_bp.route("/weight-plan", methods=["POST"])
+@login_required
+def save_weight_plan():
+    user_id = int(current_user.id)
+    try:
+        planned_on = _validate_weight_plan_date(request.form.get("planned_on", ""))
+        set_weight_measurement_plan(user_id, planned_on)
+    except ValueError as error:
+        flash(str(error), "error")
+        return redirect(url_for("workouts.index", _anchor="weight-progress"))
+
+    flash("Плановая дата замера веса сохранена. Напоминание придёт раз в неделю, если вес не записан.", "success")
     return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
 

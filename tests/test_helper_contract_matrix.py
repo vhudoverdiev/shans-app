@@ -523,6 +523,7 @@ SECTION_ENDPOINT_CASES = [
     ("english_day", "learning.english_day", "study"),
     ("workouts", "workouts.index", "workouts"),
     ("workout_result", "workouts.create_result", "workouts"),
+    ("weight_plan", "workouts.save_weight_plan", "workouts"),
     ("nutrition", "nutrition.index", "nutrition"),
     ("nutrition_entry", "nutrition.create_entry", "nutrition"),
     ("system_endpoint", "login", None),
