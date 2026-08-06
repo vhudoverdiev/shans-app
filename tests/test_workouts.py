@@ -284,6 +284,29 @@ class WorkoutsTests(unittest.TestCase):
 
         self.assertEqual(get_weight_measurement_plan(1)["weekday"], 3)
 
+    def test_legacy_empty_weight_measurement_plan_table_accepts_first_weekday_save(self):
+        conn = get_connection()
+        try:
+            conn.execute("DROP TABLE weight_measurement_plans")
+            conn.execute(
+                """
+                CREATE TABLE weight_measurement_plans (
+                    user_id INTEGER PRIMARY KEY,
+                    planned_on TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        init_workouts_db()
+        set_weight_measurement_plan(1, 4)
+
+        self.assertEqual(get_weight_measurement_plan(1)["weekday"], 4)
+
     def test_weekly_plan_syncs_to_personal_schedule_without_duplicates(self):
         ensure_default_workout_plans(1)
         plan = get_workout_plans(1)[0]

@@ -128,30 +128,68 @@ def init_workouts_db() -> None:
             row["name"]
             for row in conn.execute("PRAGMA table_info(weight_measurement_plans)").fetchall()
         }
-        if "weekday" not in weight_plan_columns:
-            conn.execute("ALTER TABLE weight_measurement_plans ADD COLUMN weekday INTEGER")
-            if "planned_on" in weight_plan_columns:
-                legacy_rows = conn.execute(
-                    """
-                    SELECT user_id, planned_on
-                    FROM weight_measurement_plans
-                    WHERE planned_on IS NOT NULL
-                      AND TRIM(planned_on) <> ''
-                    """
-                ).fetchall()
-                for row in legacy_rows:
+        if "planned_on" in weight_plan_columns or "weekday" not in weight_plan_columns:
+            legacy_select_weekday = (
+                "weekday" if "weekday" in weight_plan_columns else "NULL AS weekday"
+            )
+            legacy_select_planned_on = (
+                "planned_on" if "planned_on" in weight_plan_columns else "NULL AS planned_on"
+            )
+            legacy_select_created_at = (
+                "created_at" if "created_at" in weight_plan_columns else "CURRENT_TIMESTAMP AS created_at"
+            )
+            legacy_select_updated_at = (
+                "updated_at" if "updated_at" in weight_plan_columns else "CURRENT_TIMESTAMP AS updated_at"
+            )
+            legacy_rows = conn.execute(
+                f"""
+                SELECT
+                    user_id,
+                    {legacy_select_weekday},
+                    {legacy_select_planned_on},
+                    {legacy_select_created_at},
+                    {legacy_select_updated_at}
+                FROM weight_measurement_plans
+                """
+            ).fetchall()
+            conn.execute("DROP TABLE IF EXISTS weight_measurement_plans_new")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS weight_measurement_plans_new (
+                    user_id INTEGER PRIMARY KEY,
+                    weekday INTEGER NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            for row in legacy_rows:
+                weekday = None
+                try:
+                    candidate = int(row["weekday"])
+                except (TypeError, ValueError):
+                    candidate = None
+                if candidate in WEEKDAY_LABELS:
+                    weekday = candidate
+                elif row["planned_on"]:
                     try:
                         weekday = date.fromisoformat(row["planned_on"]).weekday()
                     except (TypeError, ValueError):
-                        continue
-                    conn.execute(
-                        """
-                        UPDATE weight_measurement_plans
-                        SET weekday = ?, updated_at = CURRENT_TIMESTAMP
-                        WHERE user_id = ?
-                        """,
-                        (weekday, row["user_id"]),
-                    )
+                        weekday = None
+                if weekday not in WEEKDAY_LABELS:
+                    continue
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO weight_measurement_plans_new (
+                        user_id, weekday, created_at, updated_at
+                    ) VALUES (?, ?, COALESCE(?, CURRENT_TIMESTAMP), COALESCE(?, CURRENT_TIMESTAMP))
+                    """,
+                    (row["user_id"], weekday, row["created_at"], row["updated_at"]),
+                )
+            conn.execute("DROP TABLE weight_measurement_plans")
+            conn.execute(
+                "ALTER TABLE weight_measurement_plans_new RENAME TO weight_measurement_plans"
+            )
         conn.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_workout_results_user_date

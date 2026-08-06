@@ -343,6 +343,15 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("left: 50%;", runtime_progress)
         self.assertNotIn("margin-top:", runtime_progress)
 
+    def test_intro_has_extra_visual_lift_in_standalone_app_mode(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        stylesheet = STYLESHEET.read_text(encoding="utf-8")
+
+        self.assertIn("html.shans-standalone-app.app-intro-pending .app-intro-stage", template)
+        self.assertIn("--app-intro-visual-lift: 58px;", template)
+        self.assertIn("html.shans-standalone-app .app-intro-stage", stylesheet)
+        self.assertIn("--app-intro-visual-lift: 58px;", stylesheet)
+
     def test_intro_progress_bar_is_styled_loader_not_plain_line(self):
         stylesheet = STYLESHEET.read_text(encoding="utf-8")
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

@@ -82,7 +82,7 @@ a {
     --app-intro-logo-size: clamp(92px, 10vw, 116px);
     --app-intro-progress-gap: 22px;
     --app-intro-progress-height: 8px;
-    --app-intro-visual-lift: 14px;
+    --app-intro-visual-lift: 28px;
     --app-intro-composition-offset: calc((var(--app-intro-progress-gap) + var(--app-intro-progress-height)) / 2);
     position: relative;
     width: min(82vw, 360px);
@@ -90,6 +90,10 @@ a {
     display: grid;
     place-items: center;
     isolation: isolate;
+}
+
+html.shans-standalone-app .app-intro-stage {
+    --app-intro-visual-lift: 58px;
 }
 
 .app-intro-logo {
@@ -222,6 +226,7 @@ a {
         --app-intro-logo-size: 96px;
         --app-intro-progress-gap: 18px;
         --app-intro-progress-height: 8px;
+        --app-intro-visual-lift: 44px;
         width: 88vw;
         min-height: 280px;
     }
