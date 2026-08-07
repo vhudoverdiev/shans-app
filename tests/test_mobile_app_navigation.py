@@ -305,6 +305,29 @@ class MobileAppNavigationTests(unittest.TestCase):
             r"\.page-header\s*>\s*:not\(\.page-actions\)",
         )
 
+    def test_phone_landscape_mode_is_blocked_by_orientation_overlay(self):
+        base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+
+        self.assertIn('class="orientation-lock-overlay"', base)
+        self.assertIn('aria-label="Поверните телефон вертикально"', base)
+        self.assertIn("Переверните телефон", base)
+        self.assertIn(".orientation-lock-overlay {\n    display: none;", mobile_styles)
+        self.assertIn(
+            "@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px)",
+            mobile_styles,
+        )
+        landscape_rule = mobile_styles.split(
+            "@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px)",
+            1,
+        )[1]
+        self.assertIn("z-index: 30000;", landscape_rule)
+        self.assertIn("place-items: center;", landscape_rule)
+        self.assertIn("overflow: hidden !important;", landscape_rule)
+        self.assertIn(".page-shell", landscape_rule)
+        self.assertIn("pointer-events: none;", landscape_rule)
+        self.assertIn("@keyframes orientation-lock-rotate", mobile_styles)
+
     def test_flash_messages_are_full_width_at_the_bottom(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
 

@@ -258,6 +258,19 @@
     </header>
     {% endif %}
 
+    <div class="orientation-lock-overlay" role="status" aria-live="polite" aria-label="Поверните телефон вертикально">
+        <div class="orientation-lock-card">
+            <div class="orientation-lock-phone" aria-hidden="true">
+                <svg viewBox="0 0 64 64" focusable="false">
+                    <rect x="20" y="7" width="24" height="50" rx="8"></rect>
+                    <path d="M28 13h8M30 51h4"></path>
+                </svg>
+            </div>
+            <div class="orientation-lock-title">Переверните телефон</div>
+            <div class="orientation-lock-text">Приложение красиво работает в вертикальном режиме.</div>
+        </div>
+    </div>
+
     <main class="page-shell">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}

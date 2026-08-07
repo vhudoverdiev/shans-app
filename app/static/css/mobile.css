@@ -5,6 +5,10 @@
     display: none;
 }
 
+.orientation-lock-overlay {
+    display: none;
+}
+
 @media (max-width: 768px) and (pointer: coarse) {
     .car-mobile-complete-btn {
         display: inline-flex;
@@ -1302,5 +1306,103 @@
     .app-body .shooting-nav-link:active {
         box-shadow: none !important;
         filter: none !important;
+    }
+}
+
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) {
+    html,
+    body {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+    }
+
+    .orientation-lock-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 30000;
+        display: grid;
+        place-items: center;
+        padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+        background:
+            radial-gradient(circle at 50% 42%, rgba(219, 234, 254, 0.92) 0, rgba(238, 242, 255, 0.82) 34%, transparent 68%),
+            linear-gradient(145deg, #f8fbff 0%, #eef3ff 52%, #f7f5ff 100%);
+    }
+
+    .orientation-lock-card {
+        width: min(360px, calc(100vw - 44px));
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 24px 22px;
+        border: 1px solid rgba(191, 219, 254, 0.9);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 24px 70px rgba(37, 99, 235, 0.16);
+        text-align: center;
+    }
+
+    .orientation-lock-phone {
+        width: 74px;
+        height: 74px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        color: #ffffff;
+        transform: rotate(-90deg);
+        animation: orientation-lock-rotate 1.4s ease-in-out infinite;
+    }
+
+    .orientation-lock-phone svg {
+        width: 44px;
+        height: 44px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .orientation-lock-title {
+        color: #101827;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.08;
+    }
+
+    .orientation-lock-text {
+        max-width: 280px;
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 650;
+        line-height: 1.42;
+    }
+
+    .site-header,
+    .page-shell,
+    .app-bottom-nav,
+    .mobile-push-inbox-trigger,
+    .mobile-push-inbox-sheet,
+    .bug-report-trigger,
+    .flash-stack {
+        pointer-events: none;
+        user-select: none;
+    }
+}
+
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) and (prefers-reduced-motion: reduce) {
+    .orientation-lock-phone {
+        animation: none;
+    }
+}
+
+@keyframes orientation-lock-rotate {
+    0%,
+    100% {
+        transform: rotate(-90deg);
+    }
+
+    50% {
+        transform: rotate(0deg);
     }
 }
