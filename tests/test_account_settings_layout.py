@@ -65,6 +65,7 @@ class AccountSettingsLayoutTests(unittest.TestCase):
         self.assertIn("url_for('delete_account_user'", template)
         self.assertIn('form="delete_managed_user_{{ user.id }}"', template)
         self.assertIn("account-managed-user-delete-form", template)
+        self.assertNotIn("onclick=\"return confirm('РЈРґР°Р»РёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ?');\"", template)
         self.assertIn("autosaveManagedUserForm", template)
         self.assertIn("managedUserPending", template)
         self.assertNotIn("user.data_database_name", template)
