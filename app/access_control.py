@@ -445,7 +445,7 @@ def create_managed_user(form: ManagedUserForm, created_by_user_id: int) -> int:
 
 def update_managed_user(
     user_id: int,
-    display_name: str,
+    display_name: str | None,
     password: str,
     permissions: set[str],
 ) -> None:
@@ -460,27 +460,69 @@ def update_managed_user(
         if user.get("is_system_admin"):
             raise ValueError("Системного администратора нельзя изменить здесь.")
 
-        normalized_name = (display_name or "").strip()
-        if not normalized_name:
-            raise ValueError("Укажите имя пользователя.")
+        updates: list[str] = []
+        params: list[str] = []
+
+        if display_name is not None:
+            normalized_name = display_name.strip()
+            if not normalized_name:
+                raise ValueError("Укажите имя пользователя.")
+            updates.append("display_name = ?")
+            params.append(normalized_name)
 
         if password:
             if len(password) < 8:
                 raise ValueError("Пароль должен быть не короче 8 символов.")
+            updates.append("password_hash = ?")
+            params.append(generate_password_hash(password))
+
+        if updates:
             conn.execute(
-                "UPDATE users SET display_name = ?, password_hash = ? WHERE id = ?",
-                (normalized_name, generate_password_hash(password), user_id),
+                f"UPDATE users SET {', '.join(updates)} WHERE id = ?",
+                (*params, user_id),
             )
-        else:
-            conn.execute(
-                "UPDATE users SET display_name = ? WHERE id = ?",
-                (normalized_name, user_id),
-            )
-        conn.commit()
+            conn.commit()
     finally:
         conn.close()
 
     set_user_permissions(user_id, permissions)
+
+
+def delete_managed_user(user_id: int) -> None:
+    conn = get_master_connection()
+    try:
+        user = conn.execute(
+            """
+            SELECT id, username, is_system_admin, data_database_name, is_active
+            FROM users
+            WHERE id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+        if not user:
+            raise ValueError("Пользователь не найден.")
+        if user["is_system_admin"]:
+            raise ValueError("Системного администратора нельзя удалить здесь.")
+        if not (user["data_database_name"] or "").strip():
+            raise ValueError("Этого пользователя нельзя удалить здесь.")
+
+        deleted_username = f"{user['username']}__deleted_{user_id}"
+        conn.execute(
+            """
+            UPDATE users
+            SET username = ?, is_active = 0
+            WHERE id = ?
+            """,
+            (deleted_username, user_id),
+        )
+        conn.execute("DELETE FROM user_section_permissions WHERE user_id = ?", (user_id,))
+        conn.execute(
+            "UPDATE user_login_sessions SET is_active = 0 WHERE user_id = ?",
+            (user_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_managed_users() -> list[dict]:
@@ -491,6 +533,7 @@ def get_managed_users() -> list[dict]:
             SELECT id, username, display_name, data_database_name, is_active
             FROM users
             WHERE COALESCE(is_system_admin, 0) = 0
+              AND COALESCE(is_active, 1) = 1
               AND COALESCE(TRIM(data_database_name), '') <> ''
             ORDER BY username COLLATE NOCASE ASC
             """

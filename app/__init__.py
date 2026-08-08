@@ -2,6 +2,7 @@ import hashlib
 import os
 import secrets
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -31,6 +32,15 @@ from app.web_push import (
 
 
 login_manager = LoginManager()
+
+
+def _is_test_process():
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        return True
+    return any(
+        "pytest" in argument.lower() or "unittest" in argument.lower()
+        for argument in sys.argv
+    )
 
 
 def build_static_asset_version(static_folder):
@@ -140,7 +150,7 @@ def create_app():
     app.register_blueprint(nutrition_bp)
     _register_management_commands(app)
     werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
-    if werkzeug_run_main in {"", "true", "1"}:
+    if werkzeug_run_main in {"", "true", "1"} and not _is_test_process():
         start_web_push_scheduler(app)
 
     app.jinja_env.filters["money"] = format_money

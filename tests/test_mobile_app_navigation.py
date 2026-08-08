@@ -7,6 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = PROJECT_ROOT / "app" / "templates"
 STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
 MOBILE_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
+MOBILE_KEYBOARD_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "mobile-keyboard.js"
 NUTRITION_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "nutrition.css"
 
 
@@ -223,7 +224,10 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("padding-bottom: 106px;", mobile_styles)
         self.assertIn("bottom: 0;", mobile_styles.split("html.shans-standalone-app .app-bottom-nav", 1)[1].split("}", 1)[0])
         self.assertIn("padding: 7px;", mobile_styles)
-        self.assertIn("transform: translate3d(-50%, 0, 0);", mobile_styles)
+        self.assertIn(
+            "transform: translate3d(-50%, var(--mobile-keyboard-offset, 0px), 0);",
+            mobile_styles,
+        )
         self.assertIn("will-change: transform;", mobile_styles)
         self.assertIn("html.shans-standalone-app .account-settings-page", mobile_styles)
         self.assertIn("min-height: calc(100dvh - 106px);", mobile_styles)
@@ -328,16 +332,41 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertIn("pointer-events: none;", landscape_rule)
         self.assertIn("@keyframes orientation-lock-rotate", mobile_styles)
 
+    def test_mobile_bottom_navigation_stays_below_ios_keyboard(self):
+        base = (TEMPLATES / "base.html").read_text(encoding="utf-8")
+        mobile_styles = MOBILE_STYLE_FILE.read_text(encoding="utf-8")
+        keyboard_script = MOBILE_KEYBOARD_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("filename='js/mobile-keyboard.js', v=static_asset_version", base)
+        self.assertIn(":root {\n    --mobile-keyboard-offset: 0px;\n}", mobile_styles)
+        self.assertIn("--mobile-keyboard-offset: 0px;", mobile_styles)
+        self.assertIn(
+            "transform: translate3d(-50%, var(--mobile-keyboard-offset, 0px), 0);",
+            mobile_styles,
+        )
+        bottom_nav_rule = mobile_styles.split(".app-bottom-nav {", 1)[1].split("}", 1)[0]
+        self.assertNotIn("    --mobile-keyboard-offset: 0px;", bottom_nav_rule)
+        self.assertIn("window.visualViewport", keyboard_script)
+        self.assertIn("let layoutViewportHeight = Math.max(", keyboard_script)
+        self.assertIn("stableLayoutHeight - visualBottom", keyboard_script)
+        self.assertIn('const keyboardOpenClass = "mobile-keyboard-open";', keyboard_script)
+        self.assertIn('const keyboardOffsetProperty = "--mobile-keyboard-offset";', keyboard_script)
+        self.assertIn("const activeElement = document.activeElement;", keyboard_script)
+        self.assertIn("const isEditingText = isTextEditingControl(activeElement);", keyboard_script)
+        self.assertIn("offset > keyboardThreshold", keyboard_script)
+
     def test_flash_messages_are_full_width_at_the_bottom(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")
 
         self.assertRegex(
             styles,
             r"\.flash-stack\s*\{"
-            r"[^}]*left:\s*24px;"
             r"[^}]*right:\s*24px;"
-            r"[^}]*width:\s*auto;",
+            r"[^}]*width:\s*min\(340px,\s*calc\(100vw - 48px\)\);",
         )
+        desktop_flash_rule = styles.split(".flash-stack {", 1)[1].split("}", 1)[0]
+        self.assertNotIn("left: 24px;", desktop_flash_rule)
+
         mobile_flash_rule = styles.split(
             "bottom: calc(86px + env(safe-area-inset-bottom, 0px));",
             1,
@@ -349,7 +378,6 @@ class MobileAppNavigationTests(unittest.TestCase):
             1,
         )[1].split("}", 1)[0]
         self.assertIn("width: auto;", mobile_flash_rule_after_bottom)
-        self.assertNotIn("width: min(340px", mobile_flash_rule)
 
     def test_mobile_blue_buttons_use_bottom_navigation_purple_theme(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")

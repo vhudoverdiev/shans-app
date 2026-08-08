@@ -44,6 +44,7 @@ from app.access_control import (
     SECTION_LABELS,
     build_managed_user_form,
     create_managed_user,
+    delete_managed_user,
     get_managed_users,
     is_system_admin_user,
     is_main_admin_user,
@@ -1693,7 +1694,7 @@ def register_routes(app):
         if not is_main_admin_user(current_user):
             return redirect(url_for("index"))
 
-        display_name = request.form.get("display_name", "")
+        display_name = request.form.get("display_name")
         password = request.form.get("password", "").strip()
         permissions = {
             key
@@ -1712,6 +1713,21 @@ def register_routes(app):
             return jsonify({"ok": True, "message": "Пользователь обновлён."})
 
         flash("Пользователь обновлён.", "success")
+        return redirect(url_for("account_settings", tab="users"))
+
+    @app.route("/account/settings/users/<int:user_id>/delete", methods=["POST"])
+    @login_required
+    def delete_account_user(user_id):
+        if not is_main_admin_user(current_user):
+            return redirect(url_for("index"))
+
+        try:
+            delete_managed_user(user_id)
+        except ValueError as exc:
+            flash(str(exc), "danger")
+            return redirect(url_for("account_settings", tab="users"))
+
+        flash("Пользователь удалён.", "success")
         return redirect(url_for("account_settings", tab="users"))
 
     @app.route("/account/settings/system-password", methods=["POST"])

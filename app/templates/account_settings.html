@@ -300,11 +300,17 @@
                             <div>
                                 <div class="account-managed-user-login">{{ user.username }}</div>
                             </div>
-                            <span class="account-status-chip">Активен</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="managed_display_name_{{ user.id }}">Имя</label>
-                            <input type="text" id="managed_display_name_{{ user.id }}" name="display_name" class="form-input" value="{{ user.display_name or user.username }}" required>
+                            <div class="account-managed-user-head-actions">
+                                <span class="account-status-chip">Активен</span>
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger btn-small account-managed-user-delete-btn"
+                                    form="delete_managed_user_{{ user.id }}"
+                                    onclick="return confirm('Удалить пользователя?');"
+                                >
+                                    Удалить
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="managed_password_{{ user.id }}">Новый пароль</label>
@@ -328,6 +334,12 @@
                         </div>
                         <p class="account-managed-user-save-status" data-managed-user-save-status role="status" aria-live="polite" hidden></p>
                     </form>
+                    <form
+                        method="post"
+                        action="{{ url_for('delete_account_user', user_id=user.id) }}"
+                        id="delete_managed_user_{{ user.id }}"
+                        class="account-managed-user-delete-form"
+                    ></form>
                     {% endfor %}
                 </div>
                 {% else %}
@@ -523,7 +535,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        form.querySelectorAll('input[name="display_name"], input[name="password"]').forEach(function (input) {
+        form.querySelectorAll('input[name="password"]').forEach(function (input) {
             input.addEventListener("change", function () {
                 autosaveManagedUserForm(form);
             });

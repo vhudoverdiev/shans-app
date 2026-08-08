@@ -182,6 +182,7 @@
     <script src="{{ url_for('static', filename='js/bug-report.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/form-controls.js', v=static_asset_version) }}" defer></script>
     <script src="{{ url_for('static', filename='js/ajax-forms.js', v=static_asset_version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/mobile-keyboard.js', v=static_asset_version) }}" defer></script>
 </head>
 <body class="app-body{% if current_user.is_authenticated %} app-body-authenticated{% endif %}">
     {% if not skip_intro_loader %}

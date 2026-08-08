@@ -10,6 +10,7 @@ from app import create_app
 from app.access_control import (
     ManagedUserForm,
     create_managed_user,
+    get_managed_users,
     get_user_permissions,
     is_main_admin_user,
 )
@@ -214,7 +215,6 @@ class UserManagementTests(unittest.TestCase):
                 f"/account/settings/users/{user_id}",
                 data={
                     "_csrf_token": "test-token",
-                    "display_name": "Autosave user",
                     "permissions": ["budget", "car"],
                 },
                 headers={
@@ -229,6 +229,15 @@ class UserManagementTests(unittest.TestCase):
             {"ok": True, "message": "Пользователь обновлён."},
         )
         self.assertEqual(get_user_permissions(user_id), {"budget", "car"})
+        conn = get_master_connection()
+        try:
+            display_name = conn.execute(
+                "SELECT display_name FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()["display_name"]
+        finally:
+            conn.close()
+        self.assertEqual(display_name, "Autosave user")
 
     def test_autosave_managed_user_returns_json_error(self):
         with self.app.app_context():
@@ -266,6 +275,81 @@ class UserManagementTests(unittest.TestCase):
         self.assertFalse(payload["ok"])
         self.assertTrue(payload["message"])
         self.assertEqual(get_user_permissions(user_id), {"schedule"})
+
+    def test_admin_can_delete_managed_user_and_reuse_login(self):
+        with self.app.app_context():
+            admin_id = self._user_id("admin")
+            user_id = create_managed_user(
+                ManagedUserForm(
+                    username="delete_me",
+                    display_name="Delete me",
+                    password="DeleteMePass-2026",
+                    permissions={"budget", "schedule"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        conn = get_master_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO user_login_sessions (
+                    session_key, user_id, device, browser, ip_address,
+                    first_login_at, last_seen_at, is_active
+                )
+                VALUES (?, ?, 'PC', 'Chrome', '127.0.0.1', ?, ?, 1)
+                """,
+                (f"managed-session-{user_id}", user_id, "2026-08-08T10:00:00", "2026-08-08T10:00:00"),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        with self.app.test_client() as client:
+            self._login_client(client, admin_id)
+            with client.session_transaction() as session:
+                session["_csrf_token"] = "test-token"
+
+            response = client.post(
+                f"/account/settings/users/{user_id}/delete",
+                data={"_csrf_token": "test-token"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/account/settings?tab=users")
+
+        conn = get_master_connection()
+        try:
+            deleted_user = conn.execute(
+                "SELECT username, is_active FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            active_session_count = conn.execute(
+                "SELECT COUNT(*) FROM user_login_sessions WHERE user_id = ? AND is_active = 1",
+                (user_id,),
+            ).fetchone()[0]
+        finally:
+            conn.close()
+
+        self.assertEqual(deleted_user["is_active"], 0)
+        self.assertTrue(deleted_user["username"].startswith("delete_me__deleted_"))
+        self.assertEqual(active_session_count, 0)
+        self.assertEqual(get_user_permissions(user_id), set())
+        self.assertNotIn(user_id, {int(user["id"]) for user in get_managed_users()})
+
+        with self.app.app_context():
+            replacement_id = create_managed_user(
+                ManagedUserForm(
+                    username="delete_me",
+                    display_name="Replacement",
+                    password="ReplacementPass-2026",
+                    permissions={"car"},
+                ),
+                created_by_user_id=admin_id,
+            )
+
+        self.assertNotEqual(replacement_id, user_id)
+        self.assertEqual(get_user_permissions(replacement_id), {"car"})
 
     def test_mobile_bottom_navigation_adapts_to_available_sections(self):
         with self.app.app_context():
