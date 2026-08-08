@@ -263,8 +263,19 @@
 
         const nextWeekUrl = "{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=next_week_date) }}";
         const prevWeekUrl = "{{ url_for('planner.schedule', calendar=current_calendar, view='month', date=prev_week_date) }}";
+        let suppressWheelUntil = 0;
+
+        function suppressMiddleClickNavigation(event) {
+            if (event.button !== 1) return;
+            suppressWheelUntil = Date.now() + 900;
+            event.preventDefault();
+        }
+
+        calendarGrid.addEventListener('mousedown', suppressMiddleClickNavigation);
+        calendarGrid.addEventListener('auxclick', suppressMiddleClickNavigation);
 
         calendarGrid.addEventListener('wheel', function (event) {
+            if (Date.now() < suppressWheelUntil || event.buttons) return;
             if (Math.abs(event.deltaY) < 8) return;
             event.preventDefault();
             window.location.href = event.deltaY > 0 ? nextWeekUrl : prevWeekUrl;

@@ -103,11 +103,21 @@ class WorkoutsTests(unittest.TestCase):
             [plan["name"] for plan in first_user_plans],
             ["Тренировка 1", "Тренировка 2", "Тренировка 3"],
         )
+        self.assertTrue(all(plan["description"] == "" for plan in first_user_plans))
         self.assertEqual(len(second_user_plans), 3)
         self.assertNotEqual(
             {plan["id"] for plan in first_user_plans},
             {plan["id"] for plan in second_user_plans},
         )
+
+        app = self._create_app()
+        with app.test_client() as client:
+            self._login(client, 1)
+            response = client.get("/workouts")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Добавьте тренировку", response.get_data(as_text=True))
+        self.assertNotIn("Грудь, плечи и трицепс", response.get_data(as_text=True))
 
     def test_results_are_stored_with_plan_and_protected_by_owner(self):
         ensure_default_workout_plans(1)
@@ -130,6 +140,37 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(get_workout_results(2), [])
         with self.assertRaisesRegex(ValueError, "не найдена"):
             add_workout_result(2, plan_id, "Тяга", "50 кг × 10", "2026-07-20")
+
+    def test_legacy_default_workout_description_is_treated_as_empty(self):
+        legacy_description = (
+            "Грудь, плечи и трицепс. Начните с разминки, затем выполните жимовые "
+            "упражнения и завершите тренировку лёгкой растяжкой."
+        )
+        conn = get_connection()
+        try:
+            cursor = conn.execute(
+                """
+                INSERT INTO workout_plans (user_id, name, description, position)
+                VALUES (?, ?, ?, ?)
+                """,
+                (1, "Старый шаблон", legacy_description, 1),
+            )
+            plan_id = int(cursor.lastrowid)
+            conn.commit()
+        finally:
+            conn.close()
+
+        app = self._create_app()
+        with app.test_client() as client:
+            self._login(client, 1)
+            detail_response = client.get(f"/workouts/plans/{plan_id}")
+            edit_response = client.get(f"/workouts/plans/{plan_id}/edit")
+
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIn("Добавьте тренировку", detail_response.get_data(as_text=True))
+        self.assertNotIn(legacy_description, detail_response.get_data(as_text=True))
+        self.assertEqual(edit_response.status_code, 200)
+        self.assertNotIn(legacy_description, edit_response.get_data(as_text=True))
 
     def test_weight_entry_for_same_date_is_updated_and_summary_is_correct(self):
         upsert_weight_entry(1, "2026-07-01", 80.0, "Старт")
@@ -524,7 +565,7 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(detail_response.status_code, 200)
         self.assertEqual(
             detail_response.get_data(as_text=True),
-            "Тренировка 1|0|добавьте описание",
+            "Тренировка 1|0|Добавьте тренировку",
         )
 
         edit_response = client.get(f"/workouts/plans/{plan['id']}/edit")
@@ -582,7 +623,10 @@ class WorkoutsTests(unittest.TestCase):
         self.assertNotIn("Сохранить дату", overview)
         self.assertIn("plan.description_display", overview)
         self.assertIn("plan.description_display", detail)
-        self.assertIn("добавьте описание", workouts_source)
+        self.assertIn("Добавьте тренировку", workouts_source)
+        self.assertIn("LEGACY_DEFAULT_WORKOUT_DESCRIPTIONS", workouts_source)
+        self.assertNotIn("Повторная запись за ту же дату обновляет значение", workouts_source)
+        self.assertNotIn("Напоминание придёт раз в неделю", workouts_source)
         self.assertNotIn("внесите описание", overview)
         self.assertNotIn("внесите описание", detail)
         self.assertIn('class="workout-plan-description"', detail)

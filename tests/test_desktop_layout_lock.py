@@ -98,6 +98,13 @@ class DesktopLayoutLockTests(unittest.TestCase):
             r"[^}]*bottom:\s*24px;"
             r"[^}]*width:\s*min\(340px,\s*calc\(100vw - 48px\)\);",
         )
+        self.assertRegex(
+            stylesheet,
+            r"\.flash-message-text\s*\{"
+            r"[^}]*min-width:\s*0;"
+            r"[^}]*-webkit-line-clamp:\s*3;"
+            r"[^}]*overflow-wrap:\s*anywhere;",
+        )
         self.assertIn('<div class="flash-stack" role="status" aria-live="polite">', base_template)
         self.assertLess(
             login_template.index('<div class="login-page">'),

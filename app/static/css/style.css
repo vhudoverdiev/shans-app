@@ -1331,6 +1331,13 @@ body.avatar-crop-scroll-locked {
 
 .flash-message-text {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow-wrap: anywhere;
+    word-break: normal;
 }
 
 .flash-close {

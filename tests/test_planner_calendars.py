@@ -354,5 +354,16 @@ class PlannerCalendarTests(unittest.TestCase):
             self.assertIn(f'data-label="{label}"', template)
 
 
+    def test_month_calendar_ignores_middle_mouse_autoscroll(self):
+        template = (PROJECT_ROOT / "app" / "templates" / "schedule.html").read_text(encoding="utf-8")
+
+        self.assertIn("function suppressMiddleClickNavigation(event)", template)
+        self.assertIn("event.button !== 1", template)
+        self.assertIn("suppressWheelUntil = Date.now() + 900;", template)
+        self.assertIn("calendarGrid.addEventListener('mousedown', suppressMiddleClickNavigation);", template)
+        self.assertIn("calendarGrid.addEventListener('auxclick', suppressMiddleClickNavigation);", template)
+        self.assertIn("Date.now() < suppressWheelUntil || event.buttons", template)
+
+
 if __name__ == "__main__":
     unittest.main()

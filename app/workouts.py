@@ -23,25 +23,28 @@ WEEKDAYS = (
 )
 WEEKDAY_LABELS = dict(WEEKDAYS)
 SCHEDULE_HORIZON_DAYS = 366
-WORKOUT_DESCRIPTION_PLACEHOLDER = "добавьте описание"
-LEGACY_EMPTY_WORKOUT_DESCRIPTIONS = {"нет"}
+WORKOUT_DESCRIPTION_PLACEHOLDER = "Добавьте тренировку"
+LEGACY_DEFAULT_WORKOUT_DESCRIPTIONS = (
+    "Грудь, плечи и трицепс. Начните с разминки, затем выполните жимовые "
+    "упражнения и завершите тренировку лёгкой растяжкой.",
+    "Спина и бицепс. Сосредоточьтесь на контролируемой технике в тягах, "
+    "не перегружайте поясницу и фиксируйте рабочие веса.",
+    "Ноги и мышцы кора. После суставной разминки выполните приседания или "
+    "их безопасную альтернативу, затем упражнения на заднюю поверхность бедра и пресс.",
+)
+LEGACY_EMPTY_WORKOUT_DESCRIPTIONS = {
+    value.casefold()
+    for value in (
+        "нет",
+        "добавьте описание",
+        *LEGACY_DEFAULT_WORKOUT_DESCRIPTIONS,
+    )
+}
 
 DEFAULT_WORKOUT_PLANS = (
-    (
-        "Тренировка 1",
-        "Грудь, плечи и трицепс. Начните с разминки, затем выполните жимовые "
-        "упражнения и завершите тренировку лёгкой растяжкой.",
-    ),
-    (
-        "Тренировка 2",
-        "Спина и бицепс. Сосредоточьтесь на контролируемой технике в тягах, "
-        "не перегружайте поясницу и фиксируйте рабочие веса.",
-    ),
-    (
-        "Тренировка 3",
-        "Ноги и мышцы кора. После суставной разминки выполните приседания или "
-        "их безопасную альтернативу, затем упражнения на заднюю поверхность бедра и пресс.",
-    ),
+    ("Тренировка 1", ""),
+    ("Тренировка 2", ""),
+    ("Тренировка 3", ""),
 )
 
 
@@ -1007,7 +1010,7 @@ def save_weight():
         flash(str(error), "error")
         return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
-    flash("Вес сохранён. Повторная запись за ту же дату обновляет значение.", "success")
+    flash("Вес сохранён.", "success")
     return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
 
@@ -1022,7 +1025,7 @@ def save_weight_plan():
         flash(str(error), "error")
         return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
-    flash("День планового замера веса сохранён. Напоминание придёт раз в неделю, если вес не записан.", "success")
+    flash("День замера сохранён.", "success")
     return redirect(url_for("workouts.index", _anchor="weight-progress"))
 
 
