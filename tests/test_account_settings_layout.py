@@ -5,11 +5,29 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "style.css"
+BASE_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "base.html"
 ACCOUNT_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "account_settings.html"
 SETUP_2FA_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "setup_2fa.html"
 
 
 class AccountSettingsLayoutTests(unittest.TestCase):
+    def test_letter_avatar_uses_shared_centering_layer(self):
+        stylesheet = STYLE_FILE.read_text(encoding="utf-8")
+        base_template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        account_template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn('class="header-avatar-letter"', base_template)
+        self.assertIn('class="header-avatar-letter" id="avatar-preview-letter"', account_template)
+        self.assertIn('fallback.className = "header-avatar-letter";', base_template)
+        self.assertRegex(
+            stylesheet,
+            r"\.header-avatar\s*\{[^}]*display:\s*inline-grid;[^}]*place-items:\s*center;[^}]*line-height:\s*1;",
+        )
+        self.assertRegex(
+            stylesheet,
+            r"\.header-avatar-letter\s*\{[^}]*display:\s*inline-grid;[^}]*place-items:\s*center;[^}]*transform:\s*translateY\(1px\);",
+        )
+
     def test_account_settings_hides_redundant_security_tab_button(self):
         template = ACCOUNT_TEMPLATE.read_text(encoding="utf-8")
         mobile_styles = (

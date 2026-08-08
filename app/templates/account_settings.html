@@ -15,7 +15,7 @@
                     {% if avatar_url %}
                     <img src="{{ avatar_url }}" alt="Аватар" class="header-avatar-image js-avatar-image" id="avatar-preview-image" data-fallback-letter="{{ avatar_letter }}">
                     {% else %}
-                    <span id="avatar-preview-letter">{{ avatar_letter }}</span>
+                    <span class="header-avatar-letter" id="avatar-preview-letter">{{ avatar_letter }}</span>
                     {% endif %}
                 </div>
                 {% if not avatar_url %}
