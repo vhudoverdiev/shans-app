@@ -38,8 +38,7 @@
             document.documentElement.clientHeight || 0,
             layoutViewportHeight
         );
-        const visualBottom = window.visualViewport.offsetTop + window.visualViewport.height;
-        return Math.max(0, Math.round(stableLayoutHeight - visualBottom));
+        return Math.max(0, Math.round(stableLayoutHeight - window.visualViewport.height));
     }
 
     function syncKeyboardState() {
