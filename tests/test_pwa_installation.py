@@ -120,6 +120,11 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(struct.unpack(">II", pwa_icon[16:24]), (512, 512))
         self.assertEqual(startup_image[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", startup_image[16:24]), (1320, 2868))
+        self.assertGreater(len(startup_image), 50_000)
+        self.assertEqual(
+            hashlib.sha256(startup_image).hexdigest(),
+            "b848c677cf5c62ef248fa1a18c12a29e649c72da88fcf88376e609be89f525b0",
+        )
 
 
 if __name__ == "__main__":
