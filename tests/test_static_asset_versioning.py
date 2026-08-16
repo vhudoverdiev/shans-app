@@ -42,7 +42,6 @@ class StaticAssetVersioningTests(unittest.TestCase):
     def test_asset_version_changes_when_ios_home_screen_assets_change(self):
         for filename in (
             "apple-touch-icon-shans-v2.png",
-            "ios-startup-iphone-16-pro-max-shans-v2.png",
             "pwa-icon-512-shans-v2.png",
         ):
             with tempfile.TemporaryDirectory() as temp_directory:
@@ -79,7 +78,6 @@ class StaticAssetVersioningTests(unittest.TestCase):
         self.assertIn("filename='logo.png', v=static_asset_version", base_template)
         self.assertIn("filename='favicon.png', v=static_asset_version", base_template)
         self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", base_template)
-        self.assertIn("filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version", base_template)
         self.assertIn(
             "filename='js/push-notifications.js', v=config.get('STATIC_ASSET_VERSION', 'dev')",
             account_template,

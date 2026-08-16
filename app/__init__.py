@@ -56,7 +56,6 @@ def build_static_asset_version(static_folder):
     for filename in (
         "apple-touch-icon-shans-v2.png",
         "favicon.png",
-        "ios-startup-iphone-16-pro-max-shans-v2.png",
         "logo.png",
         "pwa-icon-512-shans-v2.png",
         "service-worker.js",

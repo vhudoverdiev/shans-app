@@ -12,7 +12,6 @@ LOGO = PROJECT_ROOT / "app" / "static" / "logo.png"
 FAVICON = PROJECT_ROOT / "app" / "static" / "favicon.png"
 APPLE_TOUCH_ICON = PROJECT_ROOT / "app" / "static" / "apple-touch-icon-shans-v2.png"
 PWA_ICON = PROJECT_ROOT / "app" / "static" / "pwa-icon-512-shans-v2.png"
-IPHONE_16_PRO_MAX_STARTUP = PROJECT_ROOT / "app" / "static" / "ios-startup-iphone-16-pro-max-shans-v2.png"
 LEGACY_INTRO_LOGO = PROJECT_ROOT / "app" / "static" / "logo-intro.png"
 
 
@@ -38,11 +37,7 @@ class PwaInstallationTests(unittest.TestCase):
         )
         self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", template)
         self.assertNotIn('rel="apple-touch-icon" href="{{ url_for(\'static\', filename=\'logo.png\'', template)
-        self.assertIn('rel="apple-touch-startup-image"', template)
-        self.assertIn("device-width: 440px", template)
-        self.assertIn("device-height: 956px", template)
-        self.assertIn("-webkit-device-pixel-ratio: 3", template)
-        self.assertIn("filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version", template)
+        self.assertNotIn('rel="apple-touch-startup-image"', template)
         self.assertIn("filename='site.webmanifest'", template)
 
     def test_manifest_describes_standalone_shans_app(self):
@@ -76,7 +71,6 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertNotIn("/static/pwa-icon-512.png", install_icon_sources)
         self.assertIn("/static/pwa-icon-512-shans-v2.png", install_icon_sources)
         self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", template)
-        self.assertIn("filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version", template)
         self.assertNotIn("filename='apple-touch-icon.png', v=static_asset_version", template)
         self.assertNotIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
         self.assertNotIn("filename='logo.png', v=static_asset_version", template.split('rel="manifest"', 1)[0])
@@ -109,17 +103,14 @@ class PwaInstallationTests(unittest.TestCase):
             "4ae379a1088102a02eafd5b28ad21392eab9d8a19d3f50dce22649777c1c3de8",
         )
 
-    def test_ios_home_screen_assets_have_expected_dimensions(self):
+    def test_ios_home_screen_icons_have_expected_dimensions(self):
         apple_touch_icon = APPLE_TOUCH_ICON.read_bytes()
         pwa_icon = PWA_ICON.read_bytes()
-        startup_image = IPHONE_16_PRO_MAX_STARTUP.read_bytes()
 
         self.assertEqual(apple_touch_icon[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", apple_touch_icon[16:24]), (180, 180))
         self.assertEqual(pwa_icon[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(struct.unpack(">II", pwa_icon[16:24]), (512, 512))
-        self.assertEqual(startup_image[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", startup_image[16:24]), (1320, 2868))
         self.assertGreater(len(startup_image), 50_000)
         self.assertEqual(
             hashlib.sha256(startup_image).hexdigest(),

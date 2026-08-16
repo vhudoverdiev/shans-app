@@ -163,11 +163,6 @@
     {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png', v=static_asset_version) }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon-shans-v2.png', v=static_asset_version) }}">
-    <link
-        rel="apple-touch-startup-image"
-        media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-        href="{{ url_for('static', filename='ios-startup-iphone-16-pro-max-shans-v2.png', v=static_asset_version) }}"
-    >
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_asset_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=static_asset_version) }}">
