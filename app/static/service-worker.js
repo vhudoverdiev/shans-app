@@ -1,12 +1,14 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v6`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v7`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 const NAVIGATION_TIMEOUT_MS = 3000;
 
-async function fetchNavigationWithTimeout(request) {
+const CRITICAL_RESOURCE_DESTINATIONS = new Set(["style", "script"]);
+
+async function fetchWithTimeout(request) {
     const controller = new AbortController();
     const timeoutId = setTimeout(function () {
         controller.abort();
@@ -17,6 +19,13 @@ async function fetchNavigationWithTimeout(request) {
     } finally {
         clearTimeout(timeoutId);
     }
+}
+
+function buildInterferenceUrl(returnPath) {
+    const offlineUrl = new URL(OFFLINE_PAGE_URL, self.location.origin);
+    offlineUrl.searchParams.set("reason", "interference");
+    offlineUrl.searchParams.set("return", returnPath || "/");
+    return offlineUrl.href;
 }
 
 self.addEventListener("install", function (event) {
@@ -48,12 +57,20 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener("fetch", function (event) {
-    if (event.request.method !== "GET" || event.request.mode !== "navigate") {
+    if (event.request.method !== "GET") {
+        return;
+    }
+
+    const requestUrl = new URL(event.request.url);
+    const isNavigation = event.request.mode === "navigate";
+    const isCriticalResource = requestUrl.origin === self.location.origin
+        && CRITICAL_RESOURCE_DESTINATIONS.has(event.request.destination);
+
+    if (!isNavigation && !isCriticalResource) {
         return;
     }
 
     event.respondWith((async function () {
-        const requestUrl = new URL(event.request.url);
         const cache = await caches.open(OFFLINE_CACHE_NAME);
 
         if (requestUrl.pathname === OFFLINE_PAGE_URL) {
@@ -64,15 +81,32 @@ self.addEventListener("fetch", function (event) {
         }
 
         try {
-            return await fetchNavigationWithTimeout(event.request);
+            return await fetchWithTimeout(event.request);
         } catch (_error) {
             const offlinePage = await cache.match(OFFLINE_PAGE_URL);
             if (offlinePage) {
+                if (isCriticalResource) {
+                    const windowClient = event.clientId
+                        ? await self.clients.get(event.clientId)
+                        : null;
+                    const clientUrl = windowClient ? new URL(windowClient.url) : null;
+                    const returnPath = clientUrl
+                        ? clientUrl.pathname + clientUrl.search + clientUrl.hash
+                        : "/";
+                    if (windowClient && "navigate" in windowClient) {
+                        await windowClient.navigate(buildInterferenceUrl(returnPath));
+                    }
+                    return new Response("", {
+                        status: 504,
+                        headers: {
+                            "Content-Type": event.request.destination === "style"
+                                ? "text/css; charset=utf-8"
+                                : "application/javascript; charset=utf-8",
+                        },
+                    });
+                }
                 const returnPath = requestUrl.pathname + requestUrl.search + requestUrl.hash;
-                const offlineUrl = new URL(OFFLINE_PAGE_URL, self.location.origin);
-                offlineUrl.searchParams.set("reason", "interference");
-                offlineUrl.searchParams.set("return", returnPath);
-                return Response.redirect(offlineUrl.href, 302);
+                return Response.redirect(buildInterferenceUrl(returnPath), 302);
             }
             return new Response("Отсутствует подключение к интернету.", {
                 status: 503,

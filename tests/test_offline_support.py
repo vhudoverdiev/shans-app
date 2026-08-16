@@ -50,7 +50,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v6`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v7`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -58,13 +58,13 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('addEventListener("install"', service_worker)
         self.assertIn('addEventListener("activate"', service_worker)
         self.assertIn('addEventListener("fetch"', service_worker)
-        self.assertIn('event.request.mode !== "navigate"', service_worker)
-        self.assertIn("return await fetchNavigationWithTimeout(event.request)", service_worker)
+        self.assertIn('const isNavigation = event.request.mode === "navigate"', service_worker)
+        self.assertIn("return await fetchWithTimeout(event.request)", service_worker)
         self.assertIn("cache.match(OFFLINE_PAGE_URL)", service_worker)
         self.assertNotIn("cache.addAll", service_worker)
         self.assertIn('requestUrl.pathname === OFFLINE_PAGE_URL', service_worker)
         self.assertIn('offlineUrl.searchParams.set("reason", "interference")', service_worker)
-        self.assertIn("Response.redirect(offlineUrl.href, 302)", service_worker)
+        self.assertIn("Response.redirect(buildInterferenceUrl(returnPath), 302)", service_worker)
 
     def test_optional_logo_failure_cannot_cancel_offline_cache_installation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
@@ -84,7 +84,7 @@ class OfflineSupportTests(unittest.TestCase):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn('offlineUrl.searchParams.set("reason", "interference")', service_worker)
-        self.assertIn('offlineUrl.searchParams.set("return", returnPath)', service_worker)
+        self.assertIn('offlineUrl.searchParams.set("return", returnPath || "/")', service_worker)
         self.assertIn('requestUrl.pathname === OFFLINE_PAGE_URL', service_worker)
         self.assertIn("return cachedOfflinePage", service_worker)
         self.assertIn('reason === "interference"', page)
@@ -95,12 +95,23 @@ class OfflineSupportTests(unittest.TestCase):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
         self.assertIn("const NAVIGATION_TIMEOUT_MS = 3000", service_worker)
-        self.assertIn("async function fetchNavigationWithTimeout(request)", service_worker)
+        self.assertIn("async function fetchWithTimeout(request)", service_worker)
         self.assertIn("const controller = new AbortController()", service_worker)
         self.assertIn("controller.abort()", service_worker)
         self.assertIn("fetch(request, { signal: controller.signal })", service_worker)
         self.assertIn("clearTimeout(timeoutId)", service_worker)
-        self.assertIn("return await fetchNavigationWithTimeout(event.request)", service_worker)
+        self.assertIn("return await fetchWithTimeout(event.request)", service_worker)
+
+    def test_hanging_css_or_javascript_redirects_instead_of_leaving_white_screen(self):
+        service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+
+        self.assertIn('new Set(["style", "script"])', service_worker)
+        self.assertIn("CRITICAL_RESOURCE_DESTINATIONS.has(event.request.destination)", service_worker)
+        self.assertIn("await self.clients.get(event.clientId)", service_worker)
+        self.assertIn("await windowClient.navigate(buildInterferenceUrl(returnPath))", service_worker)
+        self.assertIn('event.request.destination === "style"', service_worker)
+        self.assertIn('"text/css; charset=utf-8"', service_worker)
+        self.assertIn('"application/javascript; charset=utf-8"', service_worker)
 
     def test_offline_logo_has_network_independent_sh_fallback(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
