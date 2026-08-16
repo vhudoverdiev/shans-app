@@ -83,7 +83,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v15`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v16`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -221,7 +221,7 @@ class OfflineSupportTests(unittest.TestCase):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn("const isColdLaunch = isNavigation", service_worker)
-        self.assertIn("!event.request.referrer", service_worker)
+        self.assertIn("(!event.clientId || !event.request.referrer)", service_worker)
         self.assertIn("return addLaunchContext(launchPage, returnPath)", service_worker)
         self.assertIn("window.__shansLaunchCheck=true", service_worker)
         self.assertIn("const isLaunchCheck = window.__shansLaunchCheck === true", page)
