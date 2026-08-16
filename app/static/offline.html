@@ -483,7 +483,7 @@
                 const controller = new AbortController();
                 const timeoutId = window.setTimeout(function () {
                     controller.abort();
-                }, 12000);
+                }, 3000);
 
                 try {
                     const response = await window.fetch("/health?offline_retry=" + Date.now(), {

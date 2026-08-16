@@ -1,7 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v7`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v9`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 const NAVIGATION_TIMEOUT_MS = 3000;
@@ -10,12 +10,19 @@ const CRITICAL_RESOURCE_DESTINATIONS = new Set(["style", "script"]);
 
 async function fetchWithTimeout(request) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(function () {
-        controller.abort();
-    }, NAVIGATION_TIMEOUT_MS);
+    let timeoutId;
+    const timeoutPromise = new Promise(function (_resolve, reject) {
+        timeoutId = setTimeout(function () {
+            controller.abort();
+            reject(new Error("Network request timed out"));
+        }, NAVIGATION_TIMEOUT_MS);
+    });
 
     try {
-        return await fetch(request, { signal: controller.signal });
+        return await Promise.race([
+            fetch(request, { signal: controller.signal }),
+            timeoutPromise,
+        ]);
     } finally {
         clearTimeout(timeoutId);
     }
@@ -94,9 +101,18 @@ self.addEventListener("fetch", function (event) {
                         ? clientUrl.pathname + clientUrl.search + clientUrl.hash
                         : "/";
                     if (windowClient && "navigate" in windowClient) {
-                        await windowClient.navigate(buildInterferenceUrl(returnPath));
+                        try {
+                            await windowClient.navigate(buildInterferenceUrl(returnPath));
+                        } catch (_navigationError) {
+                            // The JavaScript fallback below handles iOS clients
+                            // that reject WindowClient.navigate while launching.
+                        }
                     }
-                    return new Response("", {
+                    const interferenceUrl = buildInterferenceUrl(returnPath);
+                    const fallbackBody = event.request.destination === "script"
+                        ? `window.location.replace(${JSON.stringify(interferenceUrl)});`
+                        : "";
+                    return new Response(fallbackBody, {
                         status: 504,
                         headers: {
                             "Content-Type": event.request.destination === "style"

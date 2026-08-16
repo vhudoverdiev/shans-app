@@ -50,7 +50,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v7`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v9`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -99,6 +99,8 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("const controller = new AbortController()", service_worker)
         self.assertIn("controller.abort()", service_worker)
         self.assertIn("fetch(request, { signal: controller.signal })", service_worker)
+        self.assertIn("return await Promise.race([", service_worker)
+        self.assertIn('reject(new Error("Network request timed out"))', service_worker)
         self.assertIn("clearTimeout(timeoutId)", service_worker)
         self.assertIn("return await fetchWithTimeout(event.request)", service_worker)
 
@@ -109,6 +111,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("CRITICAL_RESOURCE_DESTINATIONS.has(event.request.destination)", service_worker)
         self.assertIn("await self.clients.get(event.clientId)", service_worker)
         self.assertIn("await windowClient.navigate(buildInterferenceUrl(returnPath))", service_worker)
+        self.assertIn("window.location.replace(${JSON.stringify(interferenceUrl)})", service_worker)
         self.assertIn('event.request.destination === "style"', service_worker)
         self.assertIn('"text/css; charset=utf-8"', service_worker)
         self.assertIn('"application/javascript; charset=utf-8"', service_worker)
@@ -145,7 +148,8 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("Повторить попытку", page)
         self.assertIn('window.fetch("/health?offline_retry="', page)
         self.assertIn('cache: "no-store"', page)
-        self.assertIn("}, 12000);", page)
+        self.assertIn("}, 3000);", page)
+        self.assertNotIn("}, 12000);", page)
         self.assertIn("new URLSearchParams(window.location.search)", page)
         self.assertIn('reason === "weak"', page)
         self.assertIn("Слабое подключение к интернету", page)
