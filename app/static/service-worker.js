@@ -1,7 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v14`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v15`;
 const PAGE_CACHE_NAME = "shans-pages-v1";
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
@@ -64,6 +64,20 @@ async function addOfflineNotice(response) {
     });
 }
 
+async function addLaunchContext(response, returnPath) {
+    const headers = new Headers(response.headers);
+    headers.delete("Content-Length");
+    headers.delete("Content-Encoding");
+    headers.delete("ETag");
+    const html = await response.text();
+    const launchContext = `<script>window.__shansLaunchCheck=true;window.__shansLaunchReturn=${JSON.stringify(returnPath)};</script>`;
+    return new Response(html.replace("</head>", `${launchContext}</head>`), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headers,
+    });
+}
+
 self.addEventListener("install", function (event) {
     event.waitUntil((async function () {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
@@ -118,6 +132,17 @@ self.addEventListener("fetch", function (event) {
             const cachedOfflinePage = await cache.match(OFFLINE_PAGE_URL);
             if (cachedOfflinePage) {
                 return cachedOfflinePage;
+            }
+        }
+
+        const isColdLaunch = isNavigation
+            && !event.request.referrer
+            && !requestUrl.searchParams.has("_shans_network");
+        if (isColdLaunch) {
+            const launchPage = await cache.match(OFFLINE_PAGE_URL);
+            if (launchPage) {
+                const returnPath = requestUrl.pathname + requestUrl.search + requestUrl.hash;
+                return addLaunchContext(launchPage, returnPath);
             }
         }
 

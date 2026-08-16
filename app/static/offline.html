@@ -429,9 +429,10 @@
             const retryLabel = document.getElementById("offline-retry-label");
             const status = document.getElementById("offline-status");
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const isLaunchCheck = window.__shansLaunchCheck === true;
             const params = new URLSearchParams(window.location.search);
             const reason = params.get("reason");
-            const rawReturnPath = params.get("return") || "/";
+            const rawReturnPath = window.__shansLaunchReturn || params.get("return") || "/";
             const returnPath = rawReturnPath.startsWith("/") && !rawReturnPath.startsWith("//")
                 ? rawReturnPath
                 : "/";
@@ -444,7 +445,7 @@
                 description.textContent = "Соединение есть, но сайт отвечает слишком долго. Проверьте сеть и повторите попытку.";
             }
 
-            window.setTimeout(function () {
+            function revealOfflineCard() {
                 loader.classList.add("is-leaving");
                 card.hidden = false;
                 window.requestAnimationFrame(function () {
@@ -454,7 +455,63 @@
                     loader.remove();
                     document.body.style.overflow = "auto";
                 }, reducedMotion ? 20 : 430);
-            }, reducedMotion ? 160 : 1550);
+            }
+
+            function buildNetworkReturnPath() {
+                const target = new URL(returnPath, window.location.origin);
+                target.searchParams.set("_shans_network", "1");
+                return target.pathname + target.search + target.hash;
+            }
+
+            async function checkConnection() {
+                const controller = new AbortController();
+                let timeoutId;
+                const timeoutPromise = new Promise(function (_resolve, reject) {
+                    timeoutId = window.setTimeout(function () {
+                        controller.abort();
+                        reject(new Error("Connection check timed out"));
+                    }, 3000);
+                });
+                try {
+                    const response = await Promise.race([
+                        window.fetch("/health?offline_retry=" + Date.now(), {
+                            cache: "no-store",
+                            credentials: "same-origin",
+                            signal: controller.signal,
+                        }),
+                        timeoutPromise,
+                    ]);
+                    return response.ok;
+                } catch (_error) {
+                    return false;
+                } finally {
+                    window.clearTimeout(timeoutId);
+                }
+            }
+
+            if (isLaunchCheck) {
+                Promise.all([
+                    checkConnection(),
+                    new Promise(function (resolve) {
+                        window.setTimeout(resolve, reducedMotion ? 160 : 1550);
+                    }),
+                ]).then(function (results) {
+                    if (results[0]) {
+                        try {
+                            window.sessionStorage.setItem("shans-intro-session-v1", "1");
+                        } catch (_storageError) {
+                            // Navigation still works when storage is unavailable.
+                        }
+                        window.location.assign(buildNetworkReturnPath());
+                        return;
+                    }
+                    title.textContent = "Интернет недоступен или связь глушат";
+                    description.textContent = "Устройство подключено к сети, но сайт не отвечает. Возможно, связь глушат. Включите белые списки и повторите попытку.";
+                    revealOfflineCard();
+                });
+            } else {
+                window.setTimeout(revealOfflineCard, reducedMotion ? 160 : 1550);
+            }
 
             function setStatus(message, state) {
                 status.textContent = message || "";
@@ -467,18 +524,9 @@
                 retryLabel.textContent = "Проверяем соединение…";
                 setStatus("");
 
-                const controller = new AbortController();
-                const timeoutId = window.setTimeout(function () {
-                    controller.abort();
-                }, 3000);
-
                 try {
-                    const response = await window.fetch("/health?offline_retry=" + Date.now(), {
-                        cache: "no-store",
-                        credentials: "same-origin",
-                        signal: controller.signal,
-                    });
-                    if (!response.ok) {
+                    const isConnected = await checkConnection();
+                    if (!isConnected) {
                         throw new Error("Server is unavailable");
                     }
                     setStatus("Соединение восстановлено. Загружаем сайт…", "online");
@@ -490,8 +538,6 @@
                     retryButton.disabled = false;
                     retryButton.classList.remove("is-checking");
                     retryLabel.textContent = "Повторить попытку";
-                } finally {
-                    window.clearTimeout(timeoutId);
                 }
             });
 
