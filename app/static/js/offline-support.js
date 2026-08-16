@@ -1,7 +1,10 @@
 (function () {
     "use strict";
 
+    const CONNECTION_TIMEOUT_MS = 3000;
+    const CONNECTION_CHECK_INTERVAL_MS = 3000;
     let connectionLost = false;
+    let connectionCheckPromise = null;
     if (!("serviceWorker" in navigator) || !window.isSecureContext) {
         return;
     }
@@ -24,10 +27,28 @@
         retry.addEventListener("click", async function () {
             retry.disabled = true;
             retry.textContent = "Проверяем…";
+            const connected = await checkServerConnection("modal_retry");
+            if (!connected) {
+                status.textContent = "Соединение пока недоступно.";
+                retry.disabled = false;
+                retry.textContent = "Проверить соединение";
+            }
+        });
+        retry.focus();
+    }
+
+    function checkServerConnection(source) {
+        if (connectionCheckPromise) {
+            return connectionCheckPromise;
+        }
+        connectionCheckPromise = (async function () {
             const controller = new AbortController();
-            const timeoutId = window.setTimeout(function () { controller.abort(); }, 3000);
+            const timeoutId = window.setTimeout(function () {
+                controller.abort();
+            }, CONNECTION_TIMEOUT_MS);
             try {
-                const response = await window.fetch("/health?modal_retry=" + Date.now(), {
+                const response = await window.fetch("/health?connection_source="
+                    + encodeURIComponent(source) + "&t=" + Date.now(), {
                     cache: "no-store",
                     credentials: "same-origin",
                     signal: controller.signal,
@@ -36,16 +57,28 @@
                     throw new Error("Unavailable");
                 }
                 connectionLost = false;
-                modal.remove();
+                const modal = document.getElementById("connection-lost-modal");
+                if (modal) {
+                    modal.remove();
+                }
+                return true;
             } catch (_error) {
-                status.textContent = "Соединение пока недоступно.";
-                retry.disabled = false;
-                retry.textContent = "Проверить соединение";
+                connectionLost = true;
+                showConnectionModal();
+                return false;
             } finally {
                 window.clearTimeout(timeoutId);
+                connectionCheckPromise = null;
             }
-        });
-        retry.focus();
+        }());
+        return connectionCheckPromise;
+    }
+
+    function startConnectionWatchdog() {
+        checkServerConnection("initial");
+        window.setInterval(function () {
+            checkServerConnection("watchdog");
+        }, CONNECTION_CHECK_INTERVAL_MS);
     }
 
     window.addEventListener("load", function () {
@@ -62,6 +95,7 @@
         }).catch(function () {
             // Offline support is progressive enhancement; the site remains usable without it.
         });
+        startConnectionWatchdog();
     }, { once: true });
 
     window.addEventListener("offline", function () {
@@ -70,9 +104,12 @@
     });
 
     window.addEventListener("online", function () {
-        const retry = document.getElementById("connection-lost-retry");
-        if (retry && !retry.disabled) {
-            retry.click();
+        checkServerConnection("online");
+    });
+
+    document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) {
+            checkServerConnection("visible");
         }
     });
 

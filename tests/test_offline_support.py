@@ -26,6 +26,26 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertNotIn("showOfflinePageWhenDisconnected", script)
         self.assertNotIn('"/health?connection_check="', script)
 
+    def test_server_watchdog_detects_jamming_even_without_browser_offline_event(self):
+        script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("const CONNECTION_TIMEOUT_MS = 3000", script)
+        self.assertIn("const CONNECTION_CHECK_INTERVAL_MS = 3000", script)
+        self.assertIn('checkServerConnection("initial")', script)
+        self.assertIn('checkServerConnection("watchdog")', script)
+        self.assertIn('checkServerConnection("visible")', script)
+        self.assertIn('window.fetch("/health?connection_source="', script)
+        self.assertIn("controller.abort()", script)
+        self.assertIn("connectionLost = true", script)
+        self.assertIn("showConnectionModal()", script)
+
+    def test_successful_watchdog_check_closes_connection_modal(self):
+        script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("connectionLost = false", script)
+        self.assertIn('document.getElementById("connection-lost-modal")', script)
+        self.assertIn("modal.remove()", script)
+
     def test_lte_and_vpn_are_not_rejected_by_connection_quality_hints(self):
         script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
 
