@@ -54,16 +54,6 @@
             opacity: 0;
         }
 
-        .offline-loader-glow {
-            position: absolute;
-            width: min(86vw, 620px);
-            aspect-ratio: 1;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.2), rgba(37, 99, 235, 0.06) 45%, transparent 70%);
-            filter: blur(10px);
-            animation: offline-glow 1.4s ease-out both;
-        }
-
         .offline-loader-stage {
             --offline-logo-size: clamp(92px, 10vw, 116px);
             --offline-progress-gap: 22px;
@@ -96,12 +86,11 @@
             overflow: hidden;
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             box-shadow:
-                0 28px 54px rgba(37, 99, 235, 0.28),
-                0 10px 22px rgba(124, 58, 237, 0.18),
-                inset 0 1px 1px rgba(255, 255, 255, 0.42);
+                0 22px 42px rgba(37, 99, 235, 0.2);
             color: #fff;
-            transform: translate(-50%, -50%);
-            animation: offline-logo-in 0.72s cubic-bezier(0.2, 0.82, 0.25, 1.18) 0.08s both;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.94);
+            animation: offline-logo-in 0.32s ease-out both;
         }
 
         .offline-logo img {
@@ -120,24 +109,11 @@
         }
 
         .offline-logo::after {
-            content: "";
-            position: absolute;
-            inset: -40% auto -40% -65%;
-            width: 38%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
-            transform: skewX(-18deg);
-            animation: offline-shine 0.68s ease 0.62s both;
+            content: none;
         }
 
         .offline-orbit {
-            position: absolute;
-            top: calc(50% - var(--offline-composition-offset) - var(--offline-visual-lift));
-            left: 50%;
-            z-index: 1;
-            border: 1px solid rgba(79, 70, 229, 0.22);
-            border-radius: 50%;
-            opacity: 0;
-            transform: translate(-50%, -62%) scale(0.48);
+            display: none;
         }
 
         .offline-orbit-outer {
@@ -163,9 +139,17 @@
             padding: 2px;
             overflow: hidden;
             border-radius: 999px;
-            background: rgba(99, 102, 241, 0.13);
-            transform: translateX(-50%);
-            animation: offline-copy-in 0.35s ease-out 0.68s both;
+            border: 1px solid rgba(124, 58, 237, 0.16);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 242, 255, 0.72)),
+                rgba(99, 102, 241, 0.13);
+            box-shadow:
+                0 12px 28px rgba(79, 70, 229, 0.18),
+                inset 0 1px 2px rgba(255, 255, 255, 0.88),
+                inset 0 -1px 2px rgba(79, 70, 229, 0.12);
+            opacity: 0;
+            transform: translate(-50%, 6px);
+            animation: offline-progress-in 0.32s ease-out 0.18s both;
         }
 
         .offline-progress span {
@@ -173,8 +157,14 @@
             width: 100%;
             height: 100%;
             border-radius: inherit;
-            background: linear-gradient(90deg, #2563eb, #7c3aed);
-            animation: offline-progress 0.78s cubic-bezier(0.65, 0, 0.35, 1) 0.72s both;
+            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 34%, #8b5cf6 68%, #6d28d9 100%);
+            background-size: 220% 100%;
+            box-shadow:
+                0 0 14px rgba(124, 58, 237, 0.36),
+                0 0 4px rgba(37, 99, 235, 0.36);
+            transform: scaleX(0.72);
+            transform-origin: center;
+            animation: offline-progress-flow 1.08s ease-in-out infinite;
         }
 
         .offline-card {
@@ -294,8 +284,8 @@
         }
 
         @keyframes offline-logo-in {
-            from { opacity: 0; transform: translate(-50%, -50%) translateY(14px) scale(0.72) rotate(-5deg); }
-            to { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1) rotate(0); }
+            from { opacity: 1; transform: translate(-50%, -50%) scale(0.98); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         @keyframes offline-orbit {
@@ -309,21 +299,14 @@
             to { left: 135%; }
         }
 
-        @keyframes offline-copy-in {
-            from { opacity: 0; transform: translate(-50%, 10px); }
+        @keyframes offline-progress-in {
             to { opacity: 1; transform: translate(-50%, 0); }
         }
 
-        @keyframes offline-progress {
-            0% { transform: translateX(-105%); }
-            72% { transform: translateX(-12%); }
-            100% { transform: translateX(0); }
-        }
-
-        @keyframes offline-glow {
-            0% { opacity: 0; transform: scale(0.76); }
-            55% { opacity: 1; }
-            100% { opacity: 0.72; transform: scale(1.06); }
+        @keyframes offline-progress-flow {
+            0% { background-position: 0% 50%; transform: scaleX(0.72); }
+            50% { background-position: 100% 50%; transform: scaleX(1); }
+            100% { background-position: 0% 50%; transform: scaleX(0.72); }
         }
 
         @keyframes offline-card-in {
@@ -396,7 +379,6 @@
 </head>
 <body>
     <div class="offline-loader" id="offline-loader" aria-hidden="true">
-        <div class="offline-loader-glow"></div>
         <div class="offline-loader-stage">
             <span class="offline-orbit offline-orbit-outer"></span>
             <span class="offline-orbit offline-orbit-inner"></span>

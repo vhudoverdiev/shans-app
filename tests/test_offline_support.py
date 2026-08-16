@@ -50,7 +50,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v9`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v10`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -133,8 +133,20 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("--offline-visual-lift: 58px", page)
         self.assertIn("--app-intro-visual-lift: 58px", template)
         self.assertIn("top: calc(50% - var(--offline-composition-offset) - var(--offline-visual-lift));", page)
-        self.assertIn("transform: translate(-50%, -50%);", page)
+        self.assertIn("transform: translate(-50%, -50%) scale(0.94);", page)
         self.assertIn('window.matchMedia("(display-mode: standalone)")', page)
+
+    def test_offline_intro_animation_matches_online_intro_without_side_fly_in(self):
+        page = OFFLINE_PAGE.read_text(encoding="utf-8")
+
+        self.assertIn("animation: offline-logo-in 0.32s ease-out both", page)
+        self.assertIn("transform: translate(-50%, -50%) scale(0.98)", page)
+        self.assertIn("transform: translate(-50%, -50%) scale(1)", page)
+        self.assertIn("animation: offline-progress-in 0.32s ease-out 0.18s both", page)
+        self.assertIn("animation: offline-progress-flow 1.08s ease-in-out infinite", page)
+        self.assertNotIn("translateY(14px)", page)
+        self.assertNotIn("rotate(-5deg)", page)
+        self.assertNotIn('class="offline-loader-glow"', page)
 
     def test_offline_page_has_intro_message_and_retry_flow(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
