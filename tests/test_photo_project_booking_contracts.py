@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import date, timedelta
 from pathlib import Path
 
 from flask import Flask
@@ -18,7 +19,7 @@ from config import Config
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PROJECT_DATE = "2026-08-10"
+PROJECT_DATE = (date.today() + timedelta(days=7)).isoformat()
 
 
 class PhotoProjectBookingContractTests(unittest.TestCase):
