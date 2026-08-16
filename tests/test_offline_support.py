@@ -18,11 +18,9 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('navigator.serviceWorker.register("/service-worker.js"', script)
         self.assertIn('scope: "/"', script)
         self.assertIn('updateViaCache: "none"', script)
-        self.assertIn("const HEALTH_TIMEOUT_MS = 4500", script)
-        self.assertIn('"/health?connection_check="', script)
         self.assertIn("navigator.onLine", script)
-        self.assertIn("hasVeryWeakConnectionHint()", script)
-        self.assertIn('redirectToOffline("weak")', script)
+        self.assertNotIn("navigator.connection", script)
+        self.assertNotIn('"/health?connection_check="', script)
         self.assertIn("window.location.replace(buildOfflineUrl(reason))", script)
 
     def test_service_worker_precaches_and_serves_offline_navigation(self):
@@ -38,17 +36,21 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('event.request.mode !== "navigate"', service_worker)
         self.assertIn("return await fetch(event.request)", service_worker)
         self.assertIn("cache.match(OFFLINE_PAGE_URL)", service_worker)
+        self.assertNotIn("cache.addAll", service_worker)
 
     def test_offline_page_has_intro_message_and_retry_flow(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn('class="offline-logo"', page)
-        self.assertIn('<img src="/static/logo.png" alt="Логотип Шанс">', page)
+        self.assertIn('class="offline-logo-fallback"', page)
+        self.assertIn('>Ш</span>', page)
+        self.assertIn('onerror="this.hidden=true"', page)
         self.assertIn("Отсутствует подключение к интернету", page)
         self.assertIn('id="offline-retry"', page)
         self.assertIn("Повторить попытку", page)
         self.assertIn('window.fetch("/health?offline_retry="', page)
         self.assertIn('cache: "no-store"', page)
+        self.assertIn("}, 12000);", page)
         self.assertIn("new URLSearchParams(window.location.search)", page)
         self.assertIn('reason === "weak"', page)
         self.assertIn("Слабое подключение к интернету", page)

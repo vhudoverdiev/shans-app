@@ -95,10 +95,18 @@
         }
 
         .offline-logo img {
+            position: absolute;
+            inset: 0;
             display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .offline-logo-fallback {
+            font-size: 54px;
+            font-weight: 800;
+            line-height: 1;
         }
 
         .offline-logo::after {
@@ -369,7 +377,8 @@
             <span class="offline-orbit offline-orbit-outer"></span>
             <span class="offline-orbit offline-orbit-inner"></span>
             <div class="offline-logo">
-                <img src="/static/logo.png" alt="Логотип Шанс">
+                <span class="offline-logo-fallback" aria-hidden="true">Ш</span>
+                <img src="/static/logo.png" alt="Логотип Шанс" onerror="this.hidden=true">
             </div>
             <div class="offline-progress"><span></span></div>
         </div>
@@ -447,7 +456,7 @@
                 const controller = new AbortController();
                 const timeoutId = window.setTimeout(function () {
                     controller.abort();
-                }, 4500);
+                }, 12000);
 
                 try {
                     const response = await window.fetch("/health?offline_retry=" + Date.now(), {

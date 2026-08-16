@@ -1,17 +1,21 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v1`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v2`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 
 self.addEventListener("install", function (event) {
     event.waitUntil((async function () {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
-        await cache.addAll([
-            new Request(OFFLINE_PAGE_URL, { cache: "reload" }),
-            new Request(OFFLINE_LOGO_URL, { cache: "reload" }),
-        ]);
+        // Cache entries independently: an optional image must never prevent the
+        // offline document and the new worker from being installed.
+        await cache.add(new Request(OFFLINE_PAGE_URL, { cache: "reload" }));
+        try {
+            await cache.add(new Request(OFFLINE_LOGO_URL, { cache: "reload" }));
+        } catch (_error) {
+            // The offline page contains its own logo fallback.
+        }
         await self.skipWaiting();
     })());
 });
