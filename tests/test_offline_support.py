@@ -40,17 +40,50 @@ class OfflineSupportTests(unittest.TestCase):
         ):
             self.assertNotIn(unreliable_hint, script)
 
-    def test_real_offline_browser_event_opens_the_offline_page(self):
+    def test_real_offline_event_keeps_current_page_readable_until_navigation(self):
         script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
 
         offline_listener = script.split('window.addEventListener("offline"', 1)[1]
-        self.assertIn('redirectToOffline("offline")', offline_listener)
+        offline_handler = offline_listener.split("});", 1)[0]
+        self.assertIn("connectionLost = true", offline_handler)
+        self.assertNotIn("redirectToOffline", offline_handler)
+        self.assertIn('window.addEventListener("online"', script)
+        self.assertIn("connectionLost = false", script)
         self.assertIn('target.searchParams.set("reason", reason || "offline")', script)
+
+    def test_offline_links_can_use_cached_pages_but_forms_stay_blocked(self):
+        script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertNotIn('document.addEventListener("click"', script)
+        self.assertIn("event.preventDefault()", script)
+        self.assertIn('document.addEventListener("submit"', script)
+        self.assertIn('redirectToOffline("offline")', script)
+
+    def test_previously_opened_pages_and_assets_are_available_offline_with_notice(self):
+        service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+
+        self.assertIn('const PAGE_CACHE_NAME = "shans-pages-v1"', service_worker)
+        self.assertIn("pageCache.put(event.request, networkResponse.clone())", service_worker)
+        self.assertIn("pageCache.match(event.request)", service_worker)
+        self.assertIn("return addOfflineNotice(cachedPage)", service_worker)
+        self.assertIn("Связь потеряна или её глушат. Показана сохранённая версия страницы.", service_worker)
+        self.assertIn('data-shans-offline-snapshot="true"', service_worker)
+        self.assertIn('dataset.shansOfflineSnapshot === "true"', REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
+        self.assertIn("cache.put(event.request, networkResponse.clone())", service_worker)
+        self.assertIn("cache.match(event.request, { ignoreSearch: true })", service_worker)
+
+    def test_logout_clears_private_offline_page_cache(self):
+        service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+
+        self.assertIn('["/login", "/logout"].includes(requestUrl.pathname)', service_worker)
+        self.assertIn("await caches.delete(PAGE_CACHE_NAME)", service_worker)
+        self.assertIn('!["/login", "/logout", OFFLINE_PAGE_URL]', service_worker)
+        self.assertIn('new URL(networkResponse.url || requestUrl.href).pathname === "/login"', service_worker)
 
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v10`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v14`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -59,7 +92,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('addEventListener("activate"', service_worker)
         self.assertIn('addEventListener("fetch"', service_worker)
         self.assertIn('const isNavigation = event.request.mode === "navigate"', service_worker)
-        self.assertIn("return await fetchWithTimeout(event.request)", service_worker)
+        self.assertIn("const networkResponse = await fetchWithTimeout(event.request)", service_worker)
         self.assertIn("cache.match(OFFLINE_PAGE_URL)", service_worker)
         self.assertNotIn("cache.addAll", service_worker)
         self.assertIn('requestUrl.pathname === OFFLINE_PAGE_URL', service_worker)
@@ -102,7 +135,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("return await Promise.race([", service_worker)
         self.assertIn('reject(new Error("Network request timed out"))', service_worker)
         self.assertIn("clearTimeout(timeoutId)", service_worker)
-        self.assertIn("return await fetchWithTimeout(event.request)", service_worker)
+        self.assertIn("const networkResponse = await fetchWithTimeout(event.request)", service_worker)
 
     def test_hanging_css_or_javascript_redirects_instead_of_leaving_white_screen(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
@@ -119,7 +152,8 @@ class OfflineSupportTests(unittest.TestCase):
     def test_offline_logo_has_network_independent_sh_fallback(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
-        self.assertIn('<span class="offline-logo-fallback" aria-hidden="true">Ш</span>', page)
+        self.assertIn('<svg class="offline-logo-fallback" viewBox="0 0 1254 1254"', page)
+        self.assertIn('<path fill="#fff"', page)
         self.assertIn('onerror="this.remove()"', page)
         self.assertNotIn('onerror="this.hidden=true"', page)
         self.assertLess(page.index("offline-logo-fallback"), page.index('src="/static/logo.png"'))
@@ -153,7 +187,7 @@ class OfflineSupportTests(unittest.TestCase):
 
         self.assertIn('class="offline-logo"', page)
         self.assertIn('class="offline-logo-fallback"', page)
-        self.assertIn('>Ш</span>', page)
+        self.assertIn('<svg class="offline-logo-fallback"', page)
         self.assertIn('onerror="this.remove()"', page)
         self.assertIn("Отсутствует подключение к интернету", page)
         self.assertIn('id="offline-retry"', page)
@@ -171,6 +205,16 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("window.location.assign(returnPath)", page)
         self.assertNotIn("window.location.reload()", page)
         self.assertIn("Интернет всё ещё недоступен", page)
+
+    def test_recovered_connection_automatically_returns_to_saved_location(self):
+        page = OFFLINE_PAGE.read_text(encoding="utf-8")
+
+        self.assertIn('window.addEventListener("online"', page)
+        self.assertIn("Соединение появилось. Возвращаем вас на сайт…", page)
+        self.assertIn("if (!retryButton.disabled)", page)
+        self.assertIn("retryButton.click()", page)
+        self.assertIn("window.location.assign(returnPath)", page)
+        self.assertIn("window.location.pathname + window.location.search + window.location.hash", REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

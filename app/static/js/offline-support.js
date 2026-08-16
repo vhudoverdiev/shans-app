@@ -2,6 +2,7 @@
     "use strict";
 
     const OFFLINE_PAGE_URL = "/static/offline.html";
+    let connectionLost = document.documentElement.dataset.shansOfflineSnapshot === "true";
     if (!("serviceWorker" in navigator) || !window.isSecureContext) {
         return;
     }
@@ -37,6 +38,18 @@
     }, { once: true });
 
     window.addEventListener("offline", function () {
+        connectionLost = true;
+    });
+
+    window.addEventListener("online", function () {
+        connectionLost = false;
+    });
+
+    document.addEventListener("submit", function (event) {
+        if (!connectionLost || event.defaultPrevented) {
+            return;
+        }
+        event.preventDefault();
         redirectToOffline("offline");
     });
 }());
