@@ -1,8 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v18`;
-const PAGE_CACHE_NAME = "shans-pages-v1";
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v20`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 const NAVIGATION_TIMEOUT_MS = 3000;
@@ -34,34 +33,6 @@ function buildInterferenceUrl(returnPath) {
     offlineUrl.searchParams.set("reason", "interference");
     offlineUrl.searchParams.set("return", returnPath || "/");
     return offlineUrl.href;
-}
-
-function canCachePage(requestUrl, response) {
-    const contentType = response.headers.get("Content-Type") || "";
-    const responseUrl = new URL(response.url || requestUrl.href);
-    return requestUrl.origin === self.location.origin
-        && responseUrl.origin === self.location.origin
-        && response.ok
-        && contentType.includes("text/html")
-        && !["/login", "/logout", OFFLINE_PAGE_URL].includes(requestUrl.pathname)
-        && !["/login", "/logout", OFFLINE_PAGE_URL].includes(responseUrl.pathname);
-}
-
-async function addOfflineNotice(response) {
-    const headers = new Headers(response.headers);
-    headers.delete("Content-Length");
-    headers.delete("Content-Encoding");
-    headers.delete("ETag");
-    const html = await response.text();
-    const notice = '<div role="status" aria-live="polite" style="position:sticky;top:0;z-index:20000;padding:10px 16px;background:#fff7ed;color:#9a3412;border-bottom:1px solid #fed7aa;text-align:center;font:700 14px/1.35 Arial,sans-serif">Связь потеряна или её глушат. Показана сохранённая версия страницы.</div>';
-    const decoratedHtml = html
-        .replace(/<html([^>]*)>/i, '<html$1 data-shans-offline-snapshot="true">')
-        .replace(/<body([^>]*)>/i, `<body$1>${notice}`);
-    return new Response(decoratedHtml, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: headers,
-    });
 }
 
 async function addLaunchContext(response, returnPath) {
@@ -122,12 +93,6 @@ self.addEventListener("fetch", function (event) {
 
     event.respondWith((async function () {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
-        const pageCache = await caches.open(PAGE_CACHE_NAME);
-
-        if (isNavigation && ["/login", "/logout"].includes(requestUrl.pathname)) {
-            await caches.delete(PAGE_CACHE_NAME);
-        }
-
         if (requestUrl.pathname === OFFLINE_PAGE_URL) {
             const cachedOfflinePage = await cache.match(OFFLINE_PAGE_URL);
             if (cachedOfflinePage) {
@@ -150,22 +115,12 @@ self.addEventListener("fetch", function (event) {
 
         try {
             const networkResponse = await fetchWithTimeout(event.request);
-            if (isNavigation && new URL(networkResponse.url || requestUrl.href).pathname === "/login") {
-                await caches.delete(PAGE_CACHE_NAME);
-            }
-            if (isNavigation && canCachePage(requestUrl, networkResponse)) {
-                await pageCache.put(event.request, networkResponse.clone());
-            } else if (isCriticalResource && networkResponse.ok) {
+            if (isCriticalResource && networkResponse.ok) {
                 await cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
         } catch (_error) {
-            if (isNavigation) {
-                const cachedPage = await pageCache.match(event.request);
-                if (cachedPage) {
-                    return addOfflineNotice(cachedPage);
-                }
-            } else if (isCriticalResource) {
+            if (isCriticalResource) {
                 const cachedResource = await cache.match(event.request, { ignoreSearch: true });
                 if (cachedResource) {
                     return cachedResource;

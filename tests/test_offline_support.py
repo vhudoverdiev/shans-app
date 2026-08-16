@@ -25,7 +25,6 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertNotIn("downlink", script)
         self.assertNotIn("showOfflinePageWhenDisconnected", script)
         self.assertNotIn('"/health?connection_check="', script)
-        self.assertIn("window.location.replace(buildOfflineUrl(reason))", script)
 
     def test_lte_and_vpn_are_not_rejected_by_connection_quality_hints(self):
         script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
@@ -49,41 +48,44 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertNotIn("redirectToOffline", offline_handler)
         self.assertIn('window.addEventListener("online"', script)
         self.assertIn("connectionLost = false", script)
-        self.assertIn('target.searchParams.set("reason", reason || "offline")', script)
 
-    def test_offline_links_can_use_cached_pages_but_forms_stay_blocked(self):
+    def test_offline_forms_are_blocked_and_show_connection_modal(self):
         script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
 
         self.assertNotIn('document.addEventListener("click"', script)
         self.assertIn("event.preventDefault()", script)
         self.assertIn('document.addEventListener("submit"', script)
-        self.assertIn('redirectToOffline("offline")', script)
+        self.assertIn("showConnectionModal()", script)
 
-    def test_previously_opened_pages_and_assets_are_available_offline_with_notice(self):
+    def test_html_pages_are_never_cached_or_shown_as_saved_copies(self):
+        service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+        registration_script = REGISTRATION_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertNotIn("PAGE_CACHE_NAME", service_worker)
+        self.assertNotIn("pageCache", service_worker)
+        self.assertNotIn("canCachePage", service_worker)
+        self.assertNotIn("addOfflineState", service_worker)
+        self.assertNotIn('data-shans-offline-snapshot="true"', service_worker)
+        self.assertNotIn("shansOfflineSnapshot", registration_script)
+        self.assertNotIn("Показана сохранённая версия страницы", service_worker)
+
+    def test_critical_assets_remain_available_to_offline_screen(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const PAGE_CACHE_NAME = "shans-pages-v1"', service_worker)
-        self.assertIn("pageCache.put(event.request, networkResponse.clone())", service_worker)
-        self.assertIn("pageCache.match(event.request)", service_worker)
-        self.assertIn("return addOfflineNotice(cachedPage)", service_worker)
-        self.assertIn("Связь потеряна или её глушат. Показана сохранённая версия страницы.", service_worker)
-        self.assertIn('data-shans-offline-snapshot="true"', service_worker)
-        self.assertIn('dataset.shansOfflineSnapshot === "true"', REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
         self.assertIn("cache.put(event.request, networkResponse.clone())", service_worker)
         self.assertIn("cache.match(event.request, { ignoreSearch: true })", service_worker)
 
-    def test_logout_clears_private_offline_page_cache(self):
+    def test_private_html_responses_are_not_persisted(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('["/login", "/logout"].includes(requestUrl.pathname)', service_worker)
-        self.assertIn("await caches.delete(PAGE_CACHE_NAME)", service_worker)
-        self.assertIn('!["/login", "/logout", OFFLINE_PAGE_URL]', service_worker)
-        self.assertIn('new URL(networkResponse.url || requestUrl.href).pathname === "/login"', service_worker)
+        self.assertNotIn("contentType.includes", service_worker)
+        self.assertNotIn("pageCache.put", service_worker)
+        self.assertNotIn("pageCache.match", service_worker)
 
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v18`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v20`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -206,7 +208,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertNotIn("window.location.reload()", page)
         self.assertIn("Интернет всё ещё недоступен", page)
 
-    def test_recovered_connection_automatically_returns_to_saved_location(self):
+    def test_recovered_connection_returns_from_offline_screen_to_requested_location(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn('window.addEventListener("online"', page)
@@ -214,7 +216,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("if (!retryButton.disabled)", page)
         self.assertIn("retryButton.click()", page)
         self.assertIn("window.location.assign(returnPath)", page)
-        self.assertIn("window.location.pathname + window.location.search + window.location.hash", REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
+        self.assertIn('offlineUrl.searchParams.set("return", returnPath || "/")', SERVICE_WORKER.read_text(encoding="utf-8"))
 
     def test_cold_pwa_launch_shows_cached_logo_before_network_check(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
