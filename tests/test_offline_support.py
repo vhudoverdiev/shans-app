@@ -50,6 +50,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v6`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -58,7 +59,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('addEventListener("activate"', service_worker)
         self.assertIn('addEventListener("fetch"', service_worker)
         self.assertIn('event.request.mode !== "navigate"', service_worker)
-        self.assertIn("return await fetch(event.request)", service_worker)
+        self.assertIn("return await fetchNavigationWithTimeout(event.request)", service_worker)
         self.assertIn("cache.match(OFFLINE_PAGE_URL)", service_worker)
         self.assertNotIn("cache.addAll", service_worker)
         self.assertIn('requestUrl.pathname === OFFLINE_PAGE_URL', service_worker)
@@ -67,13 +68,16 @@ class OfflineSupportTests(unittest.TestCase):
 
     def test_optional_logo_failure_cannot_cancel_offline_cache_installation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+        install_block = service_worker.split('self.addEventListener("install"', 1)[1].split(
+            'self.addEventListener("activate"', 1
+        )[0]
 
         offline_page_cache = 'await cache.add(new Request(OFFLINE_PAGE_URL, { cache: "reload" }));'
         logo_cache = 'await cache.add(new Request(OFFLINE_LOGO_URL, { cache: "reload" }));'
-        self.assertLess(service_worker.index(offline_page_cache), service_worker.index("try {"))
-        self.assertIn(logo_cache, service_worker)
-        self.assertIn("catch (_error)", service_worker)
-        self.assertNotIn("cache.addAll", service_worker)
+        self.assertLess(install_block.index(offline_page_cache), install_block.index("try {"))
+        self.assertIn(logo_cache, install_block)
+        self.assertIn("catch (_error)", install_block)
+        self.assertNotIn("cache.addAll", install_block)
 
     def test_unreachable_site_redirects_to_interference_message_without_looping(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
@@ -87,12 +91,36 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("Интернет недоступен или связь глушат", page)
         self.assertIn("Возможно, связь глушат. Включите белые списки", page)
 
+    def test_hanging_navigation_is_aborted_and_falls_back_from_white_screen(self):
+        service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
+
+        self.assertIn("const NAVIGATION_TIMEOUT_MS = 3000", service_worker)
+        self.assertIn("async function fetchNavigationWithTimeout(request)", service_worker)
+        self.assertIn("const controller = new AbortController()", service_worker)
+        self.assertIn("controller.abort()", service_worker)
+        self.assertIn("fetch(request, { signal: controller.signal })", service_worker)
+        self.assertIn("clearTimeout(timeoutId)", service_worker)
+        self.assertIn("return await fetchNavigationWithTimeout(event.request)", service_worker)
+
     def test_offline_logo_has_network_independent_sh_fallback(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn('<span class="offline-logo-fallback" aria-hidden="true">Ш</span>', page)
-        self.assertIn('onerror="this.hidden=true"', page)
+        self.assertIn('onerror="this.remove()"', page)
+        self.assertNotIn('onerror="this.hidden=true"', page)
         self.assertLess(page.index("offline-logo-fallback"), page.index('src="/static/logo.png"'))
+
+    def test_offline_logo_uses_the_same_vertical_geometry_as_online_intro(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        page = OFFLINE_PAGE.read_text(encoding="utf-8")
+
+        self.assertIn("--offline-visual-lift: 44px", page)
+        self.assertIn("--app-intro-visual-lift: 44px", template)
+        self.assertIn("--offline-visual-lift: 58px", page)
+        self.assertIn("--app-intro-visual-lift: 58px", template)
+        self.assertIn("top: calc(50% - var(--offline-composition-offset) - var(--offline-visual-lift));", page)
+        self.assertIn("transform: translate(-50%, -50%);", page)
+        self.assertIn('window.matchMedia("(display-mode: standalone)")', page)
 
     def test_offline_page_has_intro_message_and_retry_flow(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
@@ -100,7 +128,7 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('class="offline-logo"', page)
         self.assertIn('class="offline-logo-fallback"', page)
         self.assertIn('>Ш</span>', page)
-        self.assertIn('onerror="this.hidden=true"', page)
+        self.assertIn('onerror="this.remove()"', page)
         self.assertIn("Отсутствует подключение к интернету", page)
         self.assertIn('id="offline-retry"', page)
         self.assertIn("Повторить попытку", page)

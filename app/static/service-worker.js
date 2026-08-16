@@ -1,9 +1,23 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v3`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v6`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
+const NAVIGATION_TIMEOUT_MS = 3000;
+
+async function fetchNavigationWithTimeout(request) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(function () {
+        controller.abort();
+    }, NAVIGATION_TIMEOUT_MS);
+
+    try {
+        return await fetch(request, { signal: controller.signal });
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
 
 self.addEventListener("install", function (event) {
     event.waitUntil((async function () {
@@ -50,7 +64,7 @@ self.addEventListener("fetch", function (event) {
         }
 
         try {
-            return await fetch(event.request);
+            return await fetchNavigationWithTimeout(event.request);
         } catch (_error) {
             const offlinePage = await cache.match(OFFLINE_PAGE_URL);
             if (offlinePage) {
