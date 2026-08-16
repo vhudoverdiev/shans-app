@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Server = "root@80.249.146.211",
+    [string]$Server = "root@135.106.176.36",
     [ValidateRange(1, 65535)]
     [int]$Port = 22,
     [string]$IdentityFile = "",

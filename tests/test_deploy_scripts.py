@@ -14,6 +14,8 @@ class DeployScriptTests(unittest.TestCase):
         self.assertNotIn("SkipPush", script)
         self.assertIn("& ssh @SshArguments", script)
         self.assertIn("./deploy.sh", script)
+        self.assertIn('[string]$Server = "root@135.106.176.36"', script)
+        self.assertNotIn("80.249.146.211", script)
 
     def test_cmd_wrapper_allows_dot_slash_deploy_command(self):
         wrapper = (PROJECT_ROOT / "deploy.cmd").read_text(encoding="utf-8")
