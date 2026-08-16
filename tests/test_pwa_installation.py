@@ -46,7 +46,7 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertEqual(manifest["name"], "Шанс")
         self.assertEqual(manifest["short_name"], "Шанс")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertEqual(manifest["start_url"], "/")
+        self.assertEqual(manifest["start_url"], "/?_shans_launch=1")
         self.assertIn(
             {
                 "src": "/static/pwa-icon-512-shans-v2.png",

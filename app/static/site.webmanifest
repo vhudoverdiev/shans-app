@@ -4,7 +4,7 @@
   "description": "Личная система управления",
   "lang": "ru",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/?_shans_launch=1",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f3f4f6",

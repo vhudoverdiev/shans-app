@@ -30,8 +30,10 @@
 
     window.addEventListener("load", function () {
         const currentUrl = new URL(window.location.href);
-        if (currentUrl.searchParams.has("_shans_network")) {
+        if (currentUrl.searchParams.has("_shans_network")
+            || currentUrl.searchParams.has("_shans_launch")) {
             currentUrl.searchParams.delete("_shans_network");
+            currentUrl.searchParams.delete("_shans_launch");
             window.history.replaceState(null, "", currentUrl.pathname + currentUrl.search + currentUrl.hash);
         }
         navigator.serviceWorker.register("/service-worker.js", {

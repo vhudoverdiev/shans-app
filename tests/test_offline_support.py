@@ -83,7 +83,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v17`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v18`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -219,10 +219,13 @@ class OfflineSupportTests(unittest.TestCase):
     def test_cold_pwa_launch_shows_cached_logo_before_network_check(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
+        cold_launch_block = service_worker.split("const isColdLaunch =", 1)[1].split(";", 1)[0]
 
         self.assertIn("const isColdLaunch = isNavigation", service_worker)
-        self.assertIn("&& !event.clientId", service_worker)
-        self.assertNotIn("!event.request.referrer", service_worker)
+        self.assertIn('requestUrl.searchParams.has("_shans_launch")', service_worker)
+        self.assertNotIn("clientId", cold_launch_block)
+        self.assertNotIn("referrer", cold_launch_block)
+        self.assertIn('returnUrl.searchParams.delete("_shans_launch")', service_worker)
         self.assertIn("return addLaunchContext(launchPage, returnPath)", service_worker)
         self.assertIn("window.__shansLaunchCheck=true", service_worker)
         self.assertIn("const isLaunchCheck = window.__shansLaunchCheck === true", page)
@@ -230,13 +233,15 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn("checkConnection()", page)
         self.assertIn("window.location.assign(buildNetworkReturnPath())", page)
         self.assertIn('currentUrl.searchParams.delete("_shans_network")', REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
+        self.assertIn('currentUrl.searchParams.delete("_shans_launch")', REGISTRATION_SCRIPT.read_text(encoding="utf-8"))
 
     def test_internal_navigation_never_replays_cold_launch_logo(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
         cold_launch_block = service_worker.split("const isColdLaunch =", 1)[1].split(";", 1)[0]
 
         self.assertIn("isNavigation", cold_launch_block)
-        self.assertIn("!event.clientId", cold_launch_block)
+        self.assertIn('_shans_launch', cold_launch_block)
+        self.assertNotIn("clientId", cold_launch_block)
         self.assertNotIn("referrer", cold_launch_block)
         self.assertIn("if (isColdLaunch)", service_worker)
 

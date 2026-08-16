@@ -1,7 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v17`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v18`;
 const PAGE_CACHE_NAME = "shans-pages-v1";
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
@@ -136,12 +136,14 @@ self.addEventListener("fetch", function (event) {
         }
 
         const isColdLaunch = isNavigation
-            && !event.clientId
+            && requestUrl.searchParams.has("_shans_launch")
             && !requestUrl.searchParams.has("_shans_network");
         if (isColdLaunch) {
             const launchPage = await cache.match(OFFLINE_PAGE_URL);
             if (launchPage) {
-                const returnPath = requestUrl.pathname + requestUrl.search + requestUrl.hash;
+                const returnUrl = new URL(requestUrl.href);
+                returnUrl.searchParams.delete("_shans_launch");
+                const returnPath = returnUrl.pathname + returnUrl.search + returnUrl.hash;
                 return addLaunchContext(launchPage, returnPath);
             }
         }
