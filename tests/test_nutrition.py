@@ -29,6 +29,7 @@ from app.nutrition import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 NUTRITION_STYLE_FILE = PROJECT_ROOT / "app" / "static" / "css" / "nutrition.css"
+NUTRITION_TEMPLATE = PROJECT_ROOT / "app" / "templates" / "nutrition.html"
 NUTRITION_PROFILE_EDIT_TEMPLATE = (
     PROJECT_ROOT / "app" / "templates" / "nutrition_profile_edit.html"
 )
@@ -620,14 +621,17 @@ class NutritionTests(unittest.TestCase):
         self.assertIn("progress_insight.protein_message", template)
         self.assertNotIn("autofocus", template)
 
-    def test_nutrition_edit_pages_keep_back_button_visible_on_mobile(self):
+    def test_nutrition_pages_keep_back_button_visible_on_mobile(self):
+        template = NUTRITION_TEMPLATE.read_text(encoding="utf-8")
         styles = NUTRITION_STYLE_FILE.read_text(encoding="utf-8")
         mobile_block = styles.split("@media (max-width: 900px) and (pointer: coarse)", 1)[1].split(
             "@media (hover: hover) and (pointer: fine)",
             1,
         )[0]
 
-        self.assertIn(".nutrition-back-link {\n        display: none;", mobile_block)
+        self.assertIn("url_for('sport_hub')", template)
+        self.assertIn('class="nutrition-back-link">← Спорт</a>', template)
+        self.assertNotIn(".nutrition-back-link {\n        display: none;", mobile_block)
         self.assertIn(".nutrition-custom-food-page .nutrition-back-link", mobile_block)
         self.assertIn(".nutrition-profile-edit-page .nutrition-back-link", mobile_block)
         edit_back_rule = mobile_block.split(".nutrition-custom-food-page .nutrition-back-link,", 1)[1].split(

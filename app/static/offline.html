@@ -425,7 +425,10 @@
                 ? rawReturnPath
                 : "/";
 
-            if (reason === "weak") {
+            if (reason === "interference") {
+                title.textContent = "Интернет недоступен или связь глушат";
+                description.textContent = "Устройство подключено к сети, но сайт не отвечает. Возможно, связь глушат. Включите белые списки и повторите попытку.";
+            } else if (reason === "weak") {
                 title.textContent = "Слабое подключение к интернету";
                 description.textContent = "Соединение есть, но сайт отвечает слишком долго. Проверьте сеть и повторите попытку.";
             }

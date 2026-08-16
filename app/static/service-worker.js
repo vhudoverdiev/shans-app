@@ -1,7 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v2`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v3`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 
@@ -39,13 +39,26 @@ self.addEventListener("fetch", function (event) {
     }
 
     event.respondWith((async function () {
+        const requestUrl = new URL(event.request.url);
+        const cache = await caches.open(OFFLINE_CACHE_NAME);
+
+        if (requestUrl.pathname === OFFLINE_PAGE_URL) {
+            const cachedOfflinePage = await cache.match(OFFLINE_PAGE_URL);
+            if (cachedOfflinePage) {
+                return cachedOfflinePage;
+            }
+        }
+
         try {
             return await fetch(event.request);
         } catch (_error) {
-            const cache = await caches.open(OFFLINE_CACHE_NAME);
             const offlinePage = await cache.match(OFFLINE_PAGE_URL);
             if (offlinePage) {
-                return offlinePage;
+                const returnPath = requestUrl.pathname + requestUrl.search + requestUrl.hash;
+                const offlineUrl = new URL(OFFLINE_PAGE_URL, self.location.origin);
+                offlineUrl.searchParams.set("reason", "interference");
+                offlineUrl.searchParams.set("return", returnPath);
+                return Response.redirect(offlineUrl.href, 302);
             }
             return new Response("Отсутствует подключение к интернету.", {
                 status: 503,

@@ -27,12 +27,6 @@
         window.location.replace(buildOfflineUrl(reason));
     }
 
-    function showOfflinePageWhenDisconnected() {
-        if (!navigator.onLine) {
-            redirectToOffline("offline");
-        }
-    }
-
     window.addEventListener("load", function () {
         navigator.serviceWorker.register("/service-worker.js", {
             scope: "/",
@@ -40,8 +34,6 @@
         }).catch(function () {
             // Offline support is progressive enhancement; the site remains usable without it.
         });
-
-        showOfflinePageWhenDisconnected();
     }, { once: true });
 
     window.addEventListener("offline", function () {
