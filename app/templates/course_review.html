@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course_title }} — повторение дней {{ start_day }}–{{ end_day }} | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page lesson-page">
+    <a class="learning-back-link" href="{{ url_for(course_endpoint) }}">← Вернуться к курсу</a>
+
+    <section class="lesson-section quiz-section" id="review-test">
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">{{ course_title }} · повторение дней {{ start_day }}–{{ end_day }}</p>
+                <h1>Дополнительный тест</h1>
+            </div>
+            <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
+        </div>
+        <p class="learning-review-note">Вопросы и варианты ответов перемешиваются при каждой новой попытке.</p>
+        <form method="post" action="{{ url_for('learning.course_review', course_key=course_key, end_day=end_day, _anchor='review-test-result') }}" class="quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
+            {% for question in questions %}
+            {% set question_index = loop.index0 %}
+            <fieldset class="quiz-question">
+                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
+                <div class="quiz-options">
+                    {% for option in question.options %}
+                    <label class="quiz-option">
+                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
+                        <span>{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+        </form>
+    </section>
+
+    {% if score is not none %}
+    <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="review-test-result" role="status">
+        <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
+        <div>
+            <h2>{% if passed %}Повторение пройдено{% else %}Стоит повторить материал{% endif %}</h2>
+            <p>{% if passed %}Отлично! Материал пяти дней закреплён.{% else %}Для прохождения нужно минимум {{ pass_score }} правильных ответов.{% endif %}</p>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('learning.course_review', course_key=course_key, end_day=end_day) }}">Новая попытка</a>
+    </section>
+
+    <div class="quiz-feedback-list">
+        {% for item in feedback %}
+        <article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}">
+            <strong>{{ loop.index }}. День {{ item.day }} · {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong>
+            <span><b>Вы выбрали:</b> {{ item.selected_answer }}</span>
+            <span><b>Правильный ответ:</b> {{ item.correct_answer }}</span>
+            <span>{{ item.explanation }}</span>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

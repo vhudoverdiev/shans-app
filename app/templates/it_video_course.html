@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Видеокурс Python | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page it-learning-page">
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
+    <nav class="learning-course-tabs" aria-label="Разделы IT">
+        <a class="learning-course-tab" href="{{ url_for('learning.it_course') }}">Курс по дням</a>
+        <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.it_video_course') }}" aria-current="page">Видеокурсы</a>
+    </nav>
+
+    <div class="learning-hero it-learning-hero">
+        <div>
+            <p class="learning-kicker">Python · 22 видеоурока</p>
+            <h1>Python с нуля</h1>
+            <p>Смотрите урок, проходите обязательный тест и последовательно открывайте следующую тему.</p>
+        </div>
+        <div class="learning-progress-summary"><strong>{{ passed_count }} / 22</strong><span>тестов пройдено</span></div>
+    </div>
+
+    <div class="learning-progress-card">
+        <div class="learning-progress-copy">
+            <div><span>Ваш прогресс</span><strong>{{ progress_percent }}%</strong></div>
+            {% if next_lesson %}<a class="btn btn-primary" href="{{ url_for('learning.it_video_lesson', lesson_number=next_lesson) }}">Продолжить: урок {{ next_lesson }}</a>{% endif %}
+        </div>
+        <div class="learning-progress-track" role="progressbar" aria-label="Прогресс видеокурса" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_percent }}"><span style="width: {{ progress_percent }}%"></span></div>
+    </div>
+
+    <div class="english-course-grid it-course-grid video-course-grid">
+        {% for lesson in lessons %}
+            {% if lesson.unlocked %}<a href="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day) }}" class="english-day-card it-day-card video-lesson-card{% if lesson.passed %} english-day-card-passed{% endif %}">
+            {% else %}<div class="english-day-card it-day-card video-lesson-card english-day-card-locked" aria-disabled="true">{% endif %}
+                <div class="english-day-card-top">
+                    <span class="english-day-number">Видео {{ lesson.day }}</span>
+                    <span class="english-day-status">{% if lesson.passed %}✓{% elif lesson.unlocked %}Смотреть{% else %}🔒{% endif %}</span>
+                </div>
+                <h3>{{ lesson.title }}</h3>
+                <p>Видео + обязательный тест из 4 вопросов</p>
+                {% if lesson.passed %}<span class="english-day-score">Лучший результат: {{ lesson.best_score }} / 4</span>{% endif %}
+            {% if lesson.unlocked %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

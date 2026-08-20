@@ -118,9 +118,12 @@ SECTION_ENDPOINTS = {
         "learning.it_course",
         "learning.it_day",
         "learning.it_final",
+        "learning.it_video_course",
+        "learning.it_video_lesson",
         "learning.english_course",
         "learning.english_day",
         "learning.english_final",
+        "learning.course_review",
     },
     "workouts": {
         "workouts.index",

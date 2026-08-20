@@ -238,6 +238,66 @@
     padding: 22px 24px;
 }
 
+.learning-course-tabs {
+    display: inline-flex;
+    gap: 6px;
+    margin: 0 0 20px;
+    padding: 5px;
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    background: #eff6ff;
+}
+
+.learning-course-tab {
+    padding: 10px 16px;
+    border-radius: 12px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.learning-course-tab-active {
+    color: #ffffff;
+    background: #2563eb;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.24);
+}
+
+.video-player-section {
+    padding: 18px;
+    background: #0f172a;
+}
+
+.python-course-video {
+    display: block;
+    width: 100%;
+    max-height: min(70vh, 760px);
+    border-radius: 16px;
+    background: #000000;
+}
+
+@media (max-width: 760px) and (pointer: coarse) {
+    .learning-course-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .learning-course-tab {
+        padding: 11px 8px;
+        text-align: center;
+    }
+
+    .video-player-section {
+        padding: 8px;
+        border-radius: 18px;
+    }
+
+    .python-course-video {
+        border-radius: 12px;
+    }
+}
+
 .learning-progress-copy {
     display: flex;
     align-items: center;

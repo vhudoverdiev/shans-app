@@ -1,19 +1,28 @@
 from __future__ import annotations
 
+import random
+import secrets
+
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app.database import get_connection
 from app.it_course_content import IT_LESSONS
+from app.python_video_course_content import PYTHON_VIDEO_LESSONS
 
 
 learning_bp = Blueprint("learning", __name__)
 DAILY_PASS_SCORE = 4
 FINAL_PASS_SCORE = 24
+REVIEW_BLOCK_SIZE = 5
+REVIEW_QUESTIONS_PER_DAY = 2
+REVIEW_PASS_PERCENT = 80
+REVIEW_MILESTONES = tuple(range(REVIEW_BLOCK_SIZE, 31, REVIEW_BLOCK_SIZE))
 LOCKED_FUTURE_DAYS = tuple(range(31, 61))
 _PROGRESS_TABLES = {
     "english": "english_course_progress",
     "it": "it_course_progress",
+    "video": "python_video_progress",
 }
 _FINAL_TABLES = {
     "english": "english_final_results",
@@ -600,6 +609,20 @@ def init_learning_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS python_video_progress (
+                user_id INTEGER NOT NULL,
+                day_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, day_number)
+            )
+            """
+        )
         conn.commit()
     finally:
         conn.close()
@@ -961,6 +984,77 @@ def build_it_final_quiz() -> list[dict]:
     return questions
 
 
+def build_review_quiz(course_key: str, end_day: int, seed: int) -> list[dict]:
+    """Build a repeatable shuffled quiz for the five-day block ending at end_day."""
+    if course_key not in {"english", "it"} or end_day not in REVIEW_MILESTONES:
+        raise ValueError("Некорректный блок повторения.")
+
+    quiz_builder = build_daily_quiz if course_key == "english" else build_it_daily_quiz
+    rng = random.Random(seed)
+    questions = []
+    first_day = end_day - REVIEW_BLOCK_SIZE + 1
+    for day_number in range(first_day, end_day + 1):
+        daily_questions = quiz_builder(day_number)
+        for question in rng.sample(daily_questions, REVIEW_QUESTIONS_PER_DAY):
+            shuffled_question = dict(question)
+            correct_answer = question["options"][question["correct_index"]]
+            shuffled_options = list(question["options"])
+            rng.shuffle(shuffled_options)
+            shuffled_question["options"] = tuple(shuffled_options)
+            shuffled_question["correct_index"] = shuffled_options.index(correct_answer)
+            shuffled_question["day"] = day_number
+            questions.append(shuffled_question)
+    rng.shuffle(questions)
+    return questions
+
+
+def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
+    if lesson_number < 1 or lesson_number > len(PYTHON_VIDEO_LESSONS):
+        raise ValueError("Некорректный номер видеоурока.")
+    lesson = PYTHON_VIDEO_LESSONS[lesson_number - 1]
+    rng = random.Random(seed)
+    questions = []
+    for index, (term, definition) in enumerate(lesson["facts"]):
+        options, correct_index = _rotated_options(
+            definition,
+            (item[1] for item in lesson["facts"] if item[0] != term),
+            seed + index,
+        )
+        questions.append(
+            {
+                "prompt": f"Что в этом уроке означает «{term}»?",
+                "options": options,
+                "correct_index": correct_index,
+                "explanation": f"{term} — {definition}.",
+            }
+        )
+    rng.shuffle(questions)
+    return questions
+
+
+def _review_cards(passed_days: set[int]) -> list[dict]:
+    return [
+        {
+            "end_day": end_day,
+            "start_day": end_day - REVIEW_BLOCK_SIZE + 1,
+            "unlocked": all(day in passed_days for day in range(1, end_day + 1)),
+        }
+        for end_day in REVIEW_MILESTONES
+    ]
+
+
+def _review_seed() -> int:
+    if request.method == "GET":
+        return secrets.randbelow(2**31)
+    try:
+        seed = int(request.form.get("quiz_seed", ""))
+    except (TypeError, ValueError):
+        abort(400)
+    if not 0 <= seed < 2**31:
+        abort(400)
+    return seed
+
+
 def grade_quiz(questions: list[dict], form) -> tuple[int, list[dict]]:
     score = 0
     feedback = []
@@ -1049,18 +1143,24 @@ def _build_english_lecture_text(lesson: dict) -> str:
 def _build_english_lecture_details(lesson: dict) -> list[str]:
     first_word, first_translation = lesson["words"][0]
     first_phrase, first_phrase_translation = lesson["phrases"][0]
+    second_phrase, second_phrase_translation = lesson["phrases"][1]
     return [
         (
-            f"В теме «{lesson['title']}» главное не перечитать правило несколько раз, а сразу примерить его к обычной ситуации. "
-            f"Возьмите слово «{first_word}» - «{first_translation}», произнесите его вслух и представьте момент, где вы правда могли бы его сказать или увидеть."
+            f"Что именно изучаем. Тема называется «{lesson['title']}». Её правило простыми словами: {lesson['focus']} "
+            f"Не пытайтесь охватить всё сразу: сначала свяжите «{first_word}» только с одним значением — «{first_translation}»."
         ),
         (
-            f"Например, фразу {first_phrase} можно сначала понять через перевод «{first_phrase_translation}», а потом использовать как шаблон: "
-            "оставьте порядок слов тем же, но замените имя, предмет, место или время на свои. Так вы тренируете не отдельную карточку, а готовую модель для разговора."
+            f"Примитивный пример №1. Вы видите или слышите: «{first_phrase}». Это означает: «{first_phrase_translation}». "
+            f"Не переводите предложение наугад: сначала узнайте знакомое слово «{first_word}», затем восстановите общий смысл всей фразы."
         ),
         (
-            "Когда кажется, что всё понятно, закройте перевод и объясните смысл по-русски одним предложением, затем скажите свой короткий вариант по-английски. "
-            "Если фраза звучит медленно или с ошибкой, это нормально: цель подробностей в том, чтобы дать вам живой сценарий применения, а не ещё один список для заучивания."
+            f"Примитивный пример №2. Фраза «{second_phrase}» переводится как «{second_phrase_translation}». "
+            "Прочитайте английский вариант один раз, закройте его и попробуйте восстановить по русскому смыслу. Затем сделайте наоборот."
+        ),
+        (
+            f"Проверка понимания. Ответьте без подсказки на три вопроса: как по-английски будет «{first_translation}»; "
+            f"что означает «{first_phrase}»; в какой обычной ситуации вам пригодится тема «{lesson['title']}». "
+            "Если хотя бы один ответ не получается, откройте только нужную карточку и повторите её, а не весь урок с начала."
         ),
     ]
 
@@ -1121,27 +1221,32 @@ def _has_latin_letters(value: str) -> bool:
 def _build_it_term_cards(lesson: dict) -> list[dict]:
     cards = []
     for index, (term, definition) in enumerate(lesson["terms"]):
-        actor = "кандидат" if index % 2 == 0 else "участник команды"
+        related_term, related_definition = lesson["terms"][(index + 1) % len(lesson["terms"])]
         cards.append(
             {
                 "term": term,
                 "definition": definition,
                 "detail": (
-                    f"Представьте, что {actor} рассказывает о небольшом сервисе по теме «{lesson['title']}». "
-                    f"Термин «{term}» нужен не сам по себе, а чтобы точно назвать часть работы: кто что делает, где появляются данные "
-                    "и какой результат видит пользователь или команда."
+                    f"Совсем простыми словами: «{term}» — это {definition}. "
+                    f"В уроке «{lesson['title']}» этим словом называют именно эту часть темы, а не всю тему целиком."
                 ),
                 "is_english": _has_latin_letters(term),
                 "detail_paragraphs": [
                     (
-                        f"Например, если пользователь открывает урок «{lesson['title']}», нажимает кнопку и получает понятный результат на экране, "
-                        f"слово «{term}» помогает объяснить один конкретный фрагмент этого процесса. В разговоре о вакансии так проще показать, "
-                        "что вы понимаете не только перевод термина, но и его место в реальном продукте."
+                        f"Примитивный пример. Представьте учебное задание: «{lesson['practice']}» "
+                        f"Когда вы выполняете его, ищите в происходящем конкретно «{term}»: то есть {definition}."
                     ),
                     (
-                        "Чтобы использовать термин уверенно, придумайте короткую историю из двух-трёх предложений: какая была задача, "
-                        "что произошло в системе и почему без этого элемента сервис стал бы медленнее, опаснее или непонятнее. "
-                        "Такое объяснение звучит естественнее, чем пересказ определения."
+                        f"Не путайте с «{related_term}». «{related_term}» означает: {related_definition}. "
+                        f"Разница простая: «{term}» отвечает за смысл «{definition}», а «{related_term}» — за другой смысл из определения выше."
+                    ),
+                    (
+                        f"Как сказать своими словами: «В теме “{lesson['title']}” термин {term} нужен, когда мы говорим про {definition}». "
+                        "Это уже полноценное объяснение для новичка — без заучивания сложной формулировки."
+                    ),
+                    (
+                        f"Самопроверка: закройте определение и закончите фразу «{term} — это…». Затем приведите один пример из задания этого дня. "
+                        "Если пример не связан с определением, перечитайте только первый абзац этой расшифровки."
                     ),
                 ],
             }
@@ -1153,29 +1258,32 @@ def _build_it_lecture_points(lesson: dict) -> list[dict]:
     points = []
     for index, paragraph in enumerate(lesson["lecture"], start=1):
         key_fragment = paragraph.split(".")[0].strip()
-        context_hint = (
-            "Попробуйте назвать один реальный сайт, приложение или рабочую ситуацию, где этот принцип встречается прямо сейчас."
-            if index == 1
-            else "Свяжите эту мысль с тем, как человек принимает решение, ищет информацию или отправляет запрос в сервис."
-        )
+        first_term, first_definition = lesson["terms"][(index - 1) * 2]
+        second_term, second_definition = lesson["terms"][(index - 1) * 2 + 1]
         points.append(
             {
                 "number": index,
-                "text": f"{paragraph} {context_hint}",
+                "text": paragraph,
                 "detail": (
-                    "В работе айтишника этот пункт нужен, чтобы понимать не только слово, но и действие за ним: кто принимает решение, "
-                    "какие данные или инструменты участвуют, что считается хорошим результатом. Попробуйте найти пример в знакомом сервисе: "
-                    "форма входа, карточка товара, расписание, оплата или уведомление."
+                    f"Главная мысль этого пункта: «{key_fragment}». "
+                    f"Он относится именно к теме «{lesson['title']}» и объясняет один её конкретный кусочек."
                 ),
                 "detail_paragraphs": [
                     (
-                        "Например, пользователь нажал кнопку, система проверила данные, сохранила результат и показала ответ. "
-                        "В таком сценарии важно увидеть всю цепочку, а не отдельный термин: кто вводит данные, где они хранятся, "
-                        "какая ошибка возможна и как человек поймёт, что действие завершилось успешно."
+                        f"Разберём слова из этого же урока. «{first_term}» — это {first_definition}. "
+                        f"«{second_term}» — это {second_definition}. Эти два понятия помогают прочитать исходный абзац без ощущения, что он написан для специалиста."
                     ),
                     (
-                        "Для самостоятельной проверки возьмите привычный процесс - вход, поиск, покупку, запись на время или уведомление - "
-                        "и объясните его как рабочую ситуацию. Так тема перестаёт быть теорией и превращается в понятный сценарий продукта."
+                        f"Примитивный пример из практики этого дня: «{lesson['practice']}» "
+                        f"Сначала найдите в этом действии «{first_term}», затем отдельно «{second_term}». Так абстрактный пункт превращается в наблюдаемое действие."
+                    ),
+                    (
+                        f"Что важно не перепутать: этот пункт не объясняет всю тему «{lesson['title']}». Он объясняет только мысль «{key_fragment.lower()}». "
+                        "Остальные пункты урока дополняют её, поэтому их нужно рассматривать отдельно."
+                    ),
+                    (
+                        f"Самопроверка: объясните вслух, что такое «{first_term}» и «{second_term}», не подсматривая определения. "
+                        f"Потом одним предложением свяжите оба слова с мыслью «{key_fragment}»."
                     ),
                 ],
             }
@@ -1188,13 +1296,13 @@ def _explain_it_code_line(line: str) -> str:
     if not stripped:
         return "Пустая строка отделяет смысловые части примера, чтобы код было легче читать."
     if stripped.startswith("import "):
-        return "Подключаем готовый модуль, чтобы не писать всю логику с нуля."
+        return f"Команда «{stripped}» подключает готовый модуль. После этого код ниже может использовать его возможности, не создавая их заново."
     if stripped.startswith("def "):
-        return "Создаём функцию: небольшой именованный блок, который можно вызвать несколько раз."
+        return f"Строка «{stripped}» создаёт функцию. Имя стоит после def, а значения в скобках функция получит при вызове."
     if stripped.startswith("return "):
-        return "Возвращаем результат из функции наружу, чтобы его можно было использовать дальше."
+        return f"«{stripped}» отдаёт вычисленное значение из функции наружу. Без return результат остался бы внутри функции."
     if stripped.startswith("print("):
-        return "Показываем значение на экране. Это самый простой способ проверить, что получилось."
+        return f"«{stripped}» печатает указанное значение в консоль. Так можно сразу увидеть и проверить результат предыдущих строк."
     if stripped.startswith("for "):
         return "Запускаем цикл: повторяем одно действие для нескольких элементов."
     if stripped.startswith("if "):
@@ -1211,7 +1319,7 @@ def _explain_it_code_line(line: str) -> str:
         return "Это часть структурированных данных: ключи и значения описывают объект понятным для программы способом."
     if stripped.split(" ", 1)[0] in {"git", "pwd", "ls", "mkdir", "cd"}:
         return "Это команда терминала: её вводят в консоль, чтобы управлять файлами, папками или историей проекта."
-    return "Строка делает один маленький шаг примера. Прочитайте её слева направо и спросите себя: какие данные входят и что меняется после выполнения."
+    return f"Эта строка выполняется буквально как «{stripped}». Найдите имя слева: в него обычно записывается результат выражения справа; если знака = нет, строка вызывает указанное действие."
 
 
 def _build_it_code_steps(lesson: dict) -> list[dict]:
@@ -1227,10 +1335,11 @@ def _build_it_code_steps(lesson: dict) -> list[dict]:
 
 def _build_it_practice_steps(lesson: dict) -> list[str]:
     return [
-        f"Прочитайте задание простыми словами: {lesson['practice']}",
-        "Разбейте его на 2-3 маленьких действия: подготовить данные, выполнить действие, проверить результат.",
-        "Сделайте самый простой вариант без украшений. Главное - чтобы он работал и вы понимали каждый шаг.",
-        "Проверьте себя: объясните вслух, что было на входе, что вы сделали и что получилось на выходе.",
+        f"Цель именно этого упражнения по теме «{lesson['title']}»: {lesson['practice']}",
+        f"Шаг 1. Подготовьте только то, что прямо названо в задании «{lesson['practice']}». Не добавляйте дополнительные функции и оформление.",
+        f"Шаг 2. Выполните главное действие и вслух назовите, как оно связано с темой «{lesson['title']}». Если связь объяснить нельзя, вернитесь к лекции.",
+        "Шаг 3. Проверьте видимый результат: команда должна показать ожидаемый вывод, файл — появиться, код — запуститься, а схема — содержать все элементы из задания.",
+        f"Самопроверка. Закончите фразу: «Я выполнил задание “{lesson['practice']}”, получил конкретный результат и теперь могу объяснить, почему он относится к теме “{lesson['title']}”»."
     ]
 
 
@@ -1238,22 +1347,32 @@ def _build_english_word_cards(lesson: dict) -> list[dict]:
     cards = []
     for index, (english, russian) in enumerate(lesson["words"]):
         phrase_english, phrase_russian = lesson["phrases"][index % len(lesson["phrases"])]
+        phrase_contains_word = english.lower() in phrase_english.lower()
+        context_explanation = (
+            f"В предложении «{phrase_english}» это слово уже стоит на своём месте."
+            if phrase_contains_word
+            else f"Фраза «{phrase_english}» показывает общую ситуацию этой темы; слово «{english}» можно использовать в похожей ситуации отдельно."
+        )
         cards.append(
             {
                 "english": english,
                 "russian": russian,
                 "detail": (
-                    f"Слово «{english}» лучше запоминать через ситуацию, а не как отдельную строку словаря. "
-                    f"В теме «{lesson['title']}» его можно примерить к фразе {phrase_english} - «{phrase_russian}» и сразу понять, где оно живёт в речи."
+                    f"Точное значение: «{english}» означает «{russian}». {context_explanation} "
+                    f"Тема урока — «{lesson['title']}», поэтому запоминайте слово именно в этом контексте."
                 ),
                 "detail_paragraphs": [
                     (
-                        f"Например, произнесите {phrase_english}, затем замените одну часть предложения на свою и оставьте «{english}» внутри новой фразы. "
-                        f"Если слово переводится как «{russian}», ваша задача - не просто вспомнить перевод, а услышать, как оно работает в настоящем предложении."
+                        f"Примитивный пример. Вы видите карточку «{english}». Не нужно строить сложную фразу: сначала просто скажите «{english} — {russian}». "
+                        f"Затем прочитайте «{phrase_english}» — «{phrase_russian}»."
                     ),
                     (
-                        "После этого закройте русский перевод и скажите фразу ещё раз. Если смысл сохранился, слово уже начинает переходить "
-                        "из пассивного узнавания в активное использование."
+                        f"Частая ошибка — помнить тему «{lesson['title']}», но путать конкретные карточки. Здесь правильная пара только одна: "
+                        f"«{english}» = «{russian}». Не подменяйте её переводом соседнего слова."
+                    ),
+                    (
+                        f"Мини-проверка: закройте английскую часть и по слову «{russian}» восстановите «{english}». Потом закройте русский перевод и сделайте наоборот. "
+                        "Повторите до тех пор, пока оба направления не получатся без паузы."
                     ),
                 ],
             }
@@ -1269,17 +1388,21 @@ def _build_english_phrase_cards(lesson: dict) -> list[dict]:
                 "english": english,
                 "russian": russian,
                 "detail": (
-                    f"Фразу «{english}» полезно воспринимать как готовый речевой шаблон со смыслом «{russian}». "
-                    "Не разбирайте её как набор отдельных слов: сначала произнесите целиком, чтобы запомнить порядок и звучание."
+                    f"Полный смысл фразы «{english}» — «{russian}». Это готовое предложение из темы «{lesson['title']}»: "
+                    "его можно произнести целиком, не собирая заново из отдельных слов."
                 ),
                 "detail_paragraphs": [
                     (
-                        "Например, замените в этой фразе имя, предмет, место или время и получите свой вариант с тем же каркасом. "
-                        "Так одна учебная фраза превращается в несколько личных предложений, которые уже можно сказать в реальном разговоре."
+                        f"Примитивная ситуация: человек говорит «{english}». Вы должны понять не отдельные слова, а весь ответ целиком: «{russian}». "
+                        "Сначала прочитайте английскую фразу медленно, затем сразу произнесите русский смысл."
                     ),
                     (
-                        "Для проверки скажите фразу медленно, затем быстрее, но не теряйте смысл. Если приходится снова смотреть перевод, "
-                        "вернитесь к целой фразе, а не к отдельным словам."
+                        f"Порядок слов уже дан: «{' · '.join(english.rstrip('.!?').split())}». Не переставляйте слова по русскому порядку — "
+                        "английская фраза должна остаться в том виде, в котором она показана на карточке."
+                    ),
+                    (
+                        f"Мини-проверка: посмотрите только на перевод «{russian}» и восстановите «{english}». Затем сравните каждое слово и знак в конце. "
+                        "Если ошиблись, повторите именно эту фразу три раза, а не весь список."
                     ),
                 ],
             }
@@ -1317,6 +1440,7 @@ def english_course():
         next_day=next_day,
         final_unlocked=len(passed_days) == len(ENGLISH_LESSONS),
         final_result=_get_final_result(int(current_user.id)),
+        review_tests=_review_cards(passed_days),
     )
 
 
@@ -1431,6 +1555,56 @@ def english_final():
     )
 
 
+@learning_bp.route("/study/<course_key>/review/<int:end_day>", methods=["GET", "POST"])
+@login_required
+def course_review(course_key: str, end_day: int):
+    course_settings = {
+        "english": {
+            "title": "English",
+            "course_endpoint": "learning.english_course",
+            "state": _course_state,
+        },
+        "it": {
+            "title": "IT",
+            "course_endpoint": "learning.it_course",
+            "state": _it_course_state,
+        },
+    }
+    settings = course_settings.get(course_key)
+    if settings is None or end_day not in REVIEW_MILESTONES:
+        abort(404)
+
+    _progress, passed_days, _next_day = settings["state"](int(current_user.id))
+    if not all(day in passed_days for day in range(1, end_day + 1)):
+        flash("Тест повторения откроется после прохождения этого блока дней.", "warning")
+        return redirect(url_for(settings["course_endpoint"]))
+
+    seed = _review_seed()
+    questions = build_review_quiz(course_key, end_day, seed)
+    score = None
+    passed = False
+    feedback = None
+    pass_score = (len(questions) * REVIEW_PASS_PERCENT + 99) // 100
+    if request.method == "POST":
+        score, feedback = grade_quiz(questions, request.form)
+        passed = score >= pass_score
+
+    return render_template(
+        "course_review.html",
+        course_key=course_key,
+        course_title=settings["title"],
+        course_endpoint=settings["course_endpoint"],
+        start_day=end_day - REVIEW_BLOCK_SIZE + 1,
+        end_day=end_day,
+        questions=questions,
+        quiz_seed=seed,
+        score=score,
+        passed=passed,
+        feedback=feedback,
+        pass_score=pass_score,
+    )
+
+
 @learning_bp.route("/study/it")
 @login_required
 def it_course():
@@ -1455,6 +1629,77 @@ def it_course():
         next_day=next_day,
         final_unlocked=len(passed_days) == len(IT_LESSONS),
         final_result=_get_it_final_result(int(current_user.id)),
+        review_tests=_review_cards(passed_days),
+    )
+
+
+@learning_bp.route("/study/it/videos")
+@login_required
+def it_video_course():
+    progress, passed_lessons, next_lesson = _get_course_state(
+        int(current_user.id), "video", PYTHON_VIDEO_LESSONS
+    )
+    lessons = []
+    for lesson in PYTHON_VIDEO_LESSONS:
+        lesson_progress = progress.get(lesson["day"])
+        lessons.append(
+            {
+                **lesson,
+                "passed": lesson["day"] in passed_lessons,
+                "unlocked": lesson["day"] in passed_lessons or lesson["day"] == next_lesson,
+                "best_score": int(lesson_progress["best_score"]) if lesson_progress else 0,
+            }
+        )
+    return render_template(
+        "it_video_course.html",
+        lessons=lessons,
+        passed_count=len(passed_lessons),
+        progress_percent=round(len(passed_lessons) / len(PYTHON_VIDEO_LESSONS) * 100),
+        next_lesson=next_lesson,
+    )
+
+
+@learning_bp.route("/study/it/videos/<int:lesson_number>", methods=["GET", "POST"])
+@login_required
+def it_video_lesson(lesson_number: int):
+    if lesson_number < 1 or lesson_number > len(PYTHON_VIDEO_LESSONS):
+        abort(404)
+    progress, passed_lessons, next_lesson = _get_course_state(
+        int(current_user.id), "video", PYTHON_VIDEO_LESSONS
+    )
+    if lesson_number not in passed_lessons and lesson_number != next_lesson:
+        flash("Сначала пройдите тест предыдущего видеоурока.", "warning")
+        return redirect(url_for("learning.it_video_course"))
+
+    lesson = PYTHON_VIDEO_LESSONS[lesson_number - 1]
+    seed = _review_seed()
+    questions = build_video_lesson_quiz(lesson_number, seed)
+    score = None
+    passed = False
+    feedback = None
+    pass_score = 3
+    if request.method == "POST":
+        score, feedback = grade_quiz(questions, request.form)
+        passed = score >= pass_score
+        _save_course_day_result(
+            int(current_user.id), lesson_number, score, passed, "video"
+        )
+        progress, passed_lessons, next_lesson = _get_course_state(
+            int(current_user.id), "video", PYTHON_VIDEO_LESSONS
+        )
+
+    return render_template(
+        "it_video_lesson.html",
+        lesson=lesson,
+        questions=questions,
+        quiz_seed=seed,
+        score=score,
+        passed=passed,
+        feedback=feedback,
+        pass_score=pass_score,
+        lesson_progress=progress.get(lesson_number),
+        next_lesson=next_lesson,
+        course_finished=len(passed_lessons) == len(PYTHON_VIDEO_LESSONS),
     )
 
 

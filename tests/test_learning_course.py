@@ -7,6 +7,7 @@ from app.learning import (
     DAILY_PASS_SCORE,
     ENGLISH_LESSONS,
     FINAL_PASS_SCORE,
+    REVIEW_MILESTONES,
     _build_english_lecture_details,
     _build_english_lecture_text,
     _build_english_phrase_cards,
@@ -21,6 +22,7 @@ from app.learning import (
     _get_it_final_result,
     _it_course_state,
     _it_audio_segments,
+    _review_cards,
     _save_day_result,
     _save_final_result,
     _reset_day_result,
@@ -29,14 +31,19 @@ from app.learning import (
     _reset_it_final_result,
     _save_it_day_result,
     _save_it_final_result,
+    _get_course_state,
+    _save_course_day_result,
     build_daily_quiz,
     build_final_quiz,
     build_it_daily_quiz,
     build_it_final_quiz,
+    build_review_quiz,
+    build_video_lesson_quiz,
     grade_quiz,
     init_learning_db,
 )
 from app.it_course_content import IT_LESSONS
+from app.python_video_course_content import PYTHON_VIDEO_LESSONS
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +52,7 @@ LEARNING_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "learning.css"
 MOBILE_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
 COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
 COURSE_DAY_ACTIONS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-day-actions.js"
+PYTHON_VIDEO_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos" / "python-basics"
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -101,6 +109,120 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(missing_feedback[0]["selected_answer"], "не выбран")
         self.assertEqual(missing_feedback[0]["correct_answer"], questions[0]["options"][questions[0]["correct_index"]])
         self.assertEqual(DAILY_PASS_SCORE, 4)
+
+    def test_review_quizzes_cover_each_five_day_block_for_both_courses(self):
+        self.assertEqual(REVIEW_MILESTONES, (5, 10, 15, 20, 25, 30))
+        for course_key in ("english", "it"):
+            for end_day in REVIEW_MILESTONES:
+                questions = build_review_quiz(course_key, end_day, seed=12345)
+                self.assertEqual(len(questions), 10)
+                self.assertEqual(
+                    {question["day"] for question in questions},
+                    set(range(end_day - 4, end_day + 1)),
+                )
+                for day_number in range(end_day - 4, end_day + 1):
+                    self.assertEqual(
+                        sum(question["day"] == day_number for question in questions),
+                        2,
+                    )
+
+    def test_review_question_and_answer_order_is_shuffled_but_grading_stays_valid(self):
+        first_attempt = build_review_quiz("english", 5, seed=11)
+        repeated_seed = build_review_quiz("english", 5, seed=11)
+        next_attempt = build_review_quiz("english", 5, seed=987654)
+
+        self.assertEqual(first_attempt, repeated_seed)
+        self.assertNotEqual(first_attempt, next_attempt)
+        for questions in (first_attempt, next_attempt):
+            correct_form = {
+                f"question_{index}": str(question["correct_index"])
+                for index, question in enumerate(questions)
+            }
+            score, feedback = grade_quiz(questions, correct_form)
+            self.assertEqual(score, 10)
+            self.assertTrue(all(item["is_correct"] for item in feedback))
+
+    def test_review_cards_unlock_only_after_each_complete_five_day_milestone(self):
+        cards = _review_cards(set(range(1, 8)))
+
+        self.assertEqual(len(cards), 6)
+        self.assertTrue(cards[0]["unlocked"])
+        self.assertEqual((cards[0]["start_day"], cards[0]["end_day"]), (1, 5))
+        self.assertFalse(cards[1]["unlocked"])
+
+    def test_review_templates_are_available_in_both_courses(self):
+        english_source = (TEMPLATES / "english_course.html").read_text(encoding="utf-8")
+        it_source = (TEMPLATES / "it_course.html").read_text(encoding="utf-8")
+        review_source = (TEMPLATES / "course_review.html").read_text(encoding="utf-8")
+
+        for source, course_key in ((english_source, "english"), (it_source, "it")):
+            self.assertIn("Дополнительные тесты каждые 5 дней", source)
+            self.assertIn("review_tests", source)
+            self.assertIn(f"course_key='{course_key}'", source)
+        self.assertIn('name="quiz_seed"', review_source)
+        self.assertIn("Новая попытка", review_source)
+        self.assertIn("Вопросы и варианты ответов перемешиваются", review_source)
+
+    def test_python_video_course_contains_all_22_local_videos(self):
+        self.assertEqual(len(PYTHON_VIDEO_LESSONS), 22)
+        self.assertEqual(
+            [lesson["day"] for lesson in PYTHON_VIDEO_LESSONS],
+            list(range(1, 23)),
+        )
+        for lesson in PYTHON_VIDEO_LESSONS:
+            video_path = PROJECT_ROOT / "app" / "static" / lesson["video_file"]
+            self.assertTrue(video_path.is_file(), video_path)
+            self.assertGreater(video_path.stat().st_size, 100_000)
+            self.assertLess(video_path.stat().st_size, 100 * 1024 * 1024)
+            with video_path.open("rb") as video_file:
+                self.assertIn(b"ftyp", video_file.read(12))
+
+    def test_every_python_video_has_a_specific_valid_quiz(self):
+        for lesson in PYTHON_VIDEO_LESSONS:
+            questions = build_video_lesson_quiz(lesson["day"], seed=lesson["day"])
+            self.assertEqual(len(questions), 4)
+            self.assertEqual(
+                {question["prompt"].split("«", 1)[1].split("»", 1)[0] for question in questions},
+                {term for term, _definition in lesson["facts"]},
+            )
+            for question in questions:
+                self.assertEqual(len(question["options"]), 4)
+                self.assertEqual(len(set(question["options"])), 4)
+                self.assertIn(question["correct_index"], range(4))
+
+    def test_python_video_progress_requires_each_previous_test(self):
+        progress, passed_lessons, next_lesson = _get_course_state(
+            41, "video", PYTHON_VIDEO_LESSONS
+        )
+        self.assertEqual((progress, passed_lessons, next_lesson), ({}, set(), 1))
+
+        _save_course_day_result(41, 1, 2, False, "video")
+        self.assertEqual(
+            _get_course_state(41, "video", PYTHON_VIDEO_LESSONS)[2], 1
+        )
+        _save_course_day_result(41, 1, 4, True, "video")
+        progress, passed_lessons, next_lesson = _get_course_state(
+            41, "video", PYTHON_VIDEO_LESSONS
+        )
+        self.assertEqual(passed_lessons, {1})
+        self.assertEqual(next_lesson, 2)
+        self.assertEqual(progress[1]["best_score"], 4)
+
+    def test_it_templates_expose_responsive_video_course_and_required_tests(self):
+        it_course_source = (TEMPLATES / "it_course.html").read_text(encoding="utf-8")
+        video_course_source = (TEMPLATES / "it_video_course.html").read_text(encoding="utf-8")
+        video_lesson_source = (TEMPLATES / "it_video_lesson.html").read_text(encoding="utf-8")
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+
+        self.assertIn("Видеокурсы", it_course_source)
+        self.assertIn("22 видеоурока", video_course_source)
+        self.assertIn("обязательный тест", video_course_source)
+        self.assertIn('<video class="python-course-video" controls playsinline preload="metadata">', video_lesson_source)
+        self.assertIn("lesson.video_file", video_lesson_source)
+        self.assertIn('name="quiz_seed"', video_lesson_source)
+        self.assertIn("Проверка после видео", video_lesson_source)
+        self.assertIn(".python-course-video", styles)
+        self.assertIn("@media (max-width: 760px) and (pointer: coarse)", styles)
 
     def test_progress_unlocks_only_the_next_day_and_preserves_best_score(self):
         progress, passed_days, next_day = _course_state(7)
@@ -468,9 +590,9 @@ class EnglishCourseTests(unittest.TestCase):
 
         it_points = _build_it_lecture_points(IT_LESSONS[0])
         self.assertEqual(len(it_points), 3)
-        self.assertGreater(len(it_points[0]["text"]), len(IT_LESSONS[0]["lecture"][0]))
-        self.assertIn("реальный сайт", it_points[0]["text"])
-        self.assertIn("рабочую ситуацию", it_points[0]["text"])
+        self.assertEqual(it_points[0]["text"], IT_LESSONS[0]["lecture"][0])
+        self.assertGreater(len(it_points[0]["detail"]), 50)
+        self.assertIn(IT_LESSONS[0]["title"], it_points[0]["detail"])
 
     def test_more_details_content_is_expanded_for_beginners(self):
         english_lesson = ENGLISH_LESSONS[0]
@@ -479,12 +601,12 @@ class EnglishCourseTests(unittest.TestCase):
         phrase_cards = _build_english_phrase_cards(english_lesson)
 
         self.assertGreaterEqual(len(english_details), 3)
-        self.assertTrue(any("Например" in step for step in english_details))
+        self.assertTrue(any("Примитивный пример" in step for step in english_details))
         self.assertNotIn("Что изучаем:", english_details[0])
-        self.assertEqual(len(word_cards[0]["detail_paragraphs"]), 2)
-        self.assertEqual(len(phrase_cards[0]["detail_paragraphs"]), 2)
+        self.assertGreaterEqual(len(word_cards[0]["detail_paragraphs"]), 3)
+        self.assertGreaterEqual(len(phrase_cards[0]["detail_paragraphs"]), 3)
         self.assertNotIn("Значение:", word_cards[0]["detail"])
-        self.assertTrue(any("Например" in step for step in word_cards[0]["detail_paragraphs"]))
+        self.assertTrue(any("Примитивный пример" in step for step in word_cards[0]["detail_paragraphs"]))
 
         it_lesson = IT_LESSONS[0]
         it_points = _build_it_lecture_points(it_lesson)
@@ -492,12 +614,56 @@ class EnglishCourseTests(unittest.TestCase):
         code_steps = _build_it_code_steps(IT_LESSONS[6])
         practice_steps = _build_it_practice_steps(it_lesson)
 
-        self.assertEqual(len(it_points[0]["detail_paragraphs"]), 2)
-        self.assertEqual(len(term_cards[0]["detail_paragraphs"]), 2)
-        self.assertNotIn(term_cards[0]["definition"], term_cards[0]["detail"])
-        self.assertTrue(any("Например" in step for step in term_cards[0]["detail_paragraphs"]))
+        self.assertGreaterEqual(len(it_points[0]["detail_paragraphs"]), 4)
+        self.assertGreaterEqual(len(term_cards[0]["detail_paragraphs"]), 4)
+        self.assertIn(term_cards[0]["definition"], term_cards[0]["detail"])
+        self.assertTrue(any("Примитивный пример" in step for step in term_cards[0]["detail_paragraphs"]))
         self.assertTrue(any(step["explanation"] for step in code_steps))
         self.assertGreaterEqual(len(practice_steps), 4)
+
+    def test_every_more_details_block_is_specific_to_its_own_learning_item(self):
+        generic_phrases = (
+            "пользователь нажал кнопку",
+            "возьмите привычный процесс",
+            "кандидат рассказывает о небольшом сервисе",
+        )
+        for lesson in ENGLISH_LESSONS:
+            lecture_details = " ".join(_build_english_lecture_details(lesson))
+            self.assertIn(lesson["title"], lecture_details)
+            self.assertIn(lesson["focus"], lecture_details)
+            for card in _build_english_word_cards(lesson):
+                details = " ".join([card["detail"], *card["detail_paragraphs"]])
+                self.assertIn(card["english"], details)
+                self.assertIn(card["russian"], details)
+                self.assertIn("Примитивный пример", details)
+                self.assertIn("Мини-проверка", details)
+            for card in _build_english_phrase_cards(lesson):
+                details = " ".join([card["detail"], *card["detail_paragraphs"]])
+                self.assertIn(card["english"], details)
+                self.assertIn(card["russian"], details)
+                self.assertIn("Порядок слов", details)
+
+        for lesson in IT_LESSONS:
+            lecture_points = _build_it_lecture_points(lesson)
+            term_cards = _build_it_term_cards(lesson)
+            practice_details = " ".join(_build_it_practice_steps(lesson))
+            self.assertIn(lesson["practice"], practice_details)
+            self.assertIn(lesson["title"], practice_details)
+            for point, paragraph in zip(lecture_points, lesson["lecture"]):
+                details = " ".join([point["detail"], *point["detail_paragraphs"]])
+                self.assertIn(paragraph.split(".")[0].strip(), details)
+                self.assertIn(lesson["practice"], details)
+            for card in term_cards:
+                details = " ".join([card["detail"], *card["detail_paragraphs"]])
+                self.assertIn(card["term"], details)
+                self.assertIn(card["definition"], details)
+                self.assertIn(lesson["practice"], details)
+                self.assertIn("Самопроверка", details)
+            combined = " ".join(
+                point["detail"] for point in lecture_points
+            ) + " " + " ".join(card["detail"] for card in term_cards)
+            for phrase in generic_phrases:
+                self.assertNotIn(phrase, combined.lower())
 
     def test_every_daily_lesson_has_audio_segments(self):
         for lesson in ENGLISH_LESSONS:

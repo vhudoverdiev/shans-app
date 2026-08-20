@@ -6,6 +6,11 @@
 <section class="learning-page it-learning-page">
     <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
 
+    <nav class="learning-course-tabs" aria-label="Разделы IT">
+        <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.it_course') }}" aria-current="page">Курс по дням</a>
+        <a class="learning-course-tab" href="{{ url_for('learning.it_video_course') }}">Видеокурсы</a>
+    </nav>
+
     <div class="learning-hero it-learning-hero">
         <div>
             <p class="learning-kicker">IT · 30 минут в день</p>
@@ -80,6 +85,30 @@
             {% else %}
             </div>
             {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="learning-section-heading learning-review-heading">
+        <div>
+            <p class="learning-kicker">Повторение</p>
+            <h2>Дополнительные тесты каждые 5 дней</h2>
+        </div>
+        <span>10 перемешанных вопросов</span>
+    </div>
+    <div class="english-course-grid it-course-grid learning-review-grid">
+        {% for review in review_tests %}
+            {% if review.unlocked %}
+            <a href="{{ url_for('learning.course_review', course_key='it', end_day=review.end_day) }}" class="english-day-card it-day-card learning-review-card">
+            {% else %}
+            <div class="english-day-card it-day-card learning-review-card english-day-card-locked" aria-disabled="true">
+            {% endif %}
+                <div class="english-day-card-top">
+                    <span class="english-day-number">Дни {{ review.start_day }}–{{ review.end_day }}</span>
+                    <span class="english-day-status"{% if not review.unlocked %} aria-label="Закрыто"{% endif %}>{% if review.unlocked %}Пройти{% else %}🔒{% endif %}</span>
+                </div>
+                <h3>Тест-повторение</h3>
+                <p>Вопросы и ответы перемешиваются при каждой попытке.</p>
+            {% if review.unlocked %}</a>{% else %}</div>{% endif %}
         {% endfor %}
     </div>
 
