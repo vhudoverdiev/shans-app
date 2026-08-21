@@ -251,7 +251,7 @@
 .learning-course-tab {
     padding: 10px 16px;
     border-radius: 12px;
-    color: #475569;
+    color: #6d28d9;
     font-size: 14px;
     font-weight: 800;
     text-decoration: none;
@@ -259,8 +259,8 @@
 
 .learning-course-tab-active {
     color: #ffffff;
-    background: #2563eb;
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.24);
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.28);
 }
 
 .video-player-section {
@@ -271,9 +271,134 @@
 .python-course-video {
     display: block;
     width: 100%;
+    aspect-ratio: 16 / 9;
     max-height: min(70vh, 760px);
     border-radius: 16px;
     background: #000000;
+}
+
+.python-video-shell {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #000000;
+}
+
+.python-video-poster {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px;
+    color: #ffffff;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.34), transparent 42%),
+        linear-gradient(145deg, #111827 0%, #312e81 58%, #581c87 100%);
+}
+
+.python-video-poster[hidden] {
+    display: none;
+}
+
+.python-video-poster::before {
+    content: "</>";
+    display: grid;
+    width: 70px;
+    height: 70px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 24px;
+    color: #ddd6fe;
+    font: 800 23px/1 monospace;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.python-video-poster-kicker {
+    color: #c4b5fd;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.python-video-poster strong {
+    max-width: 760px;
+    font-size: clamp(24px, 4vw, 42px);
+    line-height: 1.15;
+}
+
+.python-video-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 48px;
+    margin-top: 4px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 15px;
+    color: #ffffff;
+    font: 800 15px/1 Arial, sans-serif;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 12px 30px rgba(76, 29, 149, 0.38);
+    cursor: pointer;
+}
+
+.python-video-floating-bar {
+    display: none;
+}
+
+.python-video-shell-floating {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 12000;
+    width: min(390px, calc(100vw - 44px));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.42);
+    animation: floating-video-in 0.22s ease-out both;
+}
+
+.python-video-shell-floating .python-course-video {
+    border-radius: 0;
+}
+
+.python-video-shell-floating .python-video-floating-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 5px 7px 5px 12px;
+    color: #ffffff;
+    background: #111827;
+}
+
+.python-video-floating-bar span {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.python-video-floating-bar button {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 9px;
+    color: #ffffff;
+    font-size: 18px;
+    background: rgba(255, 255, 255, 0.13);
+    cursor: pointer;
+}
+
+@keyframes floating-video-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 760px) and (pointer: coarse) {
@@ -295,6 +420,44 @@
 
     .python-course-video {
         border-radius: 12px;
+    }
+
+    .python-video-shell {
+        border-radius: 12px;
+    }
+
+    .python-video-poster {
+        gap: 8px;
+        padding: 18px;
+    }
+
+    .python-video-poster::before {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        font-size: 18px;
+    }
+
+    .python-video-poster strong {
+        font-size: 21px;
+    }
+
+    .python-video-play {
+        min-height: 43px;
+        padding: 0 15px;
+        font-size: 14px;
+    }
+
+    .python-video-shell-floating {
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        width: min(330px, calc(100vw - 24px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .python-video-shell-floating {
+        animation: none;
     }
 }
 
@@ -945,6 +1108,83 @@ a.english-day-card:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
     margin-top: 14px;
+}
+
+.quiz-answer-hint {
+    margin: -2px 0 12px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.quiz-text-answer {
+    display: grid;
+    gap: 7px;
+    font-weight: 700;
+}
+
+.quiz-text-answer input {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111827;
+    font: inherit;
+}
+
+.quiz-text-answer input:focus-visible {
+    border-color: #2563eb;
+    outline: 3px solid rgba(37, 99, 235, 0.18);
+}
+
+.quiz-inline-feedback {
+    margin-top: 13px;
+    padding: 11px 13px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.quiz-inline-feedback-correct {
+    border: 1px solid #86efac;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.quiz-inline-feedback-wrong {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.quiz-question-correct {
+    border-color: #86efac;
+}
+
+.quiz-question-wrong {
+    border-color: #fca5a5;
+}
+
+.quiz-question[data-answered="true"] .quiz-option {
+    cursor: default;
+}
+
+.quiz-live-extra-heading {
+    display: grid;
+    gap: 3px;
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid #c4b5fd;
+    border-radius: 16px;
+    background: #f5f3ff;
+    color: #4c1d95;
+}
+
+.quiz-live-extra-heading span {
+    color: #6d28d9;
+    font-size: 14px;
 }
 
 .quiz-option {

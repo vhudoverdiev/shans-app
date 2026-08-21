@@ -1,0 +1,20 @@
+<fieldset class="quiz-question quiz-question-{{ question.answer_type|default('single') }}" data-live-question data-question-index="{{ question_index }}" data-question-stage="{{ question_stage|default('base') }}">
+    <legend><span>{{ question_number }}</span>{{ question.prompt }}</legend>
+    {% if question.answer_hint %}<p class="quiz-answer-hint">{{ question.answer_hint }}</p>{% endif %}
+    {% if question.answer_type == "text" %}
+    <label class="quiz-text-answer">
+        <span>Ваш ответ</span>
+        <input type="text" name="question_{{ question_index }}" required maxlength="300" autocomplete="off" spellcheck="false" placeholder="Введите ответ самостоятельно">
+    </label>
+    {% else %}
+    <div class="quiz-options">
+        {% for option in question.options %}
+        <label class="quiz-option">
+            <input type="{% if question.answer_type == 'multiple' %}checkbox{% else %}radio{% endif %}" name="question_{{ question_index }}" value="{{ loop.index0 }}"{% if question.answer_type != 'multiple' %} required{% endif %}>
+            <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="quiz-inline-feedback" data-live-feedback role="status" aria-live="polite" hidden></div>
+</fieldset>

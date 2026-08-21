@@ -36,8 +36,8 @@
                     <span class="english-day-status">{% if lesson.passed %}✓{% elif lesson.unlocked %}Смотреть{% else %}🔒{% endif %}</span>
                 </div>
                 <h3>{{ lesson.title }}</h3>
-                <p>Видео + обязательный тест из 4 вопросов</p>
-                {% if lesson.passed %}<span class="english-day-score">Лучший результат: {{ lesson.best_score }} / 4</span>{% endif %}
+                <p>Видео + обязательный тест из 20 вопросов</p>
+                {% if lesson.passed %}<span class="english-day-score">Лучший результат: {{ lesson.best_score }} / 20</span>{% endif %}
             {% if lesson.unlocked %}</a>{% else %}</div>{% endif %}
         {% endfor %}
     </div>

@@ -1320,6 +1320,11 @@ body.avatar-crop-scroll-locked {
     align-items: stretch;
     gap: 10px;
     pointer-events: none;
+    transition: right 0.18s ease;
+}
+
+html.shans-push-inbox-floating-active .flash-stack {
+    right: 92px;
 }
 
 .flash-message {
@@ -2789,8 +2794,12 @@ html.login-centered-document .page-shell {
     .flash-stack {
         left: 14px;
         right: 14px;
-        bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+        bottom: max(14px, env(safe-area-inset-bottom, 0px));
         width: auto;
+    }
+
+    html.shans-push-inbox-floating-active .flash-stack {
+        right: 14px;
     }
 
     .flash-message {

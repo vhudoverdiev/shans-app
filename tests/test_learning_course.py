@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from werkzeug.datastructures import MultiDict
 
 from config import Config
 from app.learning import (
@@ -8,6 +9,7 @@ from app.learning import (
     ENGLISH_LESSONS,
     FINAL_PASS_SCORE,
     REVIEW_MILESTONES,
+    VIDEO_PASS_SCORE,
     _build_english_lecture_details,
     _build_english_lecture_text,
     _build_english_phrase_cards,
@@ -32,8 +34,13 @@ from app.learning import (
     _save_it_day_result,
     _save_it_final_result,
     _get_course_state,
+    _base_quiz_for_attempt,
+    _public_question,
+    _extra_question_count,
     _save_course_day_result,
+    _stored_score,
     build_daily_quiz,
+    build_extra_quiz,
     build_final_quiz,
     build_it_daily_quiz,
     build_it_final_quiz,
@@ -41,6 +48,7 @@ from app.learning import (
     build_video_lesson_quiz,
     grade_quiz,
     init_learning_db,
+    shuffle_quiz,
 )
 from app.it_course_content import IT_LESSONS
 from app.python_video_course_content import PYTHON_VIDEO_LESSONS
@@ -53,6 +61,21 @@ MOBILE_STYLES = PROJECT_ROOT / "app" / "static" / "css" / "mobile.css"
 COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
 COURSE_DAY_ACTIONS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-day-actions.js"
 PYTHON_VIDEO_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos" / "python-basics"
+LIVE_QUIZ_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "live-quiz.js"
+
+
+def correct_quiz_form(questions):
+    values = []
+    for index, question in enumerate(questions):
+        name = f"question_{index}"
+        answer_type = question.get("answer_type", "single")
+        if answer_type == "text":
+            values.append((name, question["accepted_answers"][0]))
+        elif answer_type == "multiple":
+            values.extend((name, str(answer_index)) for answer_index in question["correct_indices"])
+        else:
+            values.append((name, str(question["correct_index"])))
+    return MultiDict(values)
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -78,37 +101,152 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertEqual(len(lesson["words"]), 6)
             self.assertEqual(len(lesson["phrases"]), 2)
 
-    def test_every_daily_quiz_has_five_valid_questions(self):
+    def test_each_wrong_answer_adds_two_questions_from_other_sections(self):
+        for course_key, current_number in (("english", 1), ("it", 2), ("video", 3)):
+            for wrong_count in (1, 3, 20):
+                extra_count = _extra_question_count(wrong_count)
+                self.assertEqual(extra_count, wrong_count * 2)
+                questions = build_extra_quiz(
+                    course_key, current_number, extra_count, seed=12345
+                )
+                self.assertEqual(len(questions), extra_count)
+                self.assertTrue(
+                    all(question["source_number"] != current_number for question in questions)
+                )
+
+    def test_extra_questions_are_repeatable_but_not_reused_from_current_section(self):
+        first = build_extra_quiz("english", 7, 6, seed=9876)
+        second = build_extra_quiz("english", 7, 6, seed=9876)
+        self.assertEqual(first, second)
+        self.assertNotIn(7, {question["source_number"] for question in first})
+
+    def test_combined_score_is_saved_on_existing_twenty_point_scale(self):
+        self.assertEqual(_stored_score(21, 22), 19)
+        self.assertEqual(_stored_score(16, 20), 16)
+
+    def test_daily_and_video_templates_render_mandatory_extra_stage(self):
+        for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn('name="quiz_stage" value="extra"', source)
+            self.assertIn("extra_questions", source)
+            self.assertIn("по 2 новых вопроса", source)
+            self.assertNotIn('name="base_score"', source)
+
+    def test_every_daily_quiz_has_twenty_valid_questions(self):
         for day_number in range(1, 31):
             questions = build_daily_quiz(day_number)
-            self.assertEqual(len(questions), 5)
+            self.assertEqual(len(questions), 20)
             for question in questions:
-                self.assertEqual(len(question["options"]), 4)
-                self.assertEqual(len(set(question["options"])), 4)
-                self.assertIn(
-                    question["correct_index"],
-                    range(len(question["options"])),
-                )
+                if question.get("answer_type") == "text":
+                    self.assertTrue(question["accepted_answers"])
+                elif question.get("answer_type") == "multiple":
+                    self.assertEqual(len(question["correct_indices"]), 2)
+                else:
+                    self.assertIn(question["correct_index"], range(len(question["options"])))
 
     def test_quiz_grading_accepts_correct_answers_and_handles_missing_answers(self):
         questions = build_daily_quiz(1)
-        correct_form = {
-            f"question_{index}": str(question["correct_index"])
-            for index, question in enumerate(questions)
-        }
+        correct_form = correct_quiz_form(questions)
 
         score, feedback = grade_quiz(questions, correct_form)
         missing_score, missing_feedback = grade_quiz(questions, {})
 
         self.assertEqual(score, len(questions))
         self.assertTrue(all(item["is_correct"] for item in feedback))
-        self.assertEqual(feedback[0]["selected_answer"], questions[0]["options"][questions[0]["correct_index"]])
-        self.assertEqual(feedback[0]["correct_answer"], questions[0]["options"][questions[0]["correct_index"]])
+        self.assertEqual(feedback[0]["selected_answer"], questions[0]["accepted_answers"][0])
+        self.assertEqual(feedback[0]["correct_answer"], questions[0]["accepted_answers"][0])
         self.assertEqual(missing_score, 0)
         self.assertFalse(any(item["is_correct"] for item in missing_feedback))
         self.assertEqual(missing_feedback[0]["selected_answer"], "не выбран")
-        self.assertEqual(missing_feedback[0]["correct_answer"], questions[0]["options"][questions[0]["correct_index"]])
-        self.assertEqual(DAILY_PASS_SCORE, 4)
+        self.assertEqual(missing_feedback[0]["correct_answer"], questions[0]["accepted_answers"][0])
+        self.assertEqual(DAILY_PASS_SCORE, 16)
+
+    def test_main_courses_use_recall_multiple_selection_and_single_choice_tasks(self):
+        quiz_sets = (
+            build_daily_quiz(1),
+            build_it_daily_quiz(1),
+            build_video_lesson_quiz(1, seed=17),
+        )
+        for questions in quiz_sets:
+            answer_types = [question.get("answer_type", "single") for question in questions]
+            self.assertGreaterEqual(answer_types.count("text"), 3)
+            self.assertGreaterEqual(answer_types.count("multiple"), 2)
+            self.assertIn("single", answer_types)
+
+    def test_text_answers_are_tolerant_but_multiple_selection_requires_exact_set(self):
+        questions = [
+            {
+                "answer_type": "text",
+                "prompt": "Введите ответ",
+                "accepted_answers": ("Ёлка, тест!",),
+                "explanation": "Проверка текста.",
+            },
+            {
+                "answer_type": "multiple",
+                "prompt": "Выберите два",
+                "options": ("A", "B", "C", "D"),
+                "correct_indices": (0, 2),
+                "explanation": "A и C.",
+            },
+        ]
+        correct_score, _ = grade_quiz(
+            questions,
+            MultiDict((("question_0", "  елка ТЕСТ  "), ("question_1", "2"), ("question_1", "0"))),
+        )
+        incomplete_score, feedback = grade_quiz(
+            questions,
+            MultiDict((("question_0", "другой ответ"), ("question_1", "0"), ("question_1", "99"))),
+        )
+        self.assertEqual(correct_score, 2)
+        self.assertEqual(incomplete_score, 0)
+        self.assertFalse(any(item["is_correct"] for item in feedback))
+
+    def test_every_attempt_shuffles_questions_and_all_choice_types_safely(self):
+        original = build_daily_quiz(1)
+        first = shuffle_quiz(original, seed=111)
+        repeated = shuffle_quiz(original, seed=111)
+        second = shuffle_quiz(original, seed=222)
+
+        self.assertEqual(first, repeated)
+        self.assertNotEqual(
+            [question["prompt"] for question in first],
+            [question["prompt"] for question in second],
+        )
+        for questions in (first, second):
+            score, feedback = grade_quiz(questions, correct_quiz_form(questions))
+            self.assertEqual(score, 20)
+            self.assertTrue(all(item["is_correct"] for item in feedback))
+
+    def test_daily_templates_keep_attempt_seed_for_server_grading(self):
+        for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn('name="quiz_seed" value="{{ quiz_seed }}"', source)
+
+    def test_live_quiz_checks_each_answer_and_adds_questions_immediately(self):
+        script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+        template = (TEMPLATES / "_quiz_question_fields.html").read_text(encoding="utf-8")
+        for marker in (
+            "data-live-quiz",
+            "checkQuestion(fieldset)",
+            "added_questions",
+            "showFeedback(fieldset, result)",
+            'event.key === "Enter"',
+            'checked.length !== 2',
+        ):
+            self.assertIn(marker, script if marker != "data-live-quiz" else " ".join(
+                (TEMPLATES / name).read_text(encoding="utf-8")
+                for name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html")
+            ))
+        self.assertIn("data-live-feedback", template)
+
+    def test_live_quiz_never_sends_correct_answers_to_browser(self):
+        questions = _base_quiz_for_attempt("it", 1, seed=1357)
+        for index, question in enumerate(questions):
+            public = _public_question(question, index)
+            self.assertNotIn("correct_index", public)
+            self.assertNotIn("correct_indices", public)
+            self.assertNotIn("accepted_answers", public)
+            self.assertEqual(public["live_index"], index)
 
     def test_review_quizzes_cover_each_five_day_block_for_both_courses(self):
         self.assertEqual(REVIEW_MILESTONES, (5, 10, 15, 20, 25, 30))
@@ -134,10 +272,7 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertEqual(first_attempt, repeated_seed)
         self.assertNotEqual(first_attempt, next_attempt)
         for questions in (first_attempt, next_attempt):
-            correct_form = {
-                f"question_{index}": str(question["correct_index"])
-                for index, question in enumerate(questions)
-            }
+            correct_form = correct_quiz_form(questions)
             score, feedback = grade_quiz(questions, correct_form)
             self.assertEqual(score, 10)
             self.assertTrue(all(item["is_correct"] for item in feedback))
@@ -180,15 +315,22 @@ class EnglishCourseTests(unittest.TestCase):
     def test_every_python_video_has_a_specific_valid_quiz(self):
         for lesson in PYTHON_VIDEO_LESSONS:
             questions = build_video_lesson_quiz(lesson["day"], seed=lesson["day"])
-            self.assertEqual(len(questions), 4)
-            self.assertEqual(
-                {question["prompt"].split("«", 1)[1].split("»", 1)[0] for question in questions},
-                {term for term, _definition in lesson["facts"]},
+            self.assertEqual(len(questions), 20)
+            quiz_copy = " ".join(
+                question["prompt"] + " " + question["explanation"]
+                for question in questions
             )
+            for term, definition in lesson["facts"]:
+                self.assertIn(term, quiz_copy)
+                self.assertIn(definition, quiz_copy)
             for question in questions:
-                self.assertEqual(len(question["options"]), 4)
-                self.assertEqual(len(set(question["options"])), 4)
-                self.assertIn(question["correct_index"], range(4))
+                if question.get("answer_type") == "text":
+                    self.assertTrue(question["accepted_answers"])
+                elif question.get("answer_type") == "multiple":
+                    self.assertEqual(len(question["correct_indices"]), 2)
+                else:
+                    self.assertIn(question["correct_index"], range(4))
+        self.assertEqual(VIDEO_PASS_SCORE, 16)
 
     def test_python_video_progress_requires_each_previous_test(self):
         progress, passed_lessons, next_lesson = _get_course_state(
@@ -223,6 +365,30 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("Проверка после видео", video_lesson_source)
         self.assertIn(".python-course-video", styles)
         self.assertIn("@media (max-width: 760px) and (pointer: coarse)", styles)
+
+    def test_video_lesson_has_topic_poster_and_accessible_floating_player(self):
+        video_lesson_source = (TEMPLATES / "it_video_lesson.html").read_text(encoding="utf-8")
+        player_script = (PROJECT_ROOT / "app" / "static" / "js" / "floating-video-player.js").read_text(encoding="utf-8")
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+
+        self.assertIn("data-video-poster", video_lesson_source)
+        self.assertIn("Видеоурок {{ lesson.day }} из 22", video_lesson_source)
+        self.assertIn("{{ lesson.title }}", video_lesson_source)
+        self.assertIn("data-video-expand", video_lesson_source)
+        self.assertIn("data-video-close", video_lesson_source)
+        self.assertIn("floating-video-player.js", video_lesson_source)
+        self.assertIn("new IntersectionObserver", player_script)
+        self.assertIn('video.addEventListener("play"', player_script)
+        self.assertIn("video.pause()", player_script)
+        self.assertIn("scrollIntoView", player_script)
+        self.assertIn(".python-video-shell-floating", styles)
+        self.assertIn("prefers-reduced-motion: reduce", styles)
+
+    def test_it_course_tabs_use_the_mobile_primary_purple_gradient(self):
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+        active_tab_rule = styles.split(".learning-course-tab-active", 1)[1].split("}", 1)[0]
+
+        self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", active_tab_rule)
 
     def test_progress_unlocks_only_the_next_day_and_preserves_best_score(self):
         progress, passed_days, next_day = _course_state(7)
@@ -354,14 +520,14 @@ class EnglishCourseTests(unittest.TestCase):
     def test_every_it_daily_quiz_and_final_quiz_are_valid(self):
         for day_number in range(1, 31):
             questions = build_it_daily_quiz(day_number)
-            self.assertEqual(len(questions), 5)
+            self.assertEqual(len(questions), 20)
             for question in questions:
-                self.assertEqual(len(question["options"]), 4)
-                self.assertEqual(len(set(question["options"])), 4)
-                self.assertIn(
-                    question["correct_index"],
-                    range(len(question["options"])),
-                )
+                if question.get("answer_type") == "text":
+                    self.assertTrue(question["accepted_answers"])
+                elif question.get("answer_type") == "multiple":
+                    self.assertEqual(len(question["correct_indices"]), 2)
+                else:
+                    self.assertIn(question["correct_index"], range(len(question["options"])))
 
         final_questions = build_it_final_quiz()
         self.assertEqual(len(final_questions), 30)

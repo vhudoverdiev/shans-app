@@ -100,6 +100,11 @@ class DesktopLayoutLockTests(unittest.TestCase):
         )
         self.assertRegex(
             stylesheet,
+            r"html\.shans-push-inbox-floating-active\s+\.flash-stack\s*\{"
+            r"[^}]*right:\s*92px;",
+        )
+        self.assertRegex(
+            stylesheet,
             r"\.flash-message-text\s*\{"
             r"[^}]*min-width:\s*0;"
             r"[^}]*-webkit-line-clamp:\s*3;"

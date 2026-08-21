@@ -369,16 +369,18 @@ class MobileAppNavigationTests(unittest.TestCase):
         self.assertNotIn("left: 24px;", desktop_flash_rule)
 
         mobile_flash_rule = styles.split(
-            "bottom: calc(86px + env(safe-area-inset-bottom, 0px));",
+            "bottom: max(14px, env(safe-area-inset-bottom, 0px));",
             1,
         )[0].rsplit(".flash-stack {", 1)[1]
         self.assertIn("left: 14px;", mobile_flash_rule)
         self.assertIn("right: 14px;", mobile_flash_rule)
         mobile_flash_rule_after_bottom = styles.split(
-            "bottom: calc(86px + env(safe-area-inset-bottom, 0px));",
+            "bottom: max(14px, env(safe-area-inset-bottom, 0px));",
             1,
         )[1].split("}", 1)[0]
         self.assertIn("width: auto;", mobile_flash_rule_after_bottom)
+        self.assertIn("html.shans-push-inbox-floating-active .flash-stack", styles)
+        self.assertIn("right: 92px;", styles)
 
     def test_mobile_blue_buttons_use_bottom_navigation_purple_theme(self):
         styles = STYLE_FILE.read_text(encoding="utf-8")

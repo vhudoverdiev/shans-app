@@ -6,7 +6,7 @@
 <section class="learning-page lesson-page">
     <a class="learning-back-link" href="{{ url_for('learning.english_day', day_number=lesson.day) }}">← Вернуться к уроку</a>
 
-    <section class="lesson-section quiz-section" id="daily-test">
+    {% if not extra_questions %}<section class="lesson-section quiz-section" id="daily-test">
         <div class="learning-section-heading">
             <div>
                 <p class="learning-kicker">English · день {{ lesson.day }}</p>
@@ -14,29 +14,29 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-        <form method="post" action="{{ url_for('learning.english_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form">
+        <form method="post" action="{{ url_for('learning.english_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form" data-live-quiz data-course="english" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}
             {% set question_index = loop.index0 %}
-            <fieldset class="quiz-question">
-                <legend><span>{{ loop.index }}</span>{{ question.prompt }}</legend>
-                <div class="quiz-options">
-                    {% for option in question.options %}
-                    <label class="quiz-option">
-                        <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required>
-                        <span>{{ option }}</span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </fieldset>
+            {% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}
             {% endfor %}
             <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
         </form>
-    </section>
+    </section>{% else %}
+    <section class="lesson-section quiz-section extra-quiz-section" id="daily-test-result">
+        <div class="learning-section-heading"><div><p class="learning-kicker">Закрепление после ошибки</p><h1>Дополнительные вопросы</h1></div><span>{{ extra_questions|length }} вопросов</span></div>
+        <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из других дней курса.</p>
+        <form method="post" action="{{ url_for('learning.english_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_stage" value="extra">
+            {% for question in extra_questions %}{% set question_index = loop.index0 %}{% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary quiz-submit">Завершить тест</button>
+        </form>
+    </section>{% endif %}
 
     {% if score is not none %}
     <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="daily-test-result" role="status">
-        <div class="quiz-result-score">{{ score }} / {{ questions|length }}</div>
+        <div class="quiz-result-score">{{ score }} / {{ result_total_questions }}</div>
         <div>
             <h2>{% if passed %}Урок пройден{% else %}Стоит повторить материал{% endif %}</h2>
             <p>
@@ -73,3 +73,5 @@
     {% endif %}
 </section>
 {% endblock %}
+
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}
