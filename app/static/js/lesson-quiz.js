@@ -29,9 +29,8 @@
         const shouldReveal = !shell.hasAttribute("hidden");
         setButtonState(button, shouldReveal);
 
-        button.addEventListener("click", function () {
-            const isHidden = shell.hasAttribute("hidden");
-            if (isHidden) {
+        function revealQuiz(scrollToQuiz) {
+            if (shell.hasAttribute("hidden")) {
                 shell.hidden = false;
                 shell.classList.remove("quiz-form-shell-animating");
                 requestAnimationFrame(function () {
@@ -41,7 +40,7 @@
                     }, 220);
                 });
                 setButtonState(button, true);
-                if (quizForm) {
+                if (scrollToQuiz && quizForm) {
                     const firstQuestion = quizForm.querySelector(".quiz-question");
                     if (firstQuestion) {
                         firstQuestion.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -49,9 +48,21 @@
                         shell.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
                 }
+            }
+        }
+
+        button.addEventListener("click", function () {
+            if (shell.hasAttribute("hidden")) {
+                revealQuiz(true);
             } else {
                 shell.hidden = true;
                 setButtonState(button, false);
+            }
+        });
+
+        shell.addEventListener("livequiz:restored", function (event) {
+            if (event.detail && event.detail.hasAnswers) {
+                revealQuiz(false);
             }
         });
     });

@@ -14,14 +14,15 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-        <form method="post" action="{{ url_for('learning.it_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form" data-live-quiz data-course="it" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}">
+        <form method="post" action="{{ url_for('learning.it_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form" data-live-quiz data-course="it" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}
             {% set question_index = loop.index0 %}
             {% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+            <button type="button" class="btn btn-primary quiz-submit" disabled>Ответьте на все вопросы</button>
+            <noscript><button type="submit" class="btn btn-primary quiz-submit">Отправить ответы</button></noscript>
         </form>
     </section>{% else %}
     <section class="lesson-section quiz-section extra-quiz-section" id="daily-test-result">

@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from flask import Flask, session
 from werkzeug.datastructures import MultiDict
 
 from config import Config
@@ -35,6 +36,7 @@ from app.learning import (
     _save_it_final_result,
     _get_course_state,
     _base_quiz_for_attempt,
+    _live_quiz_seed,
     _public_question,
     _extra_question_count,
     _save_course_day_result,
@@ -238,6 +240,19 @@ class EnglishCourseTests(unittest.TestCase):
                 for name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html")
             ))
         self.assertIn("data-live-feedback", template)
+        self.assertNotIn("Дополнительное закрепление", script)
+        self.assertNotIn("Новые вопросы появляются здесь", script)
+        self.assertNotIn("quiz-live-extra-heading", script)
+        self.assertNotIn("showCompletion", script)
+        self.assertIn('submitButton.disabled = true', script)
+        self.assertIn('submitButton.textContent = "Ответьте на все вопросы"', script)
+        self.assertIn("result.continue_label", script)
+        self.assertIn("window.location.assign(submitButton.dataset.continueUrl)", script)
+        for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            live_form = source.split("data-live-quiz", 1)[1].split("</form>", 1)[0]
+            self.assertIn("disabled>Ответьте на все вопросы</button>", live_form)
+            self.assertNotIn(">Проверить ответы</button>", live_form)
 
     def test_live_quiz_never_sends_correct_answers_to_browser(self):
         questions = _base_quiz_for_attempt("it", 1, seed=1357)
@@ -247,6 +262,32 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertNotIn("correct_indices", public)
             self.assertNotIn("accepted_answers", public)
             self.assertEqual(public["live_index"], index)
+
+    def test_partial_live_attempt_reuses_its_seed_after_returning_to_lesson(self):
+        app = Flask(__name__)
+        app.secret_key = "test-secret"
+        with app.test_request_context("/"):
+            first_seed = _live_quiz_seed("english", 4)
+            repeated_seed = _live_quiz_seed("english", 4)
+            another_course_seed = _live_quiz_seed("it", 4)
+            self.assertEqual(first_seed, repeated_seed)
+            self.assertIsInstance(another_course_seed, int)
+            self.assertIn("live_quiz_seed:english:4", session)
+
+    def test_live_quiz_restores_partial_answers_and_added_questions(self):
+        script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+        for marker in (
+            "restoreAttempt()",
+            "restoreAnswerGroup",
+            "state.extra_questions",
+            "state.base_answers",
+            "state.extra_answers",
+            'cache: "no-store"',
+        ):
+            self.assertIn(marker, script)
+        for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("data-state-url=", source)
 
     def test_review_quizzes_cover_each_five_day_block_for_both_courses(self):
         self.assertEqual(REVIEW_MILESTONES, (5, 10, 15, 20, 25, 30))
@@ -300,6 +341,7 @@ class EnglishCourseTests(unittest.TestCase):
 
     def test_python_video_course_contains_all_22_local_videos(self):
         self.assertEqual(len(PYTHON_VIDEO_LESSONS), 22)
+        self.assertEqual(PYTHON_VIDEO_LESSONS[0]["title"], "Что такое программирование и Python")
         self.assertEqual(
             [lesson["day"] for lesson in PYTHON_VIDEO_LESSONS],
             list(range(1, 23)),
@@ -372,8 +414,12 @@ class EnglishCourseTests(unittest.TestCase):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
         self.assertIn("data-video-poster", video_lesson_source)
+        self.assertIn("{% block title %}{{ lesson.title }} | Шанс{% endblock %}", video_lesson_source)
+        self.assertNotIn("Видео {{ lesson.day }} — {{ lesson.title }}", video_lesson_source)
         self.assertIn("Видеоурок {{ lesson.day }} из 22", video_lesson_source)
         self.assertIn("{{ lesson.title }}", video_lesson_source)
+        self.assertIn('class="python-video-play-icon"', video_lesson_source)
+        self.assertNotIn(">▶</span>", video_lesson_source)
         self.assertIn("data-video-expand", video_lesson_source)
         self.assertIn("data-video-close", video_lesson_source)
         self.assertIn("floating-video-player.js", video_lesson_source)
@@ -384,11 +430,28 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn(".python-video-shell-floating", styles)
         self.assertIn("prefers-reduced-motion: reduce", styles)
 
-    def test_it_course_tabs_use_the_mobile_primary_purple_gradient(self):
+    def test_video_quiz_is_revealed_by_an_adaptive_button(self):
+        template = (TEMPLATES / "it_video_lesson.html").read_text(encoding="utf-8")
+        reveal_script = (PROJECT_ROOT / "app" / "static" / "js" / "lesson-quiz.js").read_text(encoding="utf-8")
+        live_quiz_script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+
+        self.assertIn('data-quiz-reveal-button data-quiz-target="video-test"', template)
+        self.assertIn('aria-controls="video-test"', template)
+        self.assertIn('data-quiz-form-shell{% if score is none %} hidden{% endif %}', template)
+        self.assertIn("lesson-quiz.js", template)
+        self.assertIn('shell.addEventListener("livequiz:restored"', reveal_script)
+        self.assertIn('form.dispatchEvent(new CustomEvent("livequiz:restored"', live_quiz_script)
+        self.assertIn(".video-quiz-launch .quiz-reveal-button", styles)
+
+    def test_it_course_tabs_are_blue_on_desktop_and_purple_on_mobile(self):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
         active_tab_rule = styles.split(".learning-course-tab-active", 1)[1].split("}", 1)[0]
+        mobile_rules = styles.split("@media (max-width: 760px) and (pointer: coarse)", 1)[1]
 
-        self.assertIn("linear-gradient(135deg, #2563eb, #7c3aed)", active_tab_rule)
+        self.assertIn("background: #2563eb", active_tab_rule)
+        self.assertIn("background: #7c3aed", mobile_rules)
+        self.assertIn(".learning-course-nav", styles)
 
     def test_progress_unlocks_only_the_next_day_and_preserves_best_score(self):
         progress, passed_days, next_day = _course_state(7)
@@ -513,7 +576,8 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertTrue(lesson["title"])
             self.assertTrue(lesson["summary"])
             self.assertEqual(len(lesson["lecture"]), 3)
-            self.assertEqual(len(lesson["terms"]), 6)
+            self.assertEqual(len(lesson["terms"]), 10)
+            self.assertEqual(len({term for term, _definition in lesson["terms"]}), 10)
             self.assertTrue(lesson["practice"])
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
 
@@ -521,6 +585,12 @@ class EnglishCourseTests(unittest.TestCase):
         for day_number in range(1, 31):
             questions = build_it_daily_quiz(day_number)
             self.assertEqual(len(questions), 20)
+            quiz_copy = " ".join(
+                question["prompt"] + " " + question["explanation"]
+                for question in questions
+            )
+            for term, _definition in IT_LESSONS[day_number - 1]["terms"]:
+                self.assertIn(term, quiz_copy)
             for question in questions:
                 if question.get("answer_type") == "text":
                     self.assertTrue(question["accepted_answers"])
@@ -683,7 +753,8 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("item.correct_answer", source)
             self.assertIn('id="daily-test-result"', source)
             self.assertIn("_anchor='daily-test-result'", source)
-            self.assertIn("Проверить ответы", source)
+            self.assertIn("Ответьте на все вопросы", source)
+            self.assertNotIn(">Проверить ответы</button>", source)
             self.assertIn("Вернуться к уроку", source)
         self.assertIn("url_for('learning.english_day_test'", english_test_source)
         self.assertIn("url_for('learning.it_day_test'", it_test_source)

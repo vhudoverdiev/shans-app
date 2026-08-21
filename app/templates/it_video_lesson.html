@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Видео {{ lesson.day }} — {{ lesson.title }} | Шанс{% endblock %}
+{% block title %}{{ lesson.title }} | Шанс{% endblock %}
 
 {% block content %}
 <section class="learning-page lesson-page it-video-lesson-page">
@@ -15,7 +15,7 @@
             <div class="python-video-poster" data-video-poster>
                 <span class="python-video-poster-kicker">Видеоурок {{ lesson.day }} из 22</span>
                 <strong>{{ lesson.title }}</strong>
-                <button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ lesson.title }}»"><span aria-hidden="true">▶</span> Смотреть урок</button>
+                <button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ lesson.title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть урок</button>
             </div>
             <video class="python-course-video" controls playsinline preload="metadata">
                 <source src="{{ url_for('static', filename=lesson.video_file) }}" type="video/mp4">
@@ -29,15 +29,22 @@
         </div>
     </section>
 
-    {% if not extra_questions %}<section class="lesson-section quiz-section" id="video-test">
+    {% if not extra_questions %}
+    {% if score is none %}
+    <div class="video-quiz-launch">
+        <button type="button" class="btn btn-primary quiz-reveal-button" data-quiz-reveal-button data-quiz-target="video-test" aria-controls="video-test" aria-expanded="false">Пройти тест</button>
+    </div>
+    {% endif %}
+    <section class="lesson-section quiz-section quiz-form-shell" id="video-test" data-quiz-form-shell{% if score is none %} hidden{% endif %}>
         <div class="learning-section-heading"><div><p class="learning-kicker">Проверка после видео</p><h2>Тест урока</h2></div><span>Нужно {{ pass_score }} из {{ questions|length }}</span></div>
-        <form method="post" action="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day, _anchor='video-test-result') }}" class="quiz-form" data-live-quiz data-course="video" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}">
+        <form method="post" action="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day, _anchor='video-test-result') }}" class="quiz-form" data-live-quiz data-course="video" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}{% set question_index = loop.index0 %}
             {% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}
             {% endfor %}
-            <button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button>
+            <button type="button" class="btn btn-primary quiz-submit" disabled>Ответьте на все вопросы</button>
+            <noscript><button type="submit" class="btn btn-primary quiz-submit">Отправить ответы</button></noscript>
         </form>
     </section>{% else %}
     <section class="lesson-section quiz-section extra-quiz-section" id="video-test-result">
@@ -63,5 +70,6 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

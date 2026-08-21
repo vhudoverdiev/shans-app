@@ -1049,7 +1049,7 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
             }
         )
 
-    for question_index, (term, definition) in enumerate(terms):
+    for question_index, (term, definition) in enumerate(terms[:6]):
         options, correct_index = _rotated_options(
             term,
             (item[0] for item in terms if item[0] != term),
@@ -1063,24 +1063,8 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
             "explanation": f"{definition} — это {term}.",
         })
 
-    for question_index, (term, definition) in enumerate(terms):
-        correct_pair = f"{term} — {definition}"
-        distractors = (
-            f"{other_term} — {terms[(other_index + 1) % len(terms)][1]}"
-            for other_index, (other_term, _other_definition) in enumerate(terms)
-            if other_term != term
-        )
-        options, correct_index = _rotated_options(
-            correct_pair, distractors, day_number + 20 + question_index
-        )
-        questions.append({
-            "day": lesson["day"],
-            "prompt": "Какая пара «термин — значение» составлена правильно?",
-            "options": options,
-            "correct_index": correct_index,
-            "explanation": f"Верная пара: {correct_pair}.",
-        })
-
+    questions.append({"day": lesson["day"], **_multi_pair_question(terms, day_number + 301, "термин")})
+    questions.append({"day": lesson["day"], **_multi_pair_question(terms, day_number + 402, "термин")})
     questions.append({"day": lesson["day"], **dict(lesson["checkpoint"])})
     title_options, title_correct_index = _rotated_options(
         lesson["title"],
@@ -1096,11 +1080,9 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
     })
     for index in range(3):
         term, definition = terms[index]
-        questions[6 + index] = _text_question(
-            questions[6 + index], term, f"Восстановите термин по определению: «{definition}»."
+        questions[10 + index] = _text_question(
+            questions[10 + index], term, f"Восстановите термин по определению: «{definition}»."
         )
-    questions[16] = {"day": lesson["day"], **_multi_pair_question(terms, day_number + 301, "термин")}
-    questions[17] = {"day": lesson["day"], **_multi_pair_question(terms, day_number + 402, "термин")}
     return questions
 
 
@@ -1321,11 +1303,17 @@ def _live_quiz_key(course_key: str, item_number: int, seed: int) -> str:
     return f"live_quiz:{course_key}:{item_number}:{seed}"
 
 
-def _clear_live_quiz_attempts(course_key: str, item_number: int) -> None:
-    prefix = f"live_quiz:{course_key}:{item_number}:"
-    for key in tuple(session):
-        if key.startswith(prefix):
-            session.pop(key, None)
+def _live_quiz_seed_key(course_key: str, item_number: int) -> str:
+    return f"live_quiz_seed:{course_key}:{item_number}"
+
+
+def _live_quiz_seed(course_key: str, item_number: int) -> int:
+    key = _live_quiz_seed_key(course_key, item_number)
+    seed = session.get(key)
+    if not isinstance(seed, int) or not 0 <= seed < 2**31:
+        seed = secrets.randbelow(2**31)
+        session[key] = seed
+    return seed
 
 
 def _base_quiz_for_attempt(course_key: str, item_number: int, seed: int) -> list[dict]:
@@ -1359,6 +1347,33 @@ def _save_live_quiz_result(course_key: str, item_number: int, score: int, total:
         _save_course_day_result(user_id, item_number, stored_score, passed, "video")
 
 
+def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) -> tuple[str, str]:
+    if not passed:
+        if course_key == "english":
+            retry_url = url_for("learning.english_day_test", day_number=item_number)
+        elif course_key == "it":
+            retry_url = url_for("learning.it_day_test", day_number=item_number)
+        else:
+            retry_url = url_for("learning.it_video_lesson", lesson_number=item_number)
+        return retry_url, "Пройти тест заново"
+
+    user_id = int(current_user.id)
+    if course_key == "english":
+        _progress, _passed, next_item = _course_state(user_id)
+        if next_item:
+            return url_for("learning.english_day", day_number=next_item), f"Перейти к дню {next_item}"
+        return url_for("learning.english_final"), "Перейти к итоговому тесту"
+    if course_key == "it":
+        _progress, _passed, next_item = _it_course_state(user_id)
+        if next_item:
+            return url_for("learning.it_day", day_number=next_item), f"Перейти к дню {next_item}"
+        return url_for("learning.it_final"), "Перейти к итоговому тесту"
+    _progress, _passed, next_item = _get_course_state(user_id, "video", PYTHON_VIDEO_LESSONS)
+    if next_item:
+        return url_for("learning.it_video_lesson", lesson_number=next_item), f"Перейти к видео {next_item}"
+    return url_for("learning.it_video_course"), "Вернуться к видеокурсам"
+
+
 def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
     user_id = int(current_user.id)
     if course_key == "english":
@@ -1369,6 +1384,56 @@ def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
         _progress, passed_items, next_item = _get_course_state(user_id, "video", PYTHON_VIDEO_LESSONS)
     if item_number not in passed_items and item_number != next_item:
         abort(403)
+
+
+def _live_answer_feedback(question: dict, answer) -> dict:
+    submitted = {"question_0": answer if question.get("answer_type") == "multiple" else str(answer)}
+    score, feedback = grade_quiz([question], submitted)
+    item = feedback[0]
+    return {
+        "correct": bool(score),
+        "selected_answer": item["selected_answer"],
+        "correct_answer": item["correct_answer"],
+        "explanation": item["explanation"],
+        "answer": answer,
+    }
+
+
+@learning_bp.route("/study/quiz/state", methods=["GET"])
+@login_required
+def live_quiz_state():
+    try:
+        course_key = str(request.args["course"])
+        item_number = int(request.args["item_number"])
+        seed = int(request.args["seed"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    if course_key not in {"english", "it", "video"} or not 0 <= seed < 2**31:
+        abort(400)
+    _ensure_live_quiz_access(course_key, item_number)
+    state = session.get(_live_quiz_key(course_key, item_number, seed))
+    if not isinstance(state, dict):
+        return jsonify({"base_answers": {}, "extra_answers": {}, "extra_questions": []})
+
+    base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
+    extra_count = int(state.get("extra_count", 0))
+    extras = build_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if extra_count else []
+
+    def restored_answers(stage_name: str, questions: list[dict]) -> dict:
+        restored = {}
+        for raw_index, saved in state.get(stage_name, {}).items():
+            if not isinstance(saved, dict) or "answer" not in saved:
+                continue
+            index = int(raw_index)
+            if 0 <= index < len(questions):
+                restored[raw_index] = _live_answer_feedback(questions[index], saved["answer"])
+        return restored
+
+    return jsonify({
+        "base_answers": restored_answers("base", base_questions),
+        "extra_answers": restored_answers("extra", extras[:extra_count]),
+        "extra_questions": [_public_question(extras[index], index) for index in range(extra_count)],
+    })
 
 
 @learning_bp.route("/study/quiz/check", methods=["POST"])
@@ -1410,13 +1475,19 @@ def check_live_quiz_answer():
         question = build_extra_quiz(course_key, item_number, 40, extra_seed)[question_index]
 
     answer = payload.get("answer", "")
+    if isinstance(answer, str):
+        answer = answer[:300]
+    elif isinstance(answer, list):
+        answer = [str(value)[:8] for value in answer[:4]]
+    else:
+        answer = ""
     if question.get("answer_type") == "multiple":
         submitted_form = {"question_0": answer if isinstance(answer, list) else []}
     else:
         submitted_form = {"question_0": str(answer)}
     answer_score, feedback = grade_quiz([question], submitted_form)
     is_correct = bool(answer_score)
-    answered[index_key] = is_correct
+    answered[index_key] = {"correct": is_correct, "answer": answer}
 
     added_questions = []
     if stage == "base" and not is_correct:
@@ -1441,15 +1512,24 @@ def check_live_quiz_answer():
         "complete": complete,
     }
     if complete:
-        score = sum(bool(value) for value in state["base"].values()) + sum(
-            bool(value) for value in state["extra"].values()
+        score = sum(bool(value.get("correct")) for value in state["base"].values()) + sum(
+            bool(value.get("correct")) for value in state["extra"].values()
         )
         total = len(base_questions) + int(state["extra_count"])
         pass_score = (total * REVIEW_PASS_PERCENT + 99) // 100
         passed = score >= pass_score
         _save_live_quiz_result(course_key, item_number, score, total, passed)
+        continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
         session.pop(key, None)
-        response.update({"score": score, "total": total, "pass_score": pass_score, "passed": passed})
+        session.pop(_live_quiz_seed_key(course_key, item_number), None)
+        response.update({
+            "score": score,
+            "total": total,
+            "pass_score": pass_score,
+            "passed": passed,
+            "continue_url": continue_url,
+            "continue_label": continue_label,
+        })
     else:
         session[key] = state
     return jsonify(response)
@@ -1954,9 +2034,11 @@ def english_day_test(day_number: int):
 
     lesson = ENGLISH_LESSONS[day_number - 1]
     is_extra_post = request.method == "POST" and request.form.get("quiz_stage") == "extra"
-    seed = secrets.randbelow(2**31) if is_extra_post else _review_seed()
-    if request.method == "GET":
-        _clear_live_quiz_attempts("english", day_number)
+    seed = (
+        _live_quiz_seed("english", day_number)
+        if request.method == "GET"
+        else secrets.randbelow(2**31) if is_extra_post else _review_seed()
+    )
     questions = shuffle_quiz(build_daily_quiz(day_number), seed)
     score = None
     passed = False
@@ -2163,9 +2245,11 @@ def it_video_lesson(lesson_number: int):
 
     lesson = PYTHON_VIDEO_LESSONS[lesson_number - 1]
     is_extra_post = request.method == "POST" and request.form.get("quiz_stage") == "extra"
-    seed = secrets.randbelow(2**31) if is_extra_post else _review_seed()
-    if request.method == "GET":
-        _clear_live_quiz_attempts("video", lesson_number)
+    seed = (
+        _live_quiz_seed("video", lesson_number)
+        if request.method == "GET"
+        else secrets.randbelow(2**31) if is_extra_post else _review_seed()
+    )
     questions = build_video_lesson_quiz(lesson_number, seed)
     score = None
     passed = False
@@ -2248,9 +2332,11 @@ def it_day_test(day_number: int):
 
     lesson = IT_LESSONS[day_number - 1]
     is_extra_post = request.method == "POST" and request.form.get("quiz_stage") == "extra"
-    seed = secrets.randbelow(2**31) if is_extra_post else _review_seed()
-    if request.method == "GET":
-        _clear_live_quiz_attempts("it", day_number)
+    seed = (
+        _live_quiz_seed("it", day_number)
+        if request.method == "GET"
+        else secrets.randbelow(2**31) if is_extra_post else _review_seed()
+    )
     questions = shuffle_quiz(build_it_daily_quiz(day_number), seed)
     score = None
     passed = False

@@ -105,7 +105,7 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v20`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v21`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
@@ -171,14 +171,14 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertIn('"text/css; charset=utf-8"', service_worker)
         self.assertIn('"application/javascript; charset=utf-8"', service_worker)
 
-    def test_offline_logo_has_network_independent_sh_fallback(self):
+    def test_offline_loader_uses_only_the_canonical_logo_without_glyph_swap(self):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
 
-        self.assertIn('<svg class="offline-logo-fallback" viewBox="0 0 1254 1254"', page)
-        self.assertIn('<path fill="#fff"', page)
-        self.assertIn('onerror="this.remove()"', page)
-        self.assertNotIn('onerror="this.hidden=true"', page)
-        self.assertLess(page.index("offline-logo-fallback"), page.index('src="/static/logo.png"'))
+        self.assertEqual(page.count('src="/static/logo.png"'), 1)
+        self.assertNotIn("offline-logo-fallback", page)
+        self.assertNotIn("<svg", page.split('<div class="offline-logo">', 1)[1].split("</div>", 1)[0])
+        self.assertIn("filename='logo.png'", template.split('<div class="app-intro-logo">', 1)[1].split("</div>", 1)[0])
 
     def test_offline_logo_uses_the_same_vertical_geometry_as_online_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
@@ -208,9 +208,8 @@ class OfflineSupportTests(unittest.TestCase):
         page = OFFLINE_PAGE.read_text(encoding="utf-8")
 
         self.assertIn('class="offline-logo"', page)
-        self.assertIn('class="offline-logo-fallback"', page)
-        self.assertIn('<svg class="offline-logo-fallback"', page)
-        self.assertIn('onerror="this.remove()"', page)
+        self.assertNotIn('class="offline-logo-fallback"', page)
+        self.assertEqual(page.count('src="/static/logo.png"'), 1)
         self.assertIn("Отсутствует подключение к интернету", page)
         self.assertIn('id="offline-retry"', page)
         self.assertIn("Повторить попытку", page)

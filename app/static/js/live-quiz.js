@@ -6,12 +6,12 @@
 
     const csrfInput = form.querySelector('input[name="_csrf_token"]');
     const submitButton = form.querySelector(".quiz-submit");
-    const extraHeading = document.createElement("div");
-    extraHeading.className = "quiz-live-extra-heading";
-    extraHeading.innerHTML = "<strong>Дополнительное закрепление</strong><span>Новые вопросы появляются здесь сразу после ошибки.</span>";
-    extraHeading.hidden = true;
-    form.insertBefore(extraHeading, submitButton);
-    submitButton.hidden = true;
+    submitButton.type = "button";
+    submitButton.disabled = true;
+    submitButton.textContent = "Ответьте на все вопросы";
+    form.querySelectorAll("[data-live-question] input").forEach(function (input) {
+        input.disabled = true;
+    });
 
     function lockQuestion(fieldset) {
         fieldset.querySelectorAll("input").forEach(function (input) {
@@ -99,24 +99,71 @@
 
     function addQuestions(questions) {
         if (!questions.length) return;
-        extraHeading.hidden = false;
         questions.forEach(function (question) {
             form.insertBefore(buildExtraQuestion(question), submitButton);
         });
     }
 
-    function showCompletion(result) {
-        const resultBox = document.createElement("section");
-        resultBox.className = "quiz-result " + (result.passed ? "quiz-result-passed" : "quiz-result-failed");
-        resultBox.setAttribute("role", "status");
-        resultBox.innerHTML = '<div class="quiz-result-score"></div><div><h2></h2><p></p></div>';
-        resultBox.querySelector(".quiz-result-score").textContent = result.score + " / " + result.total;
-        resultBox.querySelector("h2").textContent = result.passed ? "Тест пройден" : "Стоит повторить материал";
-        resultBox.querySelector("p").textContent = result.passed
-            ? "Результат сохранён автоматически."
-            : "Для прохождения нужно минимум " + result.pass_score + " правильных ответов.";
-        form.after(resultBox);
-        resultBox.scrollIntoView({behavior: "smooth", block: "nearest"});
+    function restoreAnswer(fieldset, result) {
+        const inputs = Array.from(fieldset.querySelectorAll("input"));
+        if (Array.isArray(result.answer)) {
+            const selected = new Set(result.answer.map(String));
+            inputs.forEach(function (input) { input.checked = selected.has(input.value); });
+        } else {
+            const answer = String(result.answer == null ? "" : result.answer);
+            const textInput = inputs.find(function (input) { return input.type === "text"; });
+            if (textInput) {
+                textInput.value = answer;
+            } else {
+                inputs.forEach(function (input) { input.checked = input.value === answer; });
+            }
+        }
+        lockQuestion(fieldset);
+        showFeedback(fieldset, result);
+    }
+
+    function restoreAnswerGroup(stage, answers) {
+        Object.keys(answers || {}).forEach(function (index) {
+            const selector = '[data-live-question][data-question-stage="' + stage + '"][data-question-index="' + index + '"]';
+            const fieldset = form.querySelector(selector);
+            if (fieldset) restoreAnswer(fieldset, answers[index]);
+        });
+    }
+
+    async function restoreAttempt() {
+        const url = new URL(form.dataset.stateUrl, window.location.origin);
+        url.searchParams.set("course", form.dataset.course);
+        url.searchParams.set("item_number", form.dataset.itemNumber);
+        url.searchParams.set("seed", form.dataset.quizSeed);
+        try {
+            const response = await fetch(url.toString(), {credentials: "same-origin", cache: "no-store"});
+            if (!response.ok) return;
+            const state = await response.json();
+            addQuestions(state.extra_questions || []);
+            restoreAnswerGroup("base", state.base_answers);
+            restoreAnswerGroup("extra", state.extra_answers);
+            form.dispatchEvent(new CustomEvent("livequiz:restored", {
+                bubbles: true,
+                detail: {
+                    hasAnswers: Object.keys(state.base_answers || {}).length > 0
+                        || Object.keys(state.extra_answers || {}).length > 0
+                }
+            }));
+        } catch (_error) {
+            // The unanswered form remains usable if restoring temporary state fails.
+        } finally {
+            form.querySelectorAll("[data-live-question]:not([data-answered='true']) input").forEach(function (input) {
+                input.disabled = false;
+            });
+        }
+    }
+
+    function enableContinuation(result) {
+        submitButton.disabled = false;
+        submitButton.textContent = result.continue_label;
+        submitButton.dataset.continueUrl = result.continue_url;
+        submitButton.classList.toggle("btn-danger", !result.passed);
+        submitButton.scrollIntoView({behavior: "smooth", block: "nearest"});
     }
 
     async function checkQuestion(fieldset) {
@@ -153,10 +200,12 @@
             lockQuestion(fieldset);
             showFeedback(fieldset, result);
             addQuestions(result.added_questions || []);
-            if (result.complete) showCompletion(result);
+            if (result.complete) enableContinuation(result);
         } catch (_error) {
             delete fieldset.dataset.checking;
-            submitButton.hidden = false;
+            submitButton.type = "submit";
+            submitButton.disabled = false;
+            submitButton.textContent = "Отправить ответы без мгновенной проверки";
             const feedback = fieldset.querySelector("[data-live-feedback]");
             feedback.className = "quiz-inline-feedback quiz-inline-feedback-wrong";
             feedback.textContent = "Мгновенная проверка недоступна. Можно отправить тест обычной кнопкой ниже.";
@@ -178,4 +227,9 @@
             checkQuestion(event.target.closest("[data-live-question]"));
         }
     });
+    submitButton.addEventListener("click", function () {
+        if (submitButton.disabled || !submitButton.dataset.continueUrl) return;
+        window.location.assign(submitButton.dataset.continueUrl);
+    });
+    restoreAttempt();
 }());
