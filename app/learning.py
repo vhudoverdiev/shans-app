@@ -1227,7 +1227,7 @@ def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
 
 
 def build_extra_quiz(course_key: str, current_number: int, question_count: int, seed: int) -> list[dict]:
-    """Build remediation questions exclusively from other lessons."""
+    """Build deterministic remediation questions from the current lesson only."""
     builders = {
         "english": (len(ENGLISH_LESSONS), lambda number: build_daily_quiz(number)),
         "it": (len(IT_LESSONS), lambda number: build_it_daily_quiz(number)),
@@ -1238,15 +1238,13 @@ def build_extra_quiz(course_key: str, current_number: int, question_count: int, 
     lesson_count, builder = builders[course_key]
     if not 1 <= current_number <= lesson_count:
         raise ValueError("Некорректный номер урока.")
-    pool = [
-        {**question, "source_number": source_number}
-        for source_number in range(1, lesson_count + 1)
-        if source_number != current_number
-        for question in builder(source_number)
-    ]
-    if question_count > len(pool):
-        raise ValueError("Недостаточно вопросов для дополнительного теста.")
-    selected = random.Random(seed).sample(pool, question_count)
+    pool = [{**question, "source_number": current_number} for question in builder(current_number)]
+    rng = random.Random(seed)
+    selected = []
+    while len(selected) < question_count:
+        cycle = list(pool)
+        rng.shuffle(cycle)
+        selected.extend(dict(question) for question in cycle[: question_count - len(selected)])
     return shuffle_quiz(selected, seed + 7919)
 
 
@@ -1258,6 +1256,13 @@ def _extra_question_count(wrong_count: int) -> int:
     if wrong_count < 1:
         raise ValueError("Дополнительные вопросы нужны только при наличии ошибок.")
     return wrong_count * 2
+
+
+def _extra_stage_passed(correct_count: int, question_count: int) -> bool:
+    """Allow one remediation mistake; two mistakes require a full lesson retry."""
+    if question_count < 0 or not 0 <= correct_count <= question_count:
+        raise ValueError("Некорректный результат дополнительных вопросов.")
+    return question_count - correct_count < 2
 
 
 def _start_extra_quiz(course_key: str, item_number: int, base_score: int, base_total: int) -> tuple[list[dict], int]:
@@ -1273,7 +1278,7 @@ def _start_extra_quiz(course_key: str, item_number: int, base_score: int, base_t
     return build_extra_quiz(course_key, item_number, extra_count, seed), wrong_count
 
 
-def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, int, int, list[dict]]:
+def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, int, int, list[dict], bool]:
     state = session.pop(_extra_quiz_key(course_key, item_number), None)
     if not isinstance(state, dict):
         abort(400)
@@ -1290,8 +1295,9 @@ def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, in
     extra_score, feedback = grade_quiz(questions, form)
     total_score = base_score + extra_score
     total_questions = base_total + extra_count
-    pass_score = (total_questions * REVIEW_PASS_PERCENT + 99) // 100
-    return total_score, total_questions, pass_score, feedback
+    passed = _extra_stage_passed(extra_score, extra_count)
+    pass_score = total_score if passed else total_score + 1
+    return total_score, total_questions, pass_score, feedback, passed
 
 
 def _stored_score(score: int, total_questions: int) -> int:
@@ -1516,8 +1522,9 @@ def check_live_quiz_answer():
             bool(value.get("correct")) for value in state["extra"].values()
         )
         total = len(base_questions) + int(state["extra_count"])
-        pass_score = (total * REVIEW_PASS_PERCENT + 99) // 100
-        passed = score >= pass_score
+        extra_score = sum(bool(value.get("correct")) for value in state["extra"].values())
+        passed = _extra_stage_passed(extra_score, int(state["extra_count"]))
+        pass_score = score if passed else score + 1
         _save_live_quiz_result(course_key, item_number, score, total, passed)
         continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
         session.pop(key, None)
@@ -2049,8 +2056,7 @@ def english_day_test(day_number: int):
     pass_score = DAILY_PASS_SCORE
     if request.method == "POST":
         if request.form.get("quiz_stage") == "extra":
-            score, result_total_questions, pass_score, feedback = _finish_extra_quiz("english", day_number, request.form)
-            passed = score >= pass_score
+            score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("english", day_number, request.form)
             _save_day_result(int(current_user.id), day_number, _stored_score(score, result_total_questions), passed)
             progress, passed_days, next_day = _course_state(int(current_user.id))
         else:
@@ -2260,8 +2266,7 @@ def it_video_lesson(lesson_number: int):
     result_total_questions = len(questions)
     if request.method == "POST":
         if is_extra_post:
-            score, result_total_questions, pass_score, feedback = _finish_extra_quiz("video", lesson_number, request.form)
-            passed = score >= pass_score
+            score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("video", lesson_number, request.form)
             _save_course_day_result(int(current_user.id), lesson_number, _stored_score(score, result_total_questions), passed, "video")
             progress, passed_lessons, next_lesson = _get_course_state(int(current_user.id), "video", PYTHON_VIDEO_LESSONS)
         else:
@@ -2347,8 +2352,7 @@ def it_day_test(day_number: int):
     pass_score = DAILY_PASS_SCORE
     if request.method == "POST":
         if request.form.get("quiz_stage") == "extra":
-            score, result_total_questions, pass_score, feedback = _finish_extra_quiz("it", day_number, request.form)
-            passed = score >= pass_score
+            score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("it", day_number, request.form)
             _save_it_day_result(int(current_user.id), day_number, _stored_score(score, result_total_questions), passed)
             progress, passed_days, next_day = _it_course_state(int(current_user.id))
         else:

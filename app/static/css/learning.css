@@ -880,6 +880,16 @@ a.english-day-card:hover {
     font-size: 25px;
 }
 
+.lesson-lecture-intro {
+    margin-bottom: 18px;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.video-lesson-notes .it-term-card {
+    min-width: 0;
+}
+
 .lesson-lecture {
     margin: 12px 0 0;
     color: #334155;
@@ -1199,6 +1209,33 @@ a.english-day-card:hover {
     border: 1px solid #fecaca;
     background: #fef2f2;
     color: #991b1b;
+}
+
+.quiz-inline-feedback-prompt {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.quiz-answer-button {
+    min-width: 132px;
+    min-height: 42px;
+    margin-top: 14px;
+    border: 1px solid #2563eb;
+    color: #ffffff;
+    background: #2563eb;
+    font-weight: 800;
+}
+
+.quiz-answer-button:hover,
+.quiz-answer-button:focus-visible {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+}
+
+.quiz-answer-button:disabled {
+    cursor: default;
+    opacity: 0.6;
 }
 
 .quiz-question-correct {
@@ -1761,6 +1798,12 @@ a.english-day-card:hover {
 
     .quiz-submit {
         width: 100%;
+    }
+
+    .quiz-answer-button {
+        width: 100%;
+        border-color: #7c3aed;
+        background: #7c3aed;
     }
 
     .video-quiz-launch .quiz-reveal-button {

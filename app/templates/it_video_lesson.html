@@ -29,6 +29,23 @@
         </div>
     </section>
 
+    <section class="lesson-section video-lesson-notes">
+        <div class="learning-section-heading">
+            <div><p class="learning-kicker">Конспект видео</p><h2>{{ lesson.title }}</h2></div>
+            <span>{{ lesson.facts|length }} ключевых понятия</span>
+        </div>
+        <p class="lesson-lecture lesson-lecture-intro">Сначала сопоставьте каждое понятие с его смыслом. Затем попробуйте объяснить его своими словами и привести простой пример — это подготовит к тесту лучше простого запоминания.</p>
+        <div class="it-term-grid">
+            {% for term, definition in lesson.facts %}
+            <article class="it-term-card">
+                <strong>{{ term }}</strong>
+                <span>{{ definition }}</span>
+                <p class="it-term-detail">Простой разбор: {{ term }} — это {{ definition }}. Пример придумайте по схеме: «Я использую {{ term }}, когда мне нужно описать или выполнить действие, связанное с темой урока».</p>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
     {% if not extra_questions %}
     {% if score is none %}
     <div class="video-quiz-launch">
@@ -49,7 +66,7 @@
     </section>{% else %}
     <section class="lesson-section quiz-section extra-quiz-section" id="video-test-result">
         <div class="learning-section-heading"><div><p class="learning-kicker">Закрепление после ошибки</p><h2>Дополнительные вопросы</h2></div><span>{{ extra_questions|length }} вопросов</span></div>
-        <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из других видеоуроков.</p>
+        <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из этого же видеоурока.</p>
         <form method="post" action="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day, _anchor='video-test-result') }}" class="quiz-form">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_stage" value="extra">
             {% for question in extra_questions %}{% set question_index = loop.index0 %}{% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}
@@ -59,7 +76,7 @@
 
     {% if score is not none %}
     <section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="video-test-result" role="status">
-        <div class="quiz-result-score">{{ score }} / {{ result_total_questions }}</div><div><h2>{% if passed %}Урок пройден{% else %}Посмотрите видео ещё раз{% endif %}</h2><p>{% if passed %}Тест сдан, следующий видеоурок открыт.{% else %}Нужно минимум {{ pass_score }} правильных ответа.{% endif %}</p></div>
+        <div class="quiz-result-score">{{ score }} / {{ result_total_questions }}</div><div><h2>{% if passed %}Урок пройден{% else %}Посмотрите видео ещё раз{% endif %}</h2><p>{% if passed %}Тест сдан, следующий видеоурок открыт.{% else %}В дополнительных вопросах допущено две или больше ошибок. Полностью пройдите этот видеоурок заново.{% endif %}</p></div>
         {% if passed and next_lesson %}<a class="btn btn-primary" href="{{ url_for('learning.it_video_lesson', lesson_number=next_lesson) }}">Видео {{ next_lesson }} →</a>{% elif passed and course_finished %}<a class="btn btn-primary" href="{{ url_for('learning.it_video_course') }}">К списку курса</a>{% endif %}
     </section>
     <div class="quiz-feedback-list">{% for item in feedback %}<article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}"><strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong><span><b>Вы выбрали:</b> {{ item.selected_answer }}</span><span><b>Правильный ответ:</b> {{ item.correct_answer }}</span><span>{{ item.explanation }}</span></article>{% endfor %}</div>

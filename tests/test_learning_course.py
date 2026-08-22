@@ -39,6 +39,7 @@ from app.learning import (
     _live_quiz_seed,
     _public_question,
     _extra_question_count,
+    _extra_stage_passed,
     _save_course_day_result,
     _stored_score,
     build_daily_quiz,
@@ -103,7 +104,7 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertEqual(len(lesson["words"]), 6)
             self.assertEqual(len(lesson["phrases"]), 2)
 
-    def test_each_wrong_answer_adds_two_questions_from_other_sections(self):
+    def test_each_wrong_answer_adds_two_questions_from_the_same_lesson(self):
         for course_key, current_number in (("english", 1), ("it", 2), ("video", 3)):
             for wrong_count in (1, 3, 20):
                 extra_count = _extra_question_count(wrong_count)
@@ -113,14 +114,20 @@ class EnglishCourseTests(unittest.TestCase):
                 )
                 self.assertEqual(len(questions), extra_count)
                 self.assertTrue(
-                    all(question["source_number"] != current_number for question in questions)
+                    all(question["source_number"] == current_number for question in questions)
                 )
 
-    def test_extra_questions_are_repeatable_but_not_reused_from_current_section(self):
+    def test_extra_questions_are_repeatable_and_stay_in_current_section(self):
         first = build_extra_quiz("english", 7, 6, seed=9876)
         second = build_extra_quiz("english", 7, 6, seed=9876)
         self.assertEqual(first, second)
-        self.assertNotIn(7, {question["source_number"] for question in first})
+        self.assertEqual({question["source_number"] for question in first}, {7})
+
+    def test_one_extra_mistake_passes_but_two_require_full_retry(self):
+        self.assertTrue(_extra_stage_passed(2, 2))
+        self.assertTrue(_extra_stage_passed(3, 4))
+        self.assertFalse(_extra_stage_passed(2, 4))
+        self.assertFalse(_extra_stage_passed(0, 2))
 
     def test_combined_score_is_saved_on_existing_twenty_point_scale(self):
         self.assertEqual(_stored_score(21, 22), 19)
@@ -132,6 +139,7 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn('name="quiz_stage" value="extra"', source)
             self.assertIn("extra_questions", source)
             self.assertIn("по 2 новых вопроса", source)
+            self.assertIn("из этого же", source)
             self.assertNotIn('name="base_score"', source)
 
     def test_every_daily_quiz_has_twenty_valid_questions(self):
@@ -232,14 +240,17 @@ class EnglishCourseTests(unittest.TestCase):
             "checkQuestion(fieldset)",
             "added_questions",
             "showFeedback(fieldset, result)",
-            'event.key === "Enter"',
             'checked.length !== 2',
+            'event.target.closest("[data-answer-question]")',
         ):
             self.assertIn(marker, script if marker != "data-live-quiz" else " ".join(
                 (TEMPLATES / name).read_text(encoding="utf-8")
                 for name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html")
             ))
         self.assertIn("data-live-feedback", template)
+        self.assertIn("data-answer-question", template)
+        self.assertNotIn('form.addEventListener("change"', script)
+        self.assertNotIn('form.addEventListener("focusout"', script)
         self.assertNotIn("Дополнительное закрепление", script)
         self.assertNotIn("Новые вопросы появляются здесь", script)
         self.assertNotIn("quiz-live-extra-heading", script)
@@ -253,6 +264,16 @@ class EnglishCourseTests(unittest.TestCase):
             live_form = source.split("data-live-quiz", 1)[1].split("</form>", 1)[0]
             self.assertIn("disabled>Ответьте на все вопросы</button>", live_form)
             self.assertNotIn(">Проверить ответы</button>", live_form)
+
+    def test_each_question_requires_an_explicit_adaptive_answer_button(self):
+        template = (TEMPLATES / "_quiz_question_fields.html").read_text(encoding="utf-8")
+        script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+
+        self.assertIn('data-answer-question>Ответить</button>', template)
+        self.assertIn(".quiz-answer-button", styles)
+        self.assertIn("width: 100%", styles.split(".quiz-answer-button", 2)[-1])
+        self.assertIn("showInputPrompt", script)
 
     def test_live_quiz_never_sends_correct_answers_to_browser(self):
         questions = _base_quiz_for_attempt("it", 1, seed=1357)
@@ -575,11 +596,23 @@ class EnglishCourseTests(unittest.TestCase):
         for lesson in IT_LESSONS:
             self.assertTrue(lesson["title"])
             self.assertTrue(lesson["summary"])
-            self.assertEqual(len(lesson["lecture"]), 3)
+            self.assertEqual(len(lesson["lecture"]), 5)
             self.assertEqual(len(lesson["terms"]), 10)
             self.assertEqual(len({term for term, _definition in lesson["terms"]}), 10)
             self.assertTrue(lesson["practice"])
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
+
+    def test_lesson_templates_show_expanded_material_and_real_term_count(self):
+        it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
+        video_source = (TEMPLATES / "it_video_lesson.html").read_text(encoding="utf-8")
+
+        self.assertIn("{{ term_cards|length }} терминов дня", it_source)
+        self.assertNotIn("6 терминов дня", it_source)
+        self.assertIn("{{ lecture_points|length }} смысловым частям", it_source)
+        self.assertIn("<strong>Цель дня:</strong>", english_source)
+        self.assertIn("Конспект видео", video_source)
+        self.assertIn("{% for term, definition in lesson.facts %}", video_source)
 
     def test_every_it_daily_quiz_and_final_quiz_are_valid(self):
         for day_number in range(1, 31):
@@ -826,7 +859,7 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("практику", expanded_english)
 
         it_points = _build_it_lecture_points(IT_LESSONS[0])
-        self.assertEqual(len(it_points), 3)
+        self.assertEqual(len(it_points), 5)
         self.assertEqual(it_points[0]["text"], IT_LESSONS[0]["lecture"][0])
         self.assertGreater(len(it_points[0]["detail"]), 50)
         self.assertIn(IT_LESSONS[0]["title"], it_points[0]["detail"])

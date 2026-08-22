@@ -12,6 +12,9 @@
     form.querySelectorAll("[data-live-question] input").forEach(function (input) {
         input.disabled = true;
     });
+    form.querySelectorAll("[data-answer-question]").forEach(function (button) {
+        button.disabled = true;
+    });
 
     function lockQuestion(fieldset) {
         fieldset.querySelectorAll("input").forEach(function (input) {
@@ -24,6 +27,8 @@
             }
             input.disabled = true;
         });
+        const answerButton = fieldset.querySelector("[data-answer-question]");
+        if (answerButton) answerButton.disabled = true;
         fieldset.dataset.answered = "true";
     }
 
@@ -87,6 +92,12 @@
             });
             fieldset.appendChild(options);
         }
+        const answerButton = document.createElement("button");
+        answerButton.type = "button";
+        answerButton.className = "btn quiz-answer-button";
+        answerButton.dataset.answerQuestion = "";
+        answerButton.textContent = "Ответить";
+        fieldset.appendChild(answerButton);
         const feedback = document.createElement("div");
         feedback.className = "quiz-inline-feedback";
         feedback.dataset.liveFeedback = "";
@@ -155,6 +166,9 @@
             form.querySelectorAll("[data-live-question]:not([data-answered='true']) input").forEach(function (input) {
                 input.disabled = false;
             });
+            form.querySelectorAll("[data-live-question]:not([data-answered='true']) [data-answer-question]").forEach(function (button) {
+                button.disabled = false;
+            });
         }
     }
 
@@ -173,11 +187,21 @@
         let answer;
         if (textInput) {
             answer = textInput.value.trim();
-            if (!answer) return;
+            if (!answer) {
+                showInputPrompt(fieldset, "Сначала введите ответ.");
+                return;
+            }
         } else {
             const checked = inputs.filter(function (input) { return input.checked; });
             const isMultiple = inputs.some(function (input) { return input.type === "checkbox"; });
-            if (!checked.length || (isMultiple && checked.length !== 2)) return;
+            if (!checked.length) {
+                showInputPrompt(fieldset, "Сначала выберите вариант ответа.");
+                return;
+            }
+            if (isMultiple && checked.length !== 2) {
+                showInputPrompt(fieldset, "Выберите ровно два варианта, затем нажмите «Ответить».");
+                return;
+            }
             answer = isMultiple ? checked.map(function (input) { return input.value; }) : checked[0].value;
         }
         fieldset.dataset.checking = "true";
@@ -213,19 +237,17 @@
         }
     }
 
-    form.addEventListener("change", function (event) {
-        const input = event.target.closest('input[type="radio"], input[type="checkbox"]');
-        if (!input) return;
-        checkQuestion(input.closest("[data-live-question]"));
-    });
-    form.addEventListener("focusout", function (event) {
-        if (event.target.matches('input[type="text"]')) checkQuestion(event.target.closest("[data-live-question]"));
-    });
-    form.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" && event.target.matches('input[type="text"]')) {
-            event.preventDefault();
-            checkQuestion(event.target.closest("[data-live-question]"));
-        }
+    function showInputPrompt(fieldset, message) {
+        const feedback = fieldset.querySelector("[data-live-feedback]");
+        feedback.className = "quiz-inline-feedback quiz-inline-feedback-prompt";
+        feedback.textContent = message;
+        feedback.hidden = false;
+    }
+
+    form.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-answer-question]");
+        if (!button) return;
+        checkQuestion(button.closest("[data-live-question]"));
     });
     submitButton.addEventListener("click", function () {
         if (submitButton.disabled || !submitButton.dataset.continueUrl) return;

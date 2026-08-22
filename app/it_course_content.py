@@ -973,7 +973,20 @@ _EXTRA_TERMS_BY_DAY = {
     30: (("resume", "краткое описание опыта и навыков кандидата"), ("roadmap", "последовательный план профессионального развития"), ("mentor", "опытный специалист, помогающий в обучении"), ("feedback", "конкретная обратная связь о результате работы")),
 }
 
-IT_LESSONS = tuple(
-    {**lesson, "terms": lesson["terms"] + _EXTRA_TERMS_BY_DAY[lesson["day"]]}
-    for lesson in IT_LESSONS
-)
+def _expand_it_lesson(lesson):
+    extra_terms = _EXTRA_TERMS_BY_DAY[lesson["day"]]
+    expanded_terms = lesson["terms"] + extra_terms
+    expanded_lecture = lesson["lecture"] + (
+        (
+            f"Дополнительные понятия темы: {extra_terms[0][0]} — {extra_terms[0][1]}; "
+            f"{extra_terms[1][0]} — {extra_terms[1][1]}. Разберите различие между ними и найдите каждое понятие в практическом задании дня."
+        ),
+        (
+            f"Практическое расширение темы: {extra_terms[2][0]} — {extra_terms[2][1]}; "
+            f"{extra_terms[3][0]} — {extra_terms[3][1]}. Объясните оба термина своими словами и составьте по одному простому примеру."
+        ),
+    )
+    return {**lesson, "terms": expanded_terms, "lecture": expanded_lecture}
+
+
+IT_LESSONS = tuple(_expand_it_lesson(lesson) for lesson in IT_LESSONS)

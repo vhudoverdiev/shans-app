@@ -35,6 +35,7 @@
     <section class="lesson-section">
         <p class="learning-kicker">Мини-лекция</p>
         <h2>Как заниматься сегодня</h2>
+        <p class="lesson-lecture lesson-lecture-intro"><strong>Цель дня:</strong> {{ lesson.focus }} Вы изучите {{ word_cards|length }} слов, разберёте {{ phrase_cards|length }} готовые фразы и научитесь использовать их в ситуации «{{ lesson.title }}».</p>
         <p class="lesson-lecture">{{ lesson_lecture_text }}</p>
         <details class="lesson-more-details">
             <summary>Подробнее</summary>

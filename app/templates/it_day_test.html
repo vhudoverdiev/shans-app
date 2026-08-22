@@ -27,7 +27,7 @@
     </section>{% else %}
     <section class="lesson-section quiz-section extra-quiz-section" id="daily-test-result">
         <div class="learning-section-heading"><div><p class="learning-kicker">Закрепление после ошибки</p><h1>Дополнительные вопросы</h1></div><span>{{ extra_questions|length }} вопросов</span></div>
-        <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из других тем курса.</p>
+        <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из этого же дня.</p>
         <form method="post" action="{{ url_for('learning.it_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_stage" value="extra">
             {% for question in extra_questions %}{% set question_index = loop.index0 %}{% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}
@@ -44,7 +44,7 @@
                 {% if passed %}
                 Отлично! Следующий день курса открыт.
                 {% else %}
-                Для прохождения нужно минимум {{ pass_score }} правильных ответа. Вернитесь к уроку, перечитайте объяснения и попробуйте снова.
+                В дополнительных вопросах допущено две или больше ошибок. Полностью пройдите этот день заново.
                 {% endif %}
             </p>
         </div>
