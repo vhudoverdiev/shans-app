@@ -53,7 +53,14 @@
         const legend = document.createElement("legend");
         const number = document.createElement("span");
         number.textContent = "+" + (question.live_index + 1);
-        legend.append(number, document.createTextNode(question.prompt));
+        number.className = "quiz-question-number";
+        const promptCopy = document.createElement("span");
+        promptCopy.className = "quiz-question-copy";
+        promptCopy.textContent = question.prompt;
+        legend.append(number, promptCopy);
+        if (question.prompt_speech) {
+            legend.appendChild(buildPronounceButton(question.prompt_speech));
+        }
         fieldset.appendChild(legend);
 
         if (question.answer_hint) {
@@ -79,6 +86,8 @@
             const options = document.createElement("div");
             options.className = "quiz-options";
             question.options.forEach(function (value, index) {
+                const row = document.createElement("div");
+                row.className = "quiz-option-row";
                 const label = document.createElement("label");
                 label.className = "quiz-option";
                 const input = document.createElement("input");
@@ -88,7 +97,11 @@
                 const text = document.createElement("span");
                 text.textContent = value;
                 label.append(input, text);
-                options.appendChild(label);
+                row.appendChild(label);
+                if (question.option_speech && question.option_speech[index]) {
+                    row.appendChild(buildPronounceButton(question.option_speech[index]));
+                }
+                options.appendChild(row);
             });
             fieldset.appendChild(options);
         }
@@ -106,6 +119,23 @@
         feedback.hidden = true;
         fieldset.appendChild(feedback);
         return fieldset;
+    }
+
+    function buildPronounceButton(text) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "course-pronounce-button quiz-pronounce-button";
+        button.dataset.coursePronounce = "";
+        button.dataset.pronounceText = text;
+        button.dataset.pronounceLang = "en-US";
+        button.setAttribute("aria-label", "Прослушать: " + text);
+        button.title = "Прослушать английский текст";
+        const icon = document.createElement("span");
+        icon.className = "course-audio-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "🔊";
+        button.appendChild(icon);
+        return button;
     }
 
     function addQuestions(questions) {

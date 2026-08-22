@@ -29,17 +29,19 @@
     const speech = window.speechSynthesis;
     const controller = document.querySelector("[data-course-audio]");
     const dataNode = document.getElementById("course-audio-segments");
+    const initialPronounceButtons = Array.from(document.querySelectorAll("[data-course-pronounce]"));
 
-    if (!controller || !dataNode) {
+    if (!controller && !initialPronounceButtons.length) {
         return;
     }
 
-    const playButton = controller.querySelector("[data-course-audio-play]");
-    const statusNode = controller.querySelector("[data-course-audio-status]");
-    const pronounceButtons = Array.from(document.querySelectorAll("[data-course-pronounce]"));
+    const playButton = controller ? controller.querySelector("[data-course-audio-play]") : null;
+    const statusNode = controller
+        ? controller.querySelector("[data-course-audio-status]")
+        : document.querySelector("[data-quiz-pronounce-status]");
     let segments = [];
     try {
-        segments = JSON.parse(dataNode.textContent || "[]")
+        segments = JSON.parse(dataNode ? dataNode.textContent || "[]" : "[]")
             .filter((segment) => segment && segment.text)
             .map((segment) => ({
                 lang: segment.lang || "ru-RU",
@@ -61,9 +63,9 @@
     }
 
     if (!supportsSpeech()) {
-        controller.classList.add("course-audio-unavailable");
+        if (controller) controller.classList.add("course-audio-unavailable");
         if (playButton) playButton.disabled = true;
-        pronounceButtons.forEach((button) => {
+        initialPronounceButtons.forEach((button) => {
             button.disabled = true;
         });
         setStatus("Озвучка недоступна в этом браузере.");
@@ -158,7 +160,7 @@
     }
 
     function setPlaying(isPlaying) {
-        controller.classList.toggle("course-audio-playing", isPlaying);
+        if (controller) controller.classList.toggle("course-audio-playing", isPlaying);
         if (playButton) {
             playButton.disabled = segments.length === 0;
             playButton.setAttribute("aria-pressed", isPlaying ? "true" : "false");
@@ -172,7 +174,7 @@
     }
 
     function resetPronounceButtons() {
-        pronounceButtons.forEach((button) => {
+        document.querySelectorAll("[data-course-pronounce]").forEach((button) => {
             setPronounceButton(button, false);
         });
     }
@@ -270,11 +272,15 @@
         });
     }
 
-    pronounceButtons.forEach((button) => {
+    initialPronounceButtons.forEach((button) => {
         button.setAttribute("aria-pressed", "false");
-        button.addEventListener("click", function () {
-            playPronunciation(button);
-        });
+    });
+
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-course-pronounce]");
+        if (!button) return;
+        event.preventDefault();
+        playPronunciation(button);
     });
 
     if (speech.onvoiceschanged !== undefined) {

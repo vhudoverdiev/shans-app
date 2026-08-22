@@ -4,6 +4,7 @@
 
 {% block content %}
 <section class="learning-page lesson-page it-lesson-page">
+    <span class="quiz-pronounce-status" data-quiz-pronounce-status role="status" aria-live="polite"></span>
     <a class="learning-back-link" href="{{ url_for('learning.it_day', day_number=lesson.day) }}">← Вернуться к уроку</a>
 
     {% if not extra_questions %}<section class="lesson-section quiz-section" id="daily-test">
@@ -75,4 +76,4 @@
 </section>
 {% endblock %}
 
-{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}

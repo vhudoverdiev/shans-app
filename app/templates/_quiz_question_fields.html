@@ -1,5 +1,10 @@
 <fieldset class="quiz-question quiz-question-{{ question.answer_type|default('single') }}" data-live-question data-question-index="{{ question_index }}" data-question-stage="{{ question_stage|default('base') }}">
-    <legend><span>{{ question_number }}</span>{{ question.prompt }}</legend>
+    {% set prompt_speech = question.prompt|english_speech %}
+    <legend>
+        <span class="quiz-question-number">{{ question_number }}</span>
+        <span class="quiz-question-copy">{{ question.prompt }}</span>
+        {% if prompt_speech %}<button type="button" class="course-pronounce-button quiz-pronounce-button" data-course-pronounce data-pronounce-text="{{ prompt_speech }}" data-pronounce-lang="en-US" aria-label="Прослушать: {{ prompt_speech }}" title="Прослушать английский текст"><span class="course-audio-icon" aria-hidden="true">🔊</span></button>{% endif %}
+    </legend>
     {% if question.answer_hint %}<p class="quiz-answer-hint">{{ question.answer_hint }}</p>{% endif %}
     {% if question.answer_type == "text" %}
     <label class="quiz-text-answer">
@@ -9,10 +14,14 @@
     {% else %}
     <div class="quiz-options">
         {% for option in question.options %}
+        {% set option_speech = option|english_speech %}
+        <div class="quiz-option-row">
         <label class="quiz-option">
             <input type="{% if question.answer_type == 'multiple' %}checkbox{% else %}radio{% endif %}" name="question_{{ question_index }}" value="{{ loop.index0 }}"{% if question.answer_type != 'multiple' %} required{% endif %}>
             <span>{{ option }}</span>
         </label>
+        {% if option_speech %}<button type="button" class="course-pronounce-button quiz-pronounce-button" data-course-pronounce data-pronounce-text="{{ option_speech }}" data-pronounce-lang="en-US" aria-label="Прослушать: {{ option_speech }}" title="Прослушать английский текст"><span class="course-audio-icon" aria-hidden="true">🔊</span></button>{% endif %}
+        </div>
         {% endfor %}
     </div>
     {% endif %}

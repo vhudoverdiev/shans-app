@@ -4,6 +4,7 @@
 
 {% block content %}
 <section class="learning-page lesson-page it-video-lesson-page">
+    <span class="quiz-pronounce-status" data-quiz-pronounce-status role="status" aria-live="polite"></span>
     <a class="learning-back-link" href="{{ url_for('learning.it_video_course') }}">← Все видеоуроки</a>
     <div class="learning-hero lesson-hero it-learning-hero">
         <div><p class="learning-kicker">Python · видео {{ lesson.day }} из 22</p><h1>{{ lesson.title }}</h1><p>Посмотрите видео полностью, затем закрепите материал обязательным тестом.</p></div>
@@ -88,5 +89,6 @@
 {{ super() }}
 <script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

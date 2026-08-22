@@ -105,11 +105,14 @@ class OfflineSupportTests(unittest.TestCase):
     def test_service_worker_precaches_and_serves_offline_navigation(self):
         service_worker = SERVICE_WORKER.read_text(encoding="utf-8")
 
-        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v21`', service_worker)
+        self.assertIn('const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v22`', service_worker)
         self.assertIn('const OFFLINE_PAGE_URL = "/static/offline.html"', service_worker)
         self.assertIn('const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png"', service_worker)
         self.assertIn('const OFFLINE_LOGO_URL = "/static/logo.png"', service_worker)
         self.assertIn("OFFLINE_LOGO_URL", service_worker)
+        self.assertIn("const isCanonicalLogo", service_worker)
+        self.assertIn("cache.match(OFFLINE_LOGO_URL, { ignoreSearch: true })", service_worker)
+        self.assertIn("cache.put(OFFLINE_LOGO_URL, networkLogo.clone())", service_worker)
         self.assertIn('addEventListener("install"', service_worker)
         self.assertIn('addEventListener("activate"', service_worker)
         self.assertIn('addEventListener("fetch"', service_worker)
@@ -179,6 +182,27 @@ class OfflineSupportTests(unittest.TestCase):
         self.assertNotIn("offline-logo-fallback", page)
         self.assertNotIn("<svg", page.split('<div class="offline-logo">', 1)[1].split("</div>", 1)[0])
         self.assertIn("filename='logo.png'", template.split('<div class="app-intro-logo">', 1)[1].split("</div>", 1)[0])
+
+    def test_mobile_intro_preloads_an_optimized_canonical_logo_before_scripts(self):
+        template = BASE_TEMPLATE.read_text(encoding="utf-8")
+        logo_path = PROJECT_ROOT / "app" / "static" / "logo.png"
+        head = template.split("<head>", 1)[1].split("</head>", 1)[0]
+        critical_logo_rule = template.split(
+            "html.app-intro-pending .app-intro-logo {", 1
+        )[1].split("}", 1)[0]
+        intro_image = template.split('<div class="app-intro-logo">', 1)[1].split("</div>", 1)[0]
+
+        self.assertIn('rel="preload" as="image"', head)
+        self.assertIn("filename='logo.png'", head)
+        self.assertIn('fetchpriority="high"', head)
+        self.assertLess(head.index('rel="preload" as="image"'), head.index("intro-loader.js"))
+        self.assertIn("opacity: 1", critical_logo_rule)
+        self.assertNotIn("opacity: 0", critical_logo_rule)
+        self.assertIn('width="384" height="384"', intro_image)
+        self.assertIn('loading="eager"', intro_image)
+        self.assertIn('decoding="sync"', intro_image)
+        self.assertIn('fetchpriority="high"', intro_image)
+        self.assertLess(logo_path.stat().st_size, 150_000)
 
     def test_offline_logo_uses_the_same_vertical_geometry_as_online_intro(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")

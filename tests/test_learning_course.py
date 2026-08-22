@@ -21,6 +21,7 @@ from app.learning import (
     _build_it_term_cards,
     _course_state,
     _english_audio_segments,
+    _english_speech,
     _get_final_result,
     _get_it_final_result,
     _it_course_state,
@@ -283,6 +284,38 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertNotIn("correct_indices", public)
             self.assertNotIn("accepted_answers", public)
             self.assertEqual(public["live_index"], index)
+
+    def test_quiz_english_fragments_have_pronunciation_controls_in_all_courses(self):
+        self.assertEqual(
+            _english_speech("Что означают Python, REST API и backend developer?"),
+            "Python; REST API; backend developer",
+        )
+        self.assertEqual(_english_speech("слово в IT-вакансии"), "IT")
+        public = _public_question(
+            {
+                "prompt": "Что означает Python?",
+                "options": ("язык программирования", "Python language"),
+                "correct_index": 0,
+            },
+            0,
+        )
+        self.assertEqual(public["prompt_speech"], "Python")
+        self.assertEqual(public["option_speech"], ["", "Python language"])
+
+        question_template = (TEMPLATES / "_quiz_question_fields.html").read_text(encoding="utf-8")
+        audio_script = COURSE_AUDIO_SCRIPT.read_text(encoding="utf-8")
+        live_script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+        for marker in ("english_speech", "data-course-pronounce", "quiz-pronounce-button"):
+            self.assertIn(marker, question_template)
+        self.assertIn('document.addEventListener("click"', audio_script)
+        self.assertIn('event.target.closest("[data-course-pronounce]")', audio_script)
+        self.assertIn("buildPronounceButton", live_script)
+        self.assertIn("question.prompt_speech", live_script)
+        self.assertIn("question.option_speech", live_script)
+        for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("course-audio.js", source)
+            self.assertIn("data-quiz-pronounce-status", source)
 
     def test_partial_live_attempt_reuses_its_seed_after_returning_to_lesson(self):
         app = Flask(__name__)

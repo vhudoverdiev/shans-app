@@ -223,7 +223,7 @@ class IntroLoaderTests(unittest.TestCase):
         self.assertIn("logoImage.addEventListener(\"error\", finish)", script)
         self.assertIn("window.setTimeout(finish, 700)", script)
 
-    def test_critical_intro_css_keeps_logo_hidden_until_image_is_ready(self):
+    def test_critical_intro_css_paints_logo_before_deferred_script_is_ready(self):
         template = BASE_TEMPLATE.read_text(encoding="utf-8")
         critical_logo = template.split("html.app-intro-pending .app-intro-logo {", 1)[1].split(
             "}",
@@ -234,14 +234,15 @@ class IntroLoaderTests(unittest.TestCase):
             1,
         )[0]
 
-        self.assertIn("opacity: 0;", critical_logo)
+        self.assertIn("opacity: 1;", critical_logo)
+        self.assertNotIn("opacity: 0;", critical_logo)
         self.assertIn("position: absolute;", critical_logo)
         self.assertIn(
             "top: calc(50% - var(--app-intro-composition-offset) - var(--app-intro-visual-lift));",
             critical_logo,
         )
         self.assertIn("left: 50%;", critical_logo)
-        self.assertIn("transform: translate(-50%, -50%) scale(0.94);", critical_logo)
+        self.assertIn("transform: translate(-50%, -50%) scale(1);", critical_logo)
         self.assertIn("background: transparent;", critical_logo)
         self.assertIn("position: absolute;", critical_progress)
         self.assertIn(

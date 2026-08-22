@@ -1,4 +1,5 @@
 {% set skip_intro_loader = request.endpoint in ['learning.english_day_test', 'learning.it_day_test', 'workouts.plan_detail', 'workouts.edit_plan', 'nutrition.edit_profile'] %}
+{% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
 <!DOCTYPE html>
 <html lang="ru" class="{% if not skip_intro_loader %}app-intro-pending{% endif %}{% if request.endpoint == 'login' %} login-centered-document{% endif %}">
 <head>
@@ -10,6 +11,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Шанс">
     <title>{% block title %}Шанс{% endblock %}</title>
+    {% if not skip_intro_loader %}
+    <link rel="preload" as="image" href="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" fetchpriority="high">
+    {% endif %}
     <script>
         (function () {
             const skipIntroLoader = {{ 'true' if skip_intro_loader else 'false' }};
@@ -128,8 +132,8 @@
             place-items: center;
             overflow: hidden;
             background: transparent;
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.94);
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         html.app-intro-pending .app-intro-logo-mark {
@@ -160,7 +164,6 @@
             background: linear-gradient(90deg, #2563eb, #7c3aed);
         }
     </style>
-    {% set static_asset_version = config.get('STATIC_ASSET_VERSION', 'dev') %}
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png', v=static_asset_version) }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon-shans-v2.png', v=static_asset_version) }}">
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest', v=static_asset_version) }}">
@@ -184,7 +187,7 @@
     <div class="app-intro" id="app-intro" aria-hidden="true" hidden>
         <div class="app-intro-stage">
             <div class="app-intro-logo">
-                <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="" class="app-intro-logo-mark" aria-hidden="true">
+                <img src="{{ url_for('static', filename='logo.png', v=static_asset_version) }}" alt="" class="app-intro-logo-mark" aria-hidden="true" width="384" height="384" loading="eager" decoding="sync" fetchpriority="high">
             </div>
             <div class="app-intro-progress"><span></span></div>
         </div>

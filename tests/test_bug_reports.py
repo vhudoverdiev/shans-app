@@ -184,6 +184,9 @@ class BugReportTests(unittest.TestCase):
         stylesheet = (PROJECT_ROOT / "app" / "static" / "css" / "style.css").read_text(
             encoding="utf-8"
         )
+        mobile_stylesheet = (PROJECT_ROOT / "app" / "static" / "css" / "mobile.css").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("js/bug-report.js", base_template)
         self.assertIn('id="bug-report-trigger"', base_template)
@@ -196,6 +199,9 @@ class BugReportTests(unittest.TestCase):
         self.assertIn("background: #2563eb;", trigger_rule)
         self.assertIn("color: #ffffff;", trigger_rule)
         self.assertIn("rgba(37, 99, 235, 0.22)", trigger_rule)
+        mobile_trigger_rule = mobile_stylesheet.split(".bug-report-trigger {", 1)[1].split("}", 1)[0]
+        self.assertIn("background: #7c3aed;", mobile_trigger_rule)
+        self.assertIn("border-color: rgba(221, 214, 254, 0.9);", mobile_trigger_rule)
 
     def test_bug_report_dialog_opens_without_text_input_autofocus(self):
         base_template = (PROJECT_ROOT / "app" / "templates" / "base.html").read_text(

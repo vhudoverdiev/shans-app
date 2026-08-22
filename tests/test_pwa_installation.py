@@ -73,7 +73,11 @@ class PwaInstallationTests(unittest.TestCase):
         self.assertIn("filename='apple-touch-icon-shans-v2.png', v=static_asset_version", template)
         self.assertNotIn("filename='apple-touch-icon.png', v=static_asset_version", template)
         self.assertNotIn("filename='ios-startup-iphone-16-pro-max.png', v=static_asset_version", template)
-        self.assertNotIn("filename='logo.png', v=static_asset_version", template.split('rel="manifest"', 1)[0])
+        self.assertNotIn(
+            'rel="apple-touch-icon" href="{{ url_for(\'static\', filename=\'logo.png\'',
+            template,
+        )
+        self.assertIn('rel="preload" as="image"', template)
         self.assertFalse(LEGACY_INTRO_LOGO.exists())
 
     def test_browser_favicon_is_a_rounded_square(self):
@@ -93,14 +97,15 @@ class PwaInstallationTests(unittest.TestCase):
             "b9e52a3974c9797f87040414b7a286b9b60dda9e5d28d7b56f8e1139463edca1",
         )
 
-    def test_logo_asset_matches_the_supplied_source_image(self):
+    def test_canonical_logo_is_visually_equivalent_but_optimized_for_mobile_loader(self):
         logo = LOGO.read_bytes()
 
         self.assertEqual(logo[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", logo[16:24]), (1254, 1254))
+        self.assertEqual(struct.unpack(">II", logo[16:24]), (384, 384))
+        self.assertLess(len(logo), 150_000)
         self.assertEqual(
             hashlib.sha256(logo).hexdigest(),
-            "4ae379a1088102a02eafd5b28ad21392eab9d8a19d3f50dce22649777c1c3de8",
+            "ed539843419937136d8085dfa13c7c2c4d5eaddec10cfaebabc131c38c63c31f",
         )
 
     def test_ios_home_screen_icons_have_expected_dimensions(self):

@@ -1,7 +1,7 @@
 const DEFAULT_NOTIFICATION_URL = "/planner.schedule?calendar=personal&view=day";
 const DEFAULT_ICON_URL = "/static/pwa-icon-512-shans-v2.png";
 const OFFLINE_CACHE_PREFIX = "shans-offline-";
-const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v21`;
+const OFFLINE_CACHE_NAME = `${OFFLINE_CACHE_PREFIX}v22`;
 const OFFLINE_PAGE_URL = "/static/offline.html";
 const OFFLINE_LOGO_URL = "/static/logo.png";
 const NAVIGATION_TIMEOUT_MS = 3000;
@@ -52,13 +52,13 @@ async function addLaunchContext(response, returnPath) {
 self.addEventListener("install", function (event) {
     event.waitUntil((async function () {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
-        // Cache entries independently: an optional image must never prevent the
-        // offline document and the new worker from being installed.
+        // Cache entries independently so the offline document can still install
+        // if the canonical logo request fails temporarily.
         await cache.add(new Request(OFFLINE_PAGE_URL, { cache: "reload" }));
         try {
             await cache.add(new Request(OFFLINE_LOGO_URL, { cache: "reload" }));
         } catch (_error) {
-            // The offline page contains its own logo fallback.
+            // A later controlled logo request gets another chance to populate it.
         }
         await self.skipWaiting();
     })());
@@ -86,13 +86,26 @@ self.addEventListener("fetch", function (event) {
     const isNavigation = event.request.mode === "navigate";
     const isCriticalResource = requestUrl.origin === self.location.origin
         && CRITICAL_RESOURCE_DESTINATIONS.has(event.request.destination);
+    const isCanonicalLogo = requestUrl.origin === self.location.origin
+        && requestUrl.pathname === OFFLINE_LOGO_URL;
 
-    if (!isNavigation && !isCriticalResource) {
+    if (!isNavigation && !isCriticalResource && !isCanonicalLogo) {
         return;
     }
 
     event.respondWith((async function () {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
+        if (isCanonicalLogo) {
+            const cachedLogo = await cache.match(OFFLINE_LOGO_URL, { ignoreSearch: true });
+            if (cachedLogo) {
+                return cachedLogo;
+            }
+            const networkLogo = await fetch(event.request);
+            if (networkLogo.ok) {
+                await cache.put(OFFLINE_LOGO_URL, networkLogo.clone());
+            }
+            return networkLogo;
+        }
         if (requestUrl.pathname === OFFLINE_PAGE_URL) {
             const cachedOfflinePage = await cache.match(OFFLINE_PAGE_URL);
             if (cachedOfflinePage) {

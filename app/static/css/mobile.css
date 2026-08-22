@@ -958,7 +958,9 @@
         bottom: calc(91px + env(safe-area-inset-bottom));
         width: 56px;
         height: 56px;
+        border-color: rgba(221, 214, 254, 0.9);
         border-radius: 19px;
+        background: #7c3aed;
         box-shadow: none;
     }
 

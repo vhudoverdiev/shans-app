@@ -22,6 +22,17 @@ REVIEW_QUESTIONS_PER_DAY = 2
 REVIEW_PASS_PERCENT = 80
 REVIEW_MILESTONES = tuple(range(REVIEW_BLOCK_SIZE, 31, REVIEW_BLOCK_SIZE))
 LOCKED_FUTURE_DAYS = tuple(range(31, 61))
+
+
+@learning_bp.app_template_filter("english_speech")
+def _english_speech(value) -> str:
+    """Return only Latin-script fragments suitable for English speech synthesis."""
+    fragments = re.findall(
+        r"[A-Za-z][A-Za-z0-9_+#.'/-]*(?:\s+[A-Za-z][A-Za-z0-9_+#.'/-]*)*",
+        str(value or ""),
+    )
+    cleaned = (fragment.strip(" .-/'") for fragment in fragments)
+    return "; ".join(fragment for fragment in cleaned if fragment)
 _PROGRESS_TABLES = {
     "english": "english_course_progress",
     "it": "it_course_progress",
@@ -1339,6 +1350,8 @@ def _public_question(question: dict, live_index: int) -> dict:
         "prompt": question["prompt"],
         "options": list(question.get("options", ())),
         "answer_hint": question.get("answer_hint", ""),
+        "prompt_speech": _english_speech(question["prompt"]),
+        "option_speech": [_english_speech(option) for option in question.get("options", ())],
     }
 
 
