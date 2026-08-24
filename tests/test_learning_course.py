@@ -276,6 +276,19 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("width: 100%", styles.split(".quiz-answer-button", 2)[-1])
         self.assertIn("showInputPrompt", script)
 
+    def test_live_quiz_serializes_answer_requests_without_losing_session_progress(self):
+        script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
+
+        # Flask's cookie session is replaced by every response. Two parallel
+        # checks could both look successful in the UI while the later cookie
+        # discarded the other answer and left continuation disabled.
+        self.assertIn("let answerQueue = Promise.resolve()", script)
+        self.assertIn("fieldset.dataset.queued", script)
+        self.assertIn("answerQueue = answerQueue", script)
+        self.assertIn('.then(function () { return checkQuestion(fieldset); })', script)
+        self.assertIn('enqueueQuestion(button.closest("[data-live-question]"))', script)
+        self.assertNotIn('checkQuestion(button.closest("[data-live-question]"))', script)
+
     def test_live_quiz_never_sends_correct_answers_to_browser(self):
         questions = _base_quiz_for_attempt("it", 1, seed=1357)
         for index, question in enumerate(questions):

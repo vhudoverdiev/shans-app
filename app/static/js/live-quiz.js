@@ -210,6 +210,24 @@
         submitButton.scrollIntoView({behavior: "smooth", block: "nearest"});
     }
 
+    // Flask saves this quiz in its signed session cookie. Parallel answer requests
+    // can therefore return competing cookies and silently erase one another's
+    // progress. Keep checks in one chain so every request sees the previous answer.
+    let answerQueue = Promise.resolve();
+
+    function enqueueQuestion(fieldset) {
+        if (!fieldset || fieldset.dataset.answered === "true" || fieldset.dataset.queued === "true") return;
+        fieldset.dataset.queued = "true";
+        const answerButton = fieldset.querySelector("[data-answer-question]");
+        if (answerButton) answerButton.disabled = true;
+        answerQueue = answerQueue
+            .then(function () { return checkQuestion(fieldset); })
+            .finally(function () {
+                delete fieldset.dataset.queued;
+                if (answerButton && fieldset.dataset.answered !== "true") answerButton.disabled = false;
+            });
+    }
+
     async function checkQuestion(fieldset) {
         if (fieldset.dataset.answered === "true" || fieldset.dataset.checking === "true") return;
         const inputs = Array.from(fieldset.querySelectorAll("input"));
@@ -277,7 +295,7 @@
     form.addEventListener("click", function (event) {
         const button = event.target.closest("[data-answer-question]");
         if (!button) return;
-        checkQuestion(button.closest("[data-live-question]"));
+        enqueueQuestion(button.closest("[data-live-question]"));
     });
     submitButton.addEventListener("click", function () {
         if (submitButton.disabled || !submitButton.dataset.continueUrl) return;
