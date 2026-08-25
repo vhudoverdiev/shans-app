@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 import re
 import secrets
@@ -568,6 +569,22 @@ ENGLISH_LESSONS = (
 )
 
 
+def _create_live_quiz_attempts_table(conn) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS learning_quiz_attempts (
+            user_id INTEGER NOT NULL,
+            course_key TEXT NOT NULL,
+            item_number INTEGER NOT NULL,
+            seed INTEGER NOT NULL,
+            state_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, course_key, item_number)
+        )
+        """
+    )
+
+
 def init_learning_db() -> None:
     conn = get_connection()
     try:
@@ -637,6 +654,7 @@ def init_learning_db() -> None:
             )
             """
         )
+        _create_live_quiz_attempts_table(conn)
         conn.commit()
     finally:
         conn.close()
@@ -1324,7 +1342,92 @@ def _live_quiz_seed_key(course_key: str, item_number: int) -> str:
     return f"live_quiz_seed:{course_key}:{item_number}"
 
 
+def _live_quiz_connection():
+    """Open quiz storage and migrate existing per-user databases on first use."""
+    conn = get_connection()
+    _create_live_quiz_attempts_table(conn)
+    return conn
+
+
+def _load_live_quiz_attempt(user_id: int, course_key: str, item_number: int) -> dict | None:
+    conn = _live_quiz_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT seed, state_json FROM learning_quiz_attempts
+            WHERE user_id = ? AND course_key = ? AND item_number = ?
+            """,
+            (user_id, course_key, item_number),
+        ).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        return None
+    try:
+        state = json.loads(row["state_json"])
+        seed = int(row["seed"])
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None
+    if (
+        not isinstance(state, dict)
+        or not isinstance(state.get("base"), dict)
+        or not isinstance(state.get("extra"), dict)
+        or not isinstance(state.get("extra_count"), int)
+        or not 0 <= state["extra_count"] <= 40
+        or not 0 <= seed < 2**31
+    ):
+        return None
+    return {"seed": seed, "state": state}
+
+
+def _save_live_quiz_attempt(
+    user_id: int, course_key: str, item_number: int, seed: int, state: dict
+) -> None:
+    conn = _live_quiz_connection()
+    try:
+        conn.execute(
+            """
+            INSERT INTO learning_quiz_attempts (
+                user_id, course_key, item_number, seed, state_json, updated_at
+            ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id, course_key, item_number) DO UPDATE SET
+                seed = excluded.seed,
+                state_json = excluded.state_json,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, course_key, item_number, seed, json.dumps(state, ensure_ascii=False)),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _delete_live_quiz_attempt(user_id: int, course_key: str, item_number: int) -> None:
+    conn = _live_quiz_connection()
+    try:
+        conn.execute(
+            """
+            DELETE FROM learning_quiz_attempts
+            WHERE user_id = ? AND course_key = ? AND item_number = ?
+            """,
+            (user_id, course_key, item_number),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _live_quiz_seed(course_key: str, item_number: int) -> int:
+    if getattr(current_user, "is_authenticated", False):
+        user_id = int(current_user.id)
+        attempt = _load_live_quiz_attempt(user_id, course_key, item_number)
+        if attempt:
+            return int(attempt["seed"])
+        seed = secrets.randbelow(2**31)
+        _save_live_quiz_attempt(
+            user_id, course_key, item_number, seed, {"base": {}, "extra": {}, "extra_count": 0}
+        )
+        return seed
     key = _live_quiz_seed_key(course_key, item_number)
     seed = session.get(key)
     if not isinstance(seed, int) or not 0 <= seed < 2**31:
@@ -1430,7 +1533,11 @@ def live_quiz_state():
     if course_key not in {"english", "it", "video"} or not 0 <= seed < 2**31:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
-    state = session.get(_live_quiz_key(course_key, item_number, seed))
+    user_id = int(current_user.id)
+    attempt = _load_live_quiz_attempt(user_id, course_key, item_number)
+    state = attempt["state"] if attempt and int(attempt["seed"]) == seed else None
+    if not isinstance(state, dict):
+        state = session.get(_live_quiz_key(course_key, item_number, seed))
     if not isinstance(state, dict):
         return jsonify({"base_answers": {}, "extra_answers": {}, "extra_questions": []})
 
@@ -1475,7 +1582,11 @@ def check_live_quiz_answer():
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
     _ensure_live_quiz_access(course_key, item_number)
     key = _live_quiz_key(course_key, item_number, seed)
-    state = session.get(key)
+    user_id = int(current_user.id)
+    attempt = _load_live_quiz_attempt(user_id, course_key, item_number)
+    state = attempt["state"] if attempt and int(attempt["seed"]) == seed else None
+    if not isinstance(state, dict):
+        state = session.get(key)
     if not isinstance(state, dict):
         state = {"base": {}, "extra": {}, "extra_count": 0}
     answered = state[stage]
@@ -1542,6 +1653,7 @@ def check_live_quiz_answer():
         continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
         session.pop(key, None)
         session.pop(_live_quiz_seed_key(course_key, item_number), None)
+        _delete_live_quiz_attempt(user_id, course_key, item_number)
         response.update({
             "score": score,
             "total": total,
@@ -1551,7 +1663,7 @@ def check_live_quiz_answer():
             "continue_label": continue_label,
         })
     else:
-        session[key] = state
+        _save_live_quiz_attempt(user_id, course_key, item_number, seed, state)
     return jsonify(response)
 
 

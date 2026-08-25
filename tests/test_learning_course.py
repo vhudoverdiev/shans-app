@@ -37,11 +37,14 @@ from app.learning import (
     _save_it_final_result,
     _get_course_state,
     _base_quiz_for_attempt,
+    _delete_live_quiz_attempt,
+    _load_live_quiz_attempt,
     _live_quiz_seed,
     _public_question,
     _extra_question_count,
     _extra_stage_passed,
     _save_course_day_result,
+    _save_live_quiz_attempt,
     _stored_score,
     build_daily_quiz,
     build_extra_quiz,
@@ -340,6 +343,25 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertEqual(first_seed, repeated_seed)
             self.assertIsInstance(another_course_seed, int)
             self.assertIn("live_quiz_seed:english:4", session)
+
+    def test_partial_live_attempt_survives_server_restart_in_database(self):
+        state = {
+            "base": {"0": {"correct": True, "answer": "Привет, меня зовут Алекс"}},
+            "extra": {"0": {"correct": True, "answer": "пожалуйста"}},
+            "extra_count": 2,
+        }
+        _save_live_quiz_attempt(17, "english", 1, 123456, state)
+
+        # Re-running startup migrations represents a new server process. The
+        # unfinished attempt must remain independent of its old cookie session.
+        init_learning_db()
+        self.assertEqual(
+            _load_live_quiz_attempt(17, "english", 1),
+            {"seed": 123456, "state": state},
+        )
+
+        _delete_live_quiz_attempt(17, "english", 1)
+        self.assertIsNone(_load_live_quiz_attempt(17, "english", 1))
 
     def test_live_quiz_restores_partial_answers_and_added_questions(self):
         script = LIVE_QUIZ_SCRIPT.read_text(encoding="utf-8")
