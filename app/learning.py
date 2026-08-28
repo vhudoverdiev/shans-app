@@ -1420,6 +1420,8 @@ def _delete_live_quiz_attempt(user_id: int, course_key: str, item_number: int) -
 def _live_quiz_seed(course_key: str, item_number: int) -> int:
     if getattr(current_user, "is_authenticated", False):
         user_id = int(current_user.id)
+        if request.args.get("restart") == "1":
+            _delete_live_quiz_attempt(user_id, course_key, item_number)
         attempt = _load_live_quiz_attempt(user_id, course_key, item_number)
         if attempt:
             return int(attempt["seed"])
@@ -1472,11 +1474,11 @@ def _save_live_quiz_result(course_key: str, item_number: int, score: int, total:
 def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) -> tuple[str, str]:
     if not passed:
         if course_key == "english":
-            retry_url = url_for("learning.english_day_test", day_number=item_number)
+            retry_url = url_for("learning.english_day_test", day_number=item_number, restart=1)
         elif course_key == "it":
-            retry_url = url_for("learning.it_day_test", day_number=item_number)
+            retry_url = url_for("learning.it_day_test", day_number=item_number, restart=1)
         else:
-            retry_url = url_for("learning.it_video_lesson", lesson_number=item_number)
+            retry_url = url_for("learning.it_video_lesson", lesson_number=item_number, restart=1)
         return retry_url, "Пройти тест заново"
 
     user_id = int(current_user.id)
@@ -1555,11 +1557,24 @@ def live_quiz_state():
                 restored[raw_index] = _live_answer_feedback(questions[index], saved["answer"])
         return restored
 
-    return jsonify({
+    response = {
         "base_answers": restored_answers("base", base_questions),
         "extra_answers": restored_answers("extra", extras[:extra_count]),
         "extra_questions": [_public_question(extras[index], index) for index in range(extra_count)],
-    })
+        "complete": bool(state.get("complete")),
+    }
+    if response["complete"]:
+        passed = bool(state.get("passed"))
+        continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
+        response.update({
+            "passed": passed,
+            "score": int(state.get("score", 0)),
+            "total": int(state.get("total", len(base_questions) + extra_count)),
+            "pass_score": int(state.get("pass_score", 0)),
+            "continue_url": continue_url,
+            "continue_label": continue_label,
+        })
+    return jsonify(response)
 
 
 @learning_bp.route("/study/quiz/check", methods=["POST"])
@@ -1653,7 +1668,14 @@ def check_live_quiz_answer():
         continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
         session.pop(key, None)
         session.pop(_live_quiz_seed_key(course_key, item_number), None)
-        _delete_live_quiz_attempt(user_id, course_key, item_number)
+        state.update({
+            "complete": True,
+            "passed": passed,
+            "score": score,
+            "total": total,
+            "pass_score": pass_score,
+        })
+        _save_live_quiz_attempt(user_id, course_key, item_number, seed, state)
         response.update({
             "score": score,
             "total": total,
@@ -2217,8 +2239,10 @@ def english_day_reset(day_number: int):
     if day_number < 1 or day_number > len(ENGLISH_LESSONS):
         abort(404)
 
-    _reset_day_result(int(current_user.id), day_number)
-    _reset_final_result(int(current_user.id))
+    user_id = int(current_user.id)
+    _reset_day_result(user_id, day_number)
+    _reset_final_result(user_id)
+    _delete_live_quiz_attempt(user_id, "english", day_number)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             {
@@ -2513,8 +2537,10 @@ def it_day_reset(day_number: int):
     if day_number < 1 or day_number > len(IT_LESSONS):
         abort(404)
 
-    _reset_it_day_result(int(current_user.id), day_number)
-    _reset_it_final_result(int(current_user.id))
+    user_id = int(current_user.id)
+    _reset_it_day_result(user_id, day_number)
+    _reset_it_final_result(user_id)
+    _delete_live_quiz_attempt(user_id, "it", day_number)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
             {

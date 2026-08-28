@@ -183,6 +183,7 @@
             addQuestions(state.extra_questions || []);
             restoreAnswerGroup("base", state.base_answers);
             restoreAnswerGroup("extra", state.extra_answers);
+            if (state.complete) enableContinuation(state);
             form.dispatchEvent(new CustomEvent("livequiz:restored", {
                 bubbles: true,
                 detail: {
@@ -210,9 +211,7 @@
         submitButton.scrollIntoView({behavior: "smooth", block: "nearest"});
     }
 
-    // Flask saves this quiz in its signed session cookie. Parallel answer requests
-    // can therefore return competing cookies and silently erase one another's
-    // progress. Keep checks in one chain so every request sees the previous answer.
+    // Keep answer writes ordered so every request sees the previous persisted state.
     let answerQueue = Promise.resolve();
 
     function enqueueQuestion(fieldset) {

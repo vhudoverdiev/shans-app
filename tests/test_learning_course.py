@@ -1,10 +1,15 @@
+import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from flask import Flask, session
 from werkzeug.datastructures import MultiDict
 
 from config import Config
+from app import create_app
+from app.database import get_master_connection
 from app.learning import (
     DAILY_PASS_SCORE,
     ENGLISH_LESSONS,
@@ -83,6 +88,14 @@ def correct_quiz_form(questions):
         else:
             values.append((name, str(question["correct_index"])))
     return MultiDict(values)
+
+
+def live_correct_answer(question):
+    if question.get("answer_type") == "text":
+        return question["accepted_answers"][0]
+    if question.get("answer_type") == "multiple":
+        return [str(index) for index in question["correct_indices"]]
+    return str(question["correct_index"])
 
 
 class EnglishCourseTests(unittest.TestCase):
@@ -371,12 +384,14 @@ class EnglishCourseTests(unittest.TestCase):
             "state.extra_questions",
             "state.base_answers",
             "state.extra_answers",
+            "if (state.complete) enableContinuation(state)",
             'cache: "no-store"',
         ):
             self.assertIn(marker, script)
         for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn("data-state-url=", source)
+
 
     def test_review_quizzes_cover_each_five_day_block_for_both_courses(self):
         self.assertEqual(REVIEW_MILESTONES, (5, 10, 15, 20, 25, 30))
@@ -1034,6 +1049,99 @@ class EnglishCourseTests(unittest.TestCase):
                         any(segment["lang"] == "en-US" and segment["text"] == term["term"] for segment in segments),
                         term["term"],
                     )
+
+
+class EnglishLiveQuizRouteTests(unittest.TestCase):
+    def setUp(self):
+        self.original_database_name = Config.DATABASE_NAME
+        self.original_environment = Config.ENV
+        self.original_secret_key = Config.SECRET_KEY
+        self.original_admin_username = os.environ.get("ADMIN_USERNAME")
+        self.original_admin_password = os.environ.get("ADMIN_PASSWORD")
+        self.temp_directory = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        Config.DATABASE_NAME = str(Path(self.temp_directory.name) / "learning-route.db")
+        Config.ENV = "testing"
+        Config.SECRET_KEY = "learning-route-secret"
+        os.environ["ADMIN_USERNAME"] = "admin"
+        os.environ["ADMIN_PASSWORD"] = "AdminPass-2026"
+        with patch.dict(os.environ, {"WERKZEUG_RUN_MAIN": "false"}):
+            self.app = create_app()
+        self.app.config.update(TESTING=True)
+
+    def tearDown(self):
+        Config.DATABASE_NAME = self.original_database_name
+        Config.ENV = self.original_environment
+        Config.SECRET_KEY = self.original_secret_key
+        if self.original_admin_username is None:
+            os.environ.pop("ADMIN_USERNAME", None)
+        else:
+            os.environ["ADMIN_USERNAME"] = self.original_admin_username
+        if self.original_admin_password is None:
+            os.environ.pop("ADMIN_PASSWORD", None)
+        else:
+            os.environ["ADMIN_PASSWORD"] = self.original_admin_password
+        self.temp_directory.cleanup()
+
+    def test_one_base_mistake_and_correct_extra_answers_unlock_next_english_day(self):
+        conn = get_master_connection()
+        try:
+            user_id = int(conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()["id"])
+        finally:
+            conn.close()
+        client = self.app.test_client()
+        with client.session_transaction() as browser_session:
+            browser_session["_user_id"] = str(user_id)
+            browser_session["_fresh"] = True
+            browser_session["_csrf_token"] = "test-token"
+
+        page = client.get("/study/english/day/1/test")
+        self.assertEqual(page.status_code, 200)
+        seed_match = re.search(rb'data-quiz-seed="(\d+)"', page.data)
+        self.assertIsNotNone(seed_match)
+        seed = int(seed_match.group(1))
+        base_questions = _base_quiz_for_attempt("english", 1, seed)
+        headers = {"X-CSRFToken": "test-token"}
+
+        for index, question in enumerate(base_questions):
+            answer = "__deliberately_wrong__" if index == 0 else live_correct_answer(question)
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "english", "item_number": 1, "seed": seed,
+                    "stage": "base", "question_index": index, "answer": answer,
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        extras = build_extra_quiz("english", 1, 40, seed ^ 0x5F3759DF)
+        for index in range(2):
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "english", "item_number": 1, "seed": seed,
+                    "stage": "extra", "question_index": index,
+                    "answer": live_correct_answer(extras[index]),
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        result = response.get_json()
+        self.assertTrue(result["complete"])
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["continue_label"], "Перейти к дню 2")
+        self.assertEqual(result["continue_url"], "/study/english/day/2")
+
+        restored = client.get(
+            f"/study/quiz/state?course=english&item_number=1&seed={seed}"
+        )
+        self.assertEqual(restored.status_code, 200)
+        restored_result = restored.get_json()
+        self.assertTrue(restored_result["complete"])
+        self.assertTrue(restored_result["passed"])
+        self.assertEqual(restored_result["continue_label"], "Перейти к дню 2")
+        self.assertEqual(restored_result["continue_url"], "/study/english/day/2")
 
 
 if __name__ == "__main__":
