@@ -15,7 +15,7 @@
             </div>
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
-        <form method="post" action="{{ url_for('learning.it_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form" data-live-quiz data-course="it" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
+        <form method="post" action="{{ url_for('learning.it_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form it-quiz-form" data-live-quiz data-course="it" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-sync-url="{{ url_for('learning.sync_live_quiz_answers') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}

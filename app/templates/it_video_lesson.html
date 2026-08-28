@@ -55,7 +55,7 @@
     {% endif %}
     <section class="lesson-section quiz-section quiz-form-shell" id="video-test" data-quiz-form-shell{% if score is none %} hidden{% endif %}>
         <div class="learning-section-heading"><div><p class="learning-kicker">Проверка после видео</p><h2>Тест урока</h2></div><span>Нужно {{ pass_score }} из {{ questions|length }}</span></div>
-        <form method="post" action="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day, _anchor='video-test-result') }}" class="quiz-form" data-live-quiz data-course="video" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
+        <form method="post" action="{{ url_for('learning.it_video_lesson', lesson_number=lesson.day, _anchor='video-test-result') }}" class="quiz-form" data-live-quiz data-course="video" data-item-number="{{ lesson.day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_live_quiz_answer') }}" data-sync-url="{{ url_for('learning.sync_live_quiz_answers') }}" data-state-url="{{ url_for('learning.live_quiz_state') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}{% set question_index = loop.index0 %}

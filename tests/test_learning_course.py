@@ -257,6 +257,8 @@ class EnglishCourseTests(unittest.TestCase):
             "checkQuestion(fieldset)",
             "added_questions",
             "showFeedback(fieldset, result)",
+            "recoverCompletedAttempt()",
+            "answers: answeredSnapshot()",
             'checked.length !== 2',
             'event.target.closest("[data-answer-question]")',
         ):
@@ -279,6 +281,7 @@ class EnglishCourseTests(unittest.TestCase):
         for template_name in ("english_day_test.html", "it_day_test.html", "it_video_lesson.html"):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             live_form = source.split("data-live-quiz", 1)[1].split("</form>", 1)[0]
+            self.assertIn("data-sync-url=", live_form)
             self.assertIn("disabled>Ответьте на все вопросы</button>", live_form)
             self.assertNotIn(">Проверить ответы</button>", live_form)
 
@@ -1142,6 +1145,73 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         self.assertTrue(restored_result["passed"])
         self.assertEqual(restored_result["continue_label"], "Перейти к дню 2")
         self.assertEqual(restored_result["continue_url"], "/study/english/day/2")
+
+        day_two_page = client.get("/study/english/day/2/test")
+        self.assertEqual(day_two_page.status_code, 200)
+        day_two_seed = int(re.search(rb'data-quiz-seed="(\d+)"', day_two_page.data).group(1))
+        day_two_questions = _base_quiz_for_attempt("english", 2, day_two_seed)
+        day_two_snapshot = []
+        for index, question in enumerate(day_two_questions):
+            answer = "__deliberately_wrong__" if index == 5 else live_correct_answer(question)
+            day_two_snapshot.append({"stage": "base", "index": index, "answer": answer})
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "english", "item_number": 2, "seed": day_two_seed,
+                    "stage": "base", "question_index": index, "answer": answer,
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        day_two_extras = build_extra_quiz("english", 2, 40, day_two_seed ^ 0x5F3759DF)
+        for index in range(2):
+            extra_answer = live_correct_answer(day_two_extras[index])
+            day_two_snapshot.append({"stage": "extra", "index": index, "answer": extra_answer})
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "english", "item_number": 2, "seed": day_two_seed,
+                    "stage": "extra", "question_index": index,
+                    "answer": extra_answer,
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        day_two_result = response.get_json()
+        self.assertTrue(day_two_result["complete"])
+        self.assertTrue(day_two_result["passed"])
+        self.assertEqual(day_two_result["continue_label"], "Перейти к дню 3")
+
+        stranded_attempt = _load_live_quiz_attempt(user_id, "english", 2)
+        for key in ("complete", "passed", "score", "total", "pass_score"):
+            stranded_attempt["state"].pop(key, None)
+        _save_live_quiz_attempt(
+            user_id, "english", 2, day_two_seed, stranded_attempt["state"]
+        )
+        recovered = client.get(
+            f"/study/quiz/state?course=english&item_number=2&seed={day_two_seed}"
+        )
+        self.assertEqual(recovered.status_code, 200)
+        recovered_result = recovered.get_json()
+        self.assertTrue(recovered_result["complete"])
+        self.assertTrue(recovered_result["passed"])
+        self.assertEqual(recovered_result["continue_label"], "Перейти к дню 3")
+
+        synchronized = client.post(
+            "/study/quiz/sync",
+            json={
+                "course": "english", "item_number": 2, "seed": day_two_seed,
+                "answers": day_two_snapshot,
+            },
+            headers=headers,
+        )
+        self.assertEqual(synchronized.status_code, 200)
+        synchronized_result = synchronized.get_json()
+        self.assertTrue(synchronized_result["complete"])
+        self.assertTrue(synchronized_result["passed"])
+        self.assertEqual(synchronized_result["continue_label"], "Перейти к дню 3")
 
 
 if __name__ == "__main__":

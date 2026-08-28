@@ -1498,6 +1498,36 @@ def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) 
     return url_for("learning.it_video_course"), "Вернуться к видеокурсам"
 
 
+def _finalize_live_quiz_state(
+    user_id: int, course_key: str, item_number: int, seed: int, state: dict, base_total: int
+) -> dict:
+    score = sum(bool(value.get("correct")) for value in state["base"].values()) + sum(
+        bool(value.get("correct")) for value in state["extra"].values()
+    )
+    total = base_total + int(state["extra_count"])
+    extra_score = sum(bool(value.get("correct")) for value in state["extra"].values())
+    passed = _extra_stage_passed(extra_score, int(state["extra_count"]))
+    pass_score = score if passed else score + 1
+    _save_live_quiz_result(course_key, item_number, score, total, passed)
+    continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
+    state.update({
+        "complete": True,
+        "passed": passed,
+        "score": score,
+        "total": total,
+        "pass_score": pass_score,
+    })
+    _save_live_quiz_attempt(user_id, course_key, item_number, seed, state)
+    return {
+        "score": score,
+        "total": total,
+        "pass_score": pass_score,
+        "passed": passed,
+        "continue_url": continue_url,
+        "continue_label": continue_label,
+    }
+
+
 def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
     user_id = int(current_user.id)
     if course_key == "english":
@@ -1547,6 +1577,16 @@ def live_quiz_state():
     extra_count = int(state.get("extra_count", 0))
     extras = build_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if extra_count else []
 
+    answers_complete = (
+        len(state["base"]) == len(base_questions)
+        and len(state["extra"]) == extra_count
+    )
+    recovered_completion = None
+    if answers_complete and not state.get("complete"):
+        recovered_completion = _finalize_live_quiz_state(
+            user_id, course_key, item_number, seed, state, len(base_questions)
+        )
+
     def restored_answers(stage_name: str, questions: list[dict]) -> dict:
         restored = {}
         for raw_index, saved in state.get(stage_name, {}).items():
@@ -1564,16 +1604,19 @@ def live_quiz_state():
         "complete": bool(state.get("complete")),
     }
     if response["complete"]:
-        passed = bool(state.get("passed"))
-        continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
-        response.update({
-            "passed": passed,
-            "score": int(state.get("score", 0)),
-            "total": int(state.get("total", len(base_questions) + extra_count)),
-            "pass_score": int(state.get("pass_score", 0)),
-            "continue_url": continue_url,
-            "continue_label": continue_label,
-        })
+        if recovered_completion:
+            response.update(recovered_completion)
+        else:
+            passed = bool(state.get("passed"))
+            continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
+            response.update({
+                "passed": passed,
+                "score": int(state.get("score", 0)),
+                "total": int(state.get("total", len(base_questions) + extra_count)),
+                "pass_score": int(state.get("pass_score", 0)),
+                "continue_url": continue_url,
+                "continue_label": continue_label,
+            })
     return jsonify(response)
 
 
@@ -1657,36 +1700,76 @@ def check_live_quiz_answer():
         "complete": complete,
     }
     if complete:
-        score = sum(bool(value.get("correct")) for value in state["base"].values()) + sum(
-            bool(value.get("correct")) for value in state["extra"].values()
-        )
-        total = len(base_questions) + int(state["extra_count"])
-        extra_score = sum(bool(value.get("correct")) for value in state["extra"].values())
-        passed = _extra_stage_passed(extra_score, int(state["extra_count"]))
-        pass_score = score if passed else score + 1
-        _save_live_quiz_result(course_key, item_number, score, total, passed)
-        continue_url, continue_label = _live_quiz_continue_action(course_key, item_number, passed)
         session.pop(key, None)
         session.pop(_live_quiz_seed_key(course_key, item_number), None)
-        state.update({
-            "complete": True,
-            "passed": passed,
-            "score": score,
-            "total": total,
-            "pass_score": pass_score,
-        })
-        _save_live_quiz_attempt(user_id, course_key, item_number, seed, state)
-        response.update({
-            "score": score,
-            "total": total,
-            "pass_score": pass_score,
-            "passed": passed,
-            "continue_url": continue_url,
-            "continue_label": continue_label,
-        })
+        response.update(
+            _finalize_live_quiz_state(
+                user_id, course_key, item_number, seed, state, len(base_questions)
+            )
+        )
     else:
         _save_live_quiz_attempt(user_id, course_key, item_number, seed, state)
     return jsonify(response)
+
+
+@learning_bp.route("/study/quiz/sync", methods=["POST"])
+@login_required
+def sync_live_quiz_answers():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or not isinstance(payload.get("answers"), list):
+        abort(400)
+    try:
+        course_key = str(payload["course"])
+        item_number = int(payload["item_number"])
+        seed = int(payload["seed"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    if course_key not in {"english", "it", "video"} or not 0 <= seed < 2**31:
+        abort(400)
+    _ensure_live_quiz_access(course_key, item_number)
+    base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
+    submitted = {"base": {}, "extra": {}}
+    for item in payload["answers"][:60]:
+        if not isinstance(item, dict) or item.get("stage") not in submitted:
+            abort(400)
+        try:
+            index = int(item["index"])
+        except (KeyError, TypeError, ValueError):
+            abort(400)
+        answer = item.get("answer", "")
+        if isinstance(answer, str):
+            answer = answer[:300]
+        elif isinstance(answer, list):
+            answer = [str(value)[:8] for value in answer[:4]]
+        else:
+            abort(400)
+        submitted[item["stage"]][index] = answer
+    if set(submitted["base"]) != set(range(len(base_questions))):
+        return jsonify({"complete": False, "error": "Не все основные ответы получены."})
+
+    state = {"base": {}, "extra": {}, "extra_count": 0}
+    for index, question in enumerate(base_questions):
+        result = _live_answer_feedback(question, submitted["base"][index])
+        state["base"][str(index)] = {
+            "correct": bool(result["correct"]), "answer": submitted["base"][index]
+        }
+    wrong_count = sum(not value["correct"] for value in state["base"].values())
+    state["extra_count"] = wrong_count * 2
+    if set(submitted["extra"]) != set(range(state["extra_count"])):
+        return jsonify({"complete": False, "error": "Не все дополнительные ответы получены."})
+    if state["extra_count"]:
+        extras = build_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF)
+        for index in range(state["extra_count"]):
+            result = _live_answer_feedback(extras[index], submitted["extra"][index])
+            state["extra"][str(index)] = {
+                "correct": bool(result["correct"]), "answer": submitted["extra"][index]
+            }
+
+    user_id = int(current_user.id)
+    completion = _finalize_live_quiz_state(
+        user_id, course_key, item_number, seed, state, len(base_questions)
+    )
+    return jsonify({"complete": True, **completion})
 
 
 def _review_cards(passed_days: set[int]) -> list[dict]:

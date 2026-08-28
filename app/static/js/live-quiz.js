@@ -211,6 +211,40 @@
         submitButton.scrollIntoView({behavior: "smooth", block: "nearest"});
     }
 
+    function answeredSnapshot() {
+        return Array.from(form.querySelectorAll("[data-live-question][data-answered='true']")).map(function (fieldset) {
+            const inputs = Array.from(fieldset.querySelectorAll("input:not([type='hidden'])"));
+            const textInput = inputs.find(function (input) { return input.type === "text"; });
+            const checked = inputs.filter(function (input) { return input.checked; });
+            return {
+                stage: fieldset.dataset.questionStage,
+                index: Number(fieldset.dataset.questionIndex),
+                answer: textInput ? textInput.value.trim() : (inputs.some(function (input) { return input.type === "checkbox"; })
+                    ? checked.map(function (input) { return input.value; })
+                    : (checked[0] ? checked[0].value : ""))
+            };
+        });
+    }
+
+    async function recoverCompletedAttempt() {
+        const questions = Array.from(form.querySelectorAll("[data-live-question]"));
+        if (!questions.length || questions.some(function (item) { return item.dataset.answered !== "true"; })) return;
+        const response = await fetch(form.dataset.syncUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {"Content-Type": "application/json", "X-CSRFToken": csrfInput.value},
+            body: JSON.stringify({
+                course: form.dataset.course,
+                item_number: Number(form.dataset.itemNumber),
+                seed: Number(form.dataset.quizSeed),
+                answers: answeredSnapshot()
+            })
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (result.complete) enableContinuation(result);
+    }
+
     // Keep answer writes ordered so every request sees the previous persisted state.
     let answerQueue = Promise.resolve();
 
@@ -272,6 +306,7 @@
             showFeedback(fieldset, result);
             addQuestions(result.added_questions || []);
             if (result.complete) enableContinuation(result);
+            else await recoverCompletedAttempt();
         } catch (_error) {
             delete fieldset.dataset.checking;
             submitButton.type = "submit";
