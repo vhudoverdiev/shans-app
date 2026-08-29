@@ -221,6 +221,24 @@ class WorkoutsTests(unittest.TestCase):
             ["Грудь + трицепс", "Тренировка 1", "Спина + бицепс"],
         )
 
+    def test_workout_plans_are_ordered_by_weekday_with_unscheduled_last(self):
+        ensure_default_workout_plans(1)
+        plans = get_workout_plans(1)
+        update_workout_plan(1, plans[0]["id"], "Пятница", "", 4)
+        update_workout_plan(1, plans[1]["id"], "Понедельник", "", 0)
+        update_workout_plan(1, plans[2]["id"], "Без дня", "", None)
+
+        ordered_plans = get_workout_plans(1)
+
+        self.assertEqual(
+            [plan["name"] for plan in ordered_plans],
+            ["Понедельник", "Пятница", "Без дня"],
+        )
+        self.assertEqual(
+            [plan["weekday"] for plan in ordered_plans],
+            [0, 4, None],
+        )
+
     def test_workout_card_preserves_description_line_breaks(self):
         styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
         card_rule = styles.split(".workout-plan-content p {", 1)[1].split("}", 1)[0]

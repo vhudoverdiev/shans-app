@@ -324,7 +324,7 @@ def get_workout_plans(user_id: int):
             SELECT id, name, description, weekday, schedule_start_date, position
             FROM workout_plans
             WHERE user_id = ?
-            ORDER BY position, id
+            ORDER BY weekday IS NULL, weekday, position, id
             """,
             (user_id,),
         ).fetchall()
