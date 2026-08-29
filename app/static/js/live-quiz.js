@@ -184,6 +184,7 @@
             restoreAnswerGroup("base", state.base_answers);
             restoreAnswerGroup("extra", state.extra_answers);
             if (state.complete) enableContinuation(state);
+            else updatePendingLabel();
             form.dispatchEvent(new CustomEvent("livequiz:restored", {
                 bubbles: true,
                 detail: {
@@ -207,6 +208,7 @@
         submitButton.disabled = false;
         submitButton.textContent = result.continue_label;
         submitButton.dataset.continueUrl = result.continue_url;
+        delete submitButton.dataset.recoverAttempt;
         submitButton.classList.toggle("btn-danger", !result.passed);
         submitButton.scrollIntoView({behavior: "smooth", block: "nearest"});
     }
@@ -226,23 +228,44 @@
         });
     }
 
+    function updatePendingLabel() {
+        if (submitButton.dataset.continueUrl) return 0;
+        const remaining = form.querySelectorAll("[data-live-question]:not([data-answered='true'])").length;
+        submitButton.disabled = true;
+        submitButton.textContent = remaining ? "Осталось ответить: " + remaining : "Завершаем тест…";
+        return remaining;
+    }
+
+    function showRecoveryRetry() {
+        submitButton.disabled = false;
+        submitButton.textContent = "Повторить завершение";
+        submitButton.dataset.recoverAttempt = "true";
+    }
+
     async function recoverCompletedAttempt() {
         const questions = Array.from(form.querySelectorAll("[data-live-question]"));
         if (!questions.length || questions.some(function (item) { return item.dataset.answered !== "true"; })) return;
-        const response = await fetch(form.dataset.syncUrl, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {"Content-Type": "application/json", "X-CSRFToken": csrfInput.value},
-            body: JSON.stringify({
-                course: form.dataset.course,
-                item_number: Number(form.dataset.itemNumber),
-                seed: Number(form.dataset.quizSeed),
-                answers: answeredSnapshot()
-            })
-        });
-        if (!response.ok) return;
-        const result = await response.json();
-        if (result.complete) enableContinuation(result);
+        submitButton.disabled = true;
+        submitButton.textContent = "Завершаем тест…";
+        try {
+            const response = await fetch(form.dataset.syncUrl, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/json", "X-CSRFToken": csrfInput.value},
+                body: JSON.stringify({
+                    course: form.dataset.course,
+                    item_number: Number(form.dataset.itemNumber),
+                    seed: Number(form.dataset.quizSeed),
+                    answers: answeredSnapshot()
+                })
+            });
+            if (!response.ok) throw new Error("Не удалось завершить тест.");
+            const result = await response.json();
+            if (result.complete) enableContinuation(result);
+            else showRecoveryRetry();
+        } catch (_error) {
+            showRecoveryRetry();
+        }
     }
 
     // Keep answer writes ordered so every request sees the previous persisted state.
@@ -306,7 +329,7 @@
             showFeedback(fieldset, result);
             addQuestions(result.added_questions || []);
             if (result.complete) enableContinuation(result);
-            else await recoverCompletedAttempt();
+            else if (updatePendingLabel() === 0) await recoverCompletedAttempt();
         } catch (_error) {
             delete fieldset.dataset.checking;
             submitButton.type = "submit";
@@ -332,7 +355,12 @@
         enqueueQuestion(button.closest("[data-live-question]"));
     });
     submitButton.addEventListener("click", function () {
-        if (submitButton.disabled || !submitButton.dataset.continueUrl) return;
+        if (submitButton.disabled) return;
+        if (submitButton.dataset.recoverAttempt === "true") {
+            recoverCompletedAttempt();
+            return;
+        }
+        if (!submitButton.dataset.continueUrl) return;
         window.location.assign(submitButton.dataset.continueUrl);
     });
     restoreAttempt();

@@ -1772,6 +1772,34 @@ def sync_live_quiz_answers():
     return jsonify({"complete": True, **completion})
 
 
+@learning_bp.route("/study/quiz/reset", methods=["POST"])
+@login_required
+def reset_live_quiz_attempt():
+    try:
+        course_key = str(request.form["course"])
+        item_number = int(request.form["item_number"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    if course_key not in {"english", "it", "video"}:
+        abort(400)
+    _ensure_live_quiz_access(course_key, item_number)
+    user_id = int(current_user.id)
+    _delete_live_quiz_attempt(user_id, course_key, item_number)
+    session.pop(_live_quiz_seed_key(course_key, item_number), None)
+    if course_key == "english":
+        _reset_day_result(user_id, item_number)
+        _reset_final_result(user_id)
+        destination = url_for("learning.english_day_test", day_number=item_number, restart=1)
+    elif course_key == "it":
+        _reset_it_day_result(user_id, item_number)
+        _reset_it_final_result(user_id)
+        destination = url_for("learning.it_day_test", day_number=item_number, restart=1)
+    else:
+        _reset_course_day_result(user_id, item_number, "video")
+        destination = url_for("learning.it_video_lesson", lesson_number=item_number, restart=1)
+    return redirect(destination)
+
+
 def _review_cards(passed_days: set[int]) -> list[dict]:
     return [
         {

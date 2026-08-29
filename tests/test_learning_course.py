@@ -259,6 +259,8 @@ class EnglishCourseTests(unittest.TestCase):
             "showFeedback(fieldset, result)",
             "recoverCompletedAttempt()",
             "answers: answeredSnapshot()",
+            '"Осталось ответить: " + remaining',
+            'submitButton.textContent = "Повторить завершение"',
             'checked.length !== 2',
             'event.target.closest("[data-answer-question]")',
         ):
@@ -282,6 +284,7 @@ class EnglishCourseTests(unittest.TestCase):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             live_form = source.split("data-live-quiz", 1)[1].split("</form>", 1)[0]
             self.assertIn("data-sync-url=", live_form)
+            self.assertIn('_quiz_attempt_reset.html', source)
             self.assertIn("disabled>Ответьте на все вопросы</button>", live_form)
             self.assertNotIn(">Проверить ответы</button>", live_form)
 
@@ -1212,6 +1215,17 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         self.assertTrue(synchronized_result["complete"])
         self.assertTrue(synchronized_result["passed"])
         self.assertEqual(synchronized_result["continue_label"], "Перейти к дню 3")
+
+        reset = client.post(
+            "/study/quiz/reset",
+            data={"_csrf_token": "test-token", "course": "english", "item_number": "2"},
+        )
+        self.assertEqual(reset.status_code, 302)
+        self.assertIn("/study/english/day/2/test?restart=1", reset.headers["Location"])
+        self.assertIsNone(_load_live_quiz_attempt(user_id, "english", 2))
+        _progress, passed_days, next_day = _course_state(user_id)
+        self.assertNotIn(2, passed_days)
+        self.assertEqual(next_day, 2)
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@
             <button type="button" class="btn btn-primary quiz-submit" disabled>Ответьте на все вопросы</button>
             <noscript><button type="submit" class="btn btn-primary quiz-submit">Отправить ответы</button></noscript>
         </form>
+        {% with reset_course='it', reset_item_number=lesson.day %}{% include "_quiz_attempt_reset.html" %}{% endwith %}
     </section>{% else %}
     <section class="lesson-section quiz-section extra-quiz-section" id="daily-test-result">
         <div class="learning-section-heading"><div><p class="learning-kicker">Закрепление после ошибки</p><h1>Дополнительные вопросы</h1></div><span>{{ extra_questions|length }} вопросов</span></div>
