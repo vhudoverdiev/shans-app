@@ -15,6 +15,24 @@
         <div class="lesson-day-mark">{{ lesson.day }}</div>
     </div>
 
+    <section class="lesson-section video-player-section" aria-labelledby="it-video-title">
+        <div class="learning-section-heading">
+            <div><p class="learning-kicker">Видеолекция дня</p><h2 id="it-video-title">{{ lesson.title }}</h2></div>
+            <span>Краткое объяснение и ключевые понятия</span>
+        </div>
+        <div class="python-video-shell" data-floating-video-player>
+            <video class="python-course-video" controls playsinline preload="metadata">
+                <source src="{{ url_for('static', filename=lesson_video_file) }}" type="video/mp4">
+                Ваш браузер не поддерживает воспроизведение видео.
+            </video>
+            <div class="python-video-floating-bar" data-video-floating-bar>
+                <span>IT · день {{ lesson.day }}</span>
+                <button type="button" data-video-expand aria-label="Развернуть видеолекцию" title="Развернуть">↗</button>
+                <button type="button" data-video-close aria-label="Остановить и закрыть мини-плеер" title="Закрыть">×</button>
+            </div>
+        </div>
+    </section>
+
     <div class="lesson-timing-grid" aria-label="План занятия на 30 минут">
         <div><strong>15 минут</strong><span>Понятная лекция</span></div>
         <div><strong>5 минут</strong><span>Словарь IT</span></div>
@@ -169,4 +187,5 @@
 {{ super() }}
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/course-day-actions.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>
 {% endblock %}

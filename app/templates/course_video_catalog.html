@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Видеолекции {{ course_title }} | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page it-learning-page">
+  <div class="learning-course-nav">
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
+    <nav class="learning-course-tabs">
+      <a class="learning-course-tab" href="{{ url_for('learning.english_course' if course_key == 'english' else 'learning.it_course') }}">Курс по дням</a>
+      <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.english_video_lectures' if course_key == 'english' else 'learning.it_video_lectures') }}">Видеолекции</a>
+      {% if course_key == 'it' %}<a class="learning-course-tab" href="{{ url_for('learning.it_video_course') }}">Python-видеокурс</a>{% endif %}
+    </nav>
+  </div>
+  <div class="learning-hero it-learning-hero"><div><p class="learning-kicker">{{ course_title }} · 30 профессиональных лекций</p><h1>Видеокурс по дням</h1><p>Смотрите короткую лекцию с графикой и проходите тест соответствующего дня.</p></div><div class="learning-progress-summary"><strong>{{ passed_count }} / 30</strong><span>дней пройдено</span></div></div>
+  <div class="english-course-grid it-course-grid video-course-grid">
+  {% for lesson in lessons %}
+    {% if lesson.unlocked %}<a href="{{ url_for('learning.english_video_lecture' if course_key == 'english' else 'learning.it_video_lecture', day_number=lesson.day) }}" class="english-day-card it-day-card video-lesson-card{% if lesson.passed %} english-day-card-passed{% endif %}">{% else %}<div class="english-day-card it-day-card video-lesson-card english-day-card-locked" aria-disabled="true">{% endif %}
+      <div class="english-day-card-top"><span class="english-day-number">Лекция {{ lesson.day }}</span><span class="english-day-status">{% if lesson.passed %}✓{% elif lesson.unlocked %}Смотреть{% else %}🔒{% endif %}</span></div>
+      <h3>{{ lesson.title }}</h3><p>Видео + тест дня</p>
+    {% if lesson.unlocked %}</a>{% else %}</div>{% endif %}
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

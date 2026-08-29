@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — видеолекция | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page it-video-lesson-page">
+  <a class="learning-back-link" href="{{ url_for('learning.english_video_lectures' if course_key == 'english' else 'learning.it_video_lectures') }}">← Все видеолекции</a>
+  <div class="learning-hero lesson-hero it-learning-hero"><div><p class="learning-kicker">{{ course_title }} · лекция {{ lesson.day }} из {{ total_lessons }}</p><h1>{{ lesson.title }}</h1><p>Смотрите лекцию и закрепите тему тестом дня.</p></div><div class="lesson-day-mark">{{ lesson.day }}</div></div>
+  <section class="lesson-section video-player-section"><div class="python-video-shell" data-floating-video-player><video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=video_file) }}" type="video/mp4">Ваш браузер не поддерживает видео.</video><div class="python-video-floating-bar" data-video-floating-bar><span>Лекция {{ lesson.day }}</span><button type="button" data-video-expand>↗</button><button type="button" data-video-close>×</button></div></div></section>
+  <div class="video-quiz-launch"><a class="btn btn-primary" href="{{ url_for(test_endpoint, day_number=lesson.day) }}">Перейти к тесту дня</a></div>
+</section>
+{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>{% endblock %}

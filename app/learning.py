@@ -2276,6 +2276,7 @@ def english_day(day_number: int):
     return render_template(
         "english_day.html",
         lesson=lesson,
+        lesson_video_file=f"videos/english-lectures/lesson-{day_number:02d}.mp4",
         lesson_lecture_text=_build_english_lecture_text(lesson),
         lesson_detail_steps=_build_english_lecture_details(lesson),
         pass_score=DAILY_PASS_SCORE,
@@ -2284,6 +2285,32 @@ def english_day(day_number: int):
         phrase_cards=_build_english_phrase_cards(lesson),
         audio_segments=_english_audio_segments(lesson),
     )
+
+
+@learning_bp.route("/study/english/videos")
+@login_required
+def english_video_lectures():
+    progress, passed_days, next_day = _english_course_state(int(current_user.id))
+    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                "passed": lesson["day"] in passed_days,
+                "video_file": f"videos/english-lectures/lesson-{lesson['day']:02d}.mp4"}
+               for lesson in ENGLISH_LESSONS]
+    return render_template("course_video_catalog.html", course_key="english", course_title="English",
+                           lessons=lessons, passed_count=len(passed_days), next_day=next_day)
+
+
+@learning_bp.route("/study/english/videos/<int:day_number>")
+@login_required
+def english_video_lecture(day_number: int):
+    if day_number < 1 or day_number > len(ENGLISH_LESSONS): abort(404)
+    _progress, passed_days, next_day = _english_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.english_video_lectures"))
+    lesson = ENGLISH_LESSONS[day_number - 1]
+    return render_template("course_video_lecture.html", course_key="english", course_title="English",
+                           lesson=lesson, video_file=f"videos/english-lectures/lesson-{day_number:02d}.mp4",
+                           total_lessons=len(ENGLISH_LESSONS), test_endpoint="learning.english_day_test")
 
 
 @learning_bp.route("/study/english/day/<int:day_number>/test", methods=["GET", "POST"])
@@ -2497,6 +2524,32 @@ def it_video_course():
     )
 
 
+@learning_bp.route("/study/it/lectures")
+@login_required
+def it_video_lectures():
+    progress, passed_days, next_day = _it_course_state(int(current_user.id))
+    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                "passed": lesson["day"] in passed_days,
+                "video_file": f"videos/it-lectures/lesson-{lesson['day']:02d}.mp4"}
+               for lesson in IT_LESSONS]
+    return render_template("course_video_catalog.html", course_key="it", course_title="IT",
+                           lessons=lessons, passed_count=len(passed_days), next_day=next_day)
+
+
+@learning_bp.route("/study/it/lectures/<int:day_number>")
+@login_required
+def it_video_lecture(day_number: int):
+    if day_number < 1 or day_number > len(IT_LESSONS): abort(404)
+    _progress, passed_days, next_day = _it_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.it_video_lectures"))
+    lesson = IT_LESSONS[day_number - 1]
+    return render_template("course_video_lecture.html", course_key="it", course_title="IT",
+                           lesson=lesson, video_file=f"videos/it-lectures/lesson-{day_number:02d}.mp4",
+                           total_lessons=len(IT_LESSONS), test_endpoint="learning.it_day_test")
+
+
 @learning_bp.route("/study/it/videos/<int:lesson_number>", methods=["GET", "POST"])
 @login_required
 def it_video_lesson(lesson_number: int):
@@ -2574,6 +2627,7 @@ def it_day(day_number: int):
     return render_template(
         "it_day.html",
         lesson=lesson,
+        lesson_video_file=f"videos/it-lectures/lesson-{day_number:02d}.mp4",
         pass_score=DAILY_PASS_SCORE,
         day_progress=progress.get(day_number),
         lecture_points=_build_it_lecture_points(lesson),
