@@ -227,14 +227,12 @@
 }
 
 .workout-plan-content p {
-    display: -webkit-box;
-    overflow: hidden;
     margin: 0;
     color: #5d687a;
     font-size: 14px;
     line-height: 1.58;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
 }
 
 .workout-plan-schedule {

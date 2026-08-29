@@ -119,6 +119,89 @@ class WorkoutsTests(unittest.TestCase):
         self.assertIn("Добавьте тренировку", response.get_data(as_text=True))
         self.assertNotIn("Грудь, плечи и трицепс", response.get_data(as_text=True))
 
+    def test_renamed_plans_do_not_recreate_default_workouts(self):
+        ensure_default_workout_plans(1)
+        plans = get_workout_plans(1)
+
+        self.assertTrue(
+            update_workout_plan(1, plans[0]["id"], "Грудь + трицепс", "", None)
+        )
+        self.assertTrue(
+            update_workout_plan(1, plans[1]["id"], "Спина + бицепс", "", None)
+        )
+        ensure_default_workout_plans(1)
+
+        updated_plans = get_workout_plans(1)
+        self.assertEqual(len(updated_plans), 3)
+        self.assertEqual(
+            [plan["name"] for plan in updated_plans],
+            ["Грудь + трицепс", "Спина + бицепс", "Тренировка 3"],
+        )
+
+    def test_legacy_empty_default_duplicates_are_removed_without_user_data_loss(self):
+        ensure_default_workout_plans(1)
+        original_plans = get_workout_plans(1)
+        update_workout_plan(1, original_plans[0]["id"], "Грудь + трицепс", "", None)
+        update_workout_plan(1, original_plans[1]["id"], "Спина + бицепс", "", None)
+
+        conn = get_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO workout_plans (user_id, name, description, position)
+                VALUES (1, 'Тренировка 1', '', 1), (1, 'Тренировка 2', '', 2)
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        ensure_default_workout_plans(1)
+
+        cleaned_plans = get_workout_plans(1)
+        self.assertEqual(len(cleaned_plans), 3)
+        self.assertEqual(
+            [plan["id"] for plan in cleaned_plans],
+            [plan["id"] for plan in original_plans],
+        )
+        self.assertEqual(
+            [plan["name"] for plan in cleaned_plans],
+            ["Грудь + трицепс", "Спина + бицепс", "Тренировка 3"],
+        )
+
+    def test_two_existing_custom_workouts_get_only_one_remaining_slot(self):
+        conn = get_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO workout_plans (user_id, name, description, position)
+                VALUES
+                    (1, 'Грудь + трицепс', '1. Бабочка\n2. Жим', 1),
+                    (1, 'Спина + бицепс', '1. Тяга\n2. Пуловер', 2)
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        ensure_default_workout_plans(1)
+        ensure_default_workout_plans(1)
+
+        plans = get_workout_plans(1)
+        self.assertEqual(len(plans), 3)
+        self.assertEqual(
+            [plan["name"] for plan in plans],
+            ["Грудь + трицепс", "Спина + бицепс", "Тренировка 1"],
+        )
+        self.assertEqual(plans[0]["description"], "1. Бабочка\n2. Жим")
+
+    def test_workout_card_preserves_description_line_breaks(self):
+        styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
+        card_rule = styles.split(".workout-plan-content p {", 1)[1].split("}", 1)[0]
+
+        self.assertIn("white-space: pre-line;", card_rule)
+        self.assertNotIn("-webkit-line-clamp", card_rule)
+
     def test_results_are_stored_with_plan_and_protected_by_owner(self):
         ensure_default_workout_plans(1)
         plan_id = get_workout_plans(1)[0]["id"]

@@ -46,6 +46,7 @@ DEFAULT_WORKOUT_PLANS = (
     ("Тренировка 2", ""),
     ("Тренировка 3", ""),
 )
+WORKOUT_PLAN_LIMIT = len(DEFAULT_WORKOUT_PLANS)
 
 
 def _is_empty_workout_description(description: str | None) -> bool:
@@ -213,17 +214,99 @@ def init_workouts_db() -> None:
 def ensure_default_workout_plans(user_id: int) -> None:
     conn = get_connection()
     try:
-        for position, (name, description) in enumerate(DEFAULT_WORKOUT_PLANS, start=1):
+        plans = conn.execute(
+            """
+            SELECT id, name, description, weekday
+            FROM workout_plans
+            WHERE user_id = ?
+            ORDER BY id
+            """,
+            (user_id,),
+        ).fetchall()
+
+        # Older versions recreated a default plan after its original slot was
+        # renamed, because initialization looked for the default *name*. Keep
+        # the three oldest slots and remove only untouched placeholders that
+        # the old initializer appended later. User data and completed results
+        # are never selected for this cleanup.
+        duplicate_ids = []
+        default_names = {name for name, _ in DEFAULT_WORKOUT_PLANS}
+        for plan in plans[WORKOUT_PLAN_LIMIT:]:
+            result_exists = conn.execute(
+                """
+                SELECT 1 FROM workout_results
+                WHERE user_id = ? AND workout_plan_id = ?
+                LIMIT 1
+                """,
+                (user_id, plan["id"]),
+            ).fetchone()
+            if (
+                plan["name"] in default_names
+                and _is_empty_workout_description(plan["description"])
+                and plan["weekday"] is None
+                and result_exists is None
+            ):
+                duplicate_ids.append(int(plan["id"]))
+
+        if duplicate_ids:
+            placeholders = ", ".join("?" for _ in duplicate_ids)
+            schedule_columns = _schedule_task_columns(conn)
+            if "workout_plan_id" in schedule_columns:
+                conn.execute(
+                    f"DELETE FROM schedule_tasks WHERE workout_plan_id IN ({placeholders})",
+                    duplicate_ids,
+                )
+            conn.execute(
+                f"DELETE FROM workout_plans WHERE user_id = ? AND id IN ({placeholders})",
+                (user_id, *duplicate_ids),
+            )
+
+        plans = conn.execute(
+            """
+            SELECT id, name
+            FROM workout_plans
+            WHERE user_id = ?
+            ORDER BY id
+            """,
+            (user_id,),
+        ).fetchall()
+        used_names = {plan["name"].casefold() for plan in plans}
+        missing_count = max(0, WORKOUT_PLAN_LIMIT - len(plans))
+        available_defaults = [
+            (name, description)
+            for name, description in DEFAULT_WORKOUT_PLANS
+            if name.casefold() not in used_names
+        ]
+        for offset, (name, description) in enumerate(
+            available_defaults[:missing_count], start=len(plans) + 1
+        ):
             conn.execute(
                 """
-                INSERT OR IGNORE INTO workout_plans (
+                INSERT INTO workout_plans (
                     user_id,
                     name,
                     description,
                     position
                 ) VALUES (?, ?, ?, ?)
                 """,
-                (user_id, name, description, position),
+                (user_id, name, description, offset),
+            )
+
+        # Position is presentation order, while identity is the row id. A
+        # rename therefore cannot create a new workout slot.
+        canonical_plans = conn.execute(
+            """
+            SELECT id FROM workout_plans
+            WHERE user_id = ?
+            ORDER BY id
+            LIMIT ?
+            """,
+            (user_id, WORKOUT_PLAN_LIMIT),
+        ).fetchall()
+        for position, plan in enumerate(canonical_plans, start=1):
+            conn.execute(
+                "UPDATE workout_plans SET position = ? WHERE id = ? AND user_id = ?",
+                (position, plan["id"], user_id),
             )
         conn.commit()
     finally:
