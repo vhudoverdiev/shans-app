@@ -225,13 +225,13 @@ def ensure_default_workout_plans(user_id: int) -> None:
         ).fetchall()
 
         # Older versions recreated a default plan after its original slot was
-        # renamed, because initialization looked for the default *name*. Keep
-        # the three oldest slots and remove only untouched placeholders that
-        # the old initializer appended later. User data and completed results
-        # are never selected for this cleanup.
-        duplicate_ids = []
+        # renamed, because initialization looked for the default *name*. When
+        # there are too many slots, remove the newest untouched placeholders
+        # until only three remain. User data and completed results are never
+        # selected for this cleanup.
+        removable_default_ids = []
         default_names = {name for name, _ in DEFAULT_WORKOUT_PLANS}
-        for plan in plans[WORKOUT_PLAN_LIMIT:]:
+        for plan in reversed(plans):
             result_exists = conn.execute(
                 """
                 SELECT 1 FROM workout_results
@@ -246,7 +246,10 @@ def ensure_default_workout_plans(user_id: int) -> None:
                 and plan["weekday"] is None
                 and result_exists is None
             ):
-                duplicate_ids.append(int(plan["id"]))
+                removable_default_ids.append(int(plan["id"]))
+
+        excess_count = max(0, len(plans) - WORKOUT_PLAN_LIMIT)
+        duplicate_ids = removable_default_ids[:excess_count]
 
         if duplicate_ids:
             placeholders = ", ".join("?" for _ in duplicate_ids)

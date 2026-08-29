@@ -195,6 +195,32 @@ class WorkoutsTests(unittest.TestCase):
         )
         self.assertEqual(plans[0]["description"], "1. Бабочка\n2. Жим")
 
+    def test_cleanup_reaches_three_when_default_placeholder_is_among_old_rows(self):
+        conn = get_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO workout_plans (user_id, name, description, position)
+                VALUES
+                    (1, 'Грудь + трицепс', '1. Бабочка', 1),
+                    (1, 'Тренировка 1', '', 2),
+                    (1, 'Спина + бицепс', '1. Тяга', 3),
+                    (1, 'Тренировка 2', '', 4)
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        ensure_default_workout_plans(1)
+
+        plans = get_workout_plans(1)
+        self.assertEqual(len(plans), 3)
+        self.assertEqual(
+            [plan["name"] for plan in plans],
+            ["Грудь + трицепс", "Тренировка 1", "Спина + бицепс"],
+        )
+
     def test_workout_card_preserves_description_line_breaks(self):
         styles = WORKOUTS_STYLE_FILE.read_text(encoding="utf-8")
         card_rule = styles.split(".workout-plan-content p {", 1)[1].split("}", 1)[0]
