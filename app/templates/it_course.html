@@ -1,20 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Фундамент IT | Шанс{% endblock %}
+{% block title %}Понятия | Шанс{% endblock %}
 
 {% block content %}
 <section class="learning-page it-learning-page">
-    <div class="learning-course-nav">
-        <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← English и IT</a>
-        <nav class="learning-course-tabs" aria-label="Раздел IT">
-            <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.it_course') }}" aria-current="page">Курс по дням</a>
-        </nav>
-    </div>
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
 
     <div class="learning-hero it-learning-hero">
         <div>
-            <p class="learning-kicker">IT · 30 минут в день</p>
-            <h1>Фундамент IT</h1>
+            <p class="learning-kicker">Понятия · 30 минут в день</p>
+            <h1>Понятия</h1>
             <p>Понятный путь от слов в вакансиях до Python, Git, баз данных, API, тестирования и запуска собственного приложения.</p>
         </div>
         <div class="learning-progress-summary">

@@ -8,7 +8,7 @@
         <div class="lesson-day-mark">{{ section_number }}</div>
     </div>
     <section class="lesson-section video-player-section" data-video-anchor>
-        <div class="learning-section-heading"><div><p class="learning-kicker">Видеолекция блока</p><h2>{{ title }}</h2></div><span>Посмотрите перед разбором</span></div>
+        <div class="learning-section-heading interview-video-heading"><div><p class="learning-kicker interview-video-label">Видеолекция блока</p><h2>{{ title }}</h2></div><span class="interview-video-hint">Посмотрите перед разбором</span></div>
         <div class="python-video-shell" data-floating-video-player>
             <div class="python-video-poster" data-video-poster><span class="python-video-poster-kicker">Собеседование · блок {{ section_number }} из {{ total_sections }}</span><strong>{{ title }}</strong><button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть лекцию</button></div>
             <video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=video_file) }}" type="video/mp4">Ваш браузер не поддерживает воспроизведение видео.</video>
@@ -24,7 +24,8 @@
             {% endfor %}
         </div>
     </section>
-    <section class="lesson-section quiz-section" id="interview-test">
+    <div class="interview-test-launch"><button type="button" class="btn btn-primary" data-interview-test-toggle aria-controls="interview-test" aria-expanded="{{ 'true' if score is not none else 'false' }}">Перейти к тесту</button></div>
+    <section class="lesson-section quiz-section" id="interview-test"{% if score is none %} hidden{% endif %}>
         <div class="learning-section-heading"><div><p class="learning-kicker">Проверка блока</p><h2>Тест после подготовки</h2></div><span>Нужно {{ pass_score }} из {{ quiz|length }}</span></div>
         <form method="post" action="{{ url_for('learning.python_interview_section', section_number=section_number, _anchor='interview-result') }}" class="quiz-form it-quiz-form">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
@@ -35,4 +36,4 @@
     {% if score is not none %}<section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="interview-result"><div class="quiz-result-score">{{ score }} / {{ quiz|length }}</div><div><h2>{% if passed %}Блок пройден{% else %}Повторите ответы блока{% endif %}</h2><p>{% if passed %}Результат сохранён, следующий блок открыт.{% else %}Откройте разборы ещё раз и повторите тест.{% endif %}</p></div>{% if passed and next_section %}<a class="btn btn-primary" href="{{ url_for('learning.python_interview_section', section_number=next_section) }}">Блок {{ next_section }} →</a>{% elif passed %}<a class="btn btn-primary" href="{{ url_for('learning.python_interview') }}">К списку блоков</a>{% endif %}</section>{% endif %}
 </section>
 {% endblock %}
-{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/interview-test-toggle.js', v=static_asset_version) }}" defer></script>{% endblock %}

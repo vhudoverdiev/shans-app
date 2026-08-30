@@ -2348,22 +2348,22 @@ def study_hub():
 @login_required
 def english_it_hub():
     user_id = int(current_user.id)
-    _english_progress, english_passed, _english_next = _course_state(user_id)
+    _python_progress, python_passed, _python_next = _python_course_state(user_id)
     _it_progress, it_passed, _it_next = _it_course_state(user_id)
     _video_progress, video_passed, _video_next = _get_course_state(
         user_id, "video", PYTHON_VIDEO_LESSONS
     )
     blocks = (
         {
-            "title": "English",
-            "description": "30 дней: слова, предложения, практика и тесты.",
-            "icon": "EN",
-            "endpoint": "learning.english_course",
-            "passed": len(english_passed),
-            "total": len(ENGLISH_LESSONS),
+            "title": "Разработчик Python",
+            "description": "30 дней от основ языка до Django, production и собеседования.",
+            "icon": "Py",
+            "endpoint": "learning.python_course",
+            "passed": len(python_passed),
+            "total": len(PYTHON_LESSONS),
         },
         {
-            "title": "IT",
+            "title": "Понятия",
             "description": "30 дней фундаментальных IT-тем, практики и тестов.",
             "icon": "</>",
             "endpoint": "learning.it_course",

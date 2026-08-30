@@ -129,6 +129,16 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn("Python с нуля", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
         self.assertIn("role=\"progressbar\"", basics_hub)
         self.assertIn("Разработчик Python", templates["python_course.html"])
+        self.assertNotIn("Курс по дням", templates["english_course.html"])
+        self.assertNotIn("Курс по дням", templates["it_course.html"])
+        self.assertNotIn("learning-course-tabs", templates["it_course.html"])
+
+        video_hub = (TEMPLATES_DIRECTORY / "it_video_course.html").read_text(encoding="utf-8")
+        self.assertNotIn("learning-course-tabs", video_hub)
+
+        learning_source = (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8")
+        for title in ('"title": "Разработчик Python"', '"title": "Понятия"', '"title": "Python с нуля"'):
+            self.assertIn(title, learning_source)
 
     def test_daily_lessons_have_topic_posters_and_video_controls(self):
         for template_name in ("english_day.html", "it_day.html", "python_day.html"):
@@ -161,6 +171,13 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn("Ответы на все вопросы блока", section)
         self.assertIn("interview_questions|length }} ответов", section)
         self.assertIn("Проверка блока", section)
+        self.assertIn("data-interview-test-toggle", section)
+        self.assertIn('id="interview-test"{% if score is none %} hidden{% endif %}', section)
+        self.assertIn("interview-test-toggle.js", section)
+        styles = (PROJECT_ROOT / "app" / "static" / "css" / "learning.css").read_text(encoding="utf-8")
+        self.assertIn(".interview-video-label", styles)
+        self.assertIn(".interview-video-hint", styles)
+        self.assertIn(".study-progress-card .study-block-progress", styles)
         self.assertIn(
             'videos/python-interview/block-{section_number:02d}.mp4',
             (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"),

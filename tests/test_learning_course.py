@@ -508,7 +508,7 @@ class EnglishCourseTests(unittest.TestCase):
         video_lesson_source = (TEMPLATES / "it_video_lesson.html").read_text(encoding="utf-8")
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
-        self.assertIn("Фундамент IT", it_course_source)
+        self.assertIn("Понятия", it_course_source)
         self.assertIn("22 видеоурока", video_course_source)
         self.assertIn("обязательный тест", video_course_source)
         self.assertIn('<video class="python-course-video" controls playsinline preload="metadata">', video_lesson_source)
@@ -617,8 +617,9 @@ class EnglishCourseTests(unittest.TestCase):
         base_source = (TEMPLATES / "base.html").read_text(encoding="utf-8")
 
         self.assertIn("<h1>Развитие</h1>", study_source)
-        self.assertIn(">Разработчик Python<", study_source)
-        self.assertIn(">English и IT<", study_source)
+        self.assertIn(">English<", study_source)
+        self.assertIn(">IT<", study_source)
+        self.assertIn("url_for('learning.english_course')", study_source)
         self.assertIn("url_for('learning.english_it_hub')", study_source)
         self.assertNotIn("url_for('workouts.index')", study_source)
         self.assertNotIn("url_for('nutrition.index')", study_source)
@@ -773,7 +774,7 @@ class EnglishCourseTests(unittest.TestCase):
         day_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
         final_source = (TEMPLATES / "it_final.html").read_text(encoding="utf-8")
 
-        self.assertIn("Фундамент IT", course_source)
+        self.assertIn("Понятия", course_source)
         self.assertIn("30 дней", course_source)
         self.assertIn("15 минут", day_source)
         self.assertIn("Словарь вакансий", day_source)
