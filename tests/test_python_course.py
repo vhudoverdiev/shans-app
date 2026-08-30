@@ -145,7 +145,7 @@ class PythonCourseTests(unittest.TestCase):
         self.assertNotIn("learning.python_video_lectures", templates["python_course.html"])
         basics_hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
         self.assertIn("url_for(block.endpoint)", basics_hub)
-        self.assertIn("Разработчик Python v2", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
+        self.assertIn("Python v3", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
         self.assertIn("role=\"progressbar\"", basics_hub)
         self.assertIn("Python v1", templates["python_course.html"])
         self.assertNotIn("Курс по дням", templates["english_course.html"])
@@ -156,7 +156,7 @@ class PythonCourseTests(unittest.TestCase):
         self.assertNotIn("learning-course-tabs", video_hub)
 
         learning_source = (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8")
-        for title in ('"title": "Python v1"', '"title": "Понятия (Для новичка)"', '"title": "Разработчик Python v2"', '"title": "Собеседования (Python)"'):
+        for title in ('"title": "Python v1"', '"title": "Понятия (Для новичка)"', '"title": "Python v3"', '"title": "Собеседования (Python)"'):
             self.assertIn(title, learning_source)
 
         self.assertNotIn("learning-course-tabs", templates["python_course.html"])
@@ -215,6 +215,16 @@ class PythonCourseTests(unittest.TestCase):
             'videos/python-interview/block-{section_number:02d}.mp4',
             (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"),
         )
+
+    def test_it_hub_mobile_icons_and_lock_footer_do_not_overlap_progress(self):
+        hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
+        styles = (PROJECT_ROOT / "app" / "static" / "css" / "learning.css").read_text(encoding="utf-8")
+
+        self.assertIn('class="study-course-lock-footer"', hub)
+        self.assertIn('class="study-course-lock-icon"', hub)
+        self.assertNotIn('{% if block.locked %}🔒{% else %}→{% endif %}', hub)
+        self.assertIn(".study-course-lock-footer {", styles)
+        self.assertIn(".study-direction-grid .study-card-icon-it {\n        font-size: 14px;", styles)
 
 
 if __name__ == "__main__":

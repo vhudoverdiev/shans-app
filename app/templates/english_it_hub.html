@@ -18,8 +18,12 @@
                 <div class="study-block-progress-copy"><strong>{{ block.percent }}%</strong><span>{{ block.passed }} из {{ block.total }}</span></div>
                 <div class="study-block-progress-track"><span style="width: {{ block.percent }}%"></span></div>
             </div>
-            <span class="dashboard-card-arrow" aria-hidden="true">{% if block.locked %}🔒{% else %}→{% endif %}</span>
-            {% if block.locked %}<span class="study-course-lock-note">Откроется после прохождения предыдущего курса минимум на 80%</span>{% endif %}
+            {% if block.locked %}
+            <div class="study-course-lock-footer">
+                <span class="study-course-lock-note">Откроется после прохождения предыдущего курса минимум на 80%</span>
+                <span class="study-course-lock-icon" aria-hidden="true">🔒</span>
+            </div>
+            {% else %}<span class="dashboard-card-arrow" aria-hidden="true">→</span>{% endif %}
         {% if block.locked %}</div>{% else %}</a>{% endif %}
         {% endfor %}
     </div>

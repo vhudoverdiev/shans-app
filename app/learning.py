@@ -2588,7 +2588,7 @@ def english_it_hub():
     blocks = (
         {"title": "Понятия (Для новичка)", "description": "30 дней фундаментальных IT-тем, практики и тестов.", "icon": "</>", "endpoint": "learning.it_course", "passed": len(it_passed), "total": len(IT_LESSONS)},
         {"title": "Python v1", "description": "30 дней от основ языка до Django и запуска проекта в production.", "icon": "Py", "endpoint": "learning.python_course", "passed": len(python_passed), "total": len(PYTHON_LESSONS)},
-        {"title": "Разработчик Python v2", "description": "Последовательные видеоуроки Python с тестом после каждого.", "icon": "Py", "endpoint": "learning.it_video_course", "passed": len(video_passed), "total": len(PYTHON_VIDEO_LESSONS)},
+        {"title": "Python v3", "description": "Последовательные видеоуроки Python с тестом после каждого.", "icon": "Py", "endpoint": "learning.it_video_course", "passed": len(video_passed), "total": len(PYTHON_VIDEO_LESSONS)},
         {"title": "Python v2", "description": "63 темы по 9–20 минут: видео, подробная лекция, практика и тест после каждой.", "icon": "Py2", "endpoint": "learning.python_v2_topics", "passed": len(topic_passed), "total": len(PYTHON_V2_TOPICS)},
         {"title": "Собеседования (Python)", "description": "Видеолекции, сильные ответы, практические задачи и тесты по блокам.", "icon": "QA", "endpoint": "learning.python_interview", "passed": int(interview_passed), "total": len(PYTHON_INTERVIEW_SECTIONS)},
         {"title": "HTML", "description": "13 тем: от устройства веба и тегов до адаптивного многостраничного проекта.", "icon": "HTML", "endpoint": "learning.html_course", "passed": len(html_passed), "total": len(HTML_THEMES)},

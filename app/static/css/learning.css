@@ -1729,10 +1729,35 @@ a.english-day-card:hover {
 }
 
 .study-course-lock-note {
-    margin-top: 10px;
     color: #64748b;
     font-size: 12px;
     line-height: 1.4;
+}
+
+.study-course-lock-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.study-course-lock-footer .study-course-lock-note {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.study-course-lock-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 999px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed, #9333ea);
+    font-size: 18px;
 }
 
 .it-quiz-form .quiz-option > span {
@@ -1740,6 +1765,14 @@ a.english-day-card:hover {
 }
 
 @media (max-width: 900px) and (pointer: coarse) {
+    .study-direction-grid .study-card-icon-it {
+        font-size: 14px;
+    }
+
+    .study-course-lock-footer {
+        align-items: flex-start;
+    }
+
     .learning-page {
         max-width: none;
     }
