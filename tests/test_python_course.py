@@ -14,6 +14,11 @@ from app.learning import (
 from app.python_course_content import PYTHON_INTERVIEW_SECTIONS
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+TEMPLATES_DIRECTORY = PROJECT_ROOT / "app" / "templates"
+VIDEOS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos"
+
+
 class PythonCourseTests(unittest.TestCase):
     def setUp(self):
         self.original_database_name = Config.DATABASE_NAME
@@ -82,6 +87,31 @@ class PythonCourseTests(unittest.TestCase):
             sum(len(section[1]) for section in PYTHON_INTERVIEW_SECTIONS),
             45,
         )
+
+    def test_all_new_course_lecture_videos_are_present_and_valid_mp4_files(self):
+        for directory_name in ("english-lectures", "it-lectures", "python-lectures"):
+            directory = VIDEOS_DIRECTORY / directory_name
+            files = sorted(directory.glob("lesson-*.mp4"))
+
+            self.assertEqual(
+                [path.name for path in files],
+                [f"lesson-{day:02d}.mp4" for day in range(1, 31)],
+            )
+            for path in files:
+                self.assertGreater(path.stat().st_size, 1024, path)
+                with path.open("rb") as video:
+                    self.assertEqual(video.read(8)[4:8], b"ftyp", path)
+
+    def test_python_video_lecture_has_test_link_and_floating_player_controls(self):
+        source = (TEMPLATES_DIRECTORY / "python_video_lecture.html").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("data-floating-video-player", source)
+        self.assertIn("data-video-expand", source)
+        self.assertIn("data-video-close", source)
+        self.assertIn("js/floating-video-player.js", source)
+        self.assertIn("learning.python_day_test", source)
 
 
 if __name__ == "__main__":

@@ -1,1 +1,35 @@
-{% extends "base.html" %}{% block title %}{{ lesson.title }} — Python | Шанс{% endblock %}{% block content %}<section class="learning-page lesson-page"><a class="learning-back-link" href="{{ url_for('learning.python_video_lectures') }}">← Все видеолекции</a><div class="learning-hero lesson-hero it-learning-hero"><div><p class="learning-kicker">Python · лекция {{ lesson.day }} из 30</p><h1>{{ lesson.title }}</h1><p>{{ lesson.summary }}</p></div><div class="lesson-day-mark">{{ lesson.day }}</div></div><section class="lesson-section video-player-section"><div class="python-video-shell" data-floating-video-player><video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=video_file) }}" type="video/mp4"></video></div></section><div class="video-quiz-launch"><a class="btn btn-primary" href="{{ url_for('learning.python_day_test', day_number=lesson.day) }}">Перейти к тесту дня</a></div></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — Python | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page it-video-lesson-page">
+    <a class="learning-back-link" href="{{ url_for('learning.python_video_lectures') }}">← Все видеолекции</a>
+    <div class="learning-hero lesson-hero it-learning-hero">
+        <div>
+            <p class="learning-kicker">Python · лекция {{ lesson.day }} из 30</p>
+            <h1>{{ lesson.title }}</h1>
+            <p>{{ lesson.summary }}</p>
+        </div>
+        <div class="lesson-day-mark">{{ lesson.day }}</div>
+    </div>
+    <section class="lesson-section video-player-section">
+        <div class="python-video-shell" data-floating-video-player>
+            <video class="python-course-video" controls playsinline preload="metadata">
+                <source src="{{ url_for('static', filename=video_file) }}" type="video/mp4">
+                Ваш браузер не поддерживает воспроизведение видео.
+            </video>
+            <div class="python-video-floating-bar" data-video-floating-bar>
+                <span>Python · лекция {{ lesson.day }}</span>
+                <button type="button" data-video-expand aria-label="Развернуть видеолекцию" title="Развернуть">↗</button>
+                <button type="button" data-video-close aria-label="Остановить и закрыть мини-плеер" title="Закрыть">×</button>
+            </div>
+        </div>
+    </section>
+    <div class="video-quiz-launch">
+        <a class="btn btn-primary" href="{{ url_for('learning.python_day_test', day_number=lesson.day) }}">Перейти к тесту дня</a>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>
+{% endblock %}
