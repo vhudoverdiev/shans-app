@@ -149,6 +149,9 @@ class PythonCourseTests(unittest.TestCase):
             self.assertIn("{{ lesson.title }}", source, template_name)
             self.assertIn("data-video-expand", source, template_name)
             self.assertIn("data-video-close", source, template_name)
+            self.assertIn("interview-video-section", source, template_name)
+            self.assertNotIn("video-player-section", source, template_name)
+            self.assertNotIn("Видеолекция дня", source, template_name)
 
     def test_interview_is_split_into_sequential_blocks_with_valid_quizzes_and_videos(self):
         for section_number in range(1, len(PYTHON_INTERVIEW_SECTIONS) + 1):
@@ -175,8 +178,9 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn('id="interview-test"{% if score is none %} hidden{% endif %}', section)
         self.assertIn("interview-test-toggle.js", section)
         styles = (PROJECT_ROOT / "app" / "static" / "css" / "learning.css").read_text(encoding="utf-8")
-        self.assertIn(".interview-video-label", styles)
-        self.assertIn(".interview-video-hint", styles)
+        self.assertNotIn("Видеолекция блока", section)
+        self.assertNotIn("Посмотрите перед разбором", section)
+        self.assertIn('class="interview-video-section"', section)
         self.assertIn(".study-progress-card .study-block-progress", styles)
         self.assertIn(
             'videos/python-interview/block-{section_number:02d}.mp4',

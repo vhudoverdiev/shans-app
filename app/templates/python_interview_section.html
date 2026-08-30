@@ -7,8 +7,7 @@
         <div><p class="learning-kicker">Разработчик Python · блок {{ section_number }} из {{ total_sections }}</p><h1>{{ title }}</h1><p>Сначала сформулируйте ответ своими словами, затем сравните его с сильным вариантом.</p></div>
         <div class="lesson-day-mark">{{ section_number }}</div>
     </div>
-    <section class="lesson-section video-player-section" data-video-anchor>
-        <div class="learning-section-heading interview-video-heading"><div><p class="learning-kicker interview-video-label">Видеолекция блока</p><h2>{{ title }}</h2></div><span class="interview-video-hint">Посмотрите перед разбором</span></div>
+    <section class="interview-video-section" data-video-anchor aria-label="Видеолекция «{{ title }}»">
         <div class="python-video-shell" data-floating-video-player>
             <div class="python-video-poster" data-video-poster><span class="python-video-poster-kicker">Собеседование · блок {{ section_number }} из {{ total_sections }}</span><strong>{{ title }}</strong><button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть лекцию</button></div>
             <video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=video_file) }}" type="video/mp4">Ваш браузер не поддерживает воспроизведение видео.</video>

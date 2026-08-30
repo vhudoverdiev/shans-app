@@ -231,6 +231,10 @@
     min-width: 190px;
 }
 
+.interview-video-section {
+    margin-top: 22px;
+}
+
 .study-block-progress-copy strong {
     color: #2563eb;
     font-size: 15px;
@@ -251,17 +255,12 @@
 }
 
 @media (max-width: 760px) and (pointer: coarse) {
-    .interview-video-label,
-    .interview-video-hint {
-        display: none;
-    }
-
-    .interview-video-heading {
-        margin-bottom: 14px;
-    }
-
     .study-progress-card .study-block-progress {
         padding-right: 44px;
+    }
+
+    .interview-video-section {
+        margin-top: 14px;
     }
 }
 

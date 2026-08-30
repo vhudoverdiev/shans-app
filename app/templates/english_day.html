@@ -15,11 +15,7 @@
         <div class="lesson-day-mark">{{ lesson.day }}</div>
     </div>
 
-    <section class="lesson-section video-player-section" aria-labelledby="english-video-title" data-video-anchor>
-        <div class="learning-section-heading">
-            <div><p class="learning-kicker">Видеолекция дня</p><h2 id="english-video-title">{{ lesson.title }}</h2></div>
-            <span>Смотрите перед изучением карточек</span>
-        </div>
+    <section class="interview-video-section" aria-label="Видеоурок «{{ lesson.title }}»" data-video-anchor>
         <div class="python-video-shell" data-floating-video-player>
             <div class="python-video-poster" data-video-poster>
                 <span class="python-video-poster-kicker">English · день {{ lesson.day }} из 30</span>
