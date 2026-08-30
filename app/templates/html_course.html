@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}HTML — курс по темам | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page it-learning-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
+    <div class="learning-hero it-learning-hero">
+        <div><p class="learning-kicker">HTML · {{ total_themes }} ТЕМ</p><h1>HTML с нуля</h1><p>От устройства веба и семантической разметки до адаптивного многостраничного проекта.</p></div>
+        <div class="learning-progress-summary"><strong>{{ passed_count }} / {{ total_themes }}</strong><span>тем завершено</span></div>
+    </div>
+    <div class="learning-progress-card"><div class="learning-progress-copy"><div><span>Ваш прогресс</span><strong>{{ progress_percent }}%</strong></div>{% if next_theme %}<a class="btn btn-primary" href="{{ url_for('learning.html_theme', theme_number=next_theme) }}">Продолжить: тема {{ next_theme }}</a>{% endif %}</div><div class="learning-progress-track"><span style="width: {{ progress_percent }}%"></span></div></div>
+    <div class="learning-section-heading"><div><p class="learning-kicker">Программа</p><h2>{{ total_themes }} последовательных тем</h2></div><span>Видео · текст · код · практика · 20 вопросов</span></div>
+    <div class="english-course-grid it-course-grid">
+        {% for theme in themes %}
+        {% if theme.unlocked %}<a href="{{ url_for('learning.html_theme', theme_number=theme.number) }}" class="english-day-card it-day-card{% if theme.passed %} english-day-card-passed{% endif %}">{% else %}<div class="english-day-card it-day-card english-day-card-locked">{% endif %}
+            <div class="english-day-card-top"><span>Тема {{ theme.number }}</span><span>{% if theme.passed %}✓{% elif theme.unlocked %}Смотреть{% else %}🔒{% endif %}</span></div><h3>{{ theme.title }}</h3><p>{{ theme.summary }}</p>{% if theme.passed %}<span class="english-day-score">Лучший результат: {{ theme.best_score }} / 20</span>{% endif %}
+        {% if theme.unlocked %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

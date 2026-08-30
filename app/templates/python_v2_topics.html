@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Python v2 — курс по темам | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page it-learning-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
+    <div class="learning-hero it-learning-hero">
+        <div><p class="learning-kicker">PYTHON V2 · {{ total_topics }} ТЕМЫ</p><h1>Python v2</h1><p>Полный видеокурс по темам: от установки и типов данных до функций, ошибок, условий и циклов.</p></div>
+        <div class="learning-progress-summary"><strong>{{ passed_count }} / {{ total_topics }}</strong><span>тем завершено</span></div>
+    </div>
+    <div class="learning-progress-card"><div class="learning-progress-copy"><div><span>Ваш прогресс</span><strong>{{ progress_percent }}%</strong></div>{% if next_topic %}<a class="btn btn-primary" href="{{ url_for('learning.python_v2_topic', topic_number=next_topic) }}">Продолжить: тема {{ next_topic }}</a>{% endif %}</div><div class="learning-progress-track"><span style="width: {{ progress_percent }}%"></span></div></div>
+    <div class="learning-section-heading"><div><p class="learning-kicker">Программа</p><h2>{{ total_topics }} последовательные темы</h2></div><span>Видео до 20 минут · текст · код · практика · 20 вопросов</span></div>
+    <div class="english-course-grid it-course-grid">
+        {% for topic in topics %}
+        {% if topic.unlocked %}<a href="{{ url_for('learning.python_v2_topic', topic_number=topic.number) }}" class="english-day-card it-day-card{% if topic.passed %} english-day-card-passed{% endif %}">{% else %}<div class="english-day-card it-day-card english-day-card-locked">{% endif %}
+            <div class="english-day-card-top"><span>Тема {{ topic.number }} · {{ topic.duration_minutes }} мин</span><span>{% if topic.passed %}✓{% elif topic.unlocked %}Смотреть{% else %}🔒{% endif %}</span></div><h3>{{ topic.title }}</h3><p>{{ topic.summary }}</p>{% if topic.passed %}<span class="english-day-score">Лучший результат: {{ topic.best_score }} / 20</span>{% endif %}
+        {% if topic.unlocked %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

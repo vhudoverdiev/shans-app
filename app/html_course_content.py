@@ -5,6 +5,7 @@ def _theme(number, title, summary, terms, code, practice):
     glossary = "; ".join(f"{term} — {definition}" for term, definition in terms)
     return {
         "number": number,
+        "day": number,
         "title": title,
         "summary": summary,
         "terms": tuple(terms),

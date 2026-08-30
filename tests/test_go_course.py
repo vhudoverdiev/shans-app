@@ -55,7 +55,7 @@ class GoCourseTests(unittest.TestCase):
         self.assertIn("30 последовательных дней", catalog)
         for marker in ("data-floating-video-player", "Текстовая лекция", "Рабочий пример", "Задание урока", "Перейти к тесту"):
             self.assertIn(marker, lesson)
-        self.assertIn("Пять направлений", hub)
+        self.assertIn("Семь направлений", hub)
         self.assertIn('"title": "Язык Go"', learning)
 
     def test_all_go_video_segments_are_valid_mp4(self):

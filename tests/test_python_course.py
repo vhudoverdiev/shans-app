@@ -164,7 +164,7 @@ class PythonCourseTests(unittest.TestCase):
         interview_hub = (TEMPLATES_DIRECTORY / "python_interview.html").read_text(encoding="utf-8")
         self.assertNotIn("learning-course-tabs", interview_hub)
         self.assertNotIn("Курс по дням", interview_hub)
-        self.assertIn("Пять направлений", basics_hub)
+        self.assertIn("Семь направлений", basics_hub)
 
     def test_daily_lessons_have_topic_posters_and_video_controls(self):
         for template_name in ("english_day.html", "it_day.html", "python_day.html"):
