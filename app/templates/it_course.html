@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Понятия | Шанс{% endblock %}
+{% block title %}Понятия (Для новичка) | Шанс{% endblock %}
 
 {% block content %}
 <section class="learning-page it-learning-page">
@@ -8,8 +8,8 @@
 
     <div class="learning-hero it-learning-hero">
         <div>
-            <p class="learning-kicker">Понятия · 30 минут в день</p>
-            <h1>Понятия</h1>
+            <p class="learning-kicker">Понятия (Для новичка) · 30 минут в день</p>
+            <h1>Понятия (Для новичка)</h1>
             <p>Понятный путь от слов в вакансиях до Python, Git, баз данных, API, тестирования и запуска собственного приложения.</p>
         </div>
         <div class="learning-progress-summary">
@@ -107,27 +107,6 @@
         {% endfor %}
     </div>
 
-    <div class="learning-section-heading learning-future-heading">
-        <div>
-            <p class="learning-kicker">Дальше</p>
-            <h2>Продолжение после 30-го дня</h2>
-        </div>
-        <span>Пока не открыто</span>
-    </div>
-
-    <div class="english-course-grid it-course-grid learning-future-grid">
-        {% for lesson in locked_future_lessons %}
-        <div class="english-day-card it-day-card english-day-card-locked english-day-card-future" aria-disabled="true">
-            <div class="english-day-card-top">
-                <span class="english-day-number">День {{ lesson.day }}</span>
-                <span class="english-day-status" aria-label="Пока не открыто">🔒</span>
-            </div>
-            <h3>{{ lesson.title }}</h3>
-            <p>{{ lesson.summary }}</p>
-        </div>
-        {% endfor %}
-    </div>
-
     <section class="final-test-card{% if not final_unlocked %} final-test-card-locked{% endif %}">
         <div class="final-test-icon" aria-hidden="true">⌁</div>
         <div class="final-test-content">
@@ -141,7 +120,7 @@
         {% if final_unlocked %}
         <a class="btn btn-primary" href="{{ url_for('learning.it_final') }}">Открыть тест</a>
         {% else %}
-        <span class="final-test-lock">Откроется после 30-го дня</span>
+        <span class="final-test-lock">Завершите все дни курса</span>
         {% endif %}
     </section>
 </section>

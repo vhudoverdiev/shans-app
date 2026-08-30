@@ -11,6 +11,8 @@ from flask_login import current_user, login_required
 
 from app.database import get_connection
 from app.it_course_content import IT_LESSONS
+from app.go_course_content import GO_LESSONS
+from app.html_course_content import HTML_THEMES
 from app.python_course_content import PYTHON_INTERVIEW_SECTIONS, PYTHON_LESSONS
 from app.python_video_course_content import PYTHON_VIDEO_LESSONS
 
@@ -38,11 +40,15 @@ _PROGRESS_TABLES = {
     "it": "it_course_progress",
     "video": "python_video_progress",
     "python": "python_course_progress",
+    "go": "go_course_progress",
+    "html": "html_course_progress",
 }
 _FINAL_TABLES = {
     "english": "english_final_results",
     "it": "it_final_results",
     "python": "python_final_results",
+    "go": "go_final_results",
+    "html": "html_final_results",
 }
 
 
@@ -695,6 +701,58 @@ def init_learning_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS go_course_progress (
+                user_id INTEGER NOT NULL,
+                day_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, day_number)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS go_final_results (
+                user_id INTEGER PRIMARY KEY,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS html_course_progress (
+                user_id INTEGER NOT NULL,
+                day_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, day_number)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS html_final_results (
+                user_id INTEGER PRIMARY KEY,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
         _create_live_quiz_attempts_table(conn)
         conn.commit()
     finally:
@@ -1153,6 +1211,104 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
         questions[10 + index] = _text_question(
             questions[10 + index], term, f"Восстановите термин по определению: «{definition}»."
         )
+    return questions
+
+
+def build_go_daily_quiz(day_number: int) -> list[dict]:
+    if not 1 <= day_number <= len(GO_LESSONS):
+        raise ValueError("Unknown Go lesson")
+    lesson = GO_LESSONS[day_number - 1]
+    terms = lesson["terms"]
+    questions = []
+    for index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            definition,
+            (candidate[1] for candidate in terms if candidate[0] != term),
+            day_number * 100 + index,
+        )
+        questions.append({
+            "day": day_number,
+            "prompt": f"Что означает «{term}» в Go?",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"{term} — {definition}.",
+        })
+    for index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            term,
+            (candidate[0] for candidate in terms if candidate[0] != term),
+            day_number * 200 + index,
+        )
+        questions.append({
+            "day": day_number,
+            "prompt": f"Какое понятие соответствует объяснению: «{definition}»?",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"Правильное понятие — {term}.",
+        })
+    for offset in range(4):
+        term, definition = terms[offset]
+        options, correct_index = _rotated_options(
+            f"{term} — {definition}",
+            (f"{other_term} — {other_definition}" for other_term, other_definition in terms if other_term != term),
+            day_number * 300 + offset,
+        )
+        questions.append({
+            "day": day_number,
+            "prompt": f"Выберите корректную пару из урока «{lesson['title']}».",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"Корректная пара: {term} — {definition}.",
+        })
+    return questions
+
+
+def build_html_theme_quiz(theme_number: int) -> list[dict]:
+    if not 1 <= theme_number <= len(HTML_THEMES):
+        raise ValueError("Unknown HTML theme")
+    theme = HTML_THEMES[theme_number - 1]
+    terms = theme["terms"]
+    questions = []
+    for index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            definition,
+            (candidate[1] for candidate in terms if candidate[0] != term),
+            theme_number * 100 + index,
+        )
+        questions.append({
+            "day": theme_number,
+            "prompt": f"Что означает «{term}» в теме HTML?",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"{term} — {definition}.",
+        })
+    for index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            term,
+            (candidate[0] for candidate in terms if candidate[0] != term),
+            theme_number * 200 + index,
+        )
+        questions.append({
+            "day": theme_number,
+            "prompt": f"Какое понятие соответствует объяснению: «{definition}»?",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"Правильное понятие — {term}.",
+        })
+    for offset in range(4):
+        term, definition = terms[offset]
+        options, correct_index = _rotated_options(
+            f"{term} — {definition}",
+            (f"{other_term} — {other_definition}" for other_term, other_definition in terms if other_term != term),
+            theme_number * 300 + offset,
+        )
+        questions.append({
+            "day": theme_number,
+            "prompt": f"Выберите корректную пару из темы «{theme['title']}».",
+            "options": options,
+            "correct_index": correct_index,
+            "explanation": f"Корректная пара: {term} — {definition}.",
+        })
     return questions
 
 
@@ -2353,41 +2509,209 @@ def english_it_hub():
     _video_progress, video_passed, _video_next = _get_course_state(
         user_id, "video", PYTHON_VIDEO_LESSONS
     )
+    _go_progress, go_passed, _go_next = _get_course_state(user_id, "go", GO_LESSONS)
+    _html_progress, html_passed, _html_next = _get_course_state(user_id, "html", HTML_THEMES)
+    conn = get_connection()
+    try:
+        interview_passed = conn.execute(
+            "SELECT COUNT(*) FROM python_interview_progress WHERE user_id = ? AND passed = 1",
+            (user_id,),
+        ).fetchone()[0]
+    finally:
+        conn.close()
     blocks = (
-        {
-            "title": "Разработчик Python",
-            "description": "30 дней от основ языка до Django, production и собеседования.",
-            "icon": "Py",
-            "endpoint": "learning.python_course",
-            "passed": len(python_passed),
-            "total": len(PYTHON_LESSONS),
-        },
-        {
-            "title": "Понятия",
-            "description": "30 дней фундаментальных IT-тем, практики и тестов.",
-            "icon": "</>",
-            "endpoint": "learning.it_course",
-            "passed": len(it_passed),
-            "total": len(IT_LESSONS),
-        },
-        {
-            "title": "Python с нуля",
-            "description": "22 последовательных видеоурока с тестом после каждого.",
-            "icon": "Py",
-            "endpoint": "learning.it_video_course",
-            "passed": len(video_passed),
-            "total": len(PYTHON_VIDEO_LESSONS),
-        },
+        {"title": "Понятия (Для новичка)", "description": "30 дней фундаментальных IT-тем, практики и тестов.", "icon": "</>", "endpoint": "learning.it_course", "passed": len(it_passed), "total": len(IT_LESSONS)},
+        {"title": "Python v1", "description": "30 дней от основ языка до Django и запуска проекта в production.", "icon": "Py", "endpoint": "learning.python_course", "passed": len(python_passed), "total": len(PYTHON_LESSONS)},
+        {"title": "Разработчик Python v2", "description": "Последовательные видеоуроки Python с тестом после каждого.", "icon": "Py", "endpoint": "learning.it_video_course", "passed": len(video_passed), "total": len(PYTHON_VIDEO_LESSONS)},
+        {"title": "Собеседования (Python)", "description": "Видеолекции, сильные ответы, практические задачи и тесты по блокам.", "icon": "QA", "endpoint": "learning.python_interview", "passed": int(interview_passed), "total": len(PYTHON_INTERVIEW_SECTIONS)},
+        {"title": "HTML", "description": "13 тем: от устройства веба и тегов до адаптивного многостраничного проекта.", "icon": "HTML", "endpoint": "learning.html_course", "passed": len(html_passed), "total": len(HTML_THEMES)},
+        {"title": "Язык Go", "description": "Синтаксис, конкурентность, HTTP backend и PostgreSQL.", "icon": "Go", "endpoint": "learning.go_course", "passed": len(go_passed), "total": len(GO_LESSONS)},
     )
+    ordered_blocks = []
+    access_open = True
+    for order, block in enumerate(blocks):
+        percent = round(block["passed"] / block["total"] * 100)
+        ordered_blocks.append({**block, "percent": percent, "locked": not access_open, "order": order})
+        access_open = access_open and percent >= 80
+    ordered_blocks.sort(key=lambda block: (block["locked"], block["percent"] >= 80, block["order"]))
+    return render_template("english_it_hub.html", blocks=ordered_blocks)
+
+
+def _it_course_access(user_id: int) -> dict[str, bool]:
+    """Последовательно открывает IT-направления после 80% предыдущего."""
+    _it_progress, it_passed, _it_next = _it_course_state(user_id)
+    _python_progress, python_passed, _python_next = _python_course_state(user_id)
+    _video_progress, video_passed, _video_next = _get_course_state(
+        user_id, "video", PYTHON_VIDEO_LESSONS
+    )
+    conn = get_connection()
+    try:
+        interview_passed = conn.execute(
+            "SELECT COUNT(*) FROM python_interview_progress WHERE user_id = ? AND passed = 1",
+            (user_id,),
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    python_ready = len(python_passed) / len(PYTHON_LESSONS) >= 0.8
+    video_ready = len(video_passed) / len(PYTHON_VIDEO_LESSONS) >= 0.8
+    interview_ready = interview_passed / len(PYTHON_INTERVIEW_SECTIONS) >= 0.8
+    _html_progress, html_passed, _html_next = _get_course_state(user_id, "html", HTML_THEMES)
+    html_ready = len(html_passed) / len(HTML_THEMES) >= 0.8
+    concepts_ready = len(it_passed) / len(IT_LESSONS) >= 0.8
+    return {
+        "it": True,
+        "python": concepts_ready,
+        "video": concepts_ready and python_ready,
+        "interview": concepts_ready and python_ready and video_ready,
+        "html": concepts_ready and python_ready and video_ready and interview_ready,
+        "go": concepts_ready and python_ready and video_ready and interview_ready and html_ready,
+    }
+
+
+@learning_bp.before_request
+def enforce_it_course_sequence():
+    if not current_user.is_authenticated or not request.endpoint:
+        return None
+    endpoint = request.endpoint.removeprefix("learning.")
+    course = None
+    if endpoint.startswith("python_interview"):
+        course = "interview"
+    elif endpoint.startswith("python_"):
+        course = "python"
+    elif endpoint.startswith("it_video"):
+        course = "video"
+    elif endpoint.startswith("go_"):
+        course = "go"
+    elif endpoint.startswith("html_"):
+        course = "html"
+    elif endpoint.startswith("it_"):
+        course = "it"
+    if course and not _it_course_access(int(current_user.id))[course]:
+        flash("Этот курс откроется после прохождения предыдущего направления минимум на 80%.", "warning")
+        return redirect(url_for("learning.english_it_hub"))
+    return None
+
+
+@learning_bp.route("/study/html")
+@login_required
+def html_course():
+    progress, passed_themes, next_theme = _get_course_state(int(current_user.id), "html", HTML_THEMES)
+    themes = []
+    for theme in HTML_THEMES:
+        item = progress.get(theme["number"])
+        themes.append({
+            **theme,
+            "passed": theme["number"] in passed_themes,
+            "unlocked": theme["number"] in passed_themes or theme["number"] == next_theme,
+            "best_score": int(item["best_score"]) if item else 0,
+        })
     return render_template(
-        "english_it_hub.html",
-        blocks=[
-            {**block, "percent": round(block["passed"] / block["total"] * 100)}
-            for block in blocks
-        ],
+        "html_course.html",
+        themes=themes,
+        passed_count=len(passed_themes),
+        total_themes=len(HTML_THEMES),
+        progress_percent=round(len(passed_themes) / len(HTML_THEMES) * 100),
+        next_theme=next_theme,
     )
 
 
+@learning_bp.route("/study/html/theme/<int:theme_number>", methods=["GET", "POST"])
+@login_required
+def html_theme(theme_number: int):
+    if not 1 <= theme_number <= len(HTML_THEMES):
+        abort(404)
+    progress, passed_themes, next_theme = _get_course_state(int(current_user.id), "html", HTML_THEMES)
+    if theme_number not in passed_themes and theme_number != next_theme:
+        flash("Сначала завершите предыдущую тему HTML.", "warning")
+        return redirect(url_for("learning.html_course"))
+    theme = HTML_THEMES[theme_number - 1]
+    seed = _review_seed()
+    if request.method == "POST":
+        try:
+            seed = int(request.form.get("quiz_seed", seed))
+        except (TypeError, ValueError):
+            seed = _review_seed()
+    questions = shuffle_quiz(build_html_theme_quiz(theme_number), seed)
+    score = feedback = None
+    passed = False
+    if request.method == "POST":
+        score, feedback = grade_quiz(questions, request.form)
+        passed = score >= DAILY_PASS_SCORE
+        _save_course_day_result(int(current_user.id), theme_number, score, passed, "html")
+        progress, passed_themes, next_theme = _get_course_state(int(current_user.id), "html", HTML_THEMES)
+    return render_template(
+        "html_theme.html",
+        theme=theme,
+        total_themes=len(HTML_THEMES),
+        questions=questions,
+        quiz_seed=seed,
+        score=score,
+        feedback=feedback,
+        passed=passed,
+        pass_score=DAILY_PASS_SCORE,
+        next_theme=next_theme if passed else None,
+        course_finished=len(passed_themes) == len(HTML_THEMES),
+    )
+
+
+@learning_bp.route("/study/go")
+@login_required
+def go_course():
+    progress, passed_days, next_day = _get_course_state(int(current_user.id), "go", GO_LESSONS)
+    lessons = []
+    for lesson in GO_LESSONS:
+        item = progress.get(lesson["day"])
+        lessons.append({
+            **lesson,
+            "passed": lesson["day"] in passed_days,
+            "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+            "best_score": int(item["best_score"]) if item else 0,
+        })
+    return render_template(
+        "go_course.html",
+        lessons=lessons,
+        passed_count=len(passed_days),
+        progress_percent=round(len(passed_days) / len(GO_LESSONS) * 100),
+        next_day=next_day,
+    )
+
+
+@learning_bp.route("/study/go/day/<int:day_number>", methods=["GET", "POST"])
+@login_required
+def go_day(day_number: int):
+    if not 1 <= day_number <= len(GO_LESSONS):
+        abort(404)
+    progress, passed_days, next_day = _get_course_state(int(current_user.id), "go", GO_LESSONS)
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий урок Go.", "warning")
+        return redirect(url_for("learning.go_course"))
+    lesson = GO_LESSONS[day_number - 1]
+    seed = _review_seed()
+    if request.method == "POST":
+        try:
+            seed = int(request.form.get("quiz_seed", seed))
+        except (TypeError, ValueError):
+            seed = _review_seed()
+    questions = shuffle_quiz(build_go_daily_quiz(day_number), seed)
+    score = feedback = None
+    passed = False
+    if request.method == "POST":
+        score, feedback = grade_quiz(questions, request.form)
+        passed = score >= DAILY_PASS_SCORE
+        _save_course_day_result(int(current_user.id), day_number, score, passed, "go")
+        progress, passed_days, next_day = _get_course_state(int(current_user.id), "go", GO_LESSONS)
+    return render_template(
+        "go_day.html",
+        lesson=lesson,
+        questions=questions,
+        quiz_seed=seed,
+        score=score,
+        feedback=feedback,
+        passed=passed,
+        pass_score=DAILY_PASS_SCORE,
+        next_day=next_day if passed else None,
+        course_finished=len(passed_days) == len(GO_LESSONS),
+    )
 @learning_bp.route("/study/english")
 @login_required
 def english_course():
@@ -3093,6 +3417,7 @@ def build_python_interview_quiz(section_number: int, seed: int) -> list[dict]:
     return quiz
 
 
+@learning_bp.route("/study/python/interview/<int:section_number>/test", methods=["GET", "POST"], endpoint="python_interview_test")
 @learning_bp.route("/study/python/interview/<int:section_number>", methods=["GET", "POST"])
 @login_required
 def python_interview_section(section_number: int):
@@ -3160,4 +3485,5 @@ def python_interview_section(section_number: int):
         passed=passed,
         next_section=section_number + 1 if section_number < len(PYTHON_INTERVIEW_SECTIONS) else None,
         video_file=f"videos/python-interview/block-{section_number:02d}.mp4",
+        test_page=request.endpoint == "learning.python_interview_test",
     )

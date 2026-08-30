@@ -4,12 +4,12 @@
 <section class="learning-page section-styled-page">
     <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
     <div class="learning-hero learning-hero-compact">
-        <div><p class="learning-kicker">Три направления</p><h1>IT</h1><p>Выберите направление и сразу увидите, сколько материала уже пройдено.</p></div>
-        <div class="learning-hero-mark" aria-hidden="true">3</div>
+        <div><p class="learning-kicker">Пять направлений</p><h1>IT</h1><p>Выберите направление и сразу увидите, сколько материала уже пройдено.</p></div>
+        <div class="learning-hero-mark" aria-hidden="true">5</div>
     </div>
     <div class="dashboard-grid study-direction-grid study-progress-grid">
         {% for block in blocks %}
-        <a href="{{ url_for(block.endpoint) }}" class="dashboard-card dashboard-card-featured study-card-it study-progress-card">
+        {% if block.locked %}<div class="dashboard-card dashboard-card-featured study-card-it study-progress-card english-day-card-locked" aria-disabled="true">{% else %}<a href="{{ url_for(block.endpoint) }}" class="dashboard-card dashboard-card-featured study-card-it study-progress-card">{% endif %}
             <div class="dashboard-card-icon study-card-icon-it" aria-hidden="true">{{ block.icon }}</div>
             <span class="study-card-badge study-card-badge-active">{{ block.percent }}%</span>
             <div class="dashboard-card-title">{{ block.title }}</div>
@@ -18,8 +18,9 @@
                 <div class="study-block-progress-copy"><strong>{{ block.percent }}%</strong><span>{{ block.passed }} из {{ block.total }}</span></div>
                 <div class="study-block-progress-track"><span style="width: {{ block.percent }}%"></span></div>
             </div>
-            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
-        </a>
+            <span class="dashboard-card-arrow" aria-hidden="true">{% if block.locked %}🔒{% else %}→{% endif %}</span>
+            {% if block.locked %}<span class="study-course-lock-note">Откроется после прохождения предыдущего курса минимум на 80%</span>{% endif %}
+        {% if block.locked %}</div>{% else %}</a>{% endif %}
         {% endfor %}
     </div>
 </section>

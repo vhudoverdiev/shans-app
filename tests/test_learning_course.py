@@ -449,12 +449,12 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("Новая попытка", review_source)
         self.assertIn("Вопросы и варианты ответов перемешиваются", review_source)
 
-    def test_python_video_course_contains_all_22_local_videos(self):
-        self.assertEqual(len(PYTHON_VIDEO_LESSONS), 22)
+    def test_python_video_course_contains_all_30_local_videos(self):
+        self.assertEqual(len(PYTHON_VIDEO_LESSONS), 30)
         self.assertEqual(PYTHON_VIDEO_LESSONS[0]["title"], "Что такое программирование и Python")
         self.assertEqual(
             [lesson["day"] for lesson in PYTHON_VIDEO_LESSONS],
-            list(range(1, 23)),
+            list(range(1, 31)),
         )
         for lesson in PYTHON_VIDEO_LESSONS:
             video_path = PROJECT_ROOT / "app" / "static" / lesson["video_file"]
@@ -509,7 +509,7 @@ class EnglishCourseTests(unittest.TestCase):
         styles = LEARNING_STYLES.read_text(encoding="utf-8")
 
         self.assertIn("Понятия", it_course_source)
-        self.assertIn("22 видеоурока", video_course_source)
+        self.assertIn("Python · 30 дней", video_course_source)
         self.assertIn("обязательный тест", video_course_source)
         self.assertIn('<video class="python-course-video" controls playsinline preload="metadata">', video_lesson_source)
         self.assertIn("lesson.video_file", video_lesson_source)
@@ -526,7 +526,7 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("data-video-poster", video_lesson_source)
         self.assertIn("{% block title %}{{ lesson.title }} | Шанс{% endblock %}", video_lesson_source)
         self.assertNotIn("Видео {{ lesson.day }} — {{ lesson.title }}", video_lesson_source)
-        self.assertIn("Видеоурок {{ lesson.day }} из 22", video_lesson_source)
+        self.assertIn("Видеоурок {{ lesson.day }} из 30", video_lesson_source)
         self.assertIn("{{ lesson.title }}", video_lesson_source)
         self.assertIn('class="python-video-play-icon"', video_lesson_source)
         self.assertNotIn(">▶</span>", video_lesson_source)
@@ -783,15 +783,14 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("Практика на 5 минут", day_source)
         self.assertIn("30 вопросов", final_source)
 
-    def test_courses_show_locked_future_days_after_day_thirty(self):
+    def test_courses_stop_at_day_thirty_without_future_placeholders(self):
         english_source = (TEMPLATES / "english_course.html").read_text(encoding="utf-8")
         it_source = (TEMPLATES / "it_course.html").read_text(encoding="utf-8")
 
         for source in (english_source, it_source):
-            self.assertIn("locked_future_lessons", source)
-            self.assertIn("Продолжение после 30-го дня", source)
-            self.assertIn("Пока не открыто", source)
-            self.assertNotIn("url_for('learning.english_day', day_number=lesson.day)", source.split("learning-future-grid", 1)[1])
+            self.assertNotIn("locked_future_lessons", source)
+            self.assertNotIn("Продолжение после 30-го дня", source)
+            self.assertNotIn("learning-future-grid", source)
 
     def test_daily_lessons_expose_speech_synthesis_controls(self):
         english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")

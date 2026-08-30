@@ -9,7 +9,7 @@
     <div class="learning-hero">
         <div>
             <p class="learning-kicker">English · 30 минут в день</p>
-            <h1>Английский за 30 дней</h1>
+            <h1>Английский за 30 дней (Начальный)</h1>
             <p>Начинаем с перевода самых полезных слов и предложений. Каждый следующий день открывается после успешного теста.</p>
         </div>
         <div class="learning-progress-summary">
@@ -97,27 +97,6 @@
         {% endfor %}
     </div>
 
-    <div class="learning-section-heading learning-future-heading">
-        <div>
-            <p class="learning-kicker">Дальше</p>
-            <h2>Продолжение после 30-го дня</h2>
-        </div>
-        <span>Пока не открыто</span>
-    </div>
-
-    <div class="english-course-grid learning-future-grid">
-        {% for lesson in locked_future_lessons %}
-        <div class="english-day-card english-day-card-locked english-day-card-future" aria-disabled="true">
-            <div class="english-day-card-top">
-                <span class="english-day-number">День {{ lesson.day }}</span>
-                <span class="english-day-status" aria-label="Пока не открыто">🔒</span>
-            </div>
-            <h3>{{ lesson.title }}</h3>
-            <p>Пока не открыто</p>
-        </div>
-        {% endfor %}
-    </div>
-
     <section class="final-test-card{% if not final_unlocked %} final-test-card-locked{% endif %}">
         <div class="final-test-icon" aria-hidden="true">★</div>
         <div class="final-test-content">
@@ -131,7 +110,7 @@
         {% if final_unlocked %}
         <a class="btn btn-primary" href="{{ url_for('learning.english_final') }}">Открыть тест</a>
         {% else %}
-        <span class="final-test-lock">Откроется после 30-го дня</span>
+        <span class="final-test-lock">Завершите все дни курса</span>
         {% endif %}
     </section>
 </section>

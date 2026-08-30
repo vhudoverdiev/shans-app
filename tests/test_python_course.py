@@ -45,6 +45,25 @@ class PythonCourseTests(unittest.TestCase):
             self.assertGreaterEqual(len(lesson["project"]["steps"]), 5)
             self.assertTrue(lesson["project"]["result"])
 
+    def test_practice_card_keeps_space_below_test_button(self):
+        styles = (PROJECT_ROOT / "app" / "static" / "css" / "learning.css").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("padding: 24px 26px 38px 98px;", styles)
+        self.assertIn("padding: 19px 19px 30px;", styles)
+
+    def test_it_courses_are_sequential_and_interview_test_is_separate(self):
+        learning = (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8")
+        hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
+        section = (TEMPLATES_DIRECTORY / "python_interview_section.html").read_text(encoding="utf-8")
+        self.assertIn("def _it_course_access", learning)
+        self.assertIn("percent >= 80", learning)
+        self.assertIn('"it": True', learning)
+        self.assertIn("block.locked", hub)
+        self.assertIn("предыдущего курса минимум на 80%", hub)
+        self.assertIn("learning.python_interview_test", section)
+        self.assertNotIn("data-interview-test-toggle", section)
+
     def test_every_day_has_twenty_valid_questions(self):
         for day in range(1, 31):
             questions = build_python_daily_quiz(day)
@@ -126,9 +145,9 @@ class PythonCourseTests(unittest.TestCase):
         self.assertNotIn("learning.python_video_lectures", templates["python_course.html"])
         basics_hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
         self.assertIn("url_for(block.endpoint)", basics_hub)
-        self.assertIn("Python с нуля", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
+        self.assertIn("Разработчик Python v2", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
         self.assertIn("role=\"progressbar\"", basics_hub)
-        self.assertIn("Разработчик Python", templates["python_course.html"])
+        self.assertIn("Python v1", templates["python_course.html"])
         self.assertNotIn("Курс по дням", templates["english_course.html"])
         self.assertNotIn("Курс по дням", templates["it_course.html"])
         self.assertNotIn("learning-course-tabs", templates["it_course.html"])
@@ -137,8 +156,15 @@ class PythonCourseTests(unittest.TestCase):
         self.assertNotIn("learning-course-tabs", video_hub)
 
         learning_source = (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8")
-        for title in ('"title": "Разработчик Python"', '"title": "Понятия"', '"title": "Python с нуля"'):
+        for title in ('"title": "Python v1"', '"title": "Понятия (Для новичка)"', '"title": "Разработчик Python v2"', '"title": "Собеседования (Python)"'):
             self.assertIn(title, learning_source)
+
+        self.assertNotIn("learning-course-tabs", templates["python_course.html"])
+        self.assertNotIn("Курс по дням", templates["python_course.html"])
+        interview_hub = (TEMPLATES_DIRECTORY / "python_interview.html").read_text(encoding="utf-8")
+        self.assertNotIn("learning-course-tabs", interview_hub)
+        self.assertNotIn("Курс по дням", interview_hub)
+        self.assertIn("Пять направлений", basics_hub)
 
     def test_daily_lessons_have_topic_posters_and_video_controls(self):
         for template_name in ("english_day.html", "it_day.html", "python_day.html"):
@@ -174,17 +200,17 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn("Ответы на все вопросы блока", section)
         self.assertIn("interview_questions|length }} ответов", section)
         self.assertIn("Проверка блока", section)
-        self.assertIn("data-interview-test-toggle", section)
-        self.assertIn('id="interview-test"{% if score is none %} hidden{% endif %}', section)
-        self.assertIn("interview-test-toggle.js", section)
+        self.assertIn("learning.python_interview_test", section)
+        self.assertIn("{% if not test_page %}", section)
+        self.assertNotIn("data-interview-test-toggle", section)
         styles = (PROJECT_ROOT / "app" / "static" / "css" / "learning.css").read_text(encoding="utf-8")
         self.assertNotIn("Видеолекция блока", section)
         self.assertNotIn("Посмотрите перед разбором", section)
         self.assertIn('class="interview-video-section"', section)
         self.assertIn(".study-progress-card .study-block-progress", styles)
         self.assertIn("margin-bottom: 24px", styles)
-        self.assertIn("linear-gradient(145deg, #0f3b8f", styles)
-        self.assertIn("linear-gradient(145deg, #312e81", styles)
+        self.assertIn("box-shadow: inset 0 0 0 2px #2563eb", styles)
+        self.assertIn("box-shadow: inset 0 0 0 2px #7c3aed", styles)
         self.assertIn(
             'videos/python-interview/block-{section_number:02d}.mp4',
             (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"),

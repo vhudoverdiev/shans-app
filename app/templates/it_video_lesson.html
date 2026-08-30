@@ -7,14 +7,14 @@
     <span class="quiz-pronounce-status" data-quiz-pronounce-status role="status" aria-live="polite"></span>
     <a class="learning-back-link" href="{{ url_for('learning.it_video_course') }}">← Все видеоуроки</a>
     <div class="learning-hero lesson-hero it-learning-hero">
-        <div><p class="learning-kicker">Python · видео {{ lesson.day }} из 22</p><h1>{{ lesson.title }}</h1><p>Посмотрите видео полностью, затем закрепите материал обязательным тестом.</p></div>
+        <div><p class="learning-kicker">Python · день {{ lesson.day }} из 30</p><h1>{{ lesson.title }}</h1><p>Посмотрите видео полностью, затем закрепите материал обязательным тестом.</p></div>
         <div class="lesson-day-mark">{{ lesson.day }}</div>
     </div>
 
     <section class="lesson-section video-player-section" data-video-anchor>
         <div class="python-video-shell" data-floating-video-player>
             <div class="python-video-poster" data-video-poster>
-                <span class="python-video-poster-kicker">Видеоурок {{ lesson.day }} из 22</span>
+                <span class="python-video-poster-kicker">Видеоурок {{ lesson.day }} из 30</span>
                 <strong>{{ lesson.title }}</strong>
                 <button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ lesson.title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть урок</button>
             </div>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Go — {{ lesson.title }} | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page it-lesson-page">
+    <a class="learning-back-link" href="{{ url_for('learning.go_course') }}">← Все уроки Go</a>
+    <div class="learning-hero lesson-hero it-learning-hero"><div><p class="learning-kicker">GO · ДЕНЬ {{ lesson.day }} ИЗ 30</p><h1>{{ lesson.title }}</h1><p>{{ lesson.summary }}</p></div><div class="lesson-day-mark">{{ lesson.day }}</div></div>
+    <section class="interview-video-section" data-video-anchor aria-label="Видеоурок «{{ lesson.title }}»">
+        <div class="python-video-shell" data-floating-video-player>
+            <div class="python-video-poster" data-video-poster><span class="python-video-poster-kicker">Go · день {{ lesson.day }} из 30</span><strong>{{ lesson.title }}</strong><button type="button" class="python-video-play" data-video-play><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть урок</button></div>
+            <video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=lesson.video_file) }}" type="video/mp4">Ваш браузер не поддерживает видео.</video>
+            <div class="python-video-floating-bar" data-video-floating-bar><span>Go · урок {{ lesson.day }}</span><button type="button" data-video-expand aria-label="Развернуть">↗</button><button type="button" data-video-close aria-label="Закрыть">×</button></div>
+        </div>
+    </section>
+    <section class="lesson-section it-lecture-section"><p class="learning-kicker">Текстовая лекция</p><h2>{{ lesson.title }}</h2><div class="it-lecture-copy">{% for paragraph in lesson.lecture %}<article class="it-lecture-point"><p>{{ paragraph }}</p></article>{% endfor %}</div></section>
+    <section class="lesson-section"><div class="learning-section-heading"><div><p class="learning-kicker">Словарь</p><h2>Ключевые понятия</h2></div><span>{{ lesson.terms|length }} терминов</span></div><div class="it-term-grid">{% for term, definition in lesson.terms %}<article class="it-term-card"><strong>{{ term }}</strong><span>{{ definition }}</span><p class="it-term-detail">Объясните своими словами, где это применяется в теме текущего урока.</p></article>{% endfor %}</div></section>
+    <section class="lesson-section"><p class="learning-kicker">Код</p><h2>Рабочий пример</h2><pre><code>{{ lesson.code }}</code></pre></section>
+    <section class="lesson-section"><p class="learning-kicker">Практика</p><h2>Задание урока</h2><p class="lesson-lecture">{{ lesson.practice }}</p></section>
+    {% if score is none %}<div class="video-quiz-launch"><button type="button" class="btn btn-primary quiz-reveal-button" data-quiz-reveal-button data-quiz-target="go-test" aria-controls="go-test" aria-expanded="false">Перейти к тесту</button></div>{% endif %}
+    <section class="lesson-section quiz-section quiz-form-shell" id="go-test" data-quiz-form-shell{% if score is none %} hidden{% endif %}>
+        <div class="learning-section-heading"><div><p class="learning-kicker">Проверка урока</p><h2>Тест по Go</h2></div><span>Нужно {{ pass_score }} из {{ questions|length }}</span></div>
+        <form method="post" class="quiz-form"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">{% for question in questions %}{% set question_index=loop.index0 %}{% set question_number=loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}<button type="submit" class="btn btn-primary quiz-submit">Проверить ответы</button></form>
+    </section>
+    {% if score is not none %}<section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" role="status"><div class="quiz-result-score">{{ score }} / {{ questions|length }}</div><div><h2>{% if passed %}Урок пройден{% else %}Повторите материал{% endif %}</h2><p>{% if passed %}Результат сохранён, следующий урок открыт.{% else %}Для продолжения нужно не менее {{ pass_score }} правильных ответов.{% endif %}</p></div>{% if passed and next_day %}<a class="btn btn-primary" href="{{ url_for('learning.go_day', day_number=next_day) }}">Урок {{ next_day }} →</a>{% elif passed and course_finished %}<a class="btn btn-primary" href="{{ url_for('learning.go_course') }}">К курсу</a>{% endif %}</section><div class="quiz-feedback-list">{% for item in feedback %}<article class="quiz-feedback-item{% if item.is_correct %} quiz-feedback-item-correct{% else %} quiz-feedback-item-wrong{% endif %}"><strong>{{ loop.index }}. {% if item.is_correct %}Верно{% else %}Неверно{% endif %}</strong><span><b>Правильный ответ:</b> {{ item.correct_answer }}</span><span>{{ item.explanation }}</span></article>{% endfor %}</div>{% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/lesson-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}

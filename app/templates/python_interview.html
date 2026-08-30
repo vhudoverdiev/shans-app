@@ -1,17 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Собеседование — Разработчик Python | Шанс{% endblock %}
+{% block title %}Собеседования (Python) | Шанс{% endblock %}
 {% block content %}
 <section class="learning-page it-learning-page">
-    <div class="learning-course-nav">
-        <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
-        <nav class="learning-course-tabs" aria-label="Разделы курса Разработчик Python">
-            <a class="learning-course-tab" href="{{ url_for('learning.python_course') }}">Курс по дням</a>
-            <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.python_interview') }}" aria-current="page">Собеседование</a>
-        </nav>
-    </div>
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
     <div class="learning-hero it-learning-hero">
         <div>
-            <p class="learning-kicker">Разработчик Python · {{ total_sections }} блоков</p>
+            <p class="learning-kicker">Собеседования (Python) · {{ total_sections }} блоков</p>
             <h1>Подготовка к техническому собеседованию</h1>
             <p>Проходите темы последовательно: сначала разберите вопросы и сильные ответы, затем сдайте тест блока.</p>
         </div>
