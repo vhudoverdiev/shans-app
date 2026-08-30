@@ -5,10 +5,9 @@
 {% block content %}
 <section class="learning-page it-learning-page">
     <div class="learning-course-nav">
-        <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
-        <nav class="learning-course-tabs" aria-label="Разделы IT">
-            <a class="learning-course-tab" href="{{ url_for('learning.it_course') }}">Курс по дням</a>
-            <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.it_video_course') }}" aria-current="page">Видеокурсы</a>
+        <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← English и IT</a>
+        <nav class="learning-course-tabs" aria-label="Раздел Python с нуля">
+            <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.it_video_course') }}" aria-current="page">Python с нуля</a>
         </nav>
     </div>
 

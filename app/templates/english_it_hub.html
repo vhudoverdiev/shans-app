@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}English и IT | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page section-styled-page">
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
+    <div class="learning-hero learning-hero-compact">
+        <div><p class="learning-kicker">Три направления</p><h1>English и IT</h1><p>Выберите курс и сразу увидите, сколько материала уже пройдено.</p></div>
+        <div class="learning-hero-mark" aria-hidden="true">3</div>
+    </div>
+    <div class="dashboard-grid study-direction-grid study-progress-grid">
+        {% for block in blocks %}
+        <a href="{{ url_for(block.endpoint) }}" class="dashboard-card dashboard-card-featured study-card-it study-progress-card">
+            <div class="dashboard-card-icon study-card-icon-it" aria-hidden="true">{{ block.icon }}</div>
+            <span class="study-card-badge study-card-badge-active">{{ block.percent }}%</span>
+            <div class="dashboard-card-title">{{ block.title }}</div>
+            <div class="dashboard-card-text">{{ block.description }}</div>
+            <div class="study-block-progress" role="progressbar" aria-label="Прогресс курса {{ block.title }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ block.percent }}">
+                <div class="study-block-progress-copy"><strong>{{ block.percent }}%</strong><span>{{ block.passed }} из {{ block.total }}</span></div>
+                <div class="study-block-progress-track"><span style="width: {{ block.percent }}%"></span></div>
+            </div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

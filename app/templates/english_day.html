@@ -15,12 +15,17 @@
         <div class="lesson-day-mark">{{ lesson.day }}</div>
     </div>
 
-    <section class="lesson-section video-player-section" aria-labelledby="english-video-title">
+    <section class="lesson-section video-player-section" aria-labelledby="english-video-title" data-video-anchor>
         <div class="learning-section-heading">
             <div><p class="learning-kicker">Видеолекция дня</p><h2 id="english-video-title">{{ lesson.title }}</h2></div>
             <span>Смотрите перед изучением карточек</span>
         </div>
         <div class="python-video-shell" data-floating-video-player>
+            <div class="python-video-poster" data-video-poster>
+                <span class="python-video-poster-kicker">English · день {{ lesson.day }} из 30</span>
+                <strong>{{ lesson.title }}</strong>
+                <button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ lesson.title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть урок</button>
+            </div>
             <video class="python-course-video" controls playsinline preload="metadata">
                 <source src="{{ url_for('static', filename=lesson_video_file) }}" type="video/mp4">
                 Ваш браузер не поддерживает воспроизведение видео.

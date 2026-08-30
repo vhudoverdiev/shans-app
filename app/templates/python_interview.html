@@ -1,1 +1,32 @@
-{% extends "base.html" %}{% block title %}Junior Python — собеседование | Шанс{% endblock %}{% block content %}<section class="learning-page it-learning-page"><div class="learning-course-nav"><a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a><nav class="learning-course-tabs"><a class="learning-course-tab" href="{{ url_for('learning.python_course') }}">Курс по дням</a><a class="learning-course-tab" href="{{ url_for('learning.python_video_lectures') }}">Видеолекции</a><a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.python_interview') }}">Собеседование</a></nav></div><div class="learning-hero it-learning-hero"><div><p class="learning-kicker">Junior Python Developer</p><h1>Подготовка к техническому собеседованию</h1><p>Python, Django, ООП, SOLID, алгоритмы, базы данных, системный дизайн и soft skills. Отвечайте вслух до раскрытия образца.</p></div></div>{% for title, questions in sections %}<section class="lesson-section"><div class="learning-section-heading"><div><p class="learning-kicker">Блок {{ loop.index }}</p><h2>{{ title }}</h2></div><span>{{ questions|length }} вопросов</span></div><div class="it-lecture-copy">{% for question, answer in questions %}<article class="it-lecture-point"><h3>{{ loop.index }}. {{ question }}</h3><details class="lesson-more-details"><summary>Показать сильный junior-ответ</summary><div class="lesson-more-body"><p>{{ answer }}</p><p><b>Как тренироваться:</b> сначала ответьте за 60–90 секунд своими словами, затем сравните структуру, исправьте пробел и повторите без чтения.</p></div></details></article>{% endfor %}</div></section>{% endfor %}</section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Собеседование — Разработчик Python | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page it-learning-page">
+    <div class="learning-course-nav">
+        <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
+        <nav class="learning-course-tabs" aria-label="Разделы курса Разработчик Python">
+            <a class="learning-course-tab" href="{{ url_for('learning.python_course') }}">Курс по дням</a>
+            <a class="learning-course-tab learning-course-tab-active" href="{{ url_for('learning.python_interview') }}" aria-current="page">Собеседование</a>
+        </nav>
+    </div>
+    <div class="learning-hero it-learning-hero">
+        <div>
+            <p class="learning-kicker">Разработчик Python · {{ total_sections }} блоков</p>
+            <h1>Подготовка к техническому собеседованию</h1>
+            <p>Проходите темы последовательно: сначала разберите вопросы и сильные ответы, затем сдайте тест блока.</p>
+        </div>
+        <div class="learning-progress-summary"><strong>{{ passed_count }} / {{ total_sections }}</strong><span>блоков завершено</span></div>
+    </div>
+    <div class="learning-section-heading"><div><p class="learning-kicker">Программа</p><h2>Блоки собеседования</h2></div><span>Разбор · примеры · тест</span></div>
+    <div class="english-course-grid it-course-grid interview-section-grid">
+        {% for section in sections %}
+            {% if section.unlocked %}<a href="{{ url_for('learning.python_interview_section', section_number=section.number) }}" class="english-day-card it-day-card{% if section.passed %} english-day-card-passed{% endif %}">{% else %}<div class="english-day-card it-day-card english-day-card-locked" aria-disabled="true">{% endif %}
+                <div class="english-day-card-top"><span class="english-day-number">Блок {{ section.number }}</span><span class="english-day-status">{% if section.passed %}✓{% elif section.unlocked %}Начать{% else %}🔒{% endif %}</span></div>
+                <h3>{{ section.title }}</h3>
+                <p>{{ section.question_count }} тем для разбора и итоговый тест блока.</p>
+                {% if section.passed %}<span class="english-day-score">Лучший результат: {{ section.best_score }} / {{ section.question_count }}</span>{% endif %}
+            {% if section.unlocked %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

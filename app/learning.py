@@ -24,8 +24,6 @@ REVIEW_QUESTIONS_PER_DAY = 2
 REVIEW_PASS_PERCENT = 80
 REVIEW_MILESTONES = tuple(range(REVIEW_BLOCK_SIZE, 31, REVIEW_BLOCK_SIZE))
 LOCKED_FUTURE_DAYS = tuple(range(31, 61))
-
-
 @learning_bp.app_template_filter("english_speech")
 def _english_speech(value) -> str:
     """Return only Latin-script fragments suitable for English speech synthesis."""
@@ -680,6 +678,20 @@ def init_learning_db() -> None:
                 passed INTEGER NOT NULL DEFAULT 0,
                 completed_at TEXT,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS python_interview_progress (
+                user_id INTEGER NOT NULL,
+                section_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, section_number)
             )
             """
         )
@@ -2332,6 +2344,50 @@ def study_hub():
     return render_template("study_hub.html")
 
 
+@learning_bp.route("/study/english-it")
+@login_required
+def english_it_hub():
+    user_id = int(current_user.id)
+    _english_progress, english_passed, _english_next = _course_state(user_id)
+    _it_progress, it_passed, _it_next = _it_course_state(user_id)
+    _video_progress, video_passed, _video_next = _get_course_state(
+        user_id, "video", PYTHON_VIDEO_LESSONS
+    )
+    blocks = (
+        {
+            "title": "English",
+            "description": "30 дней: слова, предложения, практика и тесты.",
+            "icon": "EN",
+            "endpoint": "learning.english_course",
+            "passed": len(english_passed),
+            "total": len(ENGLISH_LESSONS),
+        },
+        {
+            "title": "IT",
+            "description": "30 дней фундаментальных IT-тем, практики и тестов.",
+            "icon": "</>",
+            "endpoint": "learning.it_course",
+            "passed": len(it_passed),
+            "total": len(IT_LESSONS),
+        },
+        {
+            "title": "Python с нуля",
+            "description": "22 последовательных видеоурока с тестом после каждого.",
+            "icon": "Py",
+            "endpoint": "learning.it_video_course",
+            "passed": len(video_passed),
+            "total": len(PYTHON_VIDEO_LESSONS),
+        },
+    )
+    return render_template(
+        "english_it_hub.html",
+        blocks=[
+            {**block, "percent": round(block["passed"] / block["total"] * 100)}
+            for block in blocks
+        ],
+    )
+
+
 @learning_bp.route("/study/english")
 @login_required
 def english_course():
@@ -2971,4 +3027,137 @@ def python_video_lecture(day_number: int):
 @learning_bp.route("/study/python/interview")
 @login_required
 def python_interview():
-    return render_template("python_interview.html", sections=PYTHON_INTERVIEW_SECTIONS)
+    user_id = int(current_user.id)
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT section_number, best_score, attempts, passed
+            FROM python_interview_progress
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+    progress = {int(row["section_number"]): dict(row) for row in rows}
+    passed_sections = {number for number, row in progress.items() if row["passed"]}
+    next_section = next(
+        (number for number in range(1, len(PYTHON_INTERVIEW_SECTIONS) + 1) if number not in passed_sections),
+        None,
+    )
+    sections = [
+        {
+            "number": number,
+            "title": title,
+            "question_count": len(questions),
+            "passed": number in passed_sections,
+            "unlocked": number in passed_sections or number == next_section,
+            "best_score": int(progress.get(number, {}).get("best_score", 0)),
+        }
+        for number, (title, questions) in enumerate(PYTHON_INTERVIEW_SECTIONS, start=1)
+    ]
+    return render_template(
+        "python_interview.html",
+        sections=sections,
+        passed_count=len(passed_sections),
+        total_sections=len(PYTHON_INTERVIEW_SECTIONS),
+    )
+
+
+def build_python_interview_quiz(section_number: int, seed: int) -> list[dict]:
+    if not 1 <= section_number <= len(PYTHON_INTERVIEW_SECTIONS):
+        raise ValueError("Неизвестный блок собеседования.")
+    _title, section_questions = PYTHON_INTERVIEW_SECTIONS[section_number - 1]
+    all_answers = [
+        answer
+        for _section_title, questions in PYTHON_INTERVIEW_SECTIONS
+        for _question, answer in questions
+    ]
+    rng = random.Random(seed)
+    quiz = []
+    for question_number, (prompt, answer) in enumerate(section_questions):
+        distractors = [candidate for candidate in all_answers if candidate != answer]
+        options = [answer, *rng.sample(distractors, 3)]
+        rng.shuffle(options)
+        quiz.append(
+            {
+                "prompt": prompt,
+                "options": options,
+                "correct_index": options.index(answer),
+                "explanation": answer,
+                "question_id": f"interview-{section_number}-{question_number}",
+            }
+        )
+    rng.shuffle(quiz)
+    return quiz
+
+
+@learning_bp.route("/study/python/interview/<int:section_number>", methods=["GET", "POST"])
+@login_required
+def python_interview_section(section_number: int):
+    if not 1 <= section_number <= len(PYTHON_INTERVIEW_SECTIONS):
+        abort(404)
+    user_id = int(current_user.id)
+    conn = get_connection()
+    try:
+        passed_rows = conn.execute(
+            """
+            SELECT section_number FROM python_interview_progress
+            WHERE user_id = ? AND passed = 1
+            """,
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+    passed_sections = {int(row["section_number"]) for row in passed_rows}
+    if section_number > 1 and section_number - 1 not in passed_sections:
+        flash("Сначала завершите предыдущий блок собеседования.", "warning")
+        return redirect(url_for("learning.python_interview"))
+
+    title, interview_questions = PYTHON_INTERVIEW_SECTIONS[section_number - 1]
+    seed = int(request.form.get("quiz_seed", 0) or 0) if request.method == "POST" else secrets.randbelow(2**31)
+    quiz = build_python_interview_quiz(section_number, seed)
+    score = feedback = None
+    passed = section_number in passed_sections
+    pass_score = (len(quiz) * 80 + 99) // 100
+    if request.method == "POST":
+        score, feedback = grade_quiz(quiz, request.form)
+        passed = score >= pass_score
+        conn = get_connection()
+        try:
+            conn.execute(
+                """
+                INSERT INTO python_interview_progress (
+                    user_id, section_number, best_score, attempts, passed, completed_at, updated_at
+                ) VALUES (?, ?, ?, 1, ?, CASE WHEN ? THEN CURRENT_TIMESTAMP END, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, section_number) DO UPDATE SET
+                    best_score = MAX(best_score, excluded.best_score),
+                    attempts = attempts + 1,
+                    passed = MAX(passed, excluded.passed),
+                    completed_at = CASE
+                        WHEN excluded.passed = 1 THEN COALESCE(completed_at, CURRENT_TIMESTAMP)
+                        ELSE completed_at
+                    END,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (user_id, section_number, score, int(passed), int(passed)),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    return render_template(
+        "python_interview_section.html",
+        section_number=section_number,
+        total_sections=len(PYTHON_INTERVIEW_SECTIONS),
+        title=title,
+        interview_questions=interview_questions,
+        quiz=quiz,
+        quiz_seed=seed,
+        pass_score=pass_score,
+        score=score,
+        feedback=feedback,
+        passed=passed,
+        next_section=section_number + 1 if section_number < len(PYTHON_INTERVIEW_SECTIONS) else None,
+        video_file=f"videos/python-interview/block-{section_number:02d}.mp4",
+    )

@@ -197,6 +197,45 @@
     background: linear-gradient(145deg, #ffffff 0%, #ecfdf5 100%);
 }
 
+.study-progress-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.study-block-progress {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.study-block-progress-copy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    color: #475569;
+    font-size: 12px;
+}
+
+.study-block-progress-copy strong {
+    color: #2563eb;
+    font-size: 15px;
+}
+
+.study-block-progress-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #dbeafe;
+}
+
+.study-block-progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+}
+
 .learning-progress-summary {
     width: 170px;
     flex: 0 0 170px;

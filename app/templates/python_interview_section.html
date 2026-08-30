@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — собеседование | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page it-lesson-page">
+    <a class="learning-back-link" href="{{ url_for('learning.python_interview') }}">← Все блоки собеседования</a>
+    <div class="learning-hero lesson-hero it-learning-hero">
+        <div><p class="learning-kicker">Разработчик Python · блок {{ section_number }} из {{ total_sections }}</p><h1>{{ title }}</h1><p>Сначала сформулируйте ответ своими словами, затем сравните его с сильным вариантом.</p></div>
+        <div class="lesson-day-mark">{{ section_number }}</div>
+    </div>
+    <section class="lesson-section video-player-section" data-video-anchor>
+        <div class="learning-section-heading"><div><p class="learning-kicker">Видеолекция блока</p><h2>{{ title }}</h2></div><span>Посмотрите перед разбором</span></div>
+        <div class="python-video-shell" data-floating-video-player>
+            <div class="python-video-poster" data-video-poster><span class="python-video-poster-kicker">Собеседование · блок {{ section_number }} из {{ total_sections }}</span><strong>{{ title }}</strong><button type="button" class="python-video-play" data-video-play aria-label="Запустить видео «{{ title }}»"><span class="python-video-play-icon" aria-hidden="true"></span>Смотреть лекцию</button></div>
+            <video class="python-course-video" controls playsinline preload="metadata"><source src="{{ url_for('static', filename=video_file) }}" type="video/mp4">Ваш браузер не поддерживает воспроизведение видео.</video>
+            <div class="python-video-floating-bar" data-video-floating-bar><span>Собеседование · блок {{ section_number }}</span><button type="button" data-video-expand aria-label="Развернуть видеолекцию" title="Развернуть">↗</button><button type="button" data-video-close aria-label="Остановить и закрыть мини-плеер" title="Закрыть">×</button></div>
+        </div>
+    </section>
+    <section class="lesson-section">
+        <div class="learning-section-heading"><div><p class="learning-kicker">Конспект видеолекции</p><h2>Ответы на все вопросы блока</h2></div><span>{{ interview_questions|length }} вопросов · {{ interview_questions|length }} ответов</span></div>
+        <p class="lesson-lecture lesson-lecture-intro">Этот конспект является обязательной частью видеолекции: здесь по порядку разобраны все вопросы, которые встретятся в проверочном тесте.</p>
+        <div class="it-lecture-copy">
+            {% for question, answer in interview_questions %}
+            <article class="it-lecture-point"><h3>{{ loop.index }}. {{ question }}</h3><details class="lesson-more-details"><summary>Показать сильный junior-ответ</summary><div class="lesson-more-body"><p>{{ answer }}</p><p><strong>Как тренироваться:</strong> ответьте за 60–90 секунд без подсказки, сравните ответ и повторите ещё раз.</p></div></details></article>
+            {% endfor %}
+        </div>
+    </section>
+    <section class="lesson-section quiz-section" id="interview-test">
+        <div class="learning-section-heading"><div><p class="learning-kicker">Проверка блока</p><h2>Тест после подготовки</h2></div><span>Нужно {{ pass_score }} из {{ quiz|length }}</span></div>
+        <form method="post" action="{{ url_for('learning.python_interview_section', section_number=section_number, _anchor='interview-result') }}" class="quiz-form it-quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
+            {% for question in quiz %}{% set question_index=loop.index0 %}{% set question_number=loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary quiz-submit">Проверить блок</button>
+        </form>
+    </section>
+    {% if score is not none %}<section class="quiz-result{% if passed %} quiz-result-passed{% else %} quiz-result-failed{% endif %}" id="interview-result"><div class="quiz-result-score">{{ score }} / {{ quiz|length }}</div><div><h2>{% if passed %}Блок пройден{% else %}Повторите ответы блока{% endif %}</h2><p>{% if passed %}Результат сохранён, следующий блок открыт.{% else %}Откройте разборы ещё раз и повторите тест.{% endif %}</p></div>{% if passed and next_section %}<a class="btn btn-primary" href="{{ url_for('learning.python_interview_section', section_number=next_section) }}">Блок {{ next_section }} →</a>{% elif passed %}<a class="btn btn-primary" href="{{ url_for('learning.python_interview') }}">К списку блоков</a>{% endif %}</section>{% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>{% endblock %}

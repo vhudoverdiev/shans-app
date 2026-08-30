@@ -7,6 +7,7 @@ from app.database import get_master_connection
 from app.learning import (
     PYTHON_LESSONS,
     _base_quiz_for_attempt,
+    build_python_interview_quiz,
     build_python_daily_quiz,
     build_python_final_quiz,
     init_learning_db,
@@ -78,6 +79,7 @@ class PythonCourseTests(unittest.TestCase):
             connection.close()
         self.assertIn("python_course_progress", names)
         self.assertIn("python_final_results", names)
+        self.assertIn("python_interview_progress", names)
 
     def test_interview_section_covers_all_required_tracks(self):
         titles = " ".join(section[0] for section in PYTHON_INTERVIEW_SECTIONS).lower()
@@ -112,6 +114,57 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn("data-video-close", source)
         self.assertIn("js/floating-video-player.js", source)
         self.assertIn("learning.python_day_test", source)
+
+    def test_separate_daily_lecture_tabs_are_removed_from_course_navigation(self):
+        templates = {
+            name: (TEMPLATES_DIRECTORY / name).read_text(encoding="utf-8")
+            for name in ("english_course.html", "it_course.html", "python_course.html")
+        }
+
+        self.assertNotIn("learning.english_video_lectures", templates["english_course.html"])
+        self.assertNotIn("learning.it_video_lectures", templates["it_course.html"])
+        self.assertNotIn("learning.python_video_lectures", templates["python_course.html"])
+        basics_hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
+        self.assertIn("url_for(block.endpoint)", basics_hub)
+        self.assertIn("Python с нуля", (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"))
+        self.assertIn("role=\"progressbar\"", basics_hub)
+        self.assertIn("Разработчик Python", templates["python_course.html"])
+
+    def test_daily_lessons_have_topic_posters_and_video_controls(self):
+        for template_name in ("english_day.html", "it_day.html", "python_day.html"):
+            source = (TEMPLATES_DIRECTORY / template_name).read_text(encoding="utf-8")
+            self.assertIn("data-video-anchor", source, template_name)
+            self.assertIn("data-video-poster", source, template_name)
+            self.assertIn("data-video-play", source, template_name)
+            self.assertIn("{{ lesson.title }}", source, template_name)
+            self.assertIn("data-video-expand", source, template_name)
+            self.assertIn("data-video-close", source, template_name)
+
+    def test_interview_is_split_into_sequential_blocks_with_valid_quizzes_and_videos(self):
+        for section_number in range(1, len(PYTHON_INTERVIEW_SECTIONS) + 1):
+            quiz = build_python_interview_quiz(section_number, 20260830)
+            self.assertEqual(len(quiz), len(PYTHON_INTERVIEW_SECTIONS[section_number - 1][1]))
+            video_path = VIDEOS_DIRECTORY / "python-interview" / f"block-{section_number:02d}.mp4"
+            self.assertTrue(video_path.is_file(), video_path)
+            self.assertGreater(video_path.stat().st_size, 1024 * 1024, video_path)
+            with video_path.open("rb") as video:
+                self.assertEqual(video.read(8)[4:8], b"ftyp", video_path)
+            for question in quiz:
+                self.assertEqual(len(question["options"]), 4)
+                self.assertGreaterEqual(question["correct_index"], 0)
+                self.assertLess(question["correct_index"], 4)
+
+        catalog = (TEMPLATES_DIRECTORY / "python_interview.html").read_text(encoding="utf-8")
+        section = (TEMPLATES_DIRECTORY / "python_interview_section.html").read_text(encoding="utf-8")
+        self.assertIn("learning.python_interview_section", catalog)
+        self.assertIn("data-video-poster", section)
+        self.assertIn("Ответы на все вопросы блока", section)
+        self.assertIn("interview_questions|length }} ответов", section)
+        self.assertIn("Проверка блока", section)
+        self.assertIn(
+            'videos/python-interview/block-{section_number:02d}.mp4',
+            (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"),
+        )
 
 
 if __name__ == "__main__":
