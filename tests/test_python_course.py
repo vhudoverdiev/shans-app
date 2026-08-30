@@ -182,6 +182,9 @@ class PythonCourseTests(unittest.TestCase):
         self.assertNotIn("Посмотрите перед разбором", section)
         self.assertIn('class="interview-video-section"', section)
         self.assertIn(".study-progress-card .study-block-progress", styles)
+        self.assertIn("margin-bottom: 24px", styles)
+        self.assertIn("linear-gradient(145deg, #0f3b8f", styles)
+        self.assertIn("linear-gradient(145deg, #312e81", styles)
         self.assertIn(
             'videos/python-interview/block-{section_number:02d}.mp4',
             (PROJECT_ROOT / "app" / "learning.py").read_text(encoding="utf-8"),

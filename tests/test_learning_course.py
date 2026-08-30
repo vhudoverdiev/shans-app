@@ -538,6 +538,8 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("video.pause()", player_script)
         self.assertIn("scrollIntoView", player_script)
         self.assertIn(".python-video-shell-floating", styles)
+        self.assertIn("navigator.mediaSession.metadata", player_script)
+        self.assertIn('artist: "Шанс"', player_script)
         self.assertIn("prefers-reduced-motion: reduce", styles)
 
     def test_video_quiz_is_revealed_by_an_adaptive_button(self):

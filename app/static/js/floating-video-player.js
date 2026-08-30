@@ -16,6 +16,22 @@
     let anchorVisible = true;
     let floatingDismissed = false;
 
+    function updateMediaMetadata() {
+        if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") {
+            return;
+        }
+        const title = poster ? String(poster.querySelector("strong")?.textContent || "").trim() : "";
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: title || document.title.split("|")[0].trim(),
+            artist: "Шанс",
+            album: "Обучение",
+            artwork: [
+                { src: "/static/logo.png", sizes: "384x384", type: "image/png" },
+                { src: "/static/pwa-icon-512-shans-v2.png", sizes: "512x512", type: "image/png" },
+            ],
+        });
+    }
+
     function updateFloatingState() {
         shell.classList.toggle(
             "python-video-shell-floating",
@@ -35,6 +51,7 @@
     });
 
     video.addEventListener("play", function () {
+        updateMediaMetadata();
         started = true;
         floatingDismissed = false;
         hidePoster();
