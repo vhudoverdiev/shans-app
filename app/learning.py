@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 
 from app.database import get_connection
 from app.it_course_content import IT_LESSONS
+from app.python_course_content import PYTHON_INTERVIEW_SECTIONS, PYTHON_LESSONS
 from app.python_video_course_content import PYTHON_VIDEO_LESSONS
 
 
@@ -38,10 +39,12 @@ _PROGRESS_TABLES = {
     "english": "english_course_progress",
     "it": "it_course_progress",
     "video": "python_video_progress",
+    "python": "python_course_progress",
 }
 _FINAL_TABLES = {
     "english": "english_final_results",
     "it": "it_final_results",
+    "python": "python_final_results",
 }
 
 
@@ -654,6 +657,32 @@ def init_learning_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS python_course_progress (
+                user_id INTEGER NOT NULL,
+                day_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, day_number)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS python_final_results (
+                user_id INTEGER PRIMARY KEY,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
         _create_live_quiz_attempts_table(conn)
         conn.commit()
     finally:
@@ -1144,12 +1173,61 @@ def build_it_final_quiz() -> list[dict]:
     return questions
 
 
+def build_python_daily_quiz(day_number: int) -> list[dict]:
+    lesson = PYTHON_LESSONS[day_number - 1]
+    terms = lesson["terms"]
+    questions = []
+    for question_index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            definition, (item[1] for item in terms if item[0] != term), day_number + question_index
+        )
+        questions.append({"day": day_number, "prompt": f"Что означает «{term}»?", "options": options,
+                          "correct_index": correct_index, "explanation": f"{term} — {definition}."})
+    for question_index, (term, definition) in enumerate(terms):
+        options, correct_index = _rotated_options(
+            term, (item[0] for item in terms if item[0] != term), day_number + 20 + question_index
+        )
+        questions.append({"day": day_number, "prompt": f"Какое понятие означает «{definition}»?",
+                          "options": options, "correct_index": correct_index,
+                          "explanation": f"Это понятие — {term}."})
+    questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 501, "понятие")})
+    questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 602, "понятие")})
+    questions.append({"day": day_number, **dict(lesson["checkpoint"])})
+    title_options, title_correct_index = _rotated_options(
+        lesson["title"], (item["title"] for item in PYTHON_LESSONS if item["day"] != day_number), day_number + 40
+    )
+    questions.append({"day": day_number, "prompt": f"К какой теме относится: «{lesson['summary']}»?",
+                      "options": title_options, "correct_index": title_correct_index,
+                      "explanation": f"Это тема «{lesson['title']}»."})
+    for index in range(3):
+        term, definition = terms[index]
+        questions[10 + index] = _text_question(
+            questions[10 + index], term, f"Восстановите понятие: «{definition}»."
+        )
+    return questions
+
+
+def build_python_final_quiz() -> list[dict]:
+    questions = []
+    for lesson in PYTHON_LESSONS:
+        term_index = (lesson["day"] - 1) % len(lesson["terms"])
+        term, definition = lesson["terms"][term_index]
+        distractors = (
+            other["terms"][term_index % len(other["terms"])][1]
+            for other in PYTHON_LESSONS if other["day"] != lesson["day"]
+        )
+        options, correct_index = _rotated_options(definition, distractors, lesson["day"] + 900)
+        questions.append({"day": lesson["day"], "prompt": f"Что означает «{term}»?", "options": options,
+                          "correct_index": correct_index, "explanation": f"{term} — {definition}."})
+    return questions
+
+
 def build_review_quiz(course_key: str, end_day: int, seed: int) -> list[dict]:
     """Build a repeatable shuffled quiz for the five-day block ending at end_day."""
-    if course_key not in {"english", "it"} or end_day not in REVIEW_MILESTONES:
+    if course_key not in {"english", "it", "python"} or end_day not in REVIEW_MILESTONES:
         raise ValueError("Некорректный блок повторения.")
 
-    quiz_builder = build_daily_quiz if course_key == "english" else build_it_daily_quiz
+    quiz_builder = {"english": build_daily_quiz, "it": build_it_daily_quiz, "python": build_python_daily_quiz}[course_key]
     rng = random.Random(seed)
     questions = []
     first_day = end_day - REVIEW_BLOCK_SIZE + 1
@@ -1261,6 +1339,7 @@ def build_extra_quiz(course_key: str, current_number: int, question_count: int, 
         "english": (len(ENGLISH_LESSONS), lambda number: build_daily_quiz(number)),
         "it": (len(IT_LESSONS), lambda number: build_it_daily_quiz(number)),
         "video": (len(PYTHON_VIDEO_LESSONS), lambda number: build_video_lesson_quiz(number, seed + number)),
+        "python": (len(PYTHON_LESSONS), lambda number: build_python_daily_quiz(number)),
     }
     if course_key not in builders or question_count < 1:
         raise ValueError("Некорректные параметры дополнительного теста.")
@@ -1443,6 +1522,8 @@ def _base_quiz_for_attempt(course_key: str, item_number: int, seed: int) -> list
         return shuffle_quiz(build_daily_quiz(item_number), seed)
     if course_key == "it" and 1 <= item_number <= len(IT_LESSONS):
         return shuffle_quiz(build_it_daily_quiz(item_number), seed)
+    if course_key == "python" and 1 <= item_number <= len(PYTHON_LESSONS):
+        return shuffle_quiz(build_python_daily_quiz(item_number), seed)
     if course_key == "video" and 1 <= item_number <= len(PYTHON_VIDEO_LESSONS):
         return build_video_lesson_quiz(item_number, seed)
     abort(404)
@@ -1467,6 +1548,8 @@ def _save_live_quiz_result(course_key: str, item_number: int, score: int, total:
         _save_day_result(user_id, item_number, stored_score, passed)
     elif course_key == "it":
         _save_it_day_result(user_id, item_number, stored_score, passed)
+    elif course_key == "python":
+        _save_course_day_result(user_id, item_number, stored_score, passed, "python")
     else:
         _save_course_day_result(user_id, item_number, stored_score, passed, "video")
 
@@ -1477,6 +1560,8 @@ def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) 
             retry_url = url_for("learning.english_day_test", day_number=item_number, restart=1)
         elif course_key == "it":
             retry_url = url_for("learning.it_day_test", day_number=item_number, restart=1)
+        elif course_key == "python":
+            retry_url = url_for("learning.python_day_test", day_number=item_number, restart=1)
         else:
             retry_url = url_for("learning.it_video_lesson", lesson_number=item_number, restart=1)
         return retry_url, "Пройти тест заново"
@@ -1492,6 +1577,11 @@ def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) 
         if next_item:
             return url_for("learning.it_day", day_number=next_item), f"Перейти к дню {next_item}"
         return url_for("learning.it_final"), "Перейти к итоговому тесту"
+    if course_key == "python":
+        _progress, _passed, next_item = _python_course_state(user_id)
+        if next_item:
+            return url_for("learning.python_day", day_number=next_item), f"Перейти к дню {next_item}"
+        return url_for("learning.python_final"), "Перейти к итоговому тесту"
     _progress, _passed, next_item = _get_course_state(user_id, "video", PYTHON_VIDEO_LESSONS)
     if next_item:
         return url_for("learning.it_video_lesson", lesson_number=next_item), f"Перейти к видео {next_item}"
@@ -1534,6 +1624,8 @@ def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
         _progress, passed_items, next_item = _course_state(user_id)
     elif course_key == "it":
         _progress, passed_items, next_item = _it_course_state(user_id)
+    elif course_key == "python":
+        _progress, passed_items, next_item = _python_course_state(user_id)
     else:
         _progress, passed_items, next_item = _get_course_state(user_id, "video", PYTHON_VIDEO_LESSONS)
     if item_number not in passed_items and item_number != next_item:
@@ -1562,7 +1654,7 @@ def live_quiz_state():
         seed = int(request.args["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "video"} or not 0 <= seed < 2**31:
+    if course_key not in {"english", "it", "python", "video"} or not 0 <= seed < 2**31:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     user_id = int(current_user.id)
@@ -1634,7 +1726,7 @@ def check_live_quiz_answer():
         stage = str(payload.get("stage", "base"))
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "video"} or stage not in {"base", "extra"} or not 0 <= seed < 2**31:
+    if course_key not in {"english", "it", "python", "video"} or stage not in {"base", "extra"} or not 0 <= seed < 2**31:
         abort(400)
 
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
@@ -1724,7 +1816,7 @@ def sync_live_quiz_answers():
         seed = int(payload["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "video"} or not 0 <= seed < 2**31:
+    if course_key not in {"english", "it", "python", "video"} or not 0 <= seed < 2**31:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
@@ -1780,7 +1872,7 @@ def reset_live_quiz_attempt():
         item_number = int(request.form["item_number"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "video"}:
+    if course_key not in {"english", "it", "python", "video"}:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     user_id = int(current_user.id)
@@ -1794,6 +1886,10 @@ def reset_live_quiz_attempt():
         _reset_it_day_result(user_id, item_number)
         _reset_it_final_result(user_id)
         destination = url_for("learning.it_day_test", day_number=item_number, restart=1)
+    elif course_key == "python":
+        _reset_course_day_result(user_id, item_number, "python")
+        _reset_course_final_result(user_id, "python")
+        destination = url_for("learning.python_day_test", day_number=item_number, restart=1)
     else:
         _reset_course_day_result(user_id, item_number, "video")
         destination = url_for("learning.it_video_lesson", lesson_number=item_number, restart=1)
@@ -1908,14 +2004,20 @@ def _it_course_state(user_id: int):
     return _get_course_state(user_id, "it", IT_LESSONS)
 
 
+def _python_course_state(user_id: int):
+    return _get_course_state(user_id, "python", PYTHON_LESSONS)
+
+
 def _locked_future_lessons(course_key: str) -> list[dict]:
     titles = {
         "english": "Продолжение English",
         "it": "Продолжение IT",
+        "python": "Продолжение Python",
     }
     summaries = {
         "english": "Следующий уровень появится после запуска продолжения курса.",
         "it": "Следующий уровень фундамента IT пока готовится.",
+        "python": "Следующий уровень Python пока готовится.",
     }
     return [
         {
@@ -2434,6 +2536,11 @@ def course_review(course_key: str, end_day: int):
             "course_endpoint": "learning.it_course",
             "state": _it_course_state,
         },
+        "python": {
+            "title": "Python",
+            "course_endpoint": "learning.python_course",
+            "state": _python_course_state,
+        },
     }
     settings = course_settings.get(course_key)
     if settings is None or end_day not in REVIEW_MILESTONES:
@@ -2743,3 +2850,125 @@ def it_final():
         total_questions=len(questions),
         final_result=_get_it_final_result(int(current_user.id)),
     )
+
+
+@learning_bp.route("/study/python")
+@login_required
+def python_course():
+    progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    lessons = []
+    for lesson in PYTHON_LESSONS:
+        item = progress.get(lesson["day"])
+        lessons.append({**lesson, "passed": lesson["day"] in passed_days,
+                        "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                        "best_score": int(item["best_score"]) if item else 0})
+    return render_template("python_course.html", lessons=lessons,
+                           passed_count=len(passed_days),
+                           progress_percent=round(len(passed_days) / len(PYTHON_LESSONS) * 100),
+                           next_day=next_day, final_unlocked=len(passed_days) == len(PYTHON_LESSONS),
+                           final_result=_get_course_final_result(int(current_user.id), "python"),
+                           review_tests=_review_cards(passed_days))
+
+
+@learning_bp.route("/study/python/day/<int:day_number>")
+@login_required
+def python_day(day_number: int):
+    if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
+    progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.python_course"))
+    lesson = PYTHON_LESSONS[day_number - 1]
+    return render_template("python_day.html", lesson=lesson,
+                           lesson_video_file=f"videos/python-lectures/lesson-{day_number:02d}.mp4",
+                           day_progress=progress.get(day_number),
+                           lecture_points=_build_it_lecture_points(lesson),
+                           term_cards=_build_it_term_cards(lesson),
+                           code_steps=_build_it_code_steps(lesson),
+                           practice_steps=_build_it_practice_steps(lesson),
+                           audio_segments=_it_audio_segments(lesson))
+
+
+@learning_bp.route("/study/python/day/<int:day_number>/test", methods=["GET", "POST"])
+@login_required
+def python_day_test(day_number: int):
+    if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
+    progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        return redirect(url_for("learning.python_course"))
+    lesson = PYTHON_LESSONS[day_number - 1]
+    is_extra = request.method == "POST" and request.form.get("quiz_stage") == "extra"
+    seed = _live_quiz_seed("python", day_number) if request.method == "GET" else (secrets.randbelow(2**31) if is_extra else _review_seed())
+    questions = shuffle_quiz(build_python_daily_quiz(day_number), seed)
+    score = feedback = extra_questions = None; passed = False; wrong_count = 0
+    result_total_questions = len(questions); pass_score = DAILY_PASS_SCORE
+    if request.method == "POST":
+        if is_extra:
+            score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("python", day_number, request.form)
+            _save_course_day_result(int(current_user.id), day_number, _stored_score(score, result_total_questions), passed, "python")
+            progress, passed_days, next_day = _python_course_state(int(current_user.id))
+        else:
+            base_score, _ = grade_quiz(questions, request.form)
+            if base_score < len(questions):
+                extra_questions, wrong_count = _start_extra_quiz("python", day_number, base_score, len(questions))
+            else:
+                score = base_score; passed = True
+                _save_course_day_result(int(current_user.id), day_number, score, True, "python")
+                progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    return render_template("python_day_test.html", lesson=lesson, questions=questions, quiz_seed=seed,
+                           feedback=feedback, score=score, passed=passed, pass_score=pass_score,
+                           extra_questions=extra_questions, wrong_count=wrong_count,
+                           result_total_questions=result_total_questions, next_day=next_day,
+                           course_finished=len(passed_days) == len(PYTHON_LESSONS))
+
+
+@learning_bp.route("/study/python/day/<int:day_number>/reset", methods=["POST"])
+@login_required
+def python_day_reset(day_number: int):
+    if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
+    user_id = int(current_user.id)
+    _reset_course_day_result(user_id, day_number, "python")
+    _reset_course_final_result(user_id, "python")
+    _delete_live_quiz_attempt(user_id, "python", day_number)
+    return redirect(url_for("learning.python_day", day_number=day_number))
+
+
+@learning_bp.route("/study/python/final", methods=["GET", "POST"])
+@login_required
+def python_final():
+    _progress, passed_days, _next = _python_course_state(int(current_user.id))
+    if len(passed_days) != len(PYTHON_LESSONS): return redirect(url_for("learning.python_course"))
+    questions = build_python_final_quiz(); score = feedback = None; passed = False
+    if request.method == "POST":
+        score, feedback = grade_quiz(questions, request.form); passed = score >= FINAL_PASS_SCORE
+        _save_course_final_result(int(current_user.id), score, passed, "python")
+    return render_template("python_final.html", questions=questions, score=score, feedback=feedback,
+                           passed=passed, pass_score=FINAL_PASS_SCORE, total_questions=len(questions),
+                           final_result=_get_course_final_result(int(current_user.id), "python"))
+
+
+@learning_bp.route("/study/python/videos")
+@login_required
+def python_video_lectures():
+    _progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                "passed": lesson["day"] in passed_days} for lesson in PYTHON_LESSONS]
+    return render_template("python_video_catalog.html", lessons=lessons,
+                           passed_count=len(passed_days), next_day=next_day)
+
+
+@learning_bp.route("/study/python/videos/<int:day_number>")
+@login_required
+def python_video_lecture(day_number: int):
+    if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
+    _progress, passed_days, next_day = _python_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        return redirect(url_for("learning.python_video_lectures"))
+    return render_template("python_video_lecture.html", lesson=PYTHON_LESSONS[day_number - 1],
+                           video_file=f"videos/python-lectures/lesson-{day_number:02d}.mp4")
+
+
+@learning_bp.route("/study/python/interview")
+@login_required
+def python_interview():
+    return render_template("python_interview.html", sections=PYTHON_INTERVIEW_SECTIONS)
