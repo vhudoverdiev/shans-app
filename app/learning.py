@@ -23,7 +23,7 @@ DAILY_PASS_SCORE = 16
 VIDEO_PASS_SCORE = 16
 FINAL_PASS_SCORE = 24
 REVIEW_BLOCK_SIZE = 5
-REVIEW_QUESTIONS_PER_DAY = 2
+REVIEW_QUESTIONS_PER_DAY = 4
 REVIEW_PASS_PERCENT = 80
 REVIEW_MILESTONES = tuple(range(REVIEW_BLOCK_SIZE, 31, REVIEW_BLOCK_SIZE))
 LOCKED_FUTURE_DAYS = tuple(range(31, 61))
@@ -1641,6 +1641,42 @@ def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, in
     return total_score, total_questions, pass_score, feedback, passed
 
 
+@learning_bp.route("/study/quiz/extra/check", methods=["POST"])
+@login_required
+def check_extra_quiz_answer():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        abort(400)
+    try:
+        course_key = str(payload["course"])
+        item_number = int(payload["item_number"])
+        question_index = int(payload["question_index"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    if course_key not in {"english", "it", "python", "video"}:
+        abort(400)
+    _ensure_live_quiz_access(course_key, item_number)
+    state = session.get(_extra_quiz_key(course_key, item_number))
+    if not isinstance(state, dict):
+        abort(409)
+    try:
+        extra_count = int(state["extra_count"])
+        seed = int(state["seed"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    questions = build_extra_quiz(course_key, item_number, extra_count, seed)
+    if not 0 <= question_index < len(questions):
+        abort(400)
+    answer = payload.get("answer")
+    question = questions[question_index]
+    if question.get("answer_type", "single") == "multiple":
+        if not isinstance(answer, list):
+            abort(400)
+    elif not isinstance(answer, (str, int)):
+        abort(400)
+    return jsonify(_live_answer_feedback(question, answer))
+
+
 def _stored_score(score: int, total_questions: int) -> int:
     """Keep existing progress columns comparable on their established 20-point scale."""
     return round(score / total_questions * 20)
@@ -3072,6 +3108,13 @@ def course_review(course_key: str, end_day: int):
         return redirect(url_for(settings["course_endpoint"]))
 
     seed = _review_seed()
+    if request.method == "POST":
+        try:
+            seed = int(request.form.get("quiz_seed", seed))
+        except (TypeError, ValueError):
+            abort(400)
+        if not 0 <= seed < 2**31:
+            abort(400)
     questions = build_review_quiz(course_key, end_day, seed)
     score = None
     passed = False
@@ -3095,6 +3138,46 @@ def course_review(course_key: str, end_day: int):
         feedback=feedback,
         pass_score=pass_score,
     )
+
+
+@learning_bp.route("/study/review/check-answer", methods=["POST"])
+@login_required
+def check_review_quiz_answer():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        abort(400)
+    try:
+        course_key = str(payload["course"])
+        end_day = int(payload["end_day"])
+        seed = int(payload["seed"])
+        question_index = int(payload["question_index"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    if course_key not in {"english", "it", "python"} or end_day not in REVIEW_MILESTONES:
+        abort(400)
+    if not 0 <= seed < 2**31:
+        abort(400)
+
+    settings = {
+        "english": _course_state,
+        "it": _it_course_state,
+        "python": _python_course_state,
+    }
+    _progress, passed_days, _next_day = settings[course_key](int(current_user.id))
+    if not all(day in passed_days for day in range(1, end_day + 1)):
+        abort(403)
+
+    questions = build_review_quiz(course_key, end_day, seed)
+    if not 0 <= question_index < len(questions):
+        abort(400)
+    answer = payload.get("answer")
+    question = questions[question_index]
+    if question.get("answer_type", "single") == "multiple":
+        if not isinstance(answer, list):
+            abort(400)
+    elif not isinstance(answer, (str, int)):
+        abort(400)
+    return jsonify(_live_answer_feedback(question, answer))
 
 
 @learning_bp.route("/study/it")

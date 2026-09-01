@@ -155,6 +155,22 @@ class EnglishCourseTests(unittest.TestCase):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn('name="quiz_stage" value="extra"', source)
             self.assertIn("extra_questions", source)
+
+    def test_extra_questions_have_working_per_question_checks_in_every_course(self):
+        script = (PROJECT_ROOT / "app" / "static" / "js" / "extra-quiz.js").read_text(encoding="utf-8")
+        for template_name in (
+            "english_day_test.html",
+            "it_day_test.html",
+            "python_day_test.html",
+            "it_video_lesson.html",
+        ):
+            source = (TEMPLATES / template_name).read_text(encoding="utf-8")
+            self.assertIn("data-extra-quiz", source, template_name)
+            self.assertIn("learning.check_extra_quiz_answer", source, template_name)
+            self.assertIn("js/extra-quiz.js", source, template_name)
+        self.assertIn('event.target.closest("[data-answer-question]")', script)
+        self.assertIn('submit.disabled = true', script)
+        self.assertIn('submit.textContent = complete ? "Завершить тест"', script)
             self.assertIn("по 2 новых вопроса", source)
             self.assertIn("из этого же", source)
             self.assertNotIn('name="base_score"', source)
@@ -404,7 +420,7 @@ class EnglishCourseTests(unittest.TestCase):
         for course_key in ("english", "it"):
             for end_day in REVIEW_MILESTONES:
                 questions = build_review_quiz(course_key, end_day, seed=12345)
-                self.assertEqual(len(questions), 10)
+                self.assertEqual(len(questions), 20)
                 self.assertEqual(
                     {question["day"] for question in questions},
                     set(range(end_day - 4, end_day + 1)),
@@ -412,7 +428,7 @@ class EnglishCourseTests(unittest.TestCase):
                 for day_number in range(end_day - 4, end_day + 1):
                     self.assertEqual(
                         sum(question["day"] == day_number for question in questions),
-                        2,
+                        4,
                     )
 
     def test_review_question_and_answer_order_is_shuffled_but_grading_stays_valid(self):
@@ -425,7 +441,7 @@ class EnglishCourseTests(unittest.TestCase):
         for questions in (first_attempt, next_attempt):
             correct_form = correct_quiz_form(questions)
             score, feedback = grade_quiz(questions, correct_form)
-            self.assertEqual(score, 10)
+            self.assertEqual(score, 20)
             self.assertTrue(all(item["is_correct"] for item in feedback))
 
     def test_review_cards_unlock_only_after_each_complete_five_day_milestone(self):
@@ -446,8 +462,16 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("review_tests", source)
             self.assertIn(f"course_key='{course_key}'", source)
         self.assertIn('name="quiz_seed"', review_source)
+        self.assertIn("data-review-quiz", review_source)
+        self.assertIn("learning.check_review_quiz_answer", review_source)
+        self.assertIn("js/review-quiz.js", review_source)
         self.assertIn("Новая попытка", review_source)
         self.assertIn("Вопросы и варианты ответов перемешиваются", review_source)
+
+        review_script = (PROJECT_ROOT / "app" / "static" / "js" / "review-quiz.js").read_text(encoding="utf-8")
+        self.assertIn('event.target.closest("[data-answer-question]")', review_script)
+        self.assertIn('submit.textContent = "Ответьте на все вопросы"', review_script)
+        self.assertIn('submit.textContent = complete ? "Завершить тест"', review_script)
 
     def test_python_video_course_contains_all_30_local_videos(self):
         self.assertEqual(len(PYTHON_VIDEO_LESSONS), 30)

@@ -15,7 +15,7 @@
             <span>Нужно {{ pass_score }} из {{ questions|length }}</span>
         </div>
         <p class="learning-review-note">Вопросы и варианты ответов перемешиваются при каждой новой попытке.</p>
-        <form method="post" action="{{ url_for('learning.course_review', course_key=course_key, end_day=end_day, _anchor='review-test-result') }}" class="quiz-form">
+        <form method="post" action="{{ url_for('learning.course_review', course_key=course_key, end_day=end_day, _anchor='review-test-result') }}" class="quiz-form" data-review-quiz data-course="{{ course_key }}" data-end-day="{{ end_day }}" data-quiz-seed="{{ quiz_seed }}" data-check-url="{{ url_for('learning.check_review_quiz_answer') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="quiz_seed" value="{{ quiz_seed }}">
             {% for question in questions %}
@@ -49,3 +49,5 @@
     {% endif %}
 </section>
 {% endblock %}
+
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/review-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}

@@ -30,7 +30,7 @@
     <section class="lesson-section quiz-section extra-quiz-section" id="daily-test-result">
         <div class="learning-section-heading"><div><p class="learning-kicker">Закрепление после ошибки</p><h1>Дополнительные вопросы</h1></div><span>{{ extra_questions|length }} вопросов</span></div>
         <p>Ошибок в основном тесте: {{ wrong_count }}. За каждую добавлено по 2 новых вопроса из этого же дня.</p>
-        <form method="post" action="{{ url_for('learning.english_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form">
+        <form method="post" action="{{ url_for('learning.english_day_test', day_number=lesson.day, _anchor='daily-test-result') }}" class="quiz-form" data-extra-quiz data-course="english" data-item-number="{{ lesson.day }}" data-check-url="{{ url_for('learning.check_extra_quiz_answer') }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="quiz_stage" value="extra">
             {% for question in extra_questions %}{% set question_index = loop.index0 %}{% set question_number = loop.index %}{% include "_quiz_question_fields.html" %}{% endfor %}
             <button type="submit" class="btn btn-primary quiz-submit">Завершить тест</button>
@@ -77,4 +77,4 @@
 </section>
 {% endblock %}
 
-{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/live-quiz.js', v=static_asset_version) }}" defer></script><script src="{{ url_for('static', filename='js/extra-quiz.js', v=static_asset_version) }}" defer></script>{% endblock %}
