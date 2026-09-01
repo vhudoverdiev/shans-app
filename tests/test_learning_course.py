@@ -155,6 +155,9 @@ class EnglishCourseTests(unittest.TestCase):
             source = (TEMPLATES / template_name).read_text(encoding="utf-8")
             self.assertIn('name="quiz_stage" value="extra"', source)
             self.assertIn("extra_questions", source)
+            self.assertIn("по 2 новых вопроса", source)
+            self.assertIn("из этого же", source)
+            self.assertNotIn('name="base_score"', source)
 
     def test_extra_questions_have_working_per_question_checks_in_every_course(self):
         script = (PROJECT_ROOT / "app" / "static" / "js" / "extra-quiz.js").read_text(encoding="utf-8")
@@ -171,10 +174,6 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn('event.target.closest("[data-answer-question]")', script)
         self.assertIn('submit.disabled = true', script)
         self.assertIn('submit.textContent = complete ? "Завершить тест"', script)
-            self.assertIn("по 2 новых вопроса", source)
-            self.assertIn("из этого же", source)
-            self.assertNotIn('name="base_score"', source)
-
     def test_every_daily_quiz_has_twenty_valid_questions(self):
         for day_number in range(1, 31):
             questions = build_daily_quiz(day_number)
@@ -1001,7 +1000,11 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertGreaterEqual(len(it_points[0]["detail_paragraphs"]), 4)
         self.assertGreaterEqual(len(term_cards[0]["detail_paragraphs"]), 4)
         self.assertIn(term_cards[0]["definition"], term_cards[0]["detail"])
-        self.assertTrue(any("Примитивный пример" in step for step in term_cards[0]["detail_paragraphs"]))
+        self.assertTrue(any("Практический пример" in step for step in term_cards[0]["detail_paragraphs"]))
+        self.assertIn("В информатике термин", term_cards[0]["scientific_definition"])
+        self.assertIn("Простыми словами", term_cards[0]["plain_explanation"])
+        self.assertTrue(term_cards[0]["project_path"])
+        self.assertIn("проекте «Шанс»", term_cards[0]["project_example"])
         self.assertTrue(any(step["explanation"] for step in code_steps))
         self.assertGreaterEqual(len(practice_steps), 4)
 

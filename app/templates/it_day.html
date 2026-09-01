@@ -104,7 +104,9 @@
                 <details class="lesson-more-details it-more-details">
                     <summary>Подробнее</summary>
                     <div class="lesson-more-body">
-                        <p class="it-term-detail">{{ term.detail }}</p>
+                        <p class="it-term-detail"><strong>Точное определение.</strong> {{ term.scientific_definition }}</p>
+                        <p class="it-term-detail"><strong>Простыми словами.</strong> {{ term.plain_explanation }}</p>
+                        <p class="it-term-detail"><strong>Где встречается в проекте.</strong> <code>{{ term.project_path }}</code> — {{ term.project_example }}</p>
                         {% if term.detail_paragraphs %}
                             {% for paragraph in term.detail_paragraphs %}
                             <p>{{ paragraph }}</p>
