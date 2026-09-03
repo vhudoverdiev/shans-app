@@ -45,6 +45,7 @@ from app.learning import (
     _delete_live_quiz_attempt,
     _load_live_quiz_attempt,
     _live_quiz_seed,
+    _live_extra_quiz,
     _public_question,
     _extra_question_count,
     _extra_stage_passed,
@@ -461,16 +462,15 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertIn("review_tests", source)
             self.assertIn(f"course_key='{course_key}'", source)
         self.assertIn('name="quiz_seed"', review_source)
-        self.assertIn("data-review-quiz", review_source)
-        self.assertIn("learning.check_review_quiz_answer", review_source)
-        self.assertIn("js/review-quiz.js", review_source)
+        self.assertIn("data-live-quiz", review_source)
+        self.assertIn("learning.check_live_quiz_answer", review_source)
+        self.assertIn("learning.sync_live_quiz_answers", review_source)
+        self.assertIn("learning.live_quiz_state", review_source)
+        self.assertIn("js/live-quiz.js", review_source)
         self.assertIn("Новая попытка", review_source)
-        self.assertIn("Вопросы и варианты ответов перемешиваются", review_source)
-
-        review_script = (PROJECT_ROOT / "app" / "static" / "js" / "review-quiz.js").read_text(encoding="utf-8")
-        self.assertIn('event.target.closest("[data-answer-question]")', review_script)
-        self.assertIn('submit.textContent = "Ответьте на все вопросы"', review_script)
-        self.assertIn('submit.textContent = complete ? "Завершить тест"', review_script)
+        self.assertIn("Каждый ответ сохраняется сразу", review_source)
+        self.assertIn("data-live-completion", review_source)
+        self.assertNotIn("quiz-feedback-list", review_source)
 
     def test_python_video_course_contains_all_30_local_videos(self):
         self.assertEqual(len(PYTHON_VIDEO_LESSONS), 30)
@@ -1254,6 +1254,67 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         _progress, passed_days, next_day = _course_state(user_id)
         self.assertNotIn(2, passed_days)
         self.assertEqual(next_day, 2)
+
+    def test_review_quiz_persists_answers_adds_questions_and_returns_success(self):
+        conn = get_master_connection()
+        try:
+            user_id = int(conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()["id"])
+        finally:
+            conn.close()
+        for day_number in range(1, 6):
+            _save_day_result(user_id, day_number, 20, True)
+
+        client = self.app.test_client()
+        with client.session_transaction() as browser_session:
+            browser_session["_user_id"] = str(user_id)
+            browser_session["_fresh"] = True
+            browser_session["_csrf_token"] = "review-token"
+        page = client.get("/study/english/review/5")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b"data-live-quiz", page.data)
+        seed = int(re.search(rb'data-quiz-seed="(\d+)"', page.data).group(1))
+        questions = _base_quiz_for_attempt("review_english", 5, seed)
+        headers = {"X-CSRFToken": "review-token"}
+
+        for index, question in enumerate(questions):
+            wrong_answer = [] if question.get("answer_type") == "multiple" else "__wrong__"
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "review_english", "item_number": 5, "seed": seed,
+                    "stage": "base", "question_index": index,
+                    "answer": wrong_answer if index == 0 else live_correct_answer(question),
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        saved = _load_live_quiz_attempt(user_id, "review_english", 5)
+        self.assertEqual(len(saved["state"]["base"]), 20)
+        self.assertEqual(saved["state"]["extra_count"], 2)
+        extras = _live_extra_quiz("review_english", 5, 40, seed ^ 0x5F3759DF)
+        for index in range(2):
+            response = client.post(
+                "/study/quiz/check",
+                json={
+                    "course": "review_english", "item_number": 5, "seed": seed,
+                    "stage": "extra", "question_index": index,
+                    "answer": live_correct_answer(extras[index]),
+                },
+                headers=headers,
+            )
+            self.assertEqual(response.status_code, 200)
+
+        result = response.get_json()
+        self.assertTrue(result["complete"])
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["continue_label"], "Повторение пройдено — вернуться к курсу")
+        restored = client.get(
+            f"/study/quiz/state?course=review_english&item_number=5&seed={seed}"
+        ).get_json()
+        self.assertTrue(restored["complete"])
+        self.assertEqual(len(restored["base_answers"]), 20)
+        self.assertEqual(len(restored["extra_answers"]), 2)
 
 
 if __name__ == "__main__":

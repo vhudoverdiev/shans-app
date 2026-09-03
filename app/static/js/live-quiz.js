@@ -205,6 +205,16 @@
     }
 
     function enableContinuation(result) {
+        const completion = form.parentElement.querySelector("[data-live-completion]");
+        if (completion) {
+            completion.className = "quiz-inline-feedback " + (result.passed
+                ? "quiz-inline-feedback-correct"
+                : "quiz-inline-feedback-wrong");
+            completion.textContent = result.passed
+                ? "Тест успешно пройден. Результат сохранён."
+                : "Тест не пройден. Пройдите попытку заново.";
+            completion.hidden = false;
+        }
         submitButton.disabled = false;
         submitButton.textContent = result.continue_label;
         submitButton.dataset.continueUrl = result.continue_url;

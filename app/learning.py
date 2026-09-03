@@ -1787,6 +1787,9 @@ def _live_quiz_seed(course_key: str, item_number: int) -> int:
 
 
 def _base_quiz_for_attempt(course_key: str, item_number: int, seed: int) -> list[dict]:
+    review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    if review_course and item_number in REVIEW_MILESTONES:
+        return build_review_quiz(review_course, item_number, seed)
     if course_key == "english" and 1 <= item_number <= len(ENGLISH_LESSONS):
         return shuffle_quiz(build_daily_quiz(item_number), seed)
     if course_key == "it" and 1 <= item_number <= len(IT_LESSONS):
@@ -1796,6 +1799,28 @@ def _base_quiz_for_attempt(course_key: str, item_number: int, seed: int) -> list
     if course_key == "video" and 1 <= item_number <= len(PYTHON_VIDEO_LESSONS):
         return build_video_lesson_quiz(item_number, seed)
     abort(404)
+
+
+_REVIEW_LIVE_COURSES = {
+    "review_english": "english",
+    "review_it": "it",
+    "review_python": "python",
+}
+_LIVE_QUIZ_COURSES = {"english", "it", "python", "video", *_REVIEW_LIVE_COURSES}
+
+
+def _live_extra_quiz(course_key: str, item_number: int, question_count: int, seed: int) -> list[dict]:
+    review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    if not review_course:
+        return build_extra_quiz(course_key, item_number, question_count, seed)
+    if item_number not in REVIEW_MILESTONES or question_count < 1:
+        abort(404)
+    questions = []
+    attempt = 0
+    while len(questions) < question_count:
+        questions.extend(build_review_quiz(review_course, item_number, seed + attempt))
+        attempt += 1
+    return questions[:question_count]
 
 
 def _public_question(question: dict, live_index: int) -> dict:
@@ -1811,6 +1836,8 @@ def _public_question(question: dict, live_index: int) -> dict:
 
 
 def _save_live_quiz_result(course_key: str, item_number: int, score: int, total: int, passed: bool) -> None:
+    if course_key in _REVIEW_LIVE_COURSES:
+        return
     stored_score = _stored_score(score, total)
     user_id = int(current_user.id)
     if course_key == "english":
@@ -1824,6 +1851,19 @@ def _save_live_quiz_result(course_key: str, item_number: int, score: int, total:
 
 
 def _live_quiz_continue_action(course_key: str, item_number: int, passed: bool) -> tuple[str, str]:
+    review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    if review_course:
+        if not passed:
+            return (
+                url_for("learning.course_review", course_key=review_course, end_day=item_number, restart=1),
+                "Пройти повторный тест заново",
+            )
+        endpoints = {
+            "english": "learning.english_course",
+            "it": "learning.it_course",
+            "python": "learning.python_course",
+        }
+        return url_for(endpoints[review_course]), "Повторение пройдено — вернуться к курсу"
     if not passed:
         if course_key == "english":
             retry_url = url_for("learning.english_day_test", day_number=item_number, restart=1)
@@ -1889,6 +1929,19 @@ def _finalize_live_quiz_state(
 
 def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
     user_id = int(current_user.id)
+    review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    if review_course:
+        state_getters = {
+            "english": _course_state,
+            "it": _it_course_state,
+            "python": _python_course_state,
+        }
+        if item_number not in REVIEW_MILESTONES:
+            abort(404)
+        _progress, passed_items, _next_item = state_getters[review_course](user_id)
+        if not all(day in passed_items for day in range(1, item_number + 1)):
+            abort(403)
+        return
     if course_key == "english":
         _progress, passed_items, next_item = _course_state(user_id)
     elif course_key == "it":
@@ -1923,7 +1976,7 @@ def live_quiz_state():
         seed = int(request.args["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "python", "video"} or not 0 <= seed < 2**31:
+    if course_key not in _LIVE_QUIZ_COURSES or not 0 <= seed < 2**31:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     user_id = int(current_user.id)
@@ -1936,7 +1989,7 @@ def live_quiz_state():
 
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
     extra_count = int(state.get("extra_count", 0))
-    extras = build_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if extra_count else []
+    extras = _live_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if extra_count else []
 
     answers_complete = (
         len(state["base"]) == len(base_questions)
@@ -1995,7 +2048,7 @@ def check_live_quiz_answer():
         stage = str(payload.get("stage", "base"))
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "python", "video"} or stage not in {"base", "extra"} or not 0 <= seed < 2**31:
+    if course_key not in _LIVE_QUIZ_COURSES or stage not in {"base", "extra"} or not 0 <= seed < 2**31:
         abort(400)
 
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
@@ -2021,7 +2074,7 @@ def check_live_quiz_answer():
         if not 0 <= question_index < int(state["extra_count"]):
             abort(400)
         extra_seed = seed ^ 0x5F3759DF
-        question = build_extra_quiz(course_key, item_number, 40, extra_seed)[question_index]
+        question = _live_extra_quiz(course_key, item_number, 40, extra_seed)[question_index]
 
     answer = payload.get("answer", "")
     if isinstance(answer, str):
@@ -2043,7 +2096,7 @@ def check_live_quiz_answer():
         previous_count = int(state["extra_count"])
         state["extra_count"] = previous_count + 2
         extra_seed = seed ^ 0x5F3759DF
-        extras = build_extra_quiz(course_key, item_number, 40, extra_seed)
+        extras = _live_extra_quiz(course_key, item_number, 40, extra_seed)
         added_questions = [
             _public_question(extras[index], index)
             for index in range(previous_count, int(state["extra_count"]))
@@ -2085,7 +2138,7 @@ def sync_live_quiz_answers():
         seed = int(payload["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "python", "video"} or not 0 <= seed < 2**31:
+    if course_key not in _LIVE_QUIZ_COURSES or not 0 <= seed < 2**31:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
@@ -2119,7 +2172,7 @@ def sync_live_quiz_answers():
     if set(submitted["extra"]) != set(range(state["extra_count"])):
         return jsonify({"complete": False, "error": "Не все дополнительные ответы получены."})
     if state["extra_count"]:
-        extras = build_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF)
+        extras = _live_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF)
         for index in range(state["extra_count"]):
             result = _live_answer_feedback(extras[index], submitted["extra"][index])
             state["extra"][str(index)] = {
@@ -2141,13 +2194,18 @@ def reset_live_quiz_attempt():
         item_number = int(request.form["item_number"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if course_key not in {"english", "it", "python", "video"}:
+    if course_key not in _LIVE_QUIZ_COURSES:
         abort(400)
     _ensure_live_quiz_access(course_key, item_number)
     user_id = int(current_user.id)
     _delete_live_quiz_attempt(user_id, course_key, item_number)
     session.pop(_live_quiz_seed_key(course_key, item_number), None)
-    if course_key == "english":
+    review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    if review_course:
+        destination = url_for(
+            "learning.course_review", course_key=review_course, end_day=item_number, restart=1
+        )
+    elif course_key == "english":
         _reset_day_result(user_id, item_number)
         _reset_final_result(user_id)
         destination = url_for("learning.english_day_test", day_number=item_number, restart=1)
@@ -3148,7 +3206,8 @@ def course_review(course_key: str, end_day: int):
         flash("Тест повторения откроется после прохождения этого блока дней.", "warning")
         return redirect(url_for(settings["course_endpoint"]))
 
-    seed = _review_seed()
+    live_course_key = f"review_{course_key}"
+    seed = _live_quiz_seed(live_course_key, end_day)
     if request.method == "POST":
         try:
             seed = int(request.form.get("quiz_seed", seed))
@@ -3174,6 +3233,7 @@ def course_review(course_key: str, end_day: int):
         end_day=end_day,
         questions=questions,
         quiz_seed=seed,
+        live_course_key=live_course_key,
         score=score,
         passed=passed,
         feedback=feedback,
