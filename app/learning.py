@@ -20,6 +20,7 @@ from app.python_v2_topics_content import PYTHON_V2_TOPICS
 
 learning_bp = Blueprint("learning", __name__)
 DAILY_PASS_SCORE = 16
+PYTHON_DAILY_PASS_SCORE = 12
 VIDEO_PASS_SCORE = 16
 FINAL_PASS_SCORE = 24
 REVIEW_BLOCK_SIZE = 5
@@ -1410,13 +1411,13 @@ def build_python_daily_quiz(day_number: int) -> list[dict]:
     lesson = PYTHON_LESSONS[day_number - 1]
     terms = lesson["terms"]
     questions = []
-    for question_index, (term, definition) in enumerate(terms):
+    for question_index, (term, definition) in enumerate(terms[:5]):
         options, correct_index = _rotated_options(
             definition, (item[1] for item in terms if item[0] != term), day_number + question_index
         )
         questions.append({"day": day_number, "prompt": f"Что означает «{term}»?", "options": options,
                           "correct_index": correct_index, "explanation": f"{term} — {definition}."})
-    for question_index, (term, definition) in enumerate(terms):
+    for question_index, (term, definition) in enumerate(terms[5:8]):
         options, correct_index = _rotated_options(
             term, (item[0] for item in terms if item[0] != term), day_number + 20 + question_index
         )
@@ -1425,19 +1426,87 @@ def build_python_daily_quiz(day_number: int) -> list[dict]:
                           "explanation": f"Это понятие — {term}."})
     questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 501, "понятие")})
     questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 602, "понятие")})
-    questions.append({"day": day_number, **dict(lesson["checkpoint"])})
-    title_options, title_correct_index = _rotated_options(
-        lesson["title"], (item["title"] for item in PYTHON_LESSONS if item["day"] != day_number), day_number + 40
-    )
-    questions.append({"day": day_number, "prompt": f"К какой теме относится: «{lesson['summary']}»?",
-                      "options": title_options, "correct_index": title_correct_index,
-                      "explanation": f"Это тема «{lesson['title']}»."})
-    for index in range(3):
+    questions.extend(_python_code_questions(day_number, lesson))
+    for index in range(2):
         term, definition = terms[index]
-        questions[10 + index] = _text_question(
-            questions[10 + index], term, f"Восстановите понятие: «{definition}»."
+        questions[8 + index] = _text_question(
+            questions[8 + index], term, f"Восстановите понятие: «{definition}»."
         )
     return questions
+
+
+def _python_code_questions(day_number: int, lesson: dict) -> list[dict]:
+    code = lesson["code"].strip()
+    code_lines = tuple(line for line in code.splitlines() if line.strip())
+    first_line = code_lines[0]
+    action_lines = tuple(
+        line for line in code_lines
+        if any(token in line for token in ("print(", "return ", "yield ", "raise ", "with ", "for ", "if "))
+    )
+    key_line = action_lines[0] if action_lines else first_line
+    other_lines = tuple(
+        other_line
+        for other in PYTHON_LESSONS
+        if other["day"] != day_number
+        for other_line in other["code"].splitlines()
+        if other_line.strip() and other_line.strip() != key_line.strip()
+    )
+    summary_options, summary_correct_index = _rotated_options(
+        lesson["summary"],
+        (item["summary"] for item in PYTHON_LESSONS if item["day"] != day_number),
+        day_number + 700,
+    )
+    line_options, line_correct_index = _rotated_options(key_line, other_lines, day_number + 701)
+    file_options, file_correct_index = _rotated_options(
+        lesson["project"]["file_name"],
+        (item["project"]["file_name"] for item in PYTHON_LESSONS if item["day"] != day_number),
+        day_number + 702,
+    )
+    command_options, command_correct_index = _rotated_options(
+        lesson["project"]["run_command"],
+        (item["project"]["run_command"] for item in PYTHON_LESSONS if item["day"] != day_number),
+        day_number + 703,
+    )
+    code_prompt = f"Посмотрите на код:\n{code}\nЧто он отрабатывает в теме дня?"
+    return [
+        {
+            "day": day_number,
+            "prompt": code_prompt,
+            "options": summary_options,
+            "correct_index": summary_correct_index,
+            "explanation": f"Этот фрагмент относится к теме «{lesson['title']}»: {lesson['summary']}",
+        },
+        {
+            "day": day_number,
+            "prompt": f"В коде дня найдите строку, которая выполняет ключевое действие:\n{code}",
+            "options": line_options,
+            "correct_index": line_correct_index,
+            "explanation": f"Ключевая строка в этом примере: {key_line}",
+        },
+        {
+            "day": day_number,
+            "prompt": f"В каком файле нужно собрать мини-проект по этому коду?\n{code}",
+            "options": file_options,
+            "correct_index": file_correct_index,
+            "explanation": f"Файл мини-проекта дня: {lesson['project']['file_name']}.",
+        },
+        {
+            "day": day_number,
+            "prompt": "Какой командой запускается мини-проект дня после сохранения кода?",
+            "options": command_options,
+            "correct_index": command_correct_index,
+            "explanation": f"Команда запуска: {lesson['project']['run_command']}.",
+        },
+        _text_question(
+            {
+                "day": day_number,
+                "prompt": f"Напишите первую строку кода рабочего примера без изменений:\n{code}",
+                "explanation": f"Первая строка примера: {first_line}",
+            },
+            first_line,
+            f"Напишите первую строку кода рабочего примера без изменений:\n{code}",
+        ),
+    ]
 
 
 def build_python_final_quiz() -> list[dict]:
@@ -1630,7 +1699,8 @@ def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, in
         seed = int(state["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    if base_total != 20 or not 0 <= base_score < base_total or extra_count != _extra_question_count(base_total - base_score):
+    expected_base_total = 15 if course_key == "python" else 20
+    if base_total != expected_base_total or not 0 <= base_score < base_total or extra_count != _extra_question_count(base_total - base_score):
         abort(400)
     questions = build_extra_quiz(course_key, item_number, extra_count, seed)
     extra_score, feedback = grade_quiz(questions, form)
@@ -3605,7 +3675,7 @@ def python_day_test(day_number: int):
     seed = _live_quiz_seed("python", day_number) if request.method == "GET" else (secrets.randbelow(2**31) if is_extra else _review_seed())
     questions = shuffle_quiz(build_python_daily_quiz(day_number), seed)
     score = feedback = extra_questions = None; passed = False; wrong_count = 0
-    result_total_questions = len(questions); pass_score = DAILY_PASS_SCORE
+    result_total_questions = len(questions); pass_score = PYTHON_DAILY_PASS_SCORE
     if request.method == "POST":
         if is_extra:
             score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("python", day_number, request.form)
