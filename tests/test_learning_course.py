@@ -76,7 +76,7 @@ COURSE_DAY_ACTIONS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-day
 PYTHON_VIDEO_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos" / "python-basics"
 LIVE_QUIZ_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "live-quiz.js"
 PRESENTATIONS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentations"
-CHEATSHEETS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "cheatsheets"
+PRESENTATION_SLIDES_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentation-slides"
 
 
 def correct_quiz_form(questions):
@@ -720,11 +720,11 @@ class EnglishCourseTests(unittest.TestCase):
                 lesson["presentation_file"],
                 f"presentations/python-basics/python_day{lesson['day']:02d}_simple_readable.pdf",
             )
-            self.assertEqual(lesson["cheatsheet_file"], "cheatsheets/python-basics/python_cheatsheet_days_01_30.pdf")
-            self.assertEqual(lesson["cheatsheet_page"], lesson["day"])
+            self.assertEqual(lesson["presentation_slide_dir"], f"presentation-slides/python-basics/day-{lesson['day']:02d}")
+            self.assertEqual(lesson["presentation_slide_count"], 16)
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
 
-    def test_it_daily_presentations_and_cheatsheet_are_embedded(self):
+    def test_it_daily_presentations_are_embedded_as_slide_viewer(self):
         files = sorted((PRESENTATIONS_DIRECTORY / "python-basics").glob("python_day*_simple_readable.pdf"))
         self.assertEqual(
             [path.name for path in files],
@@ -735,19 +735,22 @@ class EnglishCourseTests(unittest.TestCase):
             with path.open("rb") as presentation:
                 self.assertEqual(presentation.read(5), b"%PDF-", path)
 
-        cheatsheet_path = CHEATSHEETS_DIRECTORY / "python-basics" / "python_cheatsheet_days_01_30.pdf"
-        self.assertTrue(cheatsheet_path.is_file(), cheatsheet_path)
-        self.assertGreater(cheatsheet_path.stat().st_size, 100 * 1024, cheatsheet_path)
-        with cheatsheet_path.open("rb") as cheatsheet:
-            self.assertEqual(cheatsheet.read(5), b"%PDF-", cheatsheet_path)
+        for day in range(1, 31):
+            slide_files = sorted((PRESENTATION_SLIDES_DIRECTORY / "python-basics" / f"day-{day:02d}").glob("slide-*.png"))
+            self.assertEqual([path.name for path in slide_files], [f"slide-{slide:02d}.png" for slide in range(1, 17)])
+            with slide_files[0].open("rb") as slide:
+                self.assertEqual(slide.read(8), b"\x89PNG\r\n\x1a\n")
 
         source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
-        self.assertIn("Смотреть презентацию", source)
-        self.assertIn("Смотреть шпаргалку", source)
+        self.assertIn("Слайды к уроку", source)
         self.assertIn("lesson.presentation_file", source)
-        self.assertIn("lesson.cheatsheet_file", source)
-        self.assertIn("#page={{ lesson.cheatsheet_page }}", source)
+        self.assertIn("lesson.presentation_slide_dir", source)
+        self.assertIn("data-slide-prev", source)
+        self.assertIn("data-slide-next", source)
+        self.assertIn("data-slide-dot", source)
         self.assertIn("js/presentation-viewer.js", source)
+        self.assertNotIn("Шпаргалка", source)
+        self.assertNotIn("cheatsheet", source)
 
         python_source = (TEMPLATES / "python_day.html").read_text(encoding="utf-8")
         self.assertNotIn("Смотреть презентацию", python_source)
@@ -1152,6 +1155,31 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         else:
             os.environ["ADMIN_PASSWORD"] = self.original_admin_password
         self.temp_directory.cleanup()
+
+    def _login_admin(self, client):
+        conn = get_master_connection()
+        try:
+            user_id = int(conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()["id"])
+        finally:
+            conn.close()
+        with client.session_transaction() as browser_session:
+            browser_session["_user_id"] = str(user_id)
+            browser_session["_fresh"] = True
+            browser_session["_csrf_token"] = "test-token"
+
+    def test_it_day_renders_slide_viewer_without_cheatsheet(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+
+        response = client.get("/study/it/day/1")
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode("utf-8")
+        self.assertIn("presentation-slides/python-basics/day-01/slide-01.png", html)
+        self.assertIn("presentation-slides/python-basics/day-01/slide-16.png", html)
+        self.assertIn('data-slide-prev', html)
+        self.assertIn('data-slide-next', html)
+        self.assertNotIn("Шпаргалка", html)
+        self.assertNotIn("cheatsheet", html)
 
     def test_one_base_mistake_and_correct_extra_answers_unlock_next_english_day(self):
         conn = get_master_connection()

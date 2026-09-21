@@ -42,30 +42,27 @@
     </div>
 
     <section class="lesson-section python-presentation-section" data-presentation-viewer>
-        <div class="learning-section-heading">
+        <div class="python-presentation-head">
             <div>
                 <p class="learning-kicker">Презентация</p>
                 <h2>Слайды к уроку</h2>
             </div>
-            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}">Открыть PDF</a>
-        </div>
-        <button type="button" class="btn btn-primary python-presentation-toggle" data-presentation-toggle aria-expanded="false" aria-controls="it-presentation-frame-{{ lesson.day }}">Смотреть презентацию</button>
-        <div class="python-presentation-frame-wrap" id="it-presentation-frame-{{ lesson.day }}" data-presentation-frame hidden>
-            <iframe class="python-presentation-frame" src="{{ url_for('static', filename=lesson.presentation_file) }}#toolbar=1&navpanes=0" title="Презентация к уроку «{{ lesson.title }}»"></iframe>
-        </div>
-    </section>
-
-    <section class="lesson-section python-presentation-section" data-presentation-viewer>
-        <div class="learning-section-heading">
-            <div>
-                <p class="learning-kicker">Шпаргалка</p>
-                <h2>Лист {{ lesson.cheatsheet_page }} к уроку</h2>
+            <div class="python-presentation-actions">
+                <span class="python-presentation-counter"><span data-slide-current>1</span> / {{ lesson.presentation_slide_count }}</span>
+                <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}">PDF</a>
             </div>
-            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.cheatsheet_file) }}#page={{ lesson.cheatsheet_page }}">Открыть PDF</a>
         </div>
-        <button type="button" class="btn btn-primary python-presentation-toggle" data-presentation-toggle aria-expanded="false" aria-controls="it-cheatsheet-frame-{{ lesson.day }}">Смотреть шпаргалку</button>
-        <div class="python-presentation-frame-wrap" id="it-cheatsheet-frame-{{ lesson.day }}" data-presentation-frame hidden>
-            <iframe class="python-presentation-frame" src="{{ url_for('static', filename=lesson.cheatsheet_file) }}#page={{ lesson.cheatsheet_page }}&toolbar=1&navpanes=0" title="Шпаргалка к уроку «{{ lesson.title }}»"></iframe>
+        <div class="python-presentation-stage" tabindex="0" aria-label="Презентация к уроку «{{ lesson.title }}»">
+            <button type="button" class="python-presentation-nav python-presentation-prev" data-slide-prev aria-label="Предыдущий слайд">‹</button>
+            <img class="python-presentation-slide" data-slide-image src="{{ url_for('static', filename=lesson.presentation_slide_dir ~ '/slide-01.png') }}" alt="Слайд 1 из {{ lesson.presentation_slide_count }} к уроку «{{ lesson.title }}»" loading="lazy">
+            <button type="button" class="python-presentation-nav python-presentation-next" data-slide-next aria-label="Следующий слайд">›</button>
+        </div>
+        <div class="python-presentation-footer">
+            <div class="python-presentation-dots" aria-label="Выбор слайда">
+                {% for slide_number in range(1, lesson.presentation_slide_count + 1) %}
+                <button type="button" class="python-presentation-dot{% if slide_number == 1 %} python-presentation-dot-active{% endif %}" data-slide-dot data-slide-index="{{ loop.index0 }}" data-slide-src="{{ url_for('static', filename=lesson.presentation_slide_dir ~ '/slide-%02d.png'|format(slide_number)) }}" aria-label="Слайд {{ slide_number }}"></button>
+                {% endfor %}
+            </div>
         </div>
     </section>
 
