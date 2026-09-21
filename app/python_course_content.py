@@ -29,9 +29,6 @@ def _lesson(day, title, summary, terms, practice, code, question, answers, corre
         ),
         "terms": tuple(terms),
         "practice": practice,
-        "presentation_file": f"presentations/python-basics/python_day{day:02d}_simple_readable.pdf",
-        "cheatsheet_file": "cheatsheets/python-basics/python_cheatsheet_days_01_30.pdf",
-        "cheatsheet_page": day,
         "project": {
             "title": f"Мини-проект дня: {title}",
             "goal": practice,

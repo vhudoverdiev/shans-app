@@ -18,7 +18,6 @@ from app.python_course_content import PYTHON_INTERVIEW_SECTIONS
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIRECTORY = PROJECT_ROOT / "app" / "templates"
 VIDEOS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos"
-PRESENTATIONS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentations"
 
 
 class PythonCourseTests(unittest.TestCase):
@@ -40,12 +39,6 @@ class PythonCourseTests(unittest.TestCase):
             self.assertGreaterEqual(len(lesson["terms"]), 8)
             self.assertGreaterEqual(len(lesson["lecture"]), 3)
             self.assertTrue(lesson["practice"])
-            self.assertEqual(
-                lesson["presentation_file"],
-                f"presentations/python-basics/python_day{lesson['day']:02d}_simple_readable.pdf",
-            )
-            self.assertEqual(lesson["cheatsheet_file"], "cheatsheets/python-basics/python_cheatsheet_days_01_30.pdf")
-            self.assertEqual(lesson["cheatsheet_page"], lesson["day"])
             self.assertTrue(lesson["code"])
             self.assertTrue(lesson["project"]["title"])
             self.assertTrue(lesson["project"]["file_name"])
@@ -145,35 +138,6 @@ class PythonCourseTests(unittest.TestCase):
         self.assertIn("data-video-close", source)
         self.assertIn("js/floating-video-player.js", source)
         self.assertIn("learning.python_day_test", source)
-
-    def test_python_daily_presentations_are_available_and_embedded(self):
-        files = sorted((PRESENTATIONS_DIRECTORY / "python-basics").glob("python_day*_simple_readable.pdf"))
-        self.assertEqual(
-            [path.name for path in files],
-            [f"python_day{day:02d}_simple_readable.pdf" for day in range(1, 31)],
-        )
-        for path in files:
-            self.assertGreater(path.stat().st_size, 100 * 1024, path)
-            with path.open("rb") as presentation:
-                self.assertEqual(presentation.read(5), b"%PDF-", path)
-
-        source = (TEMPLATES_DIRECTORY / "python_day.html").read_text(encoding="utf-8")
-        self.assertIn("Смотреть презентацию", source)
-        self.assertIn("data-presentation-viewer", source)
-        self.assertIn("lesson.presentation_file", source)
-        self.assertIn("js/presentation-viewer.js", source)
-
-    def test_python_cheatsheet_is_available_per_day(self):
-        path = PRESENTATIONS_DIRECTORY.parent / "cheatsheets" / "python-basics" / "python_cheatsheet_days_01_30.pdf"
-        self.assertTrue(path.is_file(), path)
-        self.assertGreater(path.stat().st_size, 100 * 1024, path)
-        with path.open("rb") as cheatsheet:
-            self.assertEqual(cheatsheet.read(5), b"%PDF-", path)
-
-        source = (TEMPLATES_DIRECTORY / "python_day.html").read_text(encoding="utf-8")
-        self.assertIn("Смотреть шпаргалку", source)
-        self.assertIn("lesson.cheatsheet_file", source)
-        self.assertIn("#page={{ lesson.cheatsheet_page }}", source)
 
     def test_separate_daily_lecture_tabs_are_removed_from_course_navigation(self):
         templates = {

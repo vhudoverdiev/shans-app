@@ -75,6 +75,8 @@ COURSE_AUDIO_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-audio.js"
 COURSE_DAY_ACTIONS_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "course-day-actions.js"
 PYTHON_VIDEO_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos" / "python-basics"
 LIVE_QUIZ_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "live-quiz.js"
+PRESENTATIONS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentations"
+CHEATSHEETS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "cheatsheets"
 
 
 def correct_quiz_form(questions):
@@ -714,7 +716,42 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertEqual(len(lesson["terms"]), 10)
             self.assertEqual(len({term for term, _definition in lesson["terms"]}), 10)
             self.assertTrue(lesson["practice"])
+            self.assertEqual(
+                lesson["presentation_file"],
+                f"presentations/python-basics/python_day{lesson['day']:02d}_simple_readable.pdf",
+            )
+            self.assertEqual(lesson["cheatsheet_file"], "cheatsheets/python-basics/python_cheatsheet_days_01_30.pdf")
+            self.assertEqual(lesson["cheatsheet_page"], lesson["day"])
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
+
+    def test_it_daily_presentations_and_cheatsheet_are_embedded(self):
+        files = sorted((PRESENTATIONS_DIRECTORY / "python-basics").glob("python_day*_simple_readable.pdf"))
+        self.assertEqual(
+            [path.name for path in files],
+            [f"python_day{day:02d}_simple_readable.pdf" for day in range(1, 31)],
+        )
+        for path in files:
+            self.assertGreater(path.stat().st_size, 100 * 1024, path)
+            with path.open("rb") as presentation:
+                self.assertEqual(presentation.read(5), b"%PDF-", path)
+
+        cheatsheet_path = CHEATSHEETS_DIRECTORY / "python-basics" / "python_cheatsheet_days_01_30.pdf"
+        self.assertTrue(cheatsheet_path.is_file(), cheatsheet_path)
+        self.assertGreater(cheatsheet_path.stat().st_size, 100 * 1024, cheatsheet_path)
+        with cheatsheet_path.open("rb") as cheatsheet:
+            self.assertEqual(cheatsheet.read(5), b"%PDF-", cheatsheet_path)
+
+        source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
+        self.assertIn("Смотреть презентацию", source)
+        self.assertIn("Смотреть шпаргалку", source)
+        self.assertIn("lesson.presentation_file", source)
+        self.assertIn("lesson.cheatsheet_file", source)
+        self.assertIn("#page={{ lesson.cheatsheet_page }}", source)
+        self.assertIn("js/presentation-viewer.js", source)
+
+        python_source = (TEMPLATES / "python_day.html").read_text(encoding="utf-8")
+        self.assertNotIn("Смотреть презентацию", python_source)
+        self.assertNotIn("Смотреть шпаргалку", python_source)
 
     def test_lesson_templates_show_expanded_material_and_real_term_count(self):
         it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")

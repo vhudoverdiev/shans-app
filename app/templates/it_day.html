@@ -41,6 +41,34 @@
         <div><strong>5 минут</strong><span>Тест</span></div>
     </div>
 
+    <section class="lesson-section python-presentation-section" data-presentation-viewer>
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">Презентация</p>
+                <h2>Слайды к уроку</h2>
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}">Открыть PDF</a>
+        </div>
+        <button type="button" class="btn btn-primary python-presentation-toggle" data-presentation-toggle aria-expanded="false" aria-controls="it-presentation-frame-{{ lesson.day }}">Смотреть презентацию</button>
+        <div class="python-presentation-frame-wrap" id="it-presentation-frame-{{ lesson.day }}" data-presentation-frame hidden>
+            <iframe class="python-presentation-frame" src="{{ url_for('static', filename=lesson.presentation_file) }}#toolbar=1&navpanes=0" title="Презентация к уроку «{{ lesson.title }}»"></iframe>
+        </div>
+    </section>
+
+    <section class="lesson-section python-presentation-section" data-presentation-viewer>
+        <div class="learning-section-heading">
+            <div>
+                <p class="learning-kicker">Шпаргалка</p>
+                <h2>Лист {{ lesson.cheatsheet_page }} к уроку</h2>
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.cheatsheet_file) }}#page={{ lesson.cheatsheet_page }}">Открыть PDF</a>
+        </div>
+        <button type="button" class="btn btn-primary python-presentation-toggle" data-presentation-toggle aria-expanded="false" aria-controls="it-cheatsheet-frame-{{ lesson.day }}">Смотреть шпаргалку</button>
+        <div class="python-presentation-frame-wrap" id="it-cheatsheet-frame-{{ lesson.day }}" data-presentation-frame hidden>
+            <iframe class="python-presentation-frame" src="{{ url_for('static', filename=lesson.cheatsheet_file) }}#page={{ lesson.cheatsheet_page }}&toolbar=1&navpanes=0" title="Шпаргалка к уроку «{{ lesson.title }}»"></iframe>
+        </div>
+    </section>
+
     <div class="course-audio-inline" data-course-audio>
         <button type="button" class="course-audio-button" data-course-audio-play aria-pressed="false" aria-label="Озвучить урок" title="Озвучить урок">
             <span class="course-audio-icon" aria-hidden="true">🔊</span>
@@ -191,4 +219,5 @@
 <script src="{{ url_for('static', filename='js/course-audio.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/course-day-actions.js', v=static_asset_version) }}" defer></script>
 <script src="{{ url_for('static', filename='js/floating-video-player.js', v=static_asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='js/presentation-viewer.js', v=static_asset_version) }}" defer></script>
 {% endblock %}
