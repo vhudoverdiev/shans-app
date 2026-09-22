@@ -20,7 +20,7 @@
         <p class="lesson-lecture lesson-lecture-intro">Этот конспект является обязательной частью видеолекции: здесь по порядку разобраны все вопросы, которые встретятся в проверочном тесте.</p>
         <div class="it-lecture-copy">
             {% for question, answer in interview_questions %}
-            <article class="it-lecture-point"><h3>{{ loop.index }}. {{ question }}</h3><details class="lesson-more-details"><summary>Показать сильный junior-ответ</summary><div class="lesson-more-body"><p><strong>Готовый ответ:</strong> {{ answer }}</p><p><strong>Практическая задача:</strong> закройте ответ, объясните тему за 60–90 секунд, приведите пример из своего проекта и назовите одну типичную ошибку новичка.</p><p><strong>Самопроверка:</strong> сравните формулировку с готовым ответом и повторите только пропущенную часть.</p></div></details></article>
+            <article class="it-lecture-point"><h3>{{ loop.index }}. {{ question }}</h3><div class="lesson-more-body"><p><strong>Готовый ответ:</strong> {{ answer }}</p><p><strong>Практическая задача:</strong> закройте ответ, объясните тему за 60–90 секунд, приведите пример из своего проекта и назовите одну типичную ошибку новичка.</p><p><strong>Самопроверка:</strong> сравните формулировку с готовым ответом и повторите только пропущенную часть.</p></div></article>
             {% endfor %}
         </div>
     </section>

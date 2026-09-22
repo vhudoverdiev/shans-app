@@ -35,10 +35,8 @@
     </section>
 
     <div class="lesson-timing-grid" aria-label="План занятия на 30 минут">
-        <div><strong>15 минут</strong><span>Понятная лекция</span></div>
-        <div><strong>5 минут</strong><span>Словарь IT</span></div>
-        <div><strong>5 минут</strong><span>Практика</span></div>
-        <div><strong>5 минут</strong><span>Тест</span></div>
+        <div><strong>15 минут</strong><span>Теория и словарь</span></div>
+        <div><strong>15 минут</strong><span>Мини-задачи и разбор</span></div>
     </div>
 
     <section class="lesson-section python-presentation-section" data-presentation-viewer>
@@ -84,23 +82,23 @@
             {% for point in lecture_points %}
             <article class="it-lecture-point">
                 <p>{{ point.text }}</p>
-                <details class="lesson-more-details it-more-details">
-                    <summary>Подробнее</summary>
-                    <div class="lesson-more-body">
-                        <p class="it-point-detail">{{ point.detail }}</p>
-                        {% if point.detail_paragraphs %}
-                            {% for paragraph in point.detail_paragraphs %}
-                            <p>{{ paragraph }}</p>
-                            {% endfor %}
-                        {% else %}
-                        <ol>
-                            {% for step in point.detail_steps %}
-                            <li>{{ step }}</li>
-                            {% endfor %}
-                        </ol>
-                        {% endif %}
-                    </div>
-                </details>
+                <div class="lesson-more-body it-more-details">
+                    <p class="it-point-detail">{{ point.detail }}</p>
+                    <p><strong>Бытовой пример.</strong> {{ point.everyday_example }}</p>
+                    <p><strong>Код рядом с идеей:</strong></p>
+                    <pre class="it-code-block it-code-inline"><code>{{ point.code_example }}</code></pre>
+                    {% if point.detail_paragraphs %}
+                        {% for paragraph in point.detail_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                        {% endfor %}
+                    {% else %}
+                    <ol>
+                        {% for step in point.detail_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -126,25 +124,22 @@
                     {% endif %}
                 </div>
                 <span>{{ term.definition }}</span>
-                <details class="lesson-more-details it-more-details">
-                    <summary>Подробнее</summary>
-                    <div class="lesson-more-body">
-                        <p class="it-term-detail"><strong>Точное определение.</strong> {{ term.scientific_definition }}</p>
-                        <p class="it-term-detail"><strong>Простыми словами.</strong> {{ term.plain_explanation }}</p>
-                        <p class="it-term-detail"><strong>Где встречается в проекте.</strong> <code>{{ term.project_path }}</code> — {{ term.project_example }}</p>
-                        {% if term.detail_paragraphs %}
-                            {% for paragraph in term.detail_paragraphs %}
-                            <p>{{ paragraph }}</p>
-                            {% endfor %}
-                        {% else %}
-                        <ol>
-                            {% for step in term.detail_steps %}
-                            <li>{{ step }}</li>
-                            {% endfor %}
-                        </ol>
-                        {% endif %}
-                    </div>
-                </details>
+                <div class="lesson-more-body it-more-details">
+                    <p class="it-term-detail"><strong>Точное определение.</strong> {{ term.scientific_definition }}</p>
+                    <p class="it-term-detail"><strong>Простыми словами.</strong> {{ term.plain_explanation }}</p>
+                    <p class="it-term-detail"><strong>Где встречается в проекте.</strong> <code>{{ term.project_path }}</code> — {{ term.project_example }}</p>
+                    {% if term.detail_paragraphs %}
+                        {% for paragraph in term.detail_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                        {% endfor %}
+                    {% else %}
+                    <ol>
+                        {% for step in term.detail_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -160,23 +155,20 @@
             <span>Не переписывайте вслепую — объясните каждую строку</span>
         </div>
         <pre class="it-code-block"><code>{{ lesson.code }}</code></pre>
-        <details class="lesson-more-details it-more-details">
-            <summary>Подробнее</summary>
-            <div class="lesson-more-body">
-                <ol>
-                    {% for step in code_steps %}
-                    <li>
-                        {% if step.line %}
-                        <code>{{ step.line }}</code>
-                        {% else %}
-                        <span>Пустая строка</span>
-                        {% endif %}
-                        <span>{{ step.explanation }}</span>
-                    </li>
-                    {% endfor %}
-                </ol>
-            </div>
-        </details>
+        <div class="lesson-more-body it-more-details">
+            <ol>
+                {% for step in code_steps %}
+                <li>
+                    {% if step.line %}
+                    <code>{{ step.line }}</code>
+                    {% else %}
+                    <span>Пустая строка</span>
+                    {% endif %}
+                    <span>{{ step.explanation }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
     </section>
     {% endif %}
 
@@ -186,16 +178,13 @@
             <p class="learning-kicker">Практика на 5 минут</p>
             <h2>Сделайте самостоятельно</h2>
             <p>{{ lesson.practice }}</p>
-            <details class="lesson-more-details it-more-details">
-                <summary>Подробнее</summary>
-                <div class="lesson-more-body">
-                    <ol>
-                        {% for step in practice_steps %}
-                        <li>{{ step }}</li>
-                        {% endfor %}
-                    </ol>
-                </div>
-            </details>
+            <div class="lesson-more-body it-more-details">
+                <ol>
+                    {% for step in practice_steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
             {% if day_progress and day_progress.passed %}
             <form method="post" action="{{ url_for('learning.it_day_reset', day_number=lesson.day) }}" class="lesson-reset-form course-day-reset-form" data-course-day-reset-form data-test-url="{{ url_for('learning.it_day_test', day_number=lesson.day) }}">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">

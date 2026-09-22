@@ -21,6 +21,7 @@ def _it_lesson(
     code="",
     code_title="Пример",
 ):
+    presentation_slide_counts = {1: 45, **{day: 38 for day in range(2, 31)}}
     return {
         "day": day,
         "title": title,
@@ -30,7 +31,7 @@ def _it_lesson(
         "practice": practice,
         "presentation_file": f"presentations/python-basics/python_day{day:02d}_simple_readable.pdf",
         "presentation_slide_dir": f"presentation-slides/python-basics/day-{day:02d}",
-        "presentation_slide_count": 16,
+        "presentation_slide_count": presentation_slide_counts[day],
         "checkpoint": checkpoint,
         "code": code.strip(),
         "code_title": code_title,
@@ -989,7 +990,24 @@ def _expand_it_lesson(lesson):
             f"{extra_terms[3][0]} — {extra_terms[3][1]}. Объясните оба термина своими словами и составьте по одному простому примеру."
         ),
     )
-    return {**lesson, "terms": expanded_terms, "lecture": expanded_lecture}
+    mini_tasks = (
+        {
+            "title": "Разобрать ситуацию",
+            "task": f"Представьте, что вы объясняете тему «{lesson['title']}» новичку. Выпишите 3 главных факта из лекции и свяжите каждый с реальной задачей проекта.",
+            "solution": f"Сильный ответ: назвать тему дня, показать где она встречается в работе, и объяснить зачем это нужно пользователю или команде. Итог должен опираться на: {lesson['summary']}",
+        },
+        {
+            "title": "Найти термины в практике",
+            "task": f"Возьмите практику дня и отметьте в ней минимум 4 термина: {expanded_terms[0][0]}, {expanded_terms[1][0]}, {expanded_terms[6][0]}, {expanded_terms[7][0]}.",
+            "solution": "Решение: сначала подчеркнуть термины в условии, затем рядом написать простое объяснение своими словами и один пример применения.",
+        },
+        {
+            "title": "Мини-проверка результата",
+            "task": f"После выполнения практики составьте короткий отчёт: что было входными данными, что вы сделали, какой результат получили и какую ошибку можно допустить.",
+            "solution": "Решение: отчёт должен содержать 4 строки: входные данные, действие, результат, возможная ошибка. Такой формат помогает готовиться к собеседованию.",
+        },
+    )
+    return {**lesson, "terms": expanded_terms, "lecture": expanded_lecture, "mini_tasks": mini_tasks}
 
 
 IT_LESSONS = tuple(_expand_it_lesson(lesson) for lesson in IT_LESSONS)

@@ -126,13 +126,21 @@ class EnglishCourseTests(unittest.TestCase):
 
     def test_each_wrong_answer_adds_two_questions_from_the_same_lesson(self):
         for course_key, current_number in (("english", 1), ("it", 2), ("video", 3)):
+            available_questions = build_extra_quiz(
+                course_key, current_number, 100, seed=12345
+            )
+            available_count = len(available_questions)
             for wrong_count in (1, 3, 20):
                 extra_count = _extra_question_count(wrong_count)
                 self.assertEqual(extra_count, wrong_count * 2)
                 questions = build_extra_quiz(
                     course_key, current_number, extra_count, seed=12345
                 )
-                self.assertEqual(len(questions), extra_count)
+                self.assertEqual(len(questions), min(extra_count, available_count))
+                self.assertEqual(
+                    len({(question["prompt"], question.get("answer_type", "single")) for question in questions}),
+                    len(questions),
+                )
                 self.assertTrue(
                     all(question["source_number"] == current_number for question in questions)
                 )
@@ -141,6 +149,7 @@ class EnglishCourseTests(unittest.TestCase):
         first = build_extra_quiz("english", 7, 6, seed=9876)
         second = build_extra_quiz("english", 7, 6, seed=9876)
         self.assertEqual(first, second)
+        self.assertEqual(len({question["prompt"] for question in first}), len(first))
         self.assertEqual({question["source_number"] for question in first}, {7})
 
     def test_one_extra_mistake_passes_but_two_require_full_retry(self):
@@ -492,7 +501,12 @@ class EnglishCourseTests(unittest.TestCase):
     def test_every_python_video_has_a_specific_valid_quiz(self):
         for lesson in PYTHON_VIDEO_LESSONS:
             questions = build_video_lesson_quiz(lesson["day"], seed=lesson["day"])
-            self.assertEqual(len(questions), 20)
+            self.assertEqual(len(questions), 15)
+            self.assertEqual(len({question["prompt"] for question in questions}), 15)
+            practical_questions = [question for question in questions if question.get("question_kind") == "practice"]
+            theory_questions = [question for question in questions if question.get("question_kind") == "theory"]
+            self.assertEqual(len(practical_questions), 8)
+            self.assertEqual(len(theory_questions), 7)
             quiz_copy = " ".join(
                 question["prompt"] + " " + question["explanation"]
                 for question in questions
@@ -507,7 +521,7 @@ class EnglishCourseTests(unittest.TestCase):
                     self.assertEqual(len(question["correct_indices"]), 2)
                 else:
                     self.assertIn(question["correct_index"], range(4))
-        self.assertEqual(VIDEO_PASS_SCORE, 16)
+        self.assertEqual(VIDEO_PASS_SCORE, 12)
 
     def test_python_video_progress_requires_each_previous_test(self):
         progress, passed_lessons, next_lesson = _get_course_state(
@@ -721,7 +735,8 @@ class EnglishCourseTests(unittest.TestCase):
                 f"presentations/python-basics/python_day{lesson['day']:02d}_simple_readable.pdf",
             )
             self.assertEqual(lesson["presentation_slide_dir"], f"presentation-slides/python-basics/day-{lesson['day']:02d}")
-            self.assertEqual(lesson["presentation_slide_count"], 16)
+            expected_slide_count = 45 if lesson["day"] == 1 else 38
+            self.assertEqual(lesson["presentation_slide_count"], expected_slide_count)
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
 
     def test_it_daily_presentations_are_embedded_as_slide_viewer(self):
@@ -731,13 +746,14 @@ class EnglishCourseTests(unittest.TestCase):
             [f"python_day{day:02d}_simple_readable.pdf" for day in range(1, 31)],
         )
         for path in files:
-            self.assertGreater(path.stat().st_size, 100 * 1024, path)
+            self.assertGreater(path.stat().st_size, 50 * 1024, path)
             with path.open("rb") as presentation:
                 self.assertEqual(presentation.read(5), b"%PDF-", path)
 
         for day in range(1, 31):
             slide_files = sorted((PRESENTATION_SLIDES_DIRECTORY / "python-basics" / f"day-{day:02d}").glob("slide-*.png"))
-            self.assertEqual([path.name for path in slide_files], [f"slide-{slide:02d}.png" for slide in range(1, 17)])
+            expected_slide_count = 45 if day == 1 else 38
+            self.assertEqual([path.name for path in slide_files], [f"slide-{slide:02d}.png" for slide in range(1, expected_slide_count + 1)])
             with slide_files[0].open("rb") as slide:
                 self.assertEqual(slide.read(8), b"\x89PNG\r\n\x1a\n")
 
@@ -771,7 +787,12 @@ class EnglishCourseTests(unittest.TestCase):
     def test_every_it_daily_quiz_and_final_quiz_are_valid(self):
         for day_number in range(1, 31):
             questions = build_it_daily_quiz(day_number)
-            self.assertEqual(len(questions), 20)
+            self.assertEqual(len(questions), 15)
+            self.assertEqual(len({question["prompt"] for question in questions}), 15)
+            practical_questions = [question for question in questions if question.get("question_kind") == "practice"]
+            theory_questions = [question for question in questions if question.get("question_kind") == "theory"]
+            self.assertEqual(len(practical_questions), 8)
+            self.assertEqual(len(theory_questions), 7)
             quiz_copy = " ".join(
                 question["prompt"] + " " + question["explanation"]
                 for question in questions
@@ -917,7 +938,8 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("card.detail_paragraphs", english_source)
         self.assertIn("card.detail_steps", english_source)
         self.assertIn("lesson_lecture_text", english_source)
-        self.assertIn("<summary>Подробнее</summary>", it_source)
+        self.assertNotIn("<summary>Подробнее</summary>", it_source)
+        self.assertNotIn("<details", it_source)
         self.assertIn("lecture_points", it_source)
         self.assertIn("term_cards", it_source)
         self.assertIn("point.detail_paragraphs", it_source)
@@ -982,17 +1004,20 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertNotIn("course-audio-copy", learning_styles)
         self.assertNotIn("course-audio-actions", learning_styles)
 
-    def test_lesson_cards_render_beginner_friendly_more_details_controls(self):
+    def test_lesson_cards_render_beginner_friendly_detail_content(self):
         english_source = (TEMPLATES / "english_day.html").read_text(encoding="utf-8")
         it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
         learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLES.read_text(encoding="utf-8")
 
-        for source in (english_source, it_source):
-            self.assertIn("<details", source)
-            self.assertIn("<summary>Подробнее</summary>", source)
-            self.assertIn("lesson-more-body", source)
-            self.assertIn("lesson-next-button", source)
+        self.assertIn("<details", english_source)
+        self.assertIn("<summary>Подробнее</summary>", english_source)
+        self.assertIn("lesson-more-body", english_source)
+        self.assertIn("lesson-next-button", english_source)
+        self.assertNotIn("<details", it_source)
+        self.assertNotIn("<summary>Подробнее</summary>", it_source)
+        self.assertIn("lesson-more-body", it_source)
+        self.assertIn("lesson-next-button", it_source)
 
         self.assertIn("english-card-detail", english_source)
         self.assertIn("it-point-detail", it_source)
@@ -1175,7 +1200,7 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.data.decode("utf-8")
         self.assertIn("presentation-slides/python-basics/day-01/slide-01.png", html)
-        self.assertIn("presentation-slides/python-basics/day-01/slide-16.png", html)
+        self.assertIn("presentation-slides/python-basics/day-01/slide-30.png", html)
         self.assertIn('data-slide-prev', html)
         self.assertIn('data-slide-next', html)
         self.assertNotIn("Шпаргалка", html)

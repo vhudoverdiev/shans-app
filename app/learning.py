@@ -21,7 +21,7 @@ from app.python_v2_topics_content import PYTHON_V2_TOPICS
 learning_bp = Blueprint("learning", __name__)
 DAILY_PASS_SCORE = 16
 PYTHON_DAILY_PASS_SCORE = 12
-VIDEO_PASS_SCORE = 16
+VIDEO_PASS_SCORE = 12
 FINAL_PASS_SCORE = 24
 REVIEW_BLOCK_SIZE = 5
 REVIEW_QUESTIONS_PER_DAY = 4
@@ -1018,7 +1018,7 @@ def _text_question(question: dict, answer: str, prompt: str) -> dict:
     }
 
 
-def _multi_pair_question(items, seed: int, noun: str) -> dict:
+def _multi_pair_question(items, seed: int, noun: str, prompt: str | None = None) -> dict:
     """Create a comprehension task with exactly two valid term/value pairs."""
     values = tuple(items)
     first = seed % len(values)
@@ -1035,7 +1035,7 @@ def _multi_pair_question(items, seed: int, noun: str) -> dict:
     random.Random(seed).shuffle(options)
     return {
         "answer_type": "multiple",
-        "prompt": f"Выберите ровно две правильно составленные пары «{noun} — значение».",
+        "prompt": prompt or f"Выберите ровно две правильно составленные пары «{noun} — значение».",
         "options": tuple(options),
         "correct_indices": tuple(index for index, option in enumerate(options) if option in correct),
         "explanation": "Правильные пары: " + "; ".join(correct) + ".",
@@ -1157,7 +1157,12 @@ def build_daily_quiz(day_number: int) -> list[dict]:
     questions[12] = _text_question(questions[12], lesson["phrases"][0][1], f"Переведите самостоятельно: «{lesson['phrases'][0][0]}»." )
     questions[13] = _text_question(questions[13], lesson["phrases"][0][0], f"Напишите по-английски: «{lesson['phrases'][0][1]}»." )
     questions[18] = _multi_pair_question(words, day_number + 101, "слово")
-    questions[19] = _multi_pair_question(words, day_number + 202, "слово")
+    questions[19] = _multi_pair_question(
+        words,
+        day_number + 202,
+        "слово",
+        "Отметьте еще две верные пары «слово — перевод».",
+    )
     return questions
 
 
@@ -1191,7 +1196,7 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
     lesson = IT_LESSONS[day_number - 1]
     terms = lesson["terms"]
     questions = []
-    for question_index, (term, definition) in enumerate(terms):
+    for question_index, (term, definition) in enumerate(terms[:4]):
         options, correct_index = _rotated_options(
             definition,
             (item[1] for item in terms if item[0] != term),
@@ -1207,7 +1212,7 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
             }
         )
 
-    for question_index, (term, definition) in enumerate(terms[:6]):
+    for question_index, (term, definition) in enumerate(terms[4:5]):
         options, correct_index = _rotated_options(
             term,
             (item[0] for item in terms if item[0] != term),
@@ -1222,26 +1227,163 @@ def build_it_daily_quiz(day_number: int) -> list[dict]:
         })
 
     questions.append({"day": lesson["day"], **_multi_pair_question(terms, day_number + 301, "термин")})
-    questions.append({"day": lesson["day"], **_multi_pair_question(terms, day_number + 402, "термин")})
-    questions.append({"day": lesson["day"], **dict(lesson["checkpoint"])})
-    title_options, title_correct_index = _rotated_options(
-        lesson["title"],
-        (item["title"] for item in IT_LESSONS if item["day"] != day_number),
-        day_number + 30,
-    )
     questions.append({
         "day": lesson["day"],
-        "prompt": f"К какой теме относится описание: «{lesson['summary']}»?",
-        "options": title_options,
-        "correct_index": title_correct_index,
-        "explanation": f"Это описание темы «{lesson['title']}».",
+        **_multi_pair_question(
+            terms,
+            day_number + 402,
+            "термин",
+            "Найдите еще две корректные связи «термин — значение».",
+        ),
     })
     for index in range(3):
         term, definition = terms[index]
-        questions[10 + index] = _text_question(
-            questions[10 + index], term, f"Восстановите термин по определению: «{definition}»."
+        questions[index] = _text_question(
+            questions[index], term, f"Восстановите термин по определению: «{definition}»."
         )
+    questions[-1]["explanation"] += " Термины дня: " + ", ".join(term for term, _definition in terms) + "."
+    for question in questions:
+        question["question_kind"] = "theory"
+    questions.extend(_it_practical_quiz_questions(day_number, lesson)[:8])
     return questions
+
+
+def _it_practical_quiz_questions(day_number: int, lesson: dict) -> list[dict]:
+    terms = lesson["terms"]
+    mini_tasks = lesson["mini_tasks"]
+    practice = lesson["practice"]
+    title_options, title_correct_index = _rotated_options(
+        lesson["title"],
+        (item["title"] for item in IT_LESSONS if item["day"] != day_number),
+        day_number + 700,
+    )
+    first_task = mini_tasks[0]
+    second_task = mini_tasks[1]
+    third_task = mini_tasks[2]
+    task_title_options, task_title_correct_index = _rotated_options(
+        first_task["title"],
+        tuple(task["title"] for task in mini_tasks[1:]) + ("Практика дня",),
+        day_number + 701,
+    )
+    solution_options, solution_correct_index = _rotated_options(
+        first_task["solution"],
+        tuple(task["solution"] for task in mini_tasks[1:]) + (
+            "Разбор: пропустить собственную попытку и сразу открыть готовый ответ.",
+            "Разбор: переписать все термины подряд без связи с задачей.",
+            "Разбор: выбрать случайный вариант и не проверять ошибку.",
+        ),
+        day_number + 702,
+    )
+    report_options = (
+        "Входные данные, действие, результат, возможная ошибка",
+        "Цвет кнопки, размер экрана, имя файла, пароль",
+        "Только список терминов без вывода",
+        "Случайная цитата и оценка настроения",
+    )
+    mistake_options = (
+        "Симптом, причина и действие для исправления",
+        "Только фраза «я не понял»",
+        "Новый термин без связи с задачей",
+        "Список всех технологий подряд",
+    )
+    project_layer_options = (
+        "Выбрать один слой проекта и описать реальное действие",
+        "Перечислить все языки программирования",
+        "Сразу перейти к итоговому тесту",
+        "Не связывать тему с проектом",
+    )
+    term_pair_options, term_pair_correct_index = _rotated_options(
+        f"{terms[0][0]} + {terms[1][0]}",
+        (f"{terms[index][0]} + {terms[(index + 3) % len(terms)][0]}" for index in range(2, 8)),
+        day_number + 703,
+    )
+    practical_questions = [
+        {
+            "day": lesson["day"],
+            "prompt": f"Практическая ситуация: ученик выполнил задание «{practice}». К какой теме дня это относится?",
+            "options": title_options,
+            "correct_index": title_correct_index,
+            "explanation": f"Практика относится к теме «{lesson['title']}».",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": f"Мини-задача: «{first_task['task']}». Как называется этот тип работы?",
+            "options": task_title_options,
+            "correct_index": task_title_correct_index,
+            "explanation": f"Это мини-задача «{first_task['title']}».",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": f"После задачи «{first_task['task']}» какой разбор подходит лучше всего?",
+            "options": solution_options,
+            "correct_index": solution_correct_index,
+            "explanation": first_task["solution"],
+        },
+        {
+            "day": lesson["day"],
+            "prompt": f"Практический отчёт по теме «{lesson['title']}»: какие 4 строки должны быть в хорошем ответе?",
+            "options": report_options,
+            "correct_index": 0,
+            "explanation": "Практический отчёт: входные данные, действие, результат, возможная ошибка.",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": "Как правильно разобрать типичную ошибку новичка в мини-задаче?",
+            "options": mistake_options,
+            "correct_index": 0,
+            "explanation": "Разбор ошибки должен содержать симптом, причину и действие для исправления.",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": "Как лучше связать тему дня с личным веб-проектом?",
+            "options": project_layer_options,
+            "correct_index": 0,
+            "explanation": "Практический ответ выбирает один слой проекта и описывает реальное действие.",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": f"Какая пара терминов лучше всего подходит для первого практического объяснения темы?",
+            "options": term_pair_options,
+            "correct_index": term_pair_correct_index,
+            "explanation": f"Начинайте с базовой пары: {terms[0][0]} и {terms[1][0]}.",
+        },
+        _text_question(
+            {
+                "day": lesson["day"],
+                "prompt": f"В мини-задаче «{second_task['title']}» какой термин нужно обязательно использовать первым?",
+                "explanation": f"Подходящий первый термин: {terms[0][0]}.",
+            },
+            terms[0][0],
+            f"В мини-задаче «{second_task['title']}» какой термин нужно обязательно использовать первым?",
+        ),
+        {
+            "day": lesson["day"],
+            "prompt": f"Что нужно сделать перед просмотром разбора мини-задачи «{third_task['title']}»?",
+            "options": (
+                "Сначала записать свой ответ",
+                "Сразу открыть решение",
+                "Пропустить задачу",
+                "Выбрать случайный термин",
+            ),
+            "correct_index": 0,
+            "explanation": "Практика работает лучше, когда сначала есть собственная попытка, а потом разбор.",
+        },
+        {
+            "day": lesson["day"],
+            "prompt": "Какой результат показывает, что мини-задача решена осознанно?",
+            "options": (
+                "Ученик может объяснить ход решения и назвать ошибку",
+                "Ученик просто нажал кнопку далее",
+                "Ученик переписал термин без примера",
+                "Ученик не сверялся с разбором",
+            ),
+            "correct_index": 0,
+            "explanation": "Осознанное решение включает ход мысли, результат и проверку возможной ошибки.",
+        },
+    ]
+    for question in practical_questions:
+        question["question_kind"] = "practice"
+    return practical_questions
 
 
 def build_go_daily_quiz(day_number: int) -> list[dict]:
@@ -1425,7 +1567,15 @@ def build_python_daily_quiz(day_number: int) -> list[dict]:
                           "options": options, "correct_index": correct_index,
                           "explanation": f"Это понятие — {term}."})
     questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 501, "понятие")})
-    questions.append({"day": day_number, **_multi_pair_question(terms, day_number + 602, "понятие")})
+    questions.append({
+        "day": day_number,
+        **_multi_pair_question(
+            terms,
+            day_number + 602,
+            "понятие",
+            "Выберите еще две правильно составленные пары «понятие — значение».",
+        ),
+    })
     questions.extend(_python_code_questions(day_number, lesson))
     for index in range(2):
         term, definition = terms[index]
@@ -1554,7 +1704,8 @@ def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
         raise ValueError("Некорректный номер видеоурока.")
     lesson = PYTHON_VIDEO_LESSONS[lesson_number - 1]
     rng = random.Random(seed)
-    questions = []
+    theory_questions = []
+    practice_questions = []
     facts = lesson["facts"]
     for index, (term, definition) in enumerate(facts):
         options, correct_index = _rotated_options(
@@ -1562,26 +1713,41 @@ def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
             (item[1] for item in lesson["facts"] if item[0] != term),
             seed + index,
         )
-        questions.append(
+        theory_questions.append(
             {
                 "prompt": f"Что в этом уроке означает «{term}»?",
                 "options": options,
                 "correct_index": correct_index,
                 "explanation": f"{term} — {definition}.",
+                "question_kind": "theory",
             }
         )
-    for index, (term, definition) in enumerate(facts):
+    for index, (term, definition) in enumerate(facts[:1]):
         options, correct_index = _rotated_options(
             term,
             (item[0] for item in facts if item[0] != term),
             seed + 10 + index,
         )
-        questions.append({
+        theory_questions.append({
             "prompt": f"Какое понятие означает «{definition}»?",
             "options": options,
             "correct_index": correct_index,
             "explanation": f"{definition} — это {term}.",
+            "question_kind": "theory",
         })
+    theory_questions.append({
+        **_multi_pair_question(facts, seed + 501, "понятие"),
+        "question_kind": "theory",
+    })
+    theory_questions.append({
+        **_multi_pair_question(
+            facts,
+            seed + 602,
+            "понятие",
+            "Отметьте еще две корректные пары «понятие — значение».",
+        ),
+        "question_kind": "theory",
+    })
     for index, (term, definition) in enumerate(facts):
         correct_pair = f"{term} — {definition}"
         distractors = (
@@ -1590,11 +1756,12 @@ def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
             if other_term != term
         )
         options, correct_index = _rotated_options(correct_pair, distractors, seed + 20 + index)
-        questions.append({
-            "prompt": "Какая пара из видео составлена правильно?",
+        practice_questions.append({
+            "prompt": f"Практика после видео: какая пара для «{term}» составлена правильно?",
             "options": options,
             "correct_index": correct_index,
             "explanation": f"Верная пара: {correct_pair}.",
+            "question_kind": "practice",
         })
     for index, (term, definition) in enumerate(facts):
         correct_statement = f"{term} означает: {definition}"
@@ -1604,35 +1771,38 @@ def build_video_lesson_quiz(lesson_number: int, seed: int) -> list[dict]:
             if other_term != term
         )
         options, correct_index = _rotated_options(correct_statement, distractors, seed + 30 + index)
-        questions.append({
-            "prompt": f"Какое утверждение о «{term}» верно?",
+        practice_questions.append({
+            "prompt": f"Вы объясняете тему новичку. Какое утверждение о «{term}» верно?",
             "options": options,
             "correct_index": correct_index,
             "explanation": correct_statement + ".",
+            "question_kind": "practice",
         })
-    correct_pairs = [f"{term} — {definition}" for term, definition in facts]
-    for index, (term, _definition) in enumerate(facts):
-        wrong_pair = f"{term} — {facts[(index + 1) % len(facts)][1]}"
-        options, correct_index = _rotated_options(
-            wrong_pair,
-            (pair for pair in correct_pairs if not pair.startswith(f"{term} —")),
-            seed + 40 + index,
-        )
-        questions.append({
-            "prompt": "Какая пара составлена ошибочно?",
-            "options": options,
-            "correct_index": correct_index,
-            "explanation": f"Ошибочная пара: {wrong_pair}. Правильное значение термина дано в разборе видео.",
-        })
-    for index in range(3):
+    questions = theory_questions[:7] + practice_questions[:8]
+    for index in range(min(3, len(facts))):
         term, definition = facts[index]
-        questions[4 + index] = _text_question(
-            questions[4 + index], term, f"Без вариантов назовите понятие: «{definition}»."
+        questions[index] = _text_question(
+            questions[index], term, f"Без вариантов назовите понятие: «{definition}»."
         )
-    questions[10] = _multi_pair_question(facts, seed + 501, "понятие")
-    questions[11] = _multi_pair_question(facts, seed + 602, "понятие")
+        questions[index]["question_kind"] = "theory"
     rng.shuffle(questions)
     return questions
+
+
+def _question_identity(question: dict) -> tuple[str, str]:
+    return (str(question.get("prompt", "")), str(question.get("answer_type", "single")))
+
+
+def _unique_quiz_questions(questions: list[dict]) -> list[dict]:
+    unique_questions = []
+    seen = set()
+    for question in questions:
+        identity = _question_identity(question)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        unique_questions.append(question)
+    return unique_questions
 
 
 def build_extra_quiz(course_key: str, current_number: int, question_count: int, seed: int) -> list[dict]:
@@ -1648,13 +1818,13 @@ def build_extra_quiz(course_key: str, current_number: int, question_count: int, 
     lesson_count, builder = builders[course_key]
     if not 1 <= current_number <= lesson_count:
         raise ValueError("Некорректный номер урока.")
-    pool = [{**question, "source_number": current_number} for question in builder(current_number)]
+    pool = _unique_quiz_questions([
+        {**question, "source_number": current_number}
+        for question in builder(current_number)
+    ])
     rng = random.Random(seed)
-    selected = []
-    while len(selected) < question_count:
-        cycle = list(pool)
-        rng.shuffle(cycle)
-        selected.extend(dict(question) for question in cycle[: question_count - len(selected)])
+    rng.shuffle(pool)
+    selected = [dict(question) for question in pool[:question_count]]
     return shuffle_quiz(selected, seed + 7919)
 
 
@@ -1677,15 +1847,16 @@ def _extra_stage_passed(correct_count: int, question_count: int) -> bool:
 
 def _start_extra_quiz(course_key: str, item_number: int, base_score: int, base_total: int) -> tuple[list[dict], int]:
     wrong_count = base_total - base_score
-    extra_count = _extra_question_count(wrong_count)
     seed = secrets.randbelow(2**31)
+    questions = build_extra_quiz(course_key, item_number, _extra_question_count(wrong_count), seed)
+    extra_count = len(questions)
     session[_extra_quiz_key(course_key, item_number)] = {
         "base_score": base_score,
         "base_total": base_total,
         "extra_count": extra_count,
         "seed": seed,
     }
-    return build_extra_quiz(course_key, item_number, extra_count, seed), wrong_count
+    return questions, wrong_count
 
 
 def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, int, int, list[dict], bool]:
@@ -1699,8 +1870,11 @@ def _finish_extra_quiz(course_key: str, item_number: int, form) -> tuple[int, in
         seed = int(state["seed"])
     except (KeyError, TypeError, ValueError):
         abort(400)
-    expected_base_total = 15 if course_key == "python" else 20
-    if base_total != expected_base_total or not 0 <= base_score < base_total or extra_count != _extra_question_count(base_total - base_score):
+    expected_base_total = 20 if course_key == "english" else 15
+    expected_extra_count = len(build_extra_quiz(
+        course_key, item_number, _extra_question_count(base_total - base_score), seed
+    ))
+    if base_total != expected_base_total or not 0 <= base_score < base_total or extra_count != expected_extra_count:
         abort(400)
     questions = build_extra_quiz(course_key, item_number, extra_count, seed)
     extra_score, feedback = grade_quiz(questions, form)
@@ -1886,11 +2060,22 @@ def _live_extra_quiz(course_key: str, item_number: int, question_count: int, see
     if item_number not in REVIEW_MILESTONES or question_count < 1:
         abort(404)
     questions = []
+    seen = set()
     attempt = 0
     while len(questions) < question_count:
-        questions.extend(build_review_quiz(review_course, item_number, seed + attempt))
+        before_count = len(questions)
+        for question in build_review_quiz(review_course, item_number, seed + attempt):
+            identity = _question_identity(question)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            questions.append(question)
+            if len(questions) == question_count:
+                break
         attempt += 1
-    return questions[:question_count]
+        if len(questions) == before_count:
+            break
+    return questions
 
 
 def _public_question(question: dict, live_index: int) -> dict:
@@ -2060,6 +2245,9 @@ def live_quiz_state():
     base_questions = _base_quiz_for_attempt(course_key, item_number, seed)
     extra_count = int(state.get("extra_count", 0))
     extras = _live_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if extra_count else []
+    if extra_count > len(extras):
+        extra_count = len(extras)
+        state["extra_count"] = extra_count
 
     answers_complete = (
         len(state["base"]) == len(base_questions)
@@ -2144,7 +2332,10 @@ def check_live_quiz_answer():
         if not 0 <= question_index < int(state["extra_count"]):
             abort(400)
         extra_seed = seed ^ 0x5F3759DF
-        question = _live_extra_quiz(course_key, item_number, 40, extra_seed)[question_index]
+        extras = _live_extra_quiz(course_key, item_number, 40, extra_seed)
+        if question_index >= len(extras):
+            abort(400)
+        question = extras[question_index]
 
     answer = payload.get("answer", "")
     if isinstance(answer, str):
@@ -2164,9 +2355,9 @@ def check_live_quiz_answer():
     added_questions = []
     if stage == "base" and not is_correct:
         previous_count = int(state["extra_count"])
-        state["extra_count"] = previous_count + 2
         extra_seed = seed ^ 0x5F3759DF
         extras = _live_extra_quiz(course_key, item_number, 40, extra_seed)
+        state["extra_count"] = min(previous_count + 2, len(extras))
         added_questions = [
             _public_question(extras[index], index)
             for index in range(previous_count, int(state["extra_count"]))
@@ -2238,11 +2429,11 @@ def sync_live_quiz_answers():
             "correct": bool(result["correct"]), "answer": submitted["base"][index]
         }
     wrong_count = sum(not value["correct"] for value in state["base"].values())
-    state["extra_count"] = wrong_count * 2
+    extras = _live_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF) if wrong_count else []
+    state["extra_count"] = min(wrong_count * 2, len(extras))
     if set(submitted["extra"]) != set(range(state["extra_count"])):
         return jsonify({"complete": False, "error": "Не все дополнительные ответы получены."})
     if state["extra_count"]:
-        extras = _live_extra_quiz(course_key, item_number, 40, seed ^ 0x5F3759DF)
         for index in range(state["extra_count"]):
             result = _live_answer_feedback(extras[index], submitted["extra"][index])
             state["extra"][str(index)] = {
@@ -2607,6 +2798,14 @@ def _build_it_term_cards(lesson: dict) -> list[dict]:
 
 def _build_it_lecture_points(lesson: dict) -> list[dict]:
     points = []
+    code_lines = [line for line in (lesson.get("code") or "").splitlines() if line.strip()]
+    everyday_examples = (
+        "Представьте кухню: сначала есть продукты, затем вы выполняете действие по рецепту и получаете готовое блюдо.",
+        "Представьте шкаф с подписанными полками: название помогает быстро найти нужную вещь и не перепутать её с другой.",
+        "Представьте светофор: программа проверяет условие и выбирает, что делать дальше.",
+        "Представьте список покупок: элементы идут в определённом порядке, а добавление меняет сам список.",
+        "Представьте инструкцию для помощника: функция получает просьбу, делает одну работу и возвращает результат.",
+    )
     for index, paragraph in enumerate(lesson["lecture"], start=1):
         key_fragment = paragraph.split(".")[0].strip()
         first_term, first_definition = lesson["terms"][(index - 1) * 2]
@@ -2640,6 +2839,8 @@ def _build_it_lecture_points(lesson: dict) -> list[dict]:
                         "Ответ считается понятным, если его сможет повторить человек, который не видел исходную лекцию."
                     ),
                 ],
+                "everyday_example": everyday_examples[(index - 1) % len(everyday_examples)],
+                "code_example": "\n".join(code_lines[max(0, (index - 1) * 3): index * 3]) or (lesson.get("code") or "# Здесь будет небольшой пример по теме"),
             }
         )
     return points
@@ -2931,7 +3132,7 @@ def python_v2_topic(topic_number: int):
         score=score,
         feedback=feedback,
         passed=passed,
-        pass_score=DAILY_PASS_SCORE,
+        pass_score=PYTHON_DAILY_PASS_SCORE,
         next_topic=next_topic if passed else None,
         course_finished=len(passed_topics) == len(PYTHON_V2_TOPICS),
     )
@@ -3544,7 +3745,7 @@ def it_day_test(day_number: int):
     extra_questions = None
     wrong_count = 0
     result_total_questions = len(questions)
-    pass_score = DAILY_PASS_SCORE
+    pass_score = PYTHON_DAILY_PASS_SCORE
     if request.method == "POST":
         if request.form.get("quiz_stage") == "extra":
             score, result_total_questions, pass_score, feedback, passed = _finish_extra_quiz("it", day_number, request.form)
