@@ -58,7 +58,7 @@
 
 .learning-hero h1 {
     margin: 0;
-    font-size: clamp(30px, 4vw, 44px);
+    font-size: 42px;
     line-height: 1.05;
 }
 
@@ -404,7 +404,7 @@
 
 .python-video-poster strong {
     max-width: 760px;
-    font-size: clamp(24px, 4vw, 42px);
+    font-size: 40px;
     line-height: 1.15;
 }
 
@@ -1913,7 +1913,7 @@ a.english-day-card:hover {
     }
 
     .learning-hero h1 {
-        font-size: clamp(34px, 9vw, 46px);
+        font-size: 40px;
     }
 
     .learning-hero p:not(.learning-kicker) {

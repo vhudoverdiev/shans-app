@@ -111,6 +111,11 @@ class FormControlStylingTests(unittest.TestCase):
         self.assertIn("button.focus();", script)
         self.assertIn("formatDateButtonText", script)
         self.assertIn("formatMonthButtonText", script)
+        self.assertEqual(
+            script.count('panel.addEventListener("click", function (event) {'),
+            2,
+        )
+        self.assertIn("event.stopPropagation();", script)
 
         self.assertRegex(
             stylesheet,

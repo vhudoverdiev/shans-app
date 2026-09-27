@@ -392,6 +392,9 @@
         panel.hidden = true;
         panel.setAttribute("role", "dialog");
         panel.setAttribute("aria-label", "Календарь");
+        panel.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
         document.body.appendChild(panel);
 
         const today = new Date();
@@ -645,6 +648,9 @@
         panel.hidden = true;
         panel.setAttribute("role", "dialog");
         panel.setAttribute("aria-label", "Выбор месяца");
+        panel.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
         document.body.appendChild(panel);
 
         const today = new Date();

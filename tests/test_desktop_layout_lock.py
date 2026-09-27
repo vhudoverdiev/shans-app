@@ -127,6 +127,22 @@ class DesktopLayoutLockTests(unittest.TestCase):
         )
         self.assertNotIn('matchMedia("(max-width: 768px)")', source)
 
+    def test_responsive_styles_do_not_scale_text_fluidly_with_viewport_width(self):
+        offenders = []
+
+        for stylesheet in RESPONSIVE_STYLESHEETS:
+            source = stylesheet.read_text(encoding="utf-8")
+            offenders.extend(
+                f"{stylesheet.name}: {match.group(0)}"
+                for match in re.finditer(r"font-size:\s*clamp\([^;]+;", source)
+            )
+
+        self.assertEqual(
+            offenders,
+            [],
+            "Fluid viewport-driven font sizes found:\n" + "\n".join(offenders),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

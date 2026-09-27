@@ -52,7 +52,7 @@
 
 .workouts-hero h1 {
     margin: 0;
-    font-size: clamp(34px, 4vw, 48px);
+    font-size: 46px;
     line-height: 1.05;
 }
 
@@ -868,7 +868,7 @@
 .workout-plan-detail-copy h1 {
     margin: 0;
     color: #ffffff;
-    font-size: clamp(36px, 5vw, 58px);
+    font-size: 54px;
     line-height: 1.02;
     letter-spacing: -0.04em;
 }
@@ -920,7 +920,7 @@
 .workout-plan-edit-card h1 {
     margin: 0;
     color: var(--workout-ink);
-    font-size: clamp(28px, 4vw, 42px);
+    font-size: 40px;
     line-height: 1.08;
 }
 
