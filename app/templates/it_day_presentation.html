@@ -4,24 +4,27 @@
 
 {% block content %}
 <section class="learning-page lesson-page it-lesson-page it-presentation-page">
-    <a class="learning-back-link" href="{{ url_for('learning.it_day', day_number=lesson.day) }}">← Назад к уроку</a>
+    <div class="it-pdf-sticky-back">
+        <a class="learning-back-link" href="{{ url_for('learning.it_day', day_number=lesson.day) }}">← Назад к уроку</a>
+    </div>
 
-    <section class="lesson-section it-pdf-viewer-section">
+    <section class="lesson-section it-pdf-viewer-section" aria-label="PDF-презентация к уроку «{{ lesson.title }}»">
         <div class="python-presentation-head it-pdf-viewer-head">
             <div>
                 <p class="learning-kicker">Презентация</p>
                 <h1>PDF к уроку</h1>
                 <p>IT · день {{ lesson.day }} из 30 · {{ lesson.title }}</p>
             </div>
-            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}" target="_blank" rel="noopener">Открыть отдельно</a>
+            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}" target="_blank" rel="noopener">Скачать PDF</a>
         </div>
 
-        <div class="it-pdf-frame-wrap">
-            <iframe
-                class="it-pdf-frame"
-                src="{{ url_for('static', filename=lesson.presentation_file) }}"
-                title="PDF-презентация к уроку «{{ lesson.title }}»"
-            ></iframe>
+        <div class="it-pdf-pages" aria-label="Страницы PDF">
+            {% for slide_number in range(1, lesson.presentation_slide_count + 1) %}
+            <figure class="it-pdf-page">
+                <img src="{{ url_for('static', filename=lesson.presentation_slide_dir ~ '/slide-%02d.png'|format(slide_number)) }}" alt="Страница {{ slide_number }} из {{ lesson.presentation_slide_count }} PDF-презентации" loading="{% if slide_number <= 2 %}eager{% else %}lazy{% endif %}">
+                <figcaption>{{ slide_number }} / {{ lesson.presentation_slide_count }}</figcaption>
+            </figure>
+            {% endfor %}
         </div>
     </section>
 </section>

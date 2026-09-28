@@ -47,8 +47,13 @@
             </div>
             <div class="python-presentation-actions">
                 <span class="python-presentation-counter"><span data-slide-current>1</span> / {{ lesson.presentation_slide_count }}</span>
+                <button type="button" class="btn btn-secondary python-presentation-fullscreen" data-presentation-fullscreen>На весь экран</button>
                 <a class="btn btn-secondary python-presentation-pdf-link" href="{{ url_for('learning.it_day_presentation', day_number=lesson.day) }}">PDF</a>
             </div>
+        </div>
+        <div class="python-presentation-mobile-bar" aria-label="Управление просмотром слайдов">
+            <span><span data-slide-current-mobile>1</span> / {{ lesson.presentation_slide_count }}</span>
+            <button type="button" data-presentation-close>Закрыть</button>
         </div>
         <div class="python-presentation-stage" tabindex="0" aria-label="Презентация к уроку «{{ lesson.title }}»">
             <button type="button" class="python-presentation-nav python-presentation-prev" data-slide-prev aria-label="Предыдущий слайд">‹</button>

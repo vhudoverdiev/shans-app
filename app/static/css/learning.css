@@ -1795,14 +1795,29 @@ a.english-day-card:hover {
     background: #2563eb;
 }
 
+html.presentation-viewer-lock,
+html.presentation-viewer-lock body {
+    overflow: hidden;
+}
+
+.python-presentation-mobile-bar {
+    display: none;
+}
+
 .it-presentation-page {
     gap: 16px;
 }
 
+.it-pdf-sticky-back {
+    position: sticky;
+    top: 12px;
+    z-index: 12;
+    width: fit-content;
+}
+
 .it-pdf-viewer-section {
-    min-height: calc(100vh - 220px);
     display: grid;
-    grid-template-rows: auto minmax(520px, 1fr);
+    gap: 16px;
 }
 
 .it-pdf-viewer-head h1,
@@ -1817,21 +1832,34 @@ a.english-day-card:hover {
     line-height: 1.5;
 }
 
-.it-pdf-frame-wrap {
-    min-height: 520px;
+.it-pdf-pages {
+    display: grid;
+    gap: 18px;
+}
+
+.it-pdf-page {
+    margin: 0;
     overflow: hidden;
     border: 1px solid #dbeafe;
     border-radius: 18px;
     background: #ffffff;
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.1);
 }
 
-.it-pdf-frame {
+.it-pdf-page img {
     display: block;
     width: 100%;
-    height: 100%;
-    min-height: 520px;
-    border: 0;
-    background: #ffffff;
+    height: auto;
+}
+
+.it-pdf-page figcaption {
+    padding: 10px 14px;
+    border-top: 1px solid #e0ecff;
+    color: #64748b;
+    background: #f8fbff;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
 }
 
 .it-code-block {
@@ -2225,22 +2253,24 @@ a.english-day-card:hover {
 
     .python-presentation-actions {
         display: grid;
-        grid-template-columns: 104px minmax(0, 1fr);
+        grid-template-columns: 92px minmax(0, 1fr) minmax(72px, 0.45fr);
         justify-content: space-between;
     }
 
     .python-presentation-counter,
+    .python-presentation-fullscreen,
     .python-presentation-pdf-link {
         min-height: 44px;
         border-radius: 16px;
+        padding-inline: 10px;
+        font-size: 13px;
+        white-space: nowrap;
     }
 
     .python-presentation-stage {
-        margin: 0 -10px;
-        aspect-ratio: 16 / 10;
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
+        margin: 0;
+        aspect-ratio: 16 / 9;
+        border-radius: 18px;
         background: #ffffff;
         box-shadow: 0 14px 34px rgba(37, 99, 235, 0.11);
         touch-action: pan-y;
@@ -2255,6 +2285,7 @@ a.english-day-card:hover {
     .python-presentation-nav {
         width: 48px;
         height: 64px;
+        top: 42%;
         border-radius: 18px;
         background: rgba(37, 99, 235, 0.92);
         box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
@@ -2300,9 +2331,92 @@ a.english-day-card:hover {
         width: 48px;
     }
 
+    .python-presentation-fullscreen-active {
+        position: fixed;
+        inset: 0;
+        z-index: 28000;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 0;
+        width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+        box-sizing: border-box;
+        overflow: hidden;
+        border-radius: 0;
+        background: #0f172a;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-head {
+        display: none;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-mobile-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 2px 10px;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .python-presentation-mobile-bar button {
+        min-height: 38px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.12);
+        font: inherit;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-stage {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        aspect-ratio: auto;
+        border: 0;
+        border-radius: 18px;
+        background: #111827;
+        box-shadow: none;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-slide {
+        object-fit: contain;
+        background: #ffffff;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-nav {
+        width: 54px;
+        height: 72px;
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(37, 99, 235, 0.95);
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-footer {
+        margin: 0;
+        padding: 10px 0 0;
+    }
+
+    .python-presentation-fullscreen-active .python-presentation-dots {
+        padding-bottom: 0;
+    }
+
+    html.presentation-viewer-lock .app-bottom-nav,
+    html.presentation-viewer-lock .bug-report-trigger,
+    html.presentation-viewer-lock [data-push-inbox-floating],
+    html:has(.it-presentation-page) .app-bottom-nav,
+    html:has(.it-presentation-page) .bug-report-trigger,
+    html:has(.it-presentation-page) [data-push-inbox-floating] {
+        display: none;
+    }
+
     .it-pdf-viewer-section {
-        min-height: calc(100dvh - 132px);
-        grid-template-rows: auto minmax(0, 1fr);
+        gap: 12px;
     }
 
     .it-pdf-viewer-head {
@@ -2322,10 +2436,28 @@ a.english-day-card:hover {
         justify-content: center;
     }
 
-    .it-pdf-frame-wrap,
-    .it-pdf-frame {
-        min-height: calc(100dvh - 260px);
+    .it-pdf-sticky-back {
+        top: max(10px, env(safe-area-inset-top));
+        width: 100%;
+    }
+
+    .it-pdf-sticky-back .learning-back-link {
+        width: 100%;
+        justify-content: center;
+        backdrop-filter: blur(14px);
+    }
+
+    .it-pdf-pages {
+        gap: 12px;
+        margin: 0 -4px;
+    }
+
+    .it-pdf-page {
         border-radius: 16px;
+    }
+
+    .it-pdf-page figcaption {
+        padding: 9px 12px;
     }
 
     .it-practice-number {
