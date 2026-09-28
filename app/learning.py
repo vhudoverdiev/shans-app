@@ -3720,6 +3720,23 @@ def it_day(day_number: int):
     )
 
 
+@learning_bp.route("/study/it/day/<int:day_number>/presentation")
+@login_required
+def it_day_presentation(day_number: int):
+    if day_number < 1 or day_number > len(IT_LESSONS):
+        abort(404)
+
+    progress, passed_days, next_day = _it_course_state(int(current_user.id))
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий день курса.", "warning")
+        return redirect(url_for("learning.it_course"))
+
+    return render_template(
+        "it_day_presentation.html",
+        lesson=IT_LESSONS[day_number - 1],
+    )
+
+
 @learning_bp.route("/study/it/day/<int:day_number>/test", methods=["GET", "POST"])
 @login_required
 def it_day_test(day_number: int):

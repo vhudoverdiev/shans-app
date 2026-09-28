@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}PDF · IT — день {{ lesson.day }} | Шанс{% endblock %}
+
+{% block content %}
+<section class="learning-page lesson-page it-lesson-page it-presentation-page">
+    <a class="learning-back-link" href="{{ url_for('learning.it_day', day_number=lesson.day) }}">← Назад к уроку</a>
+
+    <section class="lesson-section it-pdf-viewer-section">
+        <div class="python-presentation-head it-pdf-viewer-head">
+            <div>
+                <p class="learning-kicker">Презентация</p>
+                <h1>PDF к уроку</h1>
+                <p>IT · день {{ lesson.day }} из 30 · {{ lesson.title }}</p>
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}" target="_blank" rel="noopener">Открыть отдельно</a>
+        </div>
+
+        <div class="it-pdf-frame-wrap">
+            <iframe
+                class="it-pdf-frame"
+                src="{{ url_for('static', filename=lesson.presentation_file) }}"
+                title="PDF-презентация к уроку «{{ lesson.title }}»"
+            ></iframe>
+        </div>
+    </section>
+</section>
+{% endblock %}

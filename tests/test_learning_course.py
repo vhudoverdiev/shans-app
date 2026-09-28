@@ -77,6 +77,7 @@ PYTHON_VIDEO_DIRECTORY = PROJECT_ROOT / "app" / "static" / "videos" / "python-ba
 LIVE_QUIZ_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "live-quiz.js"
 PRESENTATIONS_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentations"
 PRESENTATION_SLIDES_DIRECTORY = PROJECT_ROOT / "app" / "static" / "presentation-slides"
+PRESENTATION_SCRIPT = PROJECT_ROOT / "app" / "static" / "js" / "presentation-viewer.js"
 
 
 def correct_quiz_form(questions):
@@ -759,8 +760,10 @@ class EnglishCourseTests(unittest.TestCase):
 
         source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
         self.assertIn("Слайды к уроку", source)
-        self.assertIn("lesson.presentation_file", source)
         self.assertIn("lesson.presentation_slide_dir", source)
+        self.assertIn("learning.it_day_presentation", source)
+        self.assertNotIn("lesson.presentation_file", source)
+        self.assertNotIn("href=\"{{ url_for('static', filename=lesson.presentation_file) }}\"", source)
         self.assertIn("data-slide-prev", source)
         self.assertIn("data-slide-next", source)
         self.assertIn("data-slide-dot", source)
@@ -768,9 +771,28 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertNotIn("Шпаргалка", source)
         self.assertNotIn("cheatsheet", source)
 
+        pdf_source = (TEMPLATES / "it_day_presentation.html").read_text(encoding="utf-8")
+        self.assertIn("Назад к уроку", pdf_source)
+        self.assertIn("url_for('learning.it_day', day_number=lesson.day)", pdf_source)
+        self.assertIn("lesson.presentation_file", pdf_source)
+        self.assertIn("<iframe", pdf_source)
+
         python_source = (TEMPLATES / "python_day.html").read_text(encoding="utf-8")
         self.assertNotIn("Смотреть презентацию", python_source)
         self.assertNotIn("Смотреть шпаргалку", python_source)
+
+    def test_it_presentation_viewer_has_mobile_friendly_controls(self):
+        styles = LEARNING_STYLES.read_text(encoding="utf-8")
+        script = PRESENTATION_SCRIPT.read_text(encoding="utf-8")
+        mobile_rules = styles.split("@media (max-width: 900px) and (pointer: coarse)", 1)[1]
+
+        self.assertIn("touchstart", script)
+        self.assertIn("touchend", script)
+        self.assertIn("Math.abs(deltaX) < 44", script)
+        self.assertIn("touch-action: pan-y;", mobile_rules)
+        self.assertIn("scroll-snap-type: x proximity;", mobile_rules)
+        self.assertIn(".it-pdf-frame", styles)
+        self.assertIn("min-height: calc(100dvh - 260px);", mobile_rules)
 
     def test_lesson_templates_show_expanded_material_and_real_term_count(self):
         it_source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
@@ -1201,10 +1223,23 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         html = response.data.decode("utf-8")
         self.assertIn("presentation-slides/python-basics/day-01/slide-01.png", html)
         self.assertIn("presentation-slides/python-basics/day-01/slide-30.png", html)
+        self.assertIn("/study/it/day/1/presentation", html)
         self.assertIn('data-slide-prev', html)
         self.assertIn('data-slide-next', html)
         self.assertNotIn("Шпаргалка", html)
         self.assertNotIn("cheatsheet", html)
+
+    def test_it_day_pdf_page_keeps_back_navigation(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+
+        response = client.get("/study/it/day/1/presentation")
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode("utf-8")
+        self.assertIn("← Назад к уроку", html)
+        self.assertIn('/study/it/day/1"', html)
+        self.assertIn("python_day01_simple_readable.pdf", html)
+        self.assertIn("<iframe", html)
 
     def test_one_base_mistake_and_correct_extra_answers_unlock_next_english_day(self):
         conn = get_master_connection()

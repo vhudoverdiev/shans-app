@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let activeIndex = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
 
         function showSlide(index) {
             activeIndex = Math.max(0, Math.min(index, dots.length - 1));
@@ -42,6 +44,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     showSlide(activeIndex + 1);
                 }
             });
+            stage.addEventListener("touchstart", (event) => {
+                if (!event.changedTouches.length) return;
+                touchStartX = event.changedTouches[0].clientX;
+                touchStartY = event.changedTouches[0].clientY;
+            }, { passive: true });
+            stage.addEventListener("touchend", (event) => {
+                if (!event.changedTouches.length) return;
+                const deltaX = event.changedTouches[0].clientX - touchStartX;
+                const deltaY = event.changedTouches[0].clientY - touchStartY;
+                if (Math.abs(deltaX) < 44 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+                showSlide(activeIndex + (deltaX < 0 ? 1 : -1));
+            }, { passive: true });
         }
         showSlide(0);
     });

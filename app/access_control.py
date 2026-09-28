@@ -117,6 +117,7 @@ SECTION_ENDPOINTS = {
         "learning.study_hub",
         "learning.it_course",
         "learning.it_day",
+        "learning.it_day_presentation",
         "learning.it_final",
         "learning.it_video_course",
         "learning.it_video_lesson",

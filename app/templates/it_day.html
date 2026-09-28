@@ -47,7 +47,7 @@
             </div>
             <div class="python-presentation-actions">
                 <span class="python-presentation-counter"><span data-slide-current>1</span> / {{ lesson.presentation_slide_count }}</span>
-                <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}">PDF</a>
+                <a class="btn btn-secondary python-presentation-pdf-link" href="{{ url_for('learning.it_day_presentation', day_number=lesson.day) }}">PDF</a>
             </div>
         </div>
         <div class="python-presentation-stage" tabindex="0" aria-label="Презентация к уроку «{{ lesson.title }}»">
