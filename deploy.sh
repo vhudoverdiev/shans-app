@@ -115,6 +115,24 @@ install_dependencies() {
     "gunicorn==$GUNICORN_VERSION"
 }
 
+prepare_lfs() {
+  local attributes
+  attributes="$(git show "$REMOTE/$BRANCH:.gitattributes" 2>/dev/null || true)"
+  if [[ "$attributes" == *"filter=lfs"* ]]; then
+    git lfs version >/dev/null 2>&1 \
+      || fail "для медиа нужен Git LFS: установите git-lfs на сервере и повторите деплой"
+    git lfs install --local
+  fi
+}
+
+download_lfs_media() {
+  if [[ -f .gitattributes && "$(<.gitattributes)" == *"filter=lfs"* ]]; then
+    log "Загрузка и проверка медиа из Git LFS"
+    git lfs pull --include="" --exclude="" "$REMOTE"
+    git lfs fsck
+  fi
+}
+
 check_health() {
   "$VENV_DIR/bin/python" - "$HEALTH_URL" <<'PY'
 import json
@@ -195,11 +213,14 @@ main() {
   git checkout "$BRANCH"
   git show-ref --verify --quiet "refs/remotes/$REMOTE/$BRANCH" \
     || fail "ветка $REMOTE/$BRANCH не найдена"
-  git merge --ff-only "$REMOTE/$BRANCH"
+  prepare_lfs
+  GIT_LFS_SKIP_SMUDGE=1 git merge --ff-only "$REMOTE/$BRANCH"
 
   if [[ "$(git rev-parse HEAD)" != "$BEFORE_HEAD" ]]; then
     UPDATED=1
   fi
+
+  download_lfs_media
 
   if [[ ! -x "$VENV_DIR/bin/python" ]]; then
     log "Создание виртуального окружения"
