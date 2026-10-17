@@ -1308,6 +1308,11 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
         self.assertIn("1 / 45", html)
         self.assertIn("Скачать PDF", html)
         self.assertNotIn("<iframe", html)
+        mobile_rules = (PROJECT_ROOT / "app/static/css/mobile.css").read_text(encoding="utf-8")
+        landscape_rules = mobile_rules.split('@media (orientation: landscape)', 1)[1]
+        self.assertIn('html:not(:has(.it-presentation-page)) body', landscape_rules)
+        self.assertIn('html:not(:has(.it-presentation-page)) .orientation-lock-overlay', landscape_rules)
+        self.assertIn('html:has(.it-presentation-page) .site-header', landscape_rules)
 
     def test_one_base_mistake_and_correct_extra_answers_unlock_next_english_day(self):
         conn = get_master_connection()

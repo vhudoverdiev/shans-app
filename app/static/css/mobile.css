@@ -1316,13 +1316,13 @@
 }
 
 @media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) {
-    html,
-    body {
+    html:not(:has(.it-presentation-page)),
+    html:not(:has(.it-presentation-page)) body {
         overflow: hidden !important;
         overscroll-behavior: none;
     }
 
-    .orientation-lock-overlay {
+    html:not(:has(.it-presentation-page)) .orientation-lock-overlay {
         position: fixed;
         inset: 0;
         z-index: 30000;
@@ -1332,6 +1332,17 @@
         background:
             radial-gradient(circle at 50% 42%, rgba(219, 234, 254, 0.92) 0, rgba(238, 242, 255, 0.82) 34%, transparent 68%),
             linear-gradient(145deg, #f8fbff 0%, #eef3ff 52%, #f7f5ff 100%);
+    }
+
+    html:has(.it-presentation-page) .site-header,
+    html:has(.it-presentation-page) .app-bottom-nav,
+    html:has(.it-presentation-page) .bug-report-trigger,
+    html:has(.it-presentation-page) [data-push-inbox-floating] {
+        display: none;
+    }
+
+    html:has(.it-presentation-page) .page-shell {
+        padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     }
 
     .orientation-lock-card {
