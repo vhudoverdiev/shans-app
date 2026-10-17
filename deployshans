@@ -5,23 +5,48 @@ SCRIPT_PATH="${0:A}"
 PROJECT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 cd "$PROJECT_DIR"
 BRANCH="$(git branch --show-current)"
+EXPECTED_REPOSITORY="vhudoverdiev/shans-app"
 
 if [[ -z "$BRANCH" ]]; then
   echo "Ошибка: проект не находится на ветке Git."
   exit 1
 fi
 
-if [[ -z "$(git status --porcelain)" ]]; then
-  echo "Локальных изменений для отправки нет."
-  exit 0
+for REMOTE_URL in "$(git remote get-url origin)" "${(@f)$(git remote get-url --push --all origin)}"; do
+  case "$REMOTE_URL" in
+    "https://github.com/$EXPECTED_REPOSITORY"|"https://github.com/$EXPECTED_REPOSITORY.git"|"git@github.com:$EXPECTED_REPOSITORY.git"|"ssh://git@github.com/$EXPECTED_REPOSITORY.git") ;;
+    *) echo "Ошибка: origin указывает не на https://github.com/$EXPECTED_REPOSITORY: $REMOTE_URL"; exit 1 ;;
+  esac
+done
+
+echo "Репозиторий: https://github.com/$EXPECTED_REPOSITORY · ветка: $BRANCH"
+if [[ -f .gitattributes && "$(<.gitattributes)" == *"filter=lfs"* ]]; then
+  if ! git lfs version >/dev/null 2>&1; then
+    echo "Ошибка: установите Git LFS перед отправкой медиа (на macOS: brew install git-lfs)."
+    exit 1
+  fi
+  git lfs install --local
+fi
+git fetch --no-tags origin
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  read "COMMIT_MESSAGE?Введите сообщение коммита (Enter — Update local changes): "
+  COMMIT_MESSAGE="${COMMIT_MESSAGE:-Update local changes}"
+  git add -A
+  git commit -m "$COMMIT_MESSAGE"
 fi
 
-echo "Изменения будут отправлены в GitHub: origin/$BRANCH"
-read "COMMIT_MESSAGE?Введите сообщение коммита (Enter — Update local changes): "
-COMMIT_MESSAGE="${COMMIT_MESSAGE:-Update local changes}"
+LARGE_OBJECTS="$(git rev-list --objects HEAD --not --remotes=origin |
+  git cat-file --batch-check='%(objecttype) %(objectsize) %(rest)' |
+  awk '$1 == "blob" && $2 > 104857600 { print }')"
+if [[ -n "$LARGE_OBJECTS" ]]; then
+  echo "Отправка остановлена: GitHub не принимает обычные Git-файлы больше 100 МиБ."
+  echo "$LARGE_OBJECTS"
+  echo "Эти файлы нужно перенести в Git LFS или внешнее хранилище из всех неотправленных коммитов."
+  echo "Локальные файлы и коммиты сохранены."
+  exit 1
+fi
 
-git add -A
-git commit -m "$COMMIT_MESSAGE"
-git push origin "$BRANCH"
+git push origin "HEAD:refs/heads/$BRANCH"
 
 echo "Готово: локальные изменения отправлены в GitHub."
