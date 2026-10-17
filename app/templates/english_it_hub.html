@@ -4,8 +4,8 @@
 <section class="learning-page section-styled-page">
     <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
     <div class="learning-hero learning-hero-compact">
-        <div><p class="learning-kicker">Семь направлений</p><h1>IT</h1><p>Выберите направление и сразу увидите, сколько материала уже пройдено.</p></div>
-        <div class="learning-hero-mark" aria-hidden="true">7</div>
+        <div><p class="learning-kicker">Восемь направлений</p><h1>IT</h1><p>Выберите направление и сразу увидите, сколько материала уже пройдено.</p></div>
+        <div class="learning-hero-mark" aria-hidden="true">8</div>
     </div>
     <div class="dashboard-grid study-direction-grid study-progress-grid">
         {% for block in blocks %}
@@ -27,5 +27,11 @@
         {% if block.locked %}</div>{% else %}</a>{% endif %}
         {% endfor %}
     </div>
+    <section class="lesson-section ai-course-entry">
+        <p class="learning-kicker">AI в разработке</p>
+        <h2>Практический курс по работе с AI</h2>
+        <p>17 видеоуроков: инструменты, backend, frontend, мобильная разработка, QA, аналитика и безопасность. Конспекты, практика и тесты по материалам видео.</p>
+        <a class="btn btn-primary" href="{{ url_for('learning.ai_course') }}">Перейти к курсу</a>
+    </section>
 </section>
 {% endblock %}

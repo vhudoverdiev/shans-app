@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Подкасты | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page podcast-page">
+    <a class="learning-back-link" href="{{ url_for('learning.study_hub') }}">← Развитие</a>
+    <div class="podcast-heading"><h1>Подкасты</h1>
+        <p class="podcast-intro">Выберите тему. Слушайте на сайте или скачивайте, чтобы взять с собой.</p>
+    </div>
+    <div class="podcast-category-grid">
+        {% for key, category in categories.items() %}
+        <a class="lesson-section podcast-category-card" href="{{ url_for('learning.podcast_category', category=key) }}">
+            <span class="podcast-category-icon" aria-hidden="true">{{ category.icon }}</span>
+            <h2>{{ category.title }}</h2>
+            <p>{{ category.description }}</p>
+            <span class="podcast-category-link">Открыть список →</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

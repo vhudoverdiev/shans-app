@@ -56,14 +56,6 @@
         <h2>Как заниматься сегодня</h2>
         <p class="lesson-lecture lesson-lecture-intro"><strong>Цель дня:</strong> {{ lesson.focus }} Вы изучите {{ word_cards|length }} слов, разберёте {{ phrase_cards|length }} готовые фразы и научитесь использовать их в ситуации «{{ lesson.title }}».</p>
         <p class="lesson-lecture">{{ lesson_lecture_text }}</p>
-        <details class="lesson-more-details">
-            <summary>Подробнее</summary>
-            <div class="lesson-more-body">
-                {% for step in lesson_detail_steps %}
-                <p>{{ step }}</p>
-                {% endfor %}
-            </div>
-        </details>
     </section>
 
     <section class="lesson-section">
@@ -84,23 +76,6 @@
                     </button>
                 </div>
                 <span>{{ card.russian }}</span>
-                <details class="lesson-more-details english-more-details">
-                    <summary>Подробнее</summary>
-                    <div class="lesson-more-body">
-                        <p class="english-card-detail">{{ card.detail }}</p>
-                        {% if card.detail_paragraphs %}
-                            {% for paragraph in card.detail_paragraphs %}
-                            <p>{{ paragraph }}</p>
-                            {% endfor %}
-                        {% else %}
-                        <ol>
-                            {% for step in card.detail_steps %}
-                            <li>{{ step }}</li>
-                            {% endfor %}
-                        </ol>
-                        {% endif %}
-                    </div>
-                </details>
             </article>
             {% endfor %}
         </div>
@@ -125,23 +100,6 @@
                     </button>
                 </div>
                 <span class="phrase-translation">{{ card.russian }}</span>
-                <details class="lesson-more-details english-more-details">
-                    <summary>Подробнее</summary>
-                    <div class="lesson-more-body">
-                        <p class="english-card-detail">{{ card.detail }}</p>
-                        {% if card.detail_paragraphs %}
-                            {% for paragraph in card.detail_paragraphs %}
-                            <p>{{ paragraph }}</p>
-                            {% endfor %}
-                        {% else %}
-                        <ol>
-                            {% for step in card.detail_steps %}
-                            <li>{{ step }}</li>
-                            {% endfor %}
-                        </ol>
-                        {% endif %}
-                    </div>
-                </details>
             </article>
             {% endfor %}
         </div>

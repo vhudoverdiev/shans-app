@@ -15,7 +15,7 @@
                 <h1>PDF к уроку</h1>
                 <p>IT · день {{ lesson.day }} из 30 · {{ lesson.title }}</p>
             </div>
-            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}" target="_blank" rel="noopener">Скачать PDF</a>
+            <a class="btn btn-secondary" href="{{ url_for('static', filename=lesson.presentation_file) }}" download>Скачать PDF</a>
         </div>
 
         <div class="it-pdf-pages" aria-label="Страницы PDF">

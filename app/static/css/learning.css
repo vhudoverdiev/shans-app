@@ -2645,3 +2645,354 @@ html.presentation-viewer-lock body {
         background: #f1f5f9;
     }
 }
+
+/* Keep lesson PDF links together on desktop and in two columns on phones. */
+.it-lesson-page .python-presentation-actions {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 900px) and (pointer: coarse) {
+    .it-lesson-page .python-presentation-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .it-presentation-links .python-presentation-head {
+        position: static;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+    }
+
+    .it-presentation-download {
+        min-height: 44px;
+        font-size: 13px;
+        justify-content: center;
+    }
+}
+
+/* Podcast pages use one spacing rhythm and a theme shared by all controls. */
+.podcast-page {
+    --podcast-accent: #2563eb;
+    --podcast-accent-hover: #1d4ed8;
+    --podcast-soft: #eff6ff;
+    --podcast-border: #bfdbfe;
+    max-width: 980px;
+    display: grid;
+    gap: 28px;
+    overflow-wrap: anywhere;
+}
+
+.podcast-page .learning-back-link {
+    justify-self: start;
+    margin: 0;
+    color: var(--podcast-accent);
+}
+
+.podcast-heading {
+    display: grid;
+    gap: 12px;
+}
+
+.podcast-heading h1,
+.podcast-detail h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.25;
+}
+
+.podcast-intro {
+    margin: 0;
+    color: #64748b;
+    font-size: 16px;
+    line-height: 1.65;
+}
+
+.podcast-category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.podcast-page .lesson-section {
+    margin: 0;
+    padding: 28px;
+}
+
+.podcast-category-card,
+.podcast-list-card,
+.podcast-empty,
+.podcast-detail {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.podcast-page .lesson-section > h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.3;
+}
+
+.podcast-page .lesson-section > p {
+    margin: 0;
+    line-height: 1.65;
+}
+
+.podcast-category-card > p,
+.podcast-list-card > p:not(.learning-kicker),
+.podcast-empty > p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+.podcast-category-card:hover,
+.podcast-list-card:hover {
+    border-color: var(--podcast-accent);
+}
+
+.podcast-category-card:focus-visible,
+.podcast-list-card:focus-visible,
+.podcast-page .podcast-actions .btn:focus-visible {
+    outline: 3px solid var(--podcast-accent);
+    outline-offset: 4px;
+}
+
+.podcast-category-card:active,
+.podcast-list-card:active {
+    background: var(--podcast-soft);
+}
+
+.podcast-category-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    color: var(--podcast-accent);
+    background: var(--podcast-soft);
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.podcast-category-link {
+    margin-top: 6px;
+    color: var(--podcast-accent);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.podcast-page .learning-kicker {
+    color: var(--podcast-accent);
+}
+
+.podcast-list {
+    display: grid;
+    gap: 24px;
+}
+
+.podcast-description {
+    white-space: pre-line;
+    font-size: 16px;
+}
+
+.podcast-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 6px 0 0;
+}
+
+.podcast-page .podcast-actions .btn {
+    min-height: 46px;
+    justify-content: center;
+    text-align: center;
+}
+
+.podcast-page .podcast-actions .btn-primary {
+    color: #ffffff;
+    border-color: var(--podcast-accent);
+    background: var(--podcast-accent);
+}
+
+.podcast-page .podcast-actions .btn-secondary {
+    color: var(--podcast-accent);
+    border-color: var(--podcast-border);
+    background: var(--podcast-soft);
+}
+
+.podcast-page .podcast-actions .btn-danger {
+    color: #ffffff;
+    border-color: #dc2626;
+    background: #dc2626;
+}
+
+.podcast-page .podcast-actions .btn-danger:hover,
+.podcast-page .podcast-actions .btn-danger:active {
+    border-color: #b91c1c;
+    background: #b91c1c;
+}
+
+.podcast-page .podcast-actions .btn-primary:hover,
+.podcast-page .podcast-actions .btn-primary:active {
+    background: var(--podcast-accent-hover);
+}
+
+.podcast-page .podcast-actions .btn-secondary:hover,
+.podcast-page .podcast-actions .btn-secondary:active {
+    border-color: var(--podcast-accent);
+    color: var(--podcast-accent-hover);
+}
+
+.podcast-actions [hidden] {
+    display: none;
+}
+
+.podcast-detail audio {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    accent-color: var(--podcast-accent);
+}
+
+.podcast-status,
+.podcast-unavailable {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.podcast-status:empty {
+    display: none;
+}
+
+@media (max-width: 900px) and (pointer: coarse) {
+    .podcast-page {
+        --podcast-accent: #6d28d9;
+        --podcast-accent-hover: #5b21b6;
+        --podcast-soft: #f5f3ff;
+        --podcast-border: #ddd6fe;
+        max-width: 560px;
+        gap: 24px;
+    }
+
+    .podcast-category-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .podcast-page .lesson-section {
+        padding: 24px;
+    }
+
+    .podcast-page h1 {
+        font-size: 28px;
+    }
+
+    .podcast-page .lesson-section > h2 {
+        font-size: 22px;
+    }
+
+    .podcast-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .podcast-page .podcast-actions .btn {
+        min-height: 48px;
+    }
+}
+
+.ai-course-entry {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+}
+
+.ai-course-entry > p {
+    margin: 0;
+    line-height: 1.65;
+}
+
+.ai-course-entry .btn {
+    justify-self: start;
+}
+
+.ai-lesson-video {
+    display: block;
+    width: 100%;
+    border-radius: 16px;
+    background: #0f172a;
+    aspect-ratio: 16 / 9;
+}
+
+.ai-lesson-locked {
+    background: #f8fafc;
+}
+
+.ai-quiz-form {
+    display: grid;
+    gap: 28px;
+    min-width: 0;
+}
+
+.ai-quiz-question {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.ai-quiz-question legend {
+    margin-bottom: 16px;
+    padding: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.ai-quiz-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 48px;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.ai-quiz-option input {
+    flex: 0 0 auto;
+    margin-top: 4px;
+    accent-color: var(--podcast-accent);
+}
+
+.ai-quiz-option:has(input:checked) {
+    border-color: var(--podcast-accent);
+    background: var(--podcast-soft);
+}
+
+.ai-quiz-option:has(input:focus-visible) {
+    outline: 3px solid var(--podcast-accent);
+    outline-offset: 3px;
+}
+
+.ai-quiz-feedback {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    line-height: 1.6;
+}
+
+.podcast-page .podcast-meta {
+    color: #64748b;
+    font-size: 14px;
+}

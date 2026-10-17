@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} · AI | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page podcast-page ai-course-page">
+    <a class="learning-back-link" href="{{ url_for('learning.ai_course') }}">← Все уроки AI</a>
+    <header class="podcast-heading">
+        <p class="learning-kicker">Урок {{ lesson.day }} из {{ total_lessons }} · {{ lesson.duration_minutes }} мин</p>
+        <h1>{{ lesson.title }}</h1>
+        <p class="podcast-intro">{{ lesson.summary }}</p>
+    </header>
+    <section class="lesson-section podcast-detail">
+        <h2>Видеоурок</h2>
+        {% if video_available %}
+        <video class="ai-lesson-video" controls playsinline preload="metadata" poster="{{ url_for('static', filename=lesson.poster_file) }}" aria-label="{{ lesson.title }}">
+            <source src="{{ url_for('static', filename=lesson.video_file) }}" type="video/mp4">
+            Ваш браузер не поддерживает видео. Откройте исходный фрагмент по ссылке ниже.
+        </video>
+        {% else %}
+        <p>Фрагмент видео пока недоступен на сайте. Вы можете открыть его в исходном ролике.</p>
+        {% endif %}
+        <a class="learning-back-link" href="https://www.youtube.com/watch?v={{ video_id }}&amp;t={{ lesson.start }}s" target="_blank" rel="noopener">Открыть этот фрагмент на YouTube ↗</a>
+    </section>
+    <section class="lesson-section podcast-detail">
+        <p class="learning-kicker">Конспект</p>
+        <h2>Главное из урока</h2>
+        {% for paragraph in lesson.lecture %}<p>{{ paragraph }}</p>{% endfor %}
+    </section>
+    <section class="lesson-section podcast-detail">
+        <p class="learning-kicker">Практика</p>
+        <h2>Закрепите материал</h2>
+        <p>{{ lesson.practice }}</p>
+    </section>
+    {% if score is none %}
+    <section class="lesson-section podcast-detail">
+        <h2>Тест по видео</h2>
+        <p>Ответьте на {{ questions|length }} вопроса. Для прохождения нужны все {{ pass_score }} правильных ответа.</p>
+        <form method="post" class="ai-quiz-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="quiz_nonce" value="{{ nonce }}">
+            {% for question in questions %}
+            {% set question_index = loop.index0 %}
+            <fieldset class="ai-quiz-question">
+                <legend>{{ loop.index }}. {{ question.prompt }}</legend>
+                {% for option in question.options %}
+                <label class="ai-quiz-option"><input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}" required><span>{{ option }}</span></label>
+                {% endfor %}
+            </fieldset>
+            {% endfor %}
+            <div class="podcast-actions"><button type="submit" class="btn btn-primary">Проверить ответы</button></div>
+        </form>
+    </section>
+    {% else %}
+    <section class="lesson-section podcast-detail" id="lesson-result" role="status">
+        <p class="learning-kicker">Результат · {{ score }} из {{ questions|length }}</p>
+        <h2>{% if passed %}Урок пройден{% else %}Повторите материал{% endif %}</h2>
+        {% for item in feedback %}
+        <div class="ai-quiz-feedback">
+            <strong>{{ loop.index }}. {{ item.prompt }}</strong>
+            <p>{% if item.is_correct %}Верно{% else %}Неверно{% endif %}</p>
+            <p>{{ item.explanation }}</p>
+            <p>Правильный ответ: {{ item.correct_answer }}</p>
+        </div>
+        {% endfor %}
+        <div class="podcast-actions">
+            {% if passed and next_day %}<a class="btn btn-primary" href="{{ url_for('learning.ai_lesson', day_number=next_day) }}">Следующий урок →</a>{% endif %}
+            <a class="btn btn-secondary" href="{{ url_for('learning.ai_lesson', day_number=lesson.day, retry=1) }}">Повторить тест</a>
+            {% if passed and not next_day %}<a class="btn btn-primary" href="{{ url_for('learning.ai_course') }}">Курс пройден · Все уроки</a>{% endif %}
+        </div>
+    </section>
+    {% endif %}
+</section>
+{% endblock %}

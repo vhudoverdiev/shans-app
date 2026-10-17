@@ -1,0 +1,23 @@
+#!/bin/zsh
+set -euo pipefail
+
+SCRIPT_PATH="${0:A}"
+PROJECT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+cd "$PROJECT_DIR"
+
+PORT="${SHANS_LOCAL_PORT:-5050}"
+
+if [[ ! -x venv/bin/python ]]; then
+  echo "Создаю виртуальное окружение..."
+  python3 -m venv venv
+fi
+
+echo "Проверяю зависимости..."
+venv/bin/python -m pip install -q -r requirements.txt
+
+export FLASK_DEBUG="1"
+export FLASK_ENV="development"
+
+echo "Shans: http://127.0.0.1:${PORT}"
+echo "Для остановки нажмите Ctrl+C"
+exec venv/bin/python -m flask --app app run --debug --host 127.0.0.1 --port "$PORT"

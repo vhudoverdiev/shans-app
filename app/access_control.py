@@ -115,6 +115,13 @@ SECTION_ENDPOINTS = {
     },
     "study": {
         "learning.study_hub",
+        "learning.ai_course",
+        "learning.ai_lesson",
+        "learning.podcasts",
+        "learning.podcast_category",
+        "learning.podcast_detail",
+        "learning.podcast_audio",
+        "learning.podcast_download",
         "learning.it_course",
         "learning.it_day",
         "learning.it_day_presentation",

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}AI в разработке | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page podcast-page ai-course-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT-обучение</a>
+    <header class="podcast-heading">
+        <h1>AI в разработке</h1>
+        <p class="podcast-intro">17 смысловых уроков по авторскому видеокурсу. Смотрите фрагмент, изучайте конспект, выполняйте практику и проверяйте знания.</p>
+    </header>
+    <section class="lesson-section podcast-detail">
+        <p class="learning-kicker">Ваш прогресс</p>
+        <h2>{{ passed_days|length }} из {{ lessons|length }} уроков пройдено</h2>
+        <p>Для завершения урока ответьте верно на все {{ pass_score }} вопроса. Следующий урок откроется после теста; пройденные уроки доступны для повторения.</p>
+        <p class="podcast-intro">Тарифы и названия моделей в записи могут устаревать. В тестах проверяются принципы работы, а не цены или версии продуктов.</p>
+    </section>
+    <div class="podcast-list">
+        {% for lesson in lessons %}
+        {% set unlocked = lesson.day in passed_days or lesson.day == next_day %}
+        {% if unlocked %}<a class="lesson-section podcast-list-card" href="{{ url_for('learning.ai_lesson', day_number=lesson.day) }}">{% else %}<article class="lesson-section podcast-list-card ai-lesson-locked">{% endif %}
+            <p class="learning-kicker">Урок {{ lesson.day }} · {{ lesson.duration_minutes }} мин</p>
+            <h2>{{ lesson.title }}</h2>
+            <p>{{ lesson.summary }}</p>
+            <span class="podcast-category-link">{% if lesson.day in passed_days %}Пройден · Повторить →{% elif unlocked %}Начать урок →{% else %}Завершите предыдущий урок{% endif %}</span>
+        {% if unlocked %}</a>{% else %}</article>{% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

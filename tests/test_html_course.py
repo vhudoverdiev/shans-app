@@ -61,7 +61,7 @@ class HtmlCourseTests(unittest.TestCase):
         self.assertIn('@learning_bp.route("/study/html/theme/<int:theme_number>"', learning)
         self.assertIn('"html": concepts_ready and python_ready and video_ready and topics_ready and interview_ready', learning)
         self.assertIn('"go": concepts_ready and python_ready and video_ready and topics_ready and interview_ready and html_ready', learning)
-        self.assertIn("Семь направлений", hub)
+        self.assertIn("Восемь направлений", hub)
         self.assertIn("последовательных тем", course)
         self.assertIn("Текстовая лекция", theme)
         self.assertIn("data-floating-video-player", theme)

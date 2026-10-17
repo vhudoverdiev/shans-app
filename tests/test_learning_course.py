@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from markupsafe import escape
 from flask import Flask, session
 from werkzeug.datastructures import MultiDict
 
@@ -740,7 +741,7 @@ class EnglishCourseTests(unittest.TestCase):
             self.assertEqual(lesson["presentation_slide_count"], expected_slide_count)
             self.assertEqual(len(lesson["checkpoint"]["options"]), 4)
 
-    def test_it_daily_presentations_are_embedded_as_slide_viewer(self):
+    def test_it_daily_presentations_offer_pdf_links(self):
         files = sorted((PRESENTATIONS_DIRECTORY / "python-basics").glob("python_day*_simple_readable.pdf"))
         self.assertEqual(
             [path.name for path in files],
@@ -759,15 +760,15 @@ class EnglishCourseTests(unittest.TestCase):
                 self.assertEqual(slide.read(8), b"\x89PNG\r\n\x1a\n")
 
         source = (TEMPLATES / "it_day.html").read_text(encoding="utf-8")
-        self.assertIn("Слайды к уроку", source)
-        self.assertIn("lesson.presentation_slide_dir", source)
+        self.assertIn("Материалы к уроку", source)
+        self.assertNotIn("lesson.presentation_slide_dir", source)
         self.assertIn("learning.it_day_presentation", source)
-        self.assertNotIn("lesson.presentation_file", source)
-        self.assertNotIn("href=\"{{ url_for('static', filename=lesson.presentation_file) }}\"", source)
-        self.assertIn("data-slide-prev", source)
-        self.assertIn("data-slide-next", source)
-        self.assertIn("data-slide-dot", source)
-        self.assertIn("js/presentation-viewer.js", source)
+        self.assertIn("lesson.presentation_file", source)
+        self.assertIn("download>Скачать PDF", source)
+        self.assertNotIn("data-slide-prev", source)
+        self.assertNotIn("data-slide-next", source)
+        self.assertNotIn("data-slide-dot", source)
+        self.assertNotIn("js/presentation-viewer.js", source)
         self.assertNotIn("Шпаргалка", source)
         self.assertNotIn("cheatsheet", source)
 
@@ -793,8 +794,8 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertIn("touchstart", script)
         self.assertIn("touchend", script)
         self.assertIn("Math.abs(deltaX) < 44", script)
-        self.assertIn("data-presentation-fullscreen", (TEMPLATES / "it_day.html").read_text(encoding="utf-8"))
-        self.assertIn("data-presentation-close", (TEMPLATES / "it_day.html").read_text(encoding="utf-8"))
+        self.assertNotIn("data-presentation-fullscreen", (TEMPLATES / "it_day.html").read_text(encoding="utf-8"))
+        self.assertNotIn("data-presentation-close", (TEMPLATES / "it_day.html").read_text(encoding="utf-8"))
         self.assertIn("presentation-viewer-lock", script)
         self.assertIn("python-presentation-fullscreen-active", script)
         self.assertIn("touch-action: pan-y;", mobile_rules)
@@ -968,21 +969,21 @@ class EnglishCourseTests(unittest.TestCase):
         self.assertNotIn('link.target = "_blank"', day_actions_source)
         self.assertNotIn('link.rel = "noopener"', day_actions_source)
         self.assertIn('link.textContent = "Пройти тест"', day_actions_source)
-        self.assertIn("<summary>Подробнее</summary>", english_source)
-        self.assertIn("lesson_detail_steps", english_source)
-        self.assertIn("card.detail_paragraphs", english_source)
-        self.assertIn("card.detail_steps", english_source)
+        self.assertNotIn("<summary>Подробнее</summary>", english_source)
+        self.assertNotIn("lesson_detail_steps", english_source)
+        self.assertNotIn("card.detail_paragraphs", english_source)
+        self.assertNotIn("card.detail_steps", english_source)
         self.assertIn("lesson_lecture_text", english_source)
         self.assertNotIn("<summary>Подробнее</summary>", it_source)
         self.assertNotIn("<details", it_source)
         self.assertIn("lecture_points", it_source)
         self.assertIn("term_cards", it_source)
-        self.assertIn("point.detail_paragraphs", it_source)
-        self.assertIn("point.detail_steps", it_source)
-        self.assertIn("term.detail_paragraphs", it_source)
-        self.assertIn("term.detail_steps", it_source)
-        self.assertIn("code_steps", it_source)
-        self.assertIn("practice_steps", it_source)
+        self.assertNotIn("point.detail_paragraphs", it_source)
+        self.assertNotIn("point.detail_steps", it_source)
+        self.assertNotIn("term.detail_paragraphs", it_source)
+        self.assertNotIn("term.detail_steps", it_source)
+        self.assertNotIn("code_steps", it_source)
+        self.assertNotIn("practice_steps", it_source)
         self.assertNotIn("quiz_revealed", english_source)
         self.assertNotIn("quiz_revealed", it_source)
         self.assertNotIn('id="daily-test-result"', english_source)
@@ -1045,20 +1046,20 @@ class EnglishCourseTests(unittest.TestCase):
         learning_styles = LEARNING_STYLES.read_text(encoding="utf-8")
         mobile_styles = MOBILE_STYLES.read_text(encoding="utf-8")
 
-        self.assertIn("<details", english_source)
-        self.assertIn("<summary>Подробнее</summary>", english_source)
-        self.assertIn("lesson-more-body", english_source)
+        self.assertNotIn("<details", english_source)
+        self.assertNotIn("<summary>Подробнее</summary>", english_source)
+        self.assertNotIn("lesson-more-body", english_source)
         self.assertIn("lesson-next-button", english_source)
         self.assertNotIn("<details", it_source)
         self.assertNotIn("<summary>Подробнее</summary>", it_source)
-        self.assertIn("lesson-more-body", it_source)
+        self.assertNotIn("lesson-more-body", it_source)
         self.assertIn("lesson-next-button", it_source)
 
-        self.assertIn("english-card-detail", english_source)
-        self.assertIn("it-point-detail", it_source)
-        self.assertIn("it-term-detail", it_source)
-        self.assertIn("english-more-details", english_source)
-        self.assertIn("it-more-details", it_source)
+        self.assertNotIn("english-card-detail", english_source)
+        self.assertNotIn("it-point-detail", it_source)
+        self.assertNotIn("it-term-detail", it_source)
+        self.assertNotIn("english-more-details", english_source)
+        self.assertNotIn("it-more-details", it_source)
         self.assertIn("lesson-more-details summary::after", learning_styles)
         self.assertIn("lesson-more-body ol", learning_styles)
         self.assertIn("course-pronounce-button", mobile_styles)
@@ -1227,22 +1228,71 @@ class EnglishLiveQuizRouteTests(unittest.TestCase):
             browser_session["_fresh"] = True
             browser_session["_csrf_token"] = "test-token"
 
-    def test_it_day_renders_slide_viewer_without_cheatsheet(self):
+    def test_it_day_renders_pdf_links_without_slideshow(self):
         client = self.app.test_client()
         self._login_admin(client)
 
         response = client.get("/study/it/day/1")
         self.assertEqual(response.status_code, 200)
         html = response.data.decode("utf-8")
-        self.assertIn("presentation-slides/python-basics/day-01/slide-01.png", html)
-        self.assertIn("presentation-slides/python-basics/day-01/slide-30.png", html)
+        self.assertNotIn("presentation-slides/python-basics/day-01/slide-01.png", html)
+        self.assertNotIn("presentation-slides/python-basics/day-01/slide-30.png", html)
         self.assertIn("/study/it/day/1/presentation", html)
-        self.assertIn('data-slide-prev', html)
-        self.assertIn('data-slide-next', html)
-        self.assertIn('data-presentation-fullscreen', html)
-        self.assertIn('data-presentation-close', html)
+        self.assertNotIn('data-slide-prev', html)
+        self.assertNotIn('data-slide-next', html)
+        self.assertNotIn('data-presentation-fullscreen', html)
+        self.assertNotIn('data-presentation-close', html)
         self.assertNotIn("Шпаргалка", html)
         self.assertNotIn("cheatsheet", html)
+
+    def test_all_english_days_remove_details_but_keep_learning_material(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+        with patch("app.learning._course_state", return_value=({}, set(range(1, 31)), 30)):
+            for lesson in ENGLISH_LESSONS:
+                with self.subTest(day=lesson["day"]):
+                    response = client.get(f"/study/english/day/{lesson['day']}")
+                    self.assertEqual(response.status_code, 200)
+                    html = response.get_data(as_text=True)
+                    self.assertNotIn("Подробнее", html)
+                    self.assertNotIn("<details", html)
+                    self.assertNotIn("lesson-more-body", html)
+                    self.assertIn("Пройти тест", html)
+                    self.assertIn("data-course-audio", html)
+                    for card in [*_build_english_word_cards(lesson), *_build_english_phrase_cards(lesson)]:
+                        self.assertNotIn(card["detail"], html)
+                        for paragraph in card["detail_paragraphs"]:
+                            self.assertNotIn(paragraph, html)
+                    for english, russian in [*lesson["words"], *lesson["phrases"]]:
+                        self.assertIn(str(escape(english)), html)
+                        self.assertIn(str(escape(russian)), html)
+
+    def test_all_it_days_remove_details_and_offer_pdf_downloads(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+        with patch("app.learning._it_course_state", return_value=({}, set(range(1, 31)), 30)):
+            for lesson in IT_LESSONS:
+                with self.subTest(day=lesson["day"]):
+                    response = client.get(f"/study/it/day/{lesson['day']}")
+                    self.assertEqual(response.status_code, 200)
+                    html = response.get_data(as_text=True)
+                    self.assertNotIn("it-more-details", html)
+                    self.assertNotIn("Подробнее", html)
+                    self.assertNotIn("data-presentation-viewer", html)
+                    self.assertNotIn("data-slide-", html)
+                    self.assertNotIn("На весь экран", html)
+                    self.assertNotIn("presentation-viewer.js", html)
+                    self.assertIn("download>Скачать PDF", html)
+                    for point in _build_it_lecture_points(lesson):
+                        self.assertNotIn(point["detail"], html)
+                    pdf = client.get(f"/study/it/day/{lesson['day']}/presentation").get_data(as_text=True)
+                    self.assertIn("download>Скачать PDF", pdf)
+                    self.assertIn(f"{lesson['presentation_slide_count']} / {lesson['presentation_slide_count']}", pdf)
+                    response = client.get("/static/" + lesson["presentation_file"])
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.mimetype, "application/pdf")
+                    self.assertTrue(response.data.startswith(b"%PDF-"))
+                    response.close()
 
     def test_it_day_pdf_page_keeps_back_navigation(self):
         client = self.app.test_client()

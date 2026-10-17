@@ -61,7 +61,7 @@ class PythonV2TopicCourseTests(unittest.TestCase):
         self.assertIn('@learning_bp.route("/study/python-v2")', learning)
         self.assertIn('"python_topics": concepts_ready and python_ready and video_ready', learning)
         self.assertIn('"interview": concepts_ready and python_ready and video_ready and topics_ready', learning)
-        self.assertIn("Семь направлений", hub)
+        self.assertIn("Восемь направлений", hub)
         self.assertIn("Видео до 20 минут", catalog)
         for marker in ("data-floating-video-player", "Текстовая лекция", "Рабочий пример", "Перейти к тесту"):
             self.assertIn(marker, topic)

@@ -1,0 +1,9 @@
+#!/bin/zsh
+set -euo pipefail
+
+SERVER_USER="${SERVER_USER:-root}"
+SERVER_HOST="${SERVER_HOST:-135.106.176.36}"
+SERVER_PORT="${SERVER_PORT:-22}"
+
+echo "Подключаюсь к ${SERVER_USER}@${SERVER_HOST}:${SERVER_PORT}..."
+exec ssh -p "$SERVER_PORT" "${SERVER_USER}@${SERVER_HOST}"

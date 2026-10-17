@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ info.title }} · Подкасты | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page podcast-page">
+    <a class="learning-back-link" href="{{ url_for('learning.podcasts') }}">← Все подкасты</a>
+    <div class="podcast-heading"><h1>{{ info.title }}</h1>
+        <p class="podcast-intro">{{ info.description }}</p>
+    </div>
+    <div class="podcast-list">
+        {% for podcast in podcasts %}
+        <a class="lesson-section podcast-list-card" href="{{ url_for('learning.podcast_detail', category=category, slug=podcast.slug) }}">
+            <p class="learning-kicker">Подкаст {{ loop.index }}{% if podcast.duration_label %} · {{ podcast.duration_label }}{% endif %}</p>
+            <h2>{{ podcast.title }}</h2>
+            {% if podcast.slug in listened_slugs %}<span class="podcast-category-link">✓ Прослушал</span>{% endif %}
+            <p>{{ podcast.description }}</p>
+            <span class="podcast-category-link">Перейти к подкасту →</span>
+        </a>
+        {% else %}
+        <div class="lesson-section podcast-empty">
+            <span class="podcast-category-icon" aria-hidden="true">♫</span>
+            <h2>Здесь скоро появятся подкасты</h2>
+            <p>Пока в этой категории нет записей. После добавления здесь будет список подкастов для прослушивания и скачивания.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

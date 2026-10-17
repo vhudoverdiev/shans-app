@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ podcast.title }} · Подкасты | Шанс{% endblock %}
+{% block content %}
+<section class="learning-page lesson-page podcast-page">
+    <a class="learning-back-link" href="{{ url_for('learning.podcast_category', category=category) }}">← Подкасты · {{ info.title }}</a>
+    <section class="lesson-section podcast-detail" data-podcast-player>
+        <p class="learning-kicker">Подкасты · {{ info.title }}</p>
+        <h1>{{ podcast.title }}</h1>
+        <p class="podcast-description">{{ podcast.description }}</p>
+        {% if podcast.duration_label %}<p class="podcast-meta">{{ podcast.duration_label }}{% if podcast.author %} · {{ podcast.author }}{% endif %}</p>{% endif %}
+        {% if audio_available %}
+        <div class="podcast-actions">
+            <button type="button" class="btn btn-primary" data-podcast-play aria-controls="podcast-audio" aria-pressed="false" hidden>Прослушать</button>
+            <a class="btn btn-secondary" href="{{ url_for('learning.podcast_download', category=category, slug=podcast.slug) }}" download>Скачать подкаст</a>
+        </div>
+        <audio id="podcast-audio" controls preload="none" aria-label="Подкаст: {{ podcast.title }}">
+            <source src="{{ url_for('learning.podcast_audio', category=category, slug=podcast.slug) }}">
+            Ваш браузер не поддерживает аудио. Вы можете скачать подкаст по ссылке выше.
+        </audio>
+        <p class="podcast-status" data-podcast-status role="status" aria-live="polite"></p>
+        {% else %}
+        <p class="podcast-unavailable" role="status">Аудиозапись пока недоступна. Попробуйте зайти позже.</p>
+        {% endif %}
+        <form method="post" class="podcast-actions">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="listened" value="{{ '0' if listened else '1' }}">
+            <button type="submit" class="btn {{ 'btn-danger' if listened else 'btn-secondary' }}" aria-pressed="{{ 'true' if listened else 'false' }}">{{ 'Снять отметку' if listened else 'Прослушал' }}</button>
+        </form>
+        {% if previous_part or next_part %}
+        <nav class="podcast-actions" aria-label="Части подкаста">
+            {% if previous_part %}<a class="btn btn-secondary" href="{{ url_for('learning.podcast_detail', category=category, slug=previous_part.slug) }}">← Часть {{ previous_part.part }}</a>{% endif %}
+            {% if next_part %}<a class="btn btn-secondary" href="{{ url_for('learning.podcast_detail', category=category, slug=next_part.slug) }}">Часть {{ next_part.part }} →</a>{% endif %}
+        </nav>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/podcast-player.js', v=static_asset_version) }}" defer></script>
+{% endblock %}

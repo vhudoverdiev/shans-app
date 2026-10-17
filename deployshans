@@ -1,0 +1,27 @@
+#!/bin/zsh
+set -euo pipefail
+
+SCRIPT_PATH="${0:A}"
+PROJECT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+cd "$PROJECT_DIR"
+BRANCH="$(git branch --show-current)"
+
+if [[ -z "$BRANCH" ]]; then
+  echo "Ошибка: проект не находится на ветке Git."
+  exit 1
+fi
+
+if [[ -z "$(git status --porcelain)" ]]; then
+  echo "Локальных изменений для отправки нет."
+  exit 0
+fi
+
+echo "Изменения будут отправлены в GitHub: origin/$BRANCH"
+read "COMMIT_MESSAGE?Введите сообщение коммита (Enter — Update local changes): "
+COMMIT_MESSAGE="${COMMIT_MESSAGE:-Update local changes}"
+
+git add -A
+git commit -m "$COMMIT_MESSAGE"
+git push origin "$BRANCH"
+
+echo "Готово: локальные изменения отправлены в GitHub."

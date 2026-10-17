@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import random
 import re
 import secrets
 import unicodedata
 
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 from flask_login import current_user, login_required
 
 from app.database import get_connection
+from app.podcast_content import PODCAST_CATEGORIES, PODCASTS
+from app.ai_course_content import AI_LESSONS, AI_PASS_SCORE, AI_VIDEO_ID
 from app.it_course_content import IT_LESSONS
 from app.go_course_content import GO_LESSONS
 from app.html_course_content import HTML_THEMES
@@ -38,6 +41,7 @@ def _english_speech(value) -> str:
     cleaned = (fragment.strip(" .-/'") for fragment in fragments)
     return "; ".join(fragment for fragment in cleaned if fragment)
 _PROGRESS_TABLES = {
+    "ai": "ai_course_progress",
     "english": "english_course_progress",
     "it": "it_course_progress",
     "video": "python_video_progress",
@@ -783,6 +787,29 @@ def init_learning_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ai_course_progress (
+                user_id INTEGER NOT NULL,
+                day_number INTEGER NOT NULL,
+                best_score INTEGER NOT NULL DEFAULT 0,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                passed INTEGER NOT NULL DEFAULT 0,
+                completed_at TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, day_number)
+            )
+            """
+        )
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS podcast_progress (
+                user_id INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                slug TEXT NOT NULL,
+                listened_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, category, slug)
+            )
+        """)
         _create_live_quiz_attempts_table(conn)
         conn.commit()
     finally:
@@ -2684,20 +2711,22 @@ def _english_audio_segments(lesson: dict) -> list[dict]:
     return segments
 
 
-def _it_audio_segments(lesson: dict) -> list[dict]:
+def _it_audio_segments(lesson: dict, *, include_details: bool = True) -> list[dict]:
     segments = [
         {"lang": "ru-RU", "text": f"День {lesson['day']}. {lesson['title']}."},
         {"lang": "ru-RU", "text": lesson["summary"]},
     ]
     for point in _build_it_lecture_points(lesson):
         segments.append({"lang": "ru-RU", "text": point["text"]})
-        segments.append({"lang": "ru-RU", "text": point["detail"]})
+        if include_details:
+            segments.append({"lang": "ru-RU", "text": point["detail"]})
     segments.append({"lang": "ru-RU", "text": "Словарь вакансий."})
     for term_card in _build_it_term_cards(lesson):
         if term_card["is_english"]:
             segments.append({"lang": "en-US", "text": term_card["term"]})
         segments.append({"lang": "ru-RU", "text": f"{term_card['term']}. {term_card['definition']}"})
-        segments.append({"lang": "ru-RU", "text": term_card["detail"]})
+        if include_details:
+            segments.append({"lang": "ru-RU", "text": term_card["detail"]})
     if lesson.get("code"):
         segments.append(
             {
@@ -2969,6 +2998,164 @@ def _build_english_phrase_cards(lesson: dict) -> list[dict]:
 @login_required
 def study_hub():
     return render_template("study_hub.html")
+
+
+@learning_bp.route("/study/ai")
+@login_required
+def ai_course():
+    progress, passed_days, next_day = _get_course_state(int(current_user.id), "ai", AI_LESSONS)
+    return render_template("ai_course.html", lessons=AI_LESSONS, progress=progress,
+                           passed_days=passed_days, next_day=next_day, pass_score=AI_PASS_SCORE)
+
+
+@learning_bp.route("/study/ai/lesson/<int:day_number>", methods=["GET", "POST"])
+@login_required
+def ai_lesson(day_number: int):
+    if not 1 <= day_number <= len(AI_LESSONS):
+        abort(404)
+    lesson = AI_LESSONS[day_number - 1]
+    user_id = int(current_user.id)
+    progress, passed_days, next_day = _get_course_state(user_id, "ai", AI_LESSONS)
+    if day_number not in passed_days and day_number != next_day:
+        flash("Сначала завершите предыдущий урок курса.", "warning")
+        return redirect(url_for("learning.ai_course"))
+
+    attempts = dict(session.get("ai_quiz_attempts", {}))
+    key = str(day_number)
+    if request.method == "POST":
+        attempt = attempts.get(key)
+        if not attempt or not secrets.compare_digest(str(request.form.get("quiz_nonce", "")), attempt["nonce"]):
+            abort(400)
+        answers = [request.form.get(f"question_{i}", "") for i in range(len(lesson["quiz"]))]
+        if any(answer not in {"0", "1", "2"} for answer in answers):
+            abort(400)
+        questions = shuffle_quiz(list(lesson["quiz"]), attempt["seed"])
+        score, feedback = grade_quiz(questions, request.form)
+        _save_course_day_result(user_id, day_number, score, score >= AI_PASS_SCORE, "ai")
+        session["ai_last_result"] = {"day": day_number, "answers": answers, "seed": attempt["seed"]}
+        attempts.pop(key, None)
+        session["ai_quiz_attempts"] = attempts
+        return redirect(url_for("learning.ai_lesson", day_number=day_number, _anchor="lesson-result"))
+
+    if request.args.get("retry") == "1":
+        session.pop("ai_last_result", None)
+        attempts.pop(key, None)
+    result = session.get("ai_last_result")
+    if result and result["day"] == day_number:
+        questions = shuffle_quiz(list(lesson["quiz"]), result["seed"])
+        score, feedback = grade_quiz(questions, {f"question_{i}": answer for i, answer in enumerate(result["answers"])})
+        nonce = None
+    else:
+        if key not in attempts:
+            attempts[key] = {"seed": secrets.randbelow(2**31), "nonce": secrets.token_hex(16)}
+        session["ai_quiz_attempts"] = attempts
+        questions = shuffle_quiz(list(lesson["quiz"]), attempts[key]["seed"])
+        nonce = attempts[key]["nonce"]
+        score = feedback = None
+    return render_template("ai_lesson.html", lesson=lesson, total_lessons=len(AI_LESSONS),
+                           questions=questions, score=score, feedback=feedback, nonce=nonce,
+                           passed=score is not None and score >= AI_PASS_SCORE,
+                           pass_score=AI_PASS_SCORE, next_day=next_day, video_id=AI_VIDEO_ID,
+                           video_available=(Path(current_app.static_folder) / lesson["video_file"]).is_file())
+
+
+def _podcast_media_root() -> Path:
+    return Path(current_app.root_path) / "podcast_media"
+
+
+def _podcast_category(category: str) -> dict:
+    if category not in PODCAST_CATEGORIES:
+        abort(404)
+    return PODCAST_CATEGORIES[category]
+
+
+def _podcast_entry(category: str, slug: str) -> dict:
+    _podcast_category(category)
+    podcast = next((item for item in PODCASTS if item["category"] == category and item["slug"] == slug), None)
+    if podcast is None:
+        abort(404)
+    return podcast
+
+
+def _podcast_audio_path(podcast: dict) -> Path | None:
+    root = _podcast_media_root().resolve()
+    path = (root / podcast["filename"]).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        return None
+    if path.suffix.lower() not in {".mp3", ".m4a", ".ogg", ".wav", ".aac", ".mp4"}:
+        return None
+    return path
+
+
+@learning_bp.route("/study/podcasts")
+@login_required
+def podcasts():
+    return render_template("podcasts.html", categories=PODCAST_CATEGORIES)
+
+
+@learning_bp.route("/study/podcasts/<category>")
+@login_required
+def podcast_category(category: str):
+    info = _podcast_category(category)
+    entries = [item for item in PODCASTS if item["category"] == category]
+    return render_template("podcast_category.html", category=category, info=info, podcasts=entries,
+                           listened_slugs=_podcast_listened_slugs(category))
+
+
+def _podcast_listened_slugs(category: str) -> set[str]:
+    conn = get_connection()
+    try:
+        return {row["slug"] for row in conn.execute(
+            "SELECT slug FROM podcast_progress WHERE user_id = ? AND category = ?",
+            (int(current_user.id), category),
+        ).fetchall()}
+    finally:
+        conn.close()
+
+
+@learning_bp.route("/study/podcasts/<category>/<slug>", methods=["GET", "POST"])
+@login_required
+def podcast_detail(category: str, slug: str):
+    podcast = _podcast_entry(category, slug)
+    if request.method == "POST":
+        listened = request.form.get("listened")
+        if listened not in {"0", "1"}:
+            abort(400)
+        conn = get_connection()
+        try:
+            if listened == "1":
+                conn.execute("INSERT OR IGNORE INTO podcast_progress (user_id, category, slug) VALUES (?, ?, ?)",
+                             (int(current_user.id), category, slug))
+            else:
+                conn.execute("DELETE FROM podcast_progress WHERE user_id = ? AND category = ? AND slug = ?",
+                             (int(current_user.id), category, slug))
+            conn.commit()
+        finally:
+            conn.close()
+        return redirect(url_for("learning.podcast_detail", category=category, slug=slug))
+    parts = sorted((item for item in PODCASTS if podcast.get("series")
+                    and item["category"] == category and item.get("source_id") == podcast.get("source_id")),
+                   key=lambda item: item.get("part", 0))
+    position = next((index for index, item in enumerate(parts) if item["slug"] == slug), None)
+    previous_part = parts[position - 1] if position is not None and position > 0 else None
+    next_part = parts[position + 1] if position is not None and position + 1 < len(parts) else None
+    return render_template("podcast_detail.html", podcast=podcast, category=category,
+                           info=PODCAST_CATEGORIES[category], audio_available=_podcast_audio_path(podcast) is not None,
+                           previous_part=previous_part, next_part=next_part,
+                           listened=slug in _podcast_listened_slugs(category))
+
+
+@learning_bp.route("/study/podcasts/<category>/<slug>/audio")
+@learning_bp.route("/study/podcasts/<category>/<slug>/download", endpoint="podcast_download")
+@login_required
+def podcast_audio(category: str, slug: str):
+    podcast = _podcast_entry(category, slug)
+    path = _podcast_audio_path(podcast)
+    if path is None:
+        abort(404)
+    return send_from_directory(path.parent, path.name, conditional=True,
+                               as_attachment=request.endpoint == "learning.podcast_download",
+                               download_name=path.name)
 
 
 @learning_bp.route("/study/english-it")
@@ -3306,7 +3493,6 @@ def english_day(day_number: int):
         lesson=lesson,
         lesson_video_file=f"videos/english-lectures/lesson-{day_number:02d}.mp4",
         lesson_lecture_text=_build_english_lecture_text(lesson),
-        lesson_detail_steps=_build_english_lecture_details(lesson),
         pass_score=DAILY_PASS_SCORE,
         day_progress=progress.get(day_number),
         word_cards=_build_english_word_cards(lesson),
@@ -3714,9 +3900,7 @@ def it_day(day_number: int):
         day_progress=progress.get(day_number),
         lecture_points=_build_it_lecture_points(lesson),
         term_cards=_build_it_term_cards(lesson),
-        code_steps=_build_it_code_steps(lesson),
-        practice_steps=_build_it_practice_steps(lesson),
-        audio_segments=_it_audio_segments(lesson),
+        audio_segments=_it_audio_segments(lesson, include_details=False),
     )
 
 
