@@ -2695,7 +2695,7 @@ html.presentation-viewer-lock body {
     }
 }
 
-/* Main administrator's learning access controls. */
+/* Personal learning access controls. */
 .learning-access-picker {
     display: grid;
     gap: 14px;

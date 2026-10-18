@@ -62,7 +62,7 @@ class LearningAccessTests(unittest.TestCase):
                 self.change(client, course, 3, 'closed')
                 self.assertEqual(client.get(route).status_code, 302)
 
-    def test_only_main_admin_can_change_access_and_csrf_is_required(self):
+    def test_users_control_only_their_own_access_and_csrf_is_required(self):
         client = self.app.test_client()
         self.assertEqual(client.get('/study/access').status_code, 302)
         self._login_admin(client)
@@ -76,20 +76,38 @@ class LearningAccessTests(unittest.TestCase):
             conn.close()
             user_id = create_managed_user(ManagedUserForm(username='access_other', password='TestPass-2026',
                                           display_name='Other', permissions={'study'}), created_by_user_id=admin_id)
-            conn = get_master_connection()
-            conn.execute('UPDATE users SET is_system_admin = 1 WHERE id = ?', (user_id,))
-            conn.commit()
-            conn.close()
         other = self.app.test_client()
         with other.session_transaction() as session:
             session['_user_id'] = str(user_id)
             session['_fresh'] = True
             session['_csrf_token'] = 'test-token'
-        self.assertEqual(other.get('/study/access').status_code, 403)
-        self.assertEqual(self.change(other, 'it', 1, 'open').status_code, 403)
+        self.assertEqual(other.get('/study/access').status_code, 200)
+        self.assertEqual(self.change(other, 'it', 1, 'open').status_code, 302)
         self.assertEqual(other.get('/study/it/day/1').status_code, 200)
-        self.assertNotIn('Доступ к обучению', other.get('/study').get_data(as_text=True))
+        self.assertIn('Доступ к обучению', other.get('/study').get_data(as_text=True))
+        self.change(other, 'it', 3, 'open')
+        self.assertEqual(other.get('/study/it/day/3').status_code, 200)
+        self.assertEqual(client.get('/study/it/day/3').status_code, 302)
+        self.assertEqual(other.post('/study/access', data={'course': 'it', 'item': '1', 'mode': 'open',
+                              'user_id': str(admin_id), '_csrf_token': 'test-token'}).status_code, 302)
         self.assertEqual(client.get('/study/it/day/1').status_code, 302)
+
+    def test_personal_access_does_not_grant_the_study_section_permission(self):
+        with self.app.app_context():
+            conn = get_master_connection()
+            admin_id = conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()['id']
+            conn.close()
+            user_id = create_managed_user(ManagedUserForm(username='access_limited', password='TestPass-2026',
+                                          display_name='Limited', permissions={'schedule'}), created_by_user_id=admin_id)
+        client = self.app.test_client()
+        with client.session_transaction() as session:
+            session['_user_id'] = str(user_id)
+            session['_fresh'] = True
+            session['_csrf_token'] = 'test-token'
+        response = client.get('/study/access')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/')
+        self.assertEqual(self.change(client, 'it', 1, 'open').status_code, 403)
 
     def test_closing_completed_lesson_keeps_result_and_settings_survive_login(self):
         client = self.app.test_client()

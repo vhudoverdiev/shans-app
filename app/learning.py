@@ -11,7 +11,7 @@ from flask import Blueprint, abort, current_app, flash, g, has_request_context, 
 from flask_login import current_user, login_required
 
 from app.database import get_connection
-from app.access_control import is_main_admin_user
+from app.access_control import has_section_access
 from app.podcast_content import PODCAST_CATEGORIES, PODCASTS
 from app.ai_course_content import AI_LESSONS, AI_PASS_SCORE, AI_VIDEO_ID
 from app.it_course_content import IT_LESSONS
@@ -2644,7 +2644,7 @@ def _get_course_state(user_id: int, course_key: str, lessons):
 
 
 def _access_overrides():
-    if not has_request_context() or not current_user.is_authenticated or not is_main_admin_user():
+    if not has_request_context() or not has_section_access("study"):
         return {}
     if not hasattr(g, "learning_access_overrides"):
         conn = get_connection()
@@ -2668,13 +2668,13 @@ def _lesson_is_open(course_key, item_number, automatic):
 
 @learning_bp.app_context_processor
 def learning_access_context():
-    return {"can_manage_learning": is_main_admin_user(), "lesson_is_open": _lesson_is_open}
+    return {"can_manage_learning": has_section_access("study"), "lesson_is_open": _lesson_is_open}
 
 
 @learning_bp.route("/study/access", methods=["GET", "POST"])
 @login_required
 def learning_access():
-    if not is_main_admin_user():
+    if not has_section_access("study"):
         abort(403)
     catalog = _access_course_catalog()
     course_key = request.form.get("course") if request.method == "POST" else request.args.get("course", "it")
