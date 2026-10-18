@@ -115,6 +115,7 @@ SECTION_ENDPOINTS = {
     },
     "study": {
         "learning.study_hub",
+        "learning.learning_access",
         "learning.ai_course",
         "learning.ai_lesson",
         "learning.podcasts",

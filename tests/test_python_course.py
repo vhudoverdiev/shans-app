@@ -57,7 +57,7 @@ class PythonCourseTests(unittest.TestCase):
         hub = (TEMPLATES_DIRECTORY / "english_it_hub.html").read_text(encoding="utf-8")
         section = (TEMPLATES_DIRECTORY / "python_interview_section.html").read_text(encoding="utf-8")
         self.assertIn("def _it_course_access", learning)
-        self.assertIn("percent >= 80", learning)
+        self.assertIn("len(it_passed) / len(IT_LESSONS) >= 0.8", learning)
         self.assertIn('"it": True', learning)
         self.assertIn("block.locked", hub)
         self.assertIn("предыдущего курса минимум на 80%", hub)

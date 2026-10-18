@@ -8,6 +8,10 @@
         <h1>Развитие</h1>
     </div>
 
+    {% if can_manage_learning %}
+    <a class="learning-back-link" href="{{ url_for('learning.learning_access') }}">Доступ к обучению →</a>
+    {% endif %}
+
     <div class="dashboard-grid study-direction-grid">
         <a href="{{ url_for('learning.english_course') }}" class="dashboard-card dashboard-card-featured study-card-english">
             <div class="dashboard-card-icon study-card-icon-english" aria-hidden="true">EN</div>

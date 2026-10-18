@@ -2695,6 +2695,48 @@ html.presentation-viewer-lock body {
     }
 }
 
+/* Main administrator's learning access controls. */
+.learning-access-picker {
+    display: grid;
+    gap: 14px;
+}
+
+.learning-access-picker select {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    font-size: 16px;
+}
+
+.learning-access-row {
+    scroll-margin-top: 100px;
+}
+
+.learning-access-row h2 {
+    margin: 8px 0;
+    font-size: 22px;
+    overflow-wrap: anywhere;
+}
+
+.learning-access-row .podcast-actions {
+    margin-top: 18px;
+}
+
+@media (max-width: 900px) and (pointer: coarse) {
+    .learning-access-row .podcast-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .podcast-page .learning-access-row .podcast-actions .btn {
+        min-width: 0;
+        padding-right: 8px;
+        padding-left: 8px;
+        font-size: 13px;
+    }
+}
+
 /* Podcast pages use one spacing rhythm and a theme shared by all controls. */
 .podcast-page {
     --podcast-accent: #2563eb;

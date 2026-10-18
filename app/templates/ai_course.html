@@ -15,7 +15,7 @@
     </section>
     <div class="podcast-list">
         {% for lesson in lessons %}
-        {% set unlocked = lesson.day in passed_days or lesson.day == next_day %}
+        {% set unlocked = lesson_is_open('ai', lesson.day, lesson.day in passed_days or lesson.day == next_day) %}
         {% if unlocked %}<a class="lesson-section podcast-list-card" href="{{ url_for('learning.ai_lesson', day_number=lesson.day) }}">{% else %}<article class="lesson-section podcast-list-card ai-lesson-locked">{% endif %}
             <p class="learning-kicker">Урок {{ lesson.day }} · {{ lesson.duration_minutes }} мин</p>
             <h2>{{ lesson.title }}</h2>

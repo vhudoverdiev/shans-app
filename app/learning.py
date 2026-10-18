@@ -7,10 +7,11 @@ import re
 import secrets
 import unicodedata
 
-from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
+from flask import Blueprint, abort, current_app, flash, g, has_request_context, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 from flask_login import current_user, login_required
 
 from app.database import get_connection
+from app.access_control import is_main_admin_user
 from app.podcast_content import PODCAST_CATEGORIES, PODCASTS
 from app.ai_course_content import AI_LESSONS, AI_PASS_SCORE, AI_VIDEO_ID
 from app.it_course_content import IT_LESSONS
@@ -22,6 +23,25 @@ from app.python_v2_topics_content import PYTHON_V2_TOPICS
 
 
 learning_bp = Blueprint("learning", __name__)
+
+
+def _access_course_catalog():
+    return {
+        "english": {"title": "English", "lessons": ENGLISH_LESSONS, "endpoint": "learning.english_course"},
+        "it": {"title": "IT · Понятия", "lessons": IT_LESSONS, "endpoint": "learning.it_course"},
+        "python": {"title": "Python v1", "lessons": PYTHON_LESSONS, "endpoint": "learning.python_course"},
+        "video": {"title": "Python v3", "lessons": PYTHON_VIDEO_LESSONS, "endpoint": "learning.it_video_course"},
+        "python_topics": {"title": "Python v2", "lessons": PYTHON_V2_TOPICS, "endpoint": "learning.python_v2_topics"},
+        "interview": {"title": "Собеседования Python", "lessons": [
+            {"day": number, "title": title}
+            for number, (title, _questions) in enumerate(PYTHON_INTERVIEW_SECTIONS, 1)
+        ], "endpoint": "learning.python_interview"},
+        "html": {"title": "HTML", "lessons": HTML_THEMES, "endpoint": "learning.html_course"},
+        "go": {"title": "Go", "lessons": GO_LESSONS, "endpoint": "learning.go_course"},
+        "ai": {"title": "AI в разработке", "lessons": AI_LESSONS, "endpoint": "learning.ai_course"},
+    }
+
+
 DAILY_PASS_SCORE = 16
 PYTHON_DAILY_PASS_SCORE = 12
 VIDEO_PASS_SCORE = 12
@@ -808,6 +828,15 @@ def init_learning_db() -> None:
                 slug TEXT NOT NULL,
                 listened_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, category, slug)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS learning_access_overrides (
+                user_id INTEGER NOT NULL,
+                course_key TEXT NOT NULL,
+                item_number INTEGER NOT NULL,
+                is_open INTEGER NOT NULL CHECK (is_open IN (0, 1)),
+                PRIMARY KEY (user_id, course_key, item_number)
             )
         """)
         _create_live_quiz_attempts_table(conn)
@@ -2212,6 +2241,9 @@ def _finalize_live_quiz_state(
 def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
     user_id = int(current_user.id)
     review_course = _REVIEW_LIVE_COURSES.get(course_key)
+    access_course = review_course or course_key
+    if _access_overrides().get((access_course, 0)) is False:
+        abort(403)
     if review_course:
         state_getters = {
             "english": _course_state,
@@ -2232,7 +2264,7 @@ def _ensure_live_quiz_access(course_key: str, item_number: int) -> None:
         _progress, passed_items, next_item = _python_course_state(user_id)
     else:
         _progress, passed_items, next_item = _get_course_state(user_id, "video", PYTHON_VIDEO_LESSONS)
-    if item_number not in passed_items and item_number != next_item:
+    if not _lesson_is_open(course_key, item_number, item_number in passed_items or item_number == next_item):
         abort(403)
 
 
@@ -2609,6 +2641,76 @@ def _get_course_state(user_id: int, course_key: str, lessons):
         None,
     )
     return progress, passed_days, next_day
+
+
+def _access_overrides():
+    if not has_request_context() or not current_user.is_authenticated or not is_main_admin_user():
+        return {}
+    if not hasattr(g, "learning_access_overrides"):
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT course_key, item_number, is_open FROM learning_access_overrides WHERE user_id = ?",
+                (int(current_user.id),),
+            ).fetchall()
+            g.learning_access_overrides = {(row["course_key"], row["item_number"]): bool(row["is_open"]) for row in rows}
+        finally:
+            conn.close()
+    return g.learning_access_overrides
+
+
+def _lesson_is_open(course_key, item_number, automatic):
+    overrides = _access_overrides()
+    if overrides.get((course_key, 0)) is False:
+        return False
+    return overrides.get((course_key, item_number), automatic)
+
+
+@learning_bp.app_context_processor
+def learning_access_context():
+    return {"can_manage_learning": is_main_admin_user(), "lesson_is_open": _lesson_is_open}
+
+
+@learning_bp.route("/study/access", methods=["GET", "POST"])
+@login_required
+def learning_access():
+    if not is_main_admin_user():
+        abort(403)
+    catalog = _access_course_catalog()
+    course_key = request.form.get("course") if request.method == "POST" else request.args.get("course", "it")
+    if course_key not in catalog:
+        abort(404)
+    course = catalog[course_key]
+    if request.method == "POST":
+        try:
+            item_number = int(request.form.get("item", ""))
+        except ValueError:
+            abort(400)
+        mode = request.form.get("mode")
+        if not 0 <= item_number <= len(course["lessons"]) or mode not in {"open", "closed", "auto"}:
+            abort(400)
+        conn = get_connection()
+        try:
+            if mode == "auto":
+                conn.execute("DELETE FROM learning_access_overrides WHERE user_id = ? AND course_key = ? AND item_number = ?",
+                             (int(current_user.id), course_key, item_number))
+            else:
+                conn.execute("INSERT INTO learning_access_overrides (user_id, course_key, item_number, is_open) VALUES (?, ?, ?, ?) "
+                             "ON CONFLICT(user_id, course_key, item_number) DO UPDATE SET is_open = excluded.is_open",
+                             (int(current_user.id), course_key, item_number, int(mode == "open")))
+            conn.commit()
+        finally:
+            conn.close()
+        flash("Доступ сохранён.", "success")
+        return redirect(url_for("learning.learning_access", course=course_key, _anchor=f"item-{item_number}"))
+    overrides = _access_overrides()
+    rows = [{"number": 0, "title": "Весь курс"}, *[
+        {"number": lesson["day"], "title": lesson["title"]} for lesson in course["lessons"]
+    ]]
+    for row in rows:
+        value = overrides.get((course_key, row["number"]))
+        row["mode"] = "auto" if value is None else "open" if value else "closed"
+    return render_template("learning_access.html", catalog=catalog, course_key=course_key, course=course, rows=rows)
 
 
 def _course_state(user_id: int):
@@ -3016,7 +3118,7 @@ def ai_lesson(day_number: int):
     lesson = AI_LESSONS[day_number - 1]
     user_id = int(current_user.id)
     progress, passed_days, next_day = _get_course_state(user_id, "ai", AI_LESSONS)
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("ai", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий урок курса.", "warning")
         return redirect(url_for("learning.ai_course"))
 
@@ -3188,11 +3290,11 @@ def english_it_hub():
         {"title": "Язык Go", "description": "Синтаксис, конкурентность, HTTP backend и PostgreSQL.", "icon": "Go", "endpoint": "learning.go_course", "passed": len(go_passed), "total": len(GO_LESSONS)},
     )
     ordered_blocks = []
-    access_open = True
+    access = _it_course_access(user_id)
+    course_keys = ("it", "python", "video", "python_topics", "interview", "html", "go")
     for order, block in enumerate(blocks):
         percent = round(block["passed"] / block["total"] * 100)
-        ordered_blocks.append({**block, "percent": percent, "locked": not access_open, "order": order})
-        access_open = access_open and percent >= 80
+        ordered_blocks.append({**block, "percent": percent, "locked": not access[course_keys[order]], "order": order})
     ordered_blocks.sort(key=lambda block: (block["locked"], block["percent"] >= 80, block["order"]))
     return render_template("english_it_hub.html", blocks=ordered_blocks)
 
@@ -3220,7 +3322,7 @@ def _it_course_access(user_id: int) -> dict[str, bool]:
     _html_progress, html_passed, _html_next = _get_course_state(user_id, "html", HTML_THEMES)
     html_ready = len(html_passed) / len(HTML_THEMES) >= 0.8
     concepts_ready = len(it_passed) / len(IT_LESSONS) >= 0.8
-    return {
+    automatic = {
         "it": True,
         "python": concepts_ready,
         "video": concepts_ready and python_ready,
@@ -3229,6 +3331,8 @@ def _it_course_access(user_id: int) -> dict[str, bool]:
         "html": concepts_ready and python_ready and video_ready and topics_ready and interview_ready,
         "go": concepts_ready and python_ready and video_ready and topics_ready and interview_ready and html_ready,
     }
+    overrides = _access_overrides()
+    return {key: overrides.get((key, 0), value) for key, value in automatic.items()}
 
 
 @learning_bp.before_request
@@ -3237,13 +3341,19 @@ def enforce_it_course_sequence():
         return None
     endpoint = request.endpoint.removeprefix("learning.")
     course = None
-    if endpoint.startswith("python_interview"):
+    if endpoint == "course_review":
+        course = (request.view_args or {}).get("course_key")
+    elif endpoint.startswith("english_") and endpoint != "english_it_hub":
+        course = "english"
+    elif endpoint.startswith("ai_"):
+        course = "ai"
+    elif endpoint.startswith("python_interview"):
         course = "interview"
     elif endpoint.startswith("python_v2_topic"):
         course = "python_topics"
     elif endpoint.startswith("python_"):
         course = "python"
-    elif endpoint.startswith("it_video"):
+    elif endpoint in {"it_video_course", "it_video_lesson"}:
         course = "video"
     elif endpoint.startswith("go_"):
         course = "go"
@@ -3251,9 +3361,9 @@ def enforce_it_course_sequence():
         course = "html"
     elif endpoint.startswith("it_"):
         course = "it"
-    if course and not _it_course_access(int(current_user.id))[course]:
+    if course and not _it_course_access(int(current_user.id)).get(course, _access_overrides().get((course, 0), True)):
         flash("Этот курс откроется после прохождения предыдущего направления минимум на 80%.", "warning")
-        return redirect(url_for("learning.english_it_hub"))
+        return redirect(url_for("learning.study_hub" if course in {"english", "ai"} else "learning.english_it_hub"))
     return None
 
 
@@ -3269,7 +3379,7 @@ def python_v2_topics():
         topics.append({
             **topic,
             "passed": topic["number"] in passed_topics,
-            "unlocked": topic["number"] in passed_topics or topic["number"] == next_topic,
+            "unlocked": _lesson_is_open("python_topics", topic["number"], topic["number"] in passed_topics or topic["number"] == next_topic),
             "best_score": int(item["best_score"]) if item else 0,
         })
     return render_template(
@@ -3290,7 +3400,7 @@ def python_v2_topic(topic_number: int):
     progress, passed_topics, next_topic = _get_course_state(
         int(current_user.id), "python_topics", PYTHON_V2_TOPICS
     )
-    if topic_number not in passed_topics and topic_number != next_topic:
+    if not _lesson_is_open("python_topics", topic_number, topic_number in passed_topics or topic_number == next_topic):
         flash("Сначала завершите предыдущую тему Python v2.", "warning")
         return redirect(url_for("learning.python_v2_topics"))
     topic = PYTHON_V2_TOPICS[topic_number - 1]
@@ -3335,7 +3445,7 @@ def html_course():
         themes.append({
             **theme,
             "passed": theme["number"] in passed_themes,
-            "unlocked": theme["number"] in passed_themes or theme["number"] == next_theme,
+            "unlocked": _lesson_is_open("html", theme["number"], theme["number"] in passed_themes or theme["number"] == next_theme),
             "best_score": int(item["best_score"]) if item else 0,
         })
     return render_template(
@@ -3354,7 +3464,7 @@ def html_theme(theme_number: int):
     if not 1 <= theme_number <= len(HTML_THEMES):
         abort(404)
     progress, passed_themes, next_theme = _get_course_state(int(current_user.id), "html", HTML_THEMES)
-    if theme_number not in passed_themes and theme_number != next_theme:
+    if not _lesson_is_open("html", theme_number, theme_number in passed_themes or theme_number == next_theme):
         flash("Сначала завершите предыдущую тему HTML.", "warning")
         return redirect(url_for("learning.html_course"))
     theme = HTML_THEMES[theme_number - 1]
@@ -3397,7 +3507,7 @@ def go_course():
         lessons.append({
             **lesson,
             "passed": lesson["day"] in passed_days,
-            "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+            "unlocked": _lesson_is_open("go", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
             "best_score": int(item["best_score"]) if item else 0,
         })
     return render_template(
@@ -3415,7 +3525,7 @@ def go_day(day_number: int):
     if not 1 <= day_number <= len(GO_LESSONS):
         abort(404)
     progress, passed_days, next_day = _get_course_state(int(current_user.id), "go", GO_LESSONS)
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("go", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий урок Go.", "warning")
         return redirect(url_for("learning.go_course"))
     lesson = GO_LESSONS[day_number - 1]
@@ -3456,7 +3566,7 @@ def english_course():
             {
                 **lesson,
                 "passed": lesson["day"] in passed_days,
-                "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                "unlocked": _lesson_is_open("english", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                 "best_score": int(day_progress["best_score"]) if day_progress else 0,
             }
         )
@@ -3480,7 +3590,7 @@ def english_day(day_number: int):
         abort(404)
 
     progress, passed_days, next_day = _course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("english", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.english_course"))
 
@@ -3505,7 +3615,7 @@ def english_day(day_number: int):
 @login_required
 def english_video_lectures():
     progress, passed_days, next_day = _english_course_state(int(current_user.id))
-    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+    lessons = [{**lesson, "unlocked": _lesson_is_open("english", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                 "passed": lesson["day"] in passed_days,
                 "video_file": f"videos/english-lectures/lesson-{lesson['day']:02d}.mp4"}
                for lesson in ENGLISH_LESSONS]
@@ -3518,7 +3628,7 @@ def english_video_lectures():
 def english_video_lecture(day_number: int):
     if day_number < 1 or day_number > len(ENGLISH_LESSONS): abort(404)
     _progress, passed_days, next_day = _english_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("english", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.english_video_lectures"))
     lesson = ENGLISH_LESSONS[day_number - 1]
@@ -3534,7 +3644,7 @@ def english_day_test(day_number: int):
         abort(404)
 
     progress, passed_days, next_day = _course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("english", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.english_course"))
 
@@ -3713,6 +3823,8 @@ def check_review_quiz_answer():
         abort(400)
     if course_key not in {"english", "it", "python"} or end_day not in REVIEW_MILESTONES:
         abort(400)
+    if _access_overrides().get((course_key, 0)) is False:
+        abort(403)
     if not 0 <= seed < 2**31:
         abort(400)
 
@@ -3749,7 +3861,7 @@ def it_course():
             {
                 **lesson,
                 "passed": lesson["day"] in passed_days,
-                "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                "unlocked": _lesson_is_open("it", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                 "best_score": int(day_progress["best_score"]) if day_progress else 0,
             }
         )
@@ -3779,7 +3891,7 @@ def it_video_course():
             {
                 **lesson,
                 "passed": lesson["day"] in passed_lessons,
-                "unlocked": lesson["day"] in passed_lessons or lesson["day"] == next_lesson,
+                "unlocked": _lesson_is_open("video", lesson["day"], lesson["day"] in passed_lessons or lesson["day"] == next_lesson),
                 "best_score": int(lesson_progress["best_score"]) if lesson_progress else 0,
             }
         )
@@ -3796,7 +3908,7 @@ def it_video_course():
 @login_required
 def it_video_lectures():
     progress, passed_days, next_day = _it_course_state(int(current_user.id))
-    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+    lessons = [{**lesson, "unlocked": _lesson_is_open("it", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                 "passed": lesson["day"] in passed_days,
                 "video_file": f"videos/it-lectures/lesson-{lesson['day']:02d}.mp4"}
                for lesson in IT_LESSONS]
@@ -3809,7 +3921,7 @@ def it_video_lectures():
 def it_video_lecture(day_number: int):
     if day_number < 1 or day_number > len(IT_LESSONS): abort(404)
     _progress, passed_days, next_day = _it_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("it", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.it_video_lectures"))
     lesson = IT_LESSONS[day_number - 1]
@@ -3826,7 +3938,7 @@ def it_video_lesson(lesson_number: int):
     progress, passed_lessons, next_lesson = _get_course_state(
         int(current_user.id), "video", PYTHON_VIDEO_LESSONS
     )
-    if lesson_number not in passed_lessons and lesson_number != next_lesson:
+    if not _lesson_is_open("video", lesson_number, lesson_number in passed_lessons or lesson_number == next_lesson):
         flash("Сначала пройдите тест предыдущего видеоурока.", "warning")
         return redirect(url_for("learning.it_video_course"))
 
@@ -3884,7 +3996,7 @@ def it_day(day_number: int):
         abort(404)
 
     progress, passed_days, next_day = _it_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("it", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.it_course"))
 
@@ -3911,7 +4023,7 @@ def it_day_presentation(day_number: int):
         abort(404)
 
     progress, passed_days, next_day = _it_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("it", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.it_course"))
 
@@ -3928,7 +4040,7 @@ def it_day_test(day_number: int):
         abort(404)
 
     progress, passed_days, next_day = _it_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("it", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.it_course"))
 
@@ -4036,7 +4148,7 @@ def python_course():
     for lesson in PYTHON_LESSONS:
         item = progress.get(lesson["day"])
         lessons.append({**lesson, "passed": lesson["day"] in passed_days,
-                        "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+                        "unlocked": _lesson_is_open("python", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                         "best_score": int(item["best_score"]) if item else 0})
     return render_template("python_course.html", lessons=lessons,
                            passed_count=len(passed_days),
@@ -4051,7 +4163,7 @@ def python_course():
 def python_day(day_number: int):
     if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
     progress, passed_days, next_day = _python_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("python", day_number, day_number in passed_days or day_number == next_day):
         flash("Сначала завершите предыдущий день курса.", "warning")
         return redirect(url_for("learning.python_course"))
     lesson = PYTHON_LESSONS[day_number - 1]
@@ -4070,7 +4182,7 @@ def python_day(day_number: int):
 def python_day_test(day_number: int):
     if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
     progress, passed_days, next_day = _python_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("python", day_number, day_number in passed_days or day_number == next_day):
         return redirect(url_for("learning.python_course"))
     lesson = PYTHON_LESSONS[day_number - 1]
     is_extra = request.method == "POST" and request.form.get("quiz_stage") == "extra"
@@ -4127,7 +4239,7 @@ def python_final():
 @login_required
 def python_video_lectures():
     _progress, passed_days, next_day = _python_course_state(int(current_user.id))
-    lessons = [{**lesson, "unlocked": lesson["day"] in passed_days or lesson["day"] == next_day,
+    lessons = [{**lesson, "unlocked": _lesson_is_open("python", lesson["day"], lesson["day"] in passed_days or lesson["day"] == next_day),
                 "passed": lesson["day"] in passed_days} for lesson in PYTHON_LESSONS]
     return render_template("python_video_catalog.html", lessons=lessons,
                            passed_count=len(passed_days), next_day=next_day)
@@ -4138,7 +4250,7 @@ def python_video_lectures():
 def python_video_lecture(day_number: int):
     if not 1 <= day_number <= len(PYTHON_LESSONS): abort(404)
     _progress, passed_days, next_day = _python_course_state(int(current_user.id))
-    if day_number not in passed_days and day_number != next_day:
+    if not _lesson_is_open("python", day_number, day_number in passed_days or day_number == next_day):
         return redirect(url_for("learning.python_video_lectures"))
     return render_template("python_video_lecture.html", lesson=PYTHON_LESSONS[day_number - 1],
                            video_file=f"videos/python-lectures/lesson-{day_number:02d}.mp4")
@@ -4172,7 +4284,7 @@ def python_interview():
             "title": title,
             "question_count": len(questions),
             "passed": number in passed_sections,
-            "unlocked": number in passed_sections or number == next_section,
+            "unlocked": _lesson_is_open("interview", number, number in passed_sections or number == next_section),
             "best_score": int(progress.get(number, {}).get("best_score", 0)),
         }
         for number, (title, questions) in enumerate(PYTHON_INTERVIEW_SECTIONS, start=1)
@@ -4232,7 +4344,7 @@ def python_interview_section(section_number: int):
     finally:
         conn.close()
     passed_sections = {int(row["section_number"]) for row in passed_rows}
-    if section_number > 1 and section_number - 1 not in passed_sections:
+    if not _lesson_is_open("interview", section_number, section_number == 1 or section_number - 1 in passed_sections):
         flash("Сначала завершите предыдущий блок собеседования.", "warning")
         return redirect(url_for("learning.python_interview"))
 
