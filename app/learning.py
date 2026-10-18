@@ -2650,7 +2650,7 @@ def _access_overrides():
         conn = get_connection()
         try:
             rows = conn.execute(
-                "SELECT course_key, item_number, is_open FROM learning_access_overrides WHERE user_id = ?",
+                "SELECT course_key, item_number, is_open FROM learning_access_overrides WHERE user_id = ? AND item_number = 0",
                 (int(current_user.id),),
             ).fetchall()
             g.learning_access_overrides = {(row["course_key"], row["item_number"]): bool(row["is_open"]) for row in rows}
@@ -2663,7 +2663,7 @@ def _lesson_is_open(course_key, item_number, automatic):
     overrides = _access_overrides()
     if overrides.get((course_key, 0)) is False:
         return False
-    return overrides.get((course_key, item_number), automatic)
+    return automatic
 
 
 @learning_bp.app_context_processor
@@ -2677,17 +2677,16 @@ def learning_access():
     if not has_section_access("study"):
         abort(403)
     catalog = _access_course_catalog()
-    course_key = request.form.get("course") if request.method == "POST" else request.args.get("course", "it")
-    if course_key not in catalog:
-        abort(404)
-    course = catalog[course_key]
     if request.method == "POST":
+        course_key = request.form.get("course")
+        if course_key not in catalog:
+            abort(404)
         try:
-            item_number = int(request.form.get("item", ""))
+            item_number = int(request.form.get("item", "0"))
         except ValueError:
             abort(400)
         mode = request.form.get("mode")
-        if not 0 <= item_number <= len(course["lessons"]) or mode not in {"open", "closed", "auto"}:
+        if item_number != 0 or mode not in {"open", "closed", "auto"}:
             abort(400)
         conn = get_connection()
         try:
@@ -2702,15 +2701,14 @@ def learning_access():
         finally:
             conn.close()
         flash("Доступ сохранён.", "success")
-        return redirect(url_for("learning.learning_access", course=course_key, _anchor=f"item-{item_number}"))
+        return redirect(url_for("learning.learning_access", _anchor=f"course-{course_key}"))
     overrides = _access_overrides()
-    rows = [{"number": 0, "title": "Весь курс"}, *[
-        {"number": lesson["day"], "title": lesson["title"]} for lesson in course["lessons"]
-    ]]
-    for row in rows:
-        value = overrides.get((course_key, row["number"]))
-        row["mode"] = "auto" if value is None else "open" if value else "closed"
-    return render_template("learning_access.html", catalog=catalog, course_key=course_key, course=course, rows=rows)
+    rows = []
+    for key, course in catalog.items():
+        value = overrides.get((key, 0))
+        rows.append({"key": key, "title": course["title"],
+                     "mode": "auto" if value is None else "open" if value else "closed"})
+    return render_template("learning_access.html", rows=rows)
 
 
 def _course_state(user_id: int):

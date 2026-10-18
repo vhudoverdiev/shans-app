@@ -13,54 +13,44 @@ class LearningAccessTests(unittest.TestCase):
         return client.post('/study/access', data={
             'course': course, 'item': str(item), 'mode': mode, '_csrf_token': 'test-token'})
 
-    def test_manual_lesson_access_is_reversible_and_preserves_progress(self):
+    def test_only_whole_courses_are_configurable_and_legacy_lesson_settings_are_ignored(self):
         client = self.app.test_client()
         self._login_admin(client)
-        self.assertIn('Доступ к обучению', client.get('/study').get_data(as_text=True))
-        self.assertEqual(client.get('/study/it/day/10').status_code, 302)
-        self.assertEqual(self.change(client, 'it', 10, 'open').status_code, 302)
-        for path in ('/study/it/day/10', '/study/it/day/10/presentation', '/study/it/day/10/test'):
-            self.assertEqual(client.get(path).status_code, 200, path)
-        api = '/study/quiz/state?course=it&item_number=10&seed=1'
-        self.assertEqual(client.get(api).status_code, 200)
-        listing = client.get('/study/it').get_data(as_text=True)
-        self.assertIn('href="/study/it/day/10"', listing)
-        self.change(client, 'it', 10, 'closed')
-        self.assertEqual(client.get('/study/it/day/10').status_code, 302)
-        self.assertEqual(client.get(api).status_code, 403)
-        self.change(client, 'it', 10, 'auto')
-        self.assertEqual(client.get('/study/it/day/10').status_code, 302)
-        self.change(client, 'it', 1, 'closed')
-        self.assertEqual(client.get('/study/it/day/1').status_code, 302)
-        self.change(client, 'it', 1, 'auto')
-        self.assertEqual(client.get('/study/it/day/1').status_code, 200)
+        html = client.get('/study/access').get_data(as_text=True)
+        self.assertEqual(html.count('class="lesson-section learning-access-row"'), 9)
+        self.assertNotIn('name="item"', html)
+        self.assertNotIn('Карта мира IT и язык вакансий', html)
+        self.assertEqual(self.change(client, 'it', 10, 'open').status_code, 400)
+        with client.session_transaction() as session:
+            user_id = int(session['_user_id'])
         conn = get_master_connection()
-        try:
-            self.assertEqual(conn.execute('SELECT COUNT(*) FROM it_course_progress').fetchone()[0], 0)
-        finally:
-            conn.close()
+        conn.executemany('INSERT INTO learning_access_overrides (user_id, course_key, item_number, is_open) VALUES (?, ?, ?, ?)',
+                         [(user_id, 'it', 10, 1), (user_id, 'it', 1, 0)])
+        conn.commit()
+        conn.close()
+        self.assertEqual(client.get('/study/it/day/10').status_code, 302)
+        self.assertEqual(client.get('/study/it/day/1').status_code, 200)
 
-    def test_all_courses_and_their_lessons_can_be_opened_and_closed(self):
+    def test_all_directions_can_be_opened_without_unlocking_later_lessons(self):
         client = self.app.test_client()
         self._login_admin(client)
         routes = {
-            'english': '/study/english/day/3', 'it': '/study/it/day/3',
-            'python': '/study/python/day/3', 'video': '/study/it/videos/3',
-            'python_topics': '/study/python-v2/topic/3', 'interview': '/study/python/interview/3',
-            'html': '/study/html/theme/3', 'go': '/study/go/day/3', 'ai': '/study/ai/lesson/3',
+            'english': '/study/english', 'it': '/study/it', 'python': '/study/python',
+            'video': '/study/it/videos', 'python_topics': '/study/python-v2',
+            'interview': '/study/python/interview', 'html': '/study/html',
+            'go': '/study/go', 'ai': '/study/ai',
         }
         for course, route in routes.items():
             with self.subTest(course=course):
-                self.assertEqual(client.get('/study/access?course=' + course).status_code, 200)
-                self.change(client, course, 0, 'open')
-                self.change(client, course, 3, 'open')
+                self.assertEqual(self.change(client, course, 0, 'open').status_code, 302)
                 self.assertEqual(client.get(route).status_code, 200, route)
                 self.change(client, course, 0, 'closed')
                 self.assertEqual(client.get(route).status_code, 302)
                 self.change(client, course, 0, 'open')
                 self.assertEqual(client.get(route).status_code, 200)
-                self.change(client, course, 3, 'closed')
-                self.assertEqual(client.get(route).status_code, 302)
+        self.assertEqual(client.get('/study/python/day/3').status_code, 302)
+        self.change(client, 'python', 0, 'auto')
+        self.assertEqual(client.get('/study/python').status_code, 302)
 
     def test_users_control_only_their_own_access_and_csrf_is_required(self):
         client = self.app.test_client()
@@ -69,7 +59,7 @@ class LearningAccessTests(unittest.TestCase):
         self.assertEqual(client.post('/study/access', data={'course': 'it', 'item': '1', 'mode': 'open'}).status_code, 400)
         for course, item, mode in [('bad', 1, 'open'), ('it', -1, 'open'), ('it', 1000, 'open'), ('it', 'x', 'open'), ('it', 1, 'bad')]:
             self.assertIn(self.change(client, course, item, mode).status_code, (400, 404))
-        self.change(client, 'it', 1, 'closed')
+        self.change(client, 'it', 0, 'closed')
         with self.app.app_context():
             conn = get_master_connection()
             admin_id = conn.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()['id']
@@ -82,13 +72,13 @@ class LearningAccessTests(unittest.TestCase):
             session['_fresh'] = True
             session['_csrf_token'] = 'test-token'
         self.assertEqual(other.get('/study/access').status_code, 200)
-        self.assertEqual(self.change(other, 'it', 1, 'open').status_code, 302)
+        self.assertEqual(self.change(other, 'it', 0, 'open').status_code, 302)
         self.assertEqual(other.get('/study/it/day/1').status_code, 200)
         self.assertIn('Доступ к обучению', other.get('/study').get_data(as_text=True))
-        self.change(other, 'it', 3, 'open')
-        self.assertEqual(other.get('/study/it/day/3').status_code, 200)
-        self.assertEqual(client.get('/study/it/day/3').status_code, 302)
-        self.assertEqual(other.post('/study/access', data={'course': 'it', 'item': '1', 'mode': 'open',
+        self.change(other, 'python', 0, 'open')
+        self.assertEqual(other.get('/study/python').status_code, 200)
+        self.assertEqual(client.get('/study/python').status_code, 302)
+        self.assertEqual(other.post('/study/access', data={'course': 'it', 'item': '0', 'mode': 'open',
                               'user_id': str(admin_id), '_csrf_token': 'test-token'}).status_code, 302)
         self.assertEqual(client.get('/study/it/day/1').status_code, 302)
 
@@ -118,11 +108,11 @@ class LearningAccessTests(unittest.TestCase):
         conn.execute('INSERT INTO it_course_progress (user_id, day_number, best_score, attempts, passed) VALUES (?, 1, 20, 1, 1)', (user_id,))
         conn.commit()
         conn.close()
-        self.change(client, 'it', 1, 'closed')
+        self.change(client, 'it', 0, 'closed')
         another_session = self.app.test_client()
         self._login_admin(another_session)
         self.assertEqual(another_session.get('/study/it/day/1').status_code, 302)
-        self.change(another_session, 'it', 1, 'auto')
+        self.change(another_session, 'it', 0, 'auto')
         self.assertEqual(client.get('/study/it/day/1').status_code, 200)
         conn = get_master_connection()
         try:

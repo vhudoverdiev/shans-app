@@ -2696,18 +2696,6 @@ html.presentation-viewer-lock body {
 }
 
 /* Personal learning access controls. */
-.learning-access-picker {
-    display: grid;
-    gap: 14px;
-}
-
-.learning-access-picker select {
-    width: 100%;
-    min-width: 0;
-    min-height: 46px;
-    font-size: 16px;
-}
-
 .learning-access-row {
     scroll-margin-top: 100px;
 }

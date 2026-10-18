@@ -7,26 +7,18 @@
         <h1>Доступ к обучению</h1>
         <p class="podcast-intro">Только для вашего аккаунта. Прогресс и результаты тестов сохраняются.</p>
     </header>
-    <form method="get" class="lesson-section learning-access-picker">
-        <label for="access-course">Направление</label>
-        <select name="course" id="access-course" class="form-input">
-            {% for key, item in catalog.items() %}<option value="{{ key }}"{% if key == course_key %} selected{% endif %}>{{ item.title }}</option>{% endfor %}
-        </select>
-        <div class="podcast-actions"><button class="btn btn-secondary" type="submit">Выбрать</button></div>
-    </form>
-    <p class="podcast-intro">«Авто» возвращает обычный порядок прохождения. Открытие курса даёт доступ к направлению; уроки настраиваются отдельно. Закрытый курс блокирует все его уроки.</p>
+    <p class="podcast-intro">Открывайте и закрывайте целые направления. «Авто» возвращает обычные условия доступа. Внутри курса уроки открываются по мере прохождения.</p>
     <div class="podcast-list">
         {% for row in rows %}
-        <section class="lesson-section learning-access-row" id="item-{{ row.number }}">
+        <section class="lesson-section learning-access-row" id="course-{{ row.key }}">
             <div>
-                <p class="learning-kicker">{{ course.title }}{% if row.number %} · {{ row.number }}{% endif %}</p>
+                <p class="learning-kicker">Направление</p>
                 <h2>{{ row.title }}</h2>
                 <p class="podcast-meta">{% if row.mode == 'auto' %}Автоматический доступ{% elif row.mode == 'open' %}Открыто вручную{% else %}Закрыто вручную{% endif %}</p>
             </div>
             <form method="post" class="podcast-actions" aria-label="Доступ: {{ row.title }}">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                <input type="hidden" name="course" value="{{ course_key }}">
-                <input type="hidden" name="item" value="{{ row.number }}">
+                <input type="hidden" name="course" value="{{ row.key }}">
                 {% for mode, label in [('open', 'Открыть'), ('closed', 'Закрыть'), ('auto', 'Авто')] %}
                 <button type="submit" name="mode" value="{{ mode }}" class="btn {% if mode == 'closed' %}btn-danger{% elif row.mode == mode %}btn-primary{% else %}btn-secondary{% endif %}" aria-pressed="{{ 'true' if row.mode == mode else 'false' }}">{{ label }}</button>
                 {% endfor %}
