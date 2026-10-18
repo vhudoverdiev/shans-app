@@ -3106,8 +3106,11 @@ def study_hub():
 @login_required
 def ai_course():
     progress, passed_days, next_day = _get_course_state(int(current_user.id), "ai", AI_LESSONS)
+    continue_day = next((lesson["day"] for lesson in AI_LESSONS
+                         if lesson["day"] not in passed_days and _lesson_is_open("ai", lesson["day"], lesson["day"] == next_day)), None)
     return render_template("ai_course.html", lessons=AI_LESSONS, progress=progress,
-                           passed_days=passed_days, next_day=next_day, pass_score=AI_PASS_SCORE)
+                           passed_days=passed_days, next_day=next_day, pass_score=AI_PASS_SCORE,
+                           continue_day=continue_day, progress_percent=round(len(passed_days) / len(AI_LESSONS) * 100))
 
 
 @learning_bp.route("/study/ai/lesson/<int:day_number>", methods=["GET", "POST"])
@@ -3272,6 +3275,7 @@ def english_it_hub():
     _go_progress, go_passed, _go_next = _get_course_state(user_id, "go", GO_LESSONS)
     _html_progress, html_passed, _html_next = _get_course_state(user_id, "html", HTML_THEMES)
     _topic_progress, topic_passed, _topic_next = _get_course_state(user_id, "python_topics", PYTHON_V2_TOPICS)
+    _ai_progress, ai_passed, _ai_next = _get_course_state(user_id, "ai", AI_LESSONS)
     conn = get_connection()
     try:
         interview_passed = conn.execute(
@@ -3288,10 +3292,12 @@ def english_it_hub():
         {"title": "Собеседования (Python)", "description": "Видеолекции, сильные ответы, практические задачи и тесты по блокам.", "icon": "QA", "endpoint": "learning.python_interview", "passed": int(interview_passed), "total": len(PYTHON_INTERVIEW_SECTIONS)},
         {"title": "HTML", "description": "13 тем: от устройства веба и тегов до адаптивного многостраничного проекта.", "icon": "HTML", "endpoint": "learning.html_course", "passed": len(html_passed), "total": len(HTML_THEMES)},
         {"title": "Язык Go", "description": "Синтаксис, конкурентность, HTTP backend и PostgreSQL.", "icon": "Go", "endpoint": "learning.go_course", "passed": len(go_passed), "total": len(GO_LESSONS)},
+        {"title": "Практический курс по работе с AI", "description": "17 видеоуроков: инструменты, разработка, QA, аналитика и безопасность. Конспекты, практика и тесты.", "icon": "AI", "endpoint": "learning.ai_course", "passed": len(ai_passed), "total": len(AI_LESSONS)},
     )
     ordered_blocks = []
     access = _it_course_access(user_id)
-    course_keys = ("it", "python", "video", "python_topics", "interview", "html", "go")
+    access["ai"] = _access_overrides().get(("ai", 0), True)
+    course_keys = ("it", "python", "video", "python_topics", "interview", "html", "go", "ai")
     for order, block in enumerate(blocks):
         percent = round(block["passed"] / block["total"] * 100)
         ordered_blocks.append({**block, "percent": percent, "locked": not access[course_keys[order]], "order": order})

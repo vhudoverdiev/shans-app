@@ -2973,21 +2973,6 @@ html.presentation-viewer-lock body {
     }
 }
 
-.ai-course-entry {
-    display: grid;
-    gap: 18px;
-    margin-top: 28px;
-}
-
-.ai-course-entry > p {
-    margin: 0;
-    line-height: 1.65;
-}
-
-.ai-course-entry .btn {
-    justify-self: start;
-}
-
 .ai-lesson-video {
     display: block;
     width: 100%;

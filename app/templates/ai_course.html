@@ -1,28 +1,71 @@
 {% extends "base.html" %}
 {% block title %}AI в разработке | Шанс{% endblock %}
 {% block content %}
-<section class="learning-page podcast-page ai-course-page">
-    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT-обучение</a>
-    <header class="podcast-heading">
-        <h1>AI в разработке</h1>
-        <p class="podcast-intro">17 смысловых уроков по авторскому видеокурсу. Смотрите фрагмент, изучайте конспект, выполняйте практику и проверяйте знания.</p>
-    </header>
-    <section class="lesson-section podcast-detail">
-        <p class="learning-kicker">Ваш прогресс</p>
-        <h2>{{ passed_days|length }} из {{ lessons|length }} уроков пройдено</h2>
-        <p>Для завершения урока ответьте верно на все {{ pass_score }} вопроса. Следующий урок откроется после теста; пройденные уроки доступны для повторения.</p>
-        <p class="podcast-intro">Тарифы и названия моделей в записи могут устаревать. В тестах проверяются принципы работы, а не цены или версии продуктов.</p>
+<section class="learning-page it-learning-page">
+    <a class="learning-back-link" href="{{ url_for('learning.english_it_hub') }}">← IT</a>
+    <div class="learning-hero it-learning-hero">
+        <div>
+            <p class="learning-kicker">Практический курс · {{ lessons|length }} уроков</p>
+            <h1>AI в разработке</h1>
+            <p>Учимся применять AI в разработке, тестировании и аналитике: от выбора инструментов до проверки результатов и безопасности.</p>
+        </div>
+        <div class="learning-progress-summary">
+            <strong>{{ passed_days|length }} из {{ lessons|length }}</strong>
+            <span>уроков завершено</span>
+        </div>
+    </div>
+    <section class="it-direction-card">
+        <div class="it-direction-icon" aria-hidden="true">AI</div>
+        <div>
+            <p class="learning-kicker">Направление</p>
+            <h2>Практическая работа с AI</h2>
+            <p>Смотрите видео, изучайте конспект, выполняйте практику и отвечайте на {{ pass_score }} вопроса по материалам каждого урока.</p>
+        </div>
+        <span>От инструментов к практике</span>
     </section>
-    <div class="podcast-list">
+    <div class="learning-progress-card">
+        <div class="learning-progress-copy">
+            <div><span>Ваш прогресс</span><strong>{{ progress_percent }}%</strong></div>
+            {% if continue_day %}
+            <a class="btn btn-primary" href="{{ url_for('learning.ai_lesson', day_number=continue_day) }}">Продолжить: урок {{ continue_day }}</a>
+            {% elif passed_days|length == lessons|length %}
+            <span>Курс завершён</span>
+            {% else %}
+            <span>Нет открытых непройденных уроков</span>
+            {% endif %}
+        </div>
+        <div class="learning-progress-track" role="progressbar" aria-label="Прогресс AI-курса" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_percent }}">
+            <span style="width: {{ progress_percent }}%"></span>
+        </div>
+    </div>
+    <div class="learning-section-heading">
+        <div><p class="learning-kicker">Программа</p><h2>{{ lessons|length }} уроков по работе с AI</h2></div>
+        <span>Видео · конспект · практика · тест</span>
+    </div>
+    <div class="english-course-grid it-course-grid">
         {% for lesson in lessons %}
         {% set unlocked = lesson_is_open('ai', lesson.day, lesson.day in passed_days or lesson.day == next_day) %}
-        {% if unlocked %}<a class="lesson-section podcast-list-card" href="{{ url_for('learning.ai_lesson', day_number=lesson.day) }}">{% else %}<article class="lesson-section podcast-list-card ai-lesson-locked">{% endif %}
-            <p class="learning-kicker">Урок {{ lesson.day }} · {{ lesson.duration_minutes }} мин</p>
-            <h2>{{ lesson.title }}</h2>
+        {% set passed = lesson.day in passed_days %}
+        {% if unlocked %}
+        <a class="english-day-card it-day-card{% if passed %} english-day-card-passed{% elif lesson.day == continue_day %} english-day-card-current{% endif %}" href="{{ url_for('learning.ai_lesson', day_number=lesson.day) }}">
+        {% else %}
+        <div class="english-day-card it-day-card english-day-card-locked" aria-disabled="true">
+        {% endif %}
+            <div class="english-day-card-top">
+                <span class="english-day-number">Урок {{ lesson.day }}</span>
+                {% if passed %}<span class="english-day-status english-day-status-passed" aria-label="Пройдено">✓</span>
+                {% elif unlocked %}<span class="english-day-status">Начать</span>
+                {% else %}<span class="english-day-status" aria-label="Закрыто">🔒</span>{% endif %}
+            </div>
+            <h3>{{ lesson.title }}</h3>
             <p>{{ lesson.summary }}</p>
-            <span class="podcast-category-link">{% if lesson.day in passed_days %}Пройден · Повторить →{% elif unlocked %}Начать урок →{% else %}Завершите предыдущий урок{% endif %}</span>
-        {% if unlocked %}</a>{% else %}</article>{% endif %}
+            <span class="english-day-score">{{ lesson.duration_minutes }} мин{% if passed %} · Лучший результат: {{ progress[lesson.day].best_score }} / {{ pass_score }}{% endif %}</span>
+        {% if unlocked %}</a>{% else %}</div>{% endif %}
         {% endfor %}
     </div>
+    <section class="lesson-section">
+        <p>Для прохождения урока нужны все {{ pass_score }} правильных ответа. Следующий урок открывается после теста; пройденные доступны для повторения.</p>
+        <p>Тарифы и названия моделей в записи могут устаревать. В тестах проверяются принципы работы, а не цены или версии продуктов.</p>
+    </section>
 </section>
 {% endblock %}

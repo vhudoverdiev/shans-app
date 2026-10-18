@@ -96,6 +96,25 @@ class AiCourseTests(unittest.TestCase):
         self.assertIn('17 из 17', html)
         self.assertNotIn('Завершите предыдущий урок', html)
 
+    def test_course_uses_shared_it_cards_and_progress(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+        hub = client.get('/study/english-it').get_data(as_text=True)
+        self.assertEqual(hub.count('study-progress-card'), 8)
+        self.assertIn('Практический курс по работе с AI', hub)
+        self.assertNotIn('ai-course-entry', hub)
+        html = client.get('/study/ai').get_data(as_text=True)
+        self.assertIn('learning-hero it-learning-hero', html)
+        self.assertIn('english-course-grid it-course-grid', html)
+        self.assertIn('aria-label="Прогресс AI-курса"', html)
+        self.assertIn('Продолжить: урок 1', html)
+        self.assertNotIn('href="/study/ai/lesson/2"', html)
+        self._answer(client, 1)
+        html = client.get('/study/ai').get_data(as_text=True)
+        self.assertIn('aria-valuenow="6"', html)
+        self.assertIn('Продолжить: урок 2', html)
+        self.assertIn('Лучший результат: 3 / 3', html)
+
     def test_locked_failed_and_invalid_lessons(self):
         client = self.app.test_client()
         self._login_admin(client)
