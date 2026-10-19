@@ -364,6 +364,23 @@ class WorkoutsTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], return_to)
 
+    def test_weight_form_accepts_comma_and_dot_decimals(self):
+        app = self._create_app()
+        client = app.test_client()
+        self._login(client)
+        for raw_weight in ("75,5", "75.5", "75,55"):
+            with self.subTest(value=raw_weight):
+                response = client.post('/workouts/weight', data={
+                    'weight_kg': raw_weight, 'measured_on': '2026-07-20', 'notes': ''})
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(get_weight_entries(1)[0]['weight_kg'], float(raw_weight.replace(',', '.')))
+        template = (PROJECT_ROOT / 'app/templates/workouts.html').read_text(encoding='utf-8')
+        import re
+        field = re.search(r'<input\s+[^>]*id="weight-kg"[^>]*>', template).group()
+        self.assertIn('type="text"', field)
+        self.assertIn('inputmode="decimal"', field)
+        self.assertIn('pattern="[0-9]+([.,][0-9]{1,2})?"', field)
+
     def test_invalid_weight_is_rejected_without_database_write(self):
         app = self._create_app()
         client = app.test_client()
