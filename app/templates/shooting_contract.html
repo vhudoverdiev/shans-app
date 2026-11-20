@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Генерация договора на съёмку | Шанс{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shooting-contract.css', v=static_asset_version) }}">{% endblock %}
+{% macro field(name, label, type='text', required=false, placeholder='') %}
+<div class="form-group">
+    <label for="contract-{{ name }}">{{ label }}{% if required %} <span aria-hidden="true">*</span>{% endif %}</label>
+    <input class="form-input" id="contract-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ values[name] }}"{% if required %} required{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %} maxlength="{{ fields[name][1] }}"{% if name in ['price','hours'] %} inputmode="decimal"{% endif %}>
+</div>
+{% endmacro %}
+{% macro area(name, label, placeholder='') %}
+<div class="form-group"><label for="contract-{{ name }}">{{ label }}</label><textarea class="form-input" id="contract-{{ name }}" name="{{ name }}" rows="2" maxlength="{{ fields[name][1] }}" placeholder="{{ placeholder }}">{{ values[name] }}</textarea></div>
+{% endmacro %}
+{% block content %}
+<section class="contract-page section-styled-page">
+    <header class="contract-heading"><div><a class="contract-back" href="{{ url_for('shootings_hub') }}">← Съёмки</a><h1>Генерация договора на съёмку</h1><p>Заполните заказ — скачайте договор в исходном оформлении, без печати.</p></div><span class="contract-format">DOCX</span></header>
+    {% if errors %}<div class="contract-errors" role="alert" tabindex="-1"><strong>Проверьте данные</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+    <div class="contract-layout">
+    <div>
+    {% if bookings %}
+    <form method="get" class="contract-card contract-import">
+        <label for="contract-booking">Заполнить из существующей съёмки</label>
+        <div><select id="contract-booking" name="shooting_id" class="form-input"><option value="">Выберите съёмку</option>{% for booking in bookings %}<option value="{{ booking.id }}">{{ booking.shooting_date }} · {{ booking.client_name }} · {{ booking.project_name }}</option>{% endfor %}</select><button class="btn btn-secondary" type="submit">Подставить</button></div>
+    </form>
+    {% endif %}
+    <form method="post" id="contract-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <section class="contract-card"><h2><span>01</span> Клиент и договор</h2><div class="contract-grid">
+            {{ field('client_name', 'ФИО клиента или наименование организации', required=true) }}
+            {{ field('phone', 'Телефон клиента', 'tel', true, '+7…') }}
+            {{ field('vk', 'Аккаунт ВКонтакте клиента', required=true, placeholder='https://vk.com/…') }}
+            {{ field('extra_phone', 'Дополнительный телефон', 'tel') }}
+            {{ field('city', 'Город заключения', required=true) }}
+            {{ field('contract_date', 'Дата договора', 'date', true) }}
+        </div><details class="contract-details"><summary>Организация, ИП или другой подписант</summary><div class="contract-grid">{{ field('representative', 'ФИО, должность и основание полномочий') }}{{ field('signature_name', 'ФИО подписанта') }}</div></details></section>
+        <section class="contract-card"><h2><span>02</span> Съёмка и стоимость</h2>
+            <div class="contract-package-row"><div class="form-group"><label for="contract-package">Пакет с сайта</label><select id="contract-package" name="package" class="form-input">{% for package in packages %}<option value="{{ package.id }}"{% if values.package == package.id %} selected{% endif %}>{{ package.title }}</option>{% endfor %}</select></div><button type="button" class="btn btn-secondary" id="contract-apply-package">Применить пакет</button></div>
+            <p class="contract-hint" id="contract-package-note" role="status">Пакет подставляет вид, ориентир цены и известный объём фото. Все значения можно изменить.</p>
+            <div class="contract-grid">
+                <div class="form-group"><label for="contract-kind">Вид услуги</label><select id="contract-kind" name="kind" class="form-input">{% for key, label in kinds.items() %}<option value="{{ key }}"{% if values.kind == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                {{ field('subject', 'Пакет или сюжет', required=true) }}
+                {{ field('shooting_date', 'Дата съёмки', 'date', true) }}
+                {{ field('hours', 'Продолжительность, часов', required=true) }}
+                {{ field('start_time', 'Начало, МСК', 'time', true) }}
+                {{ field('end_time', 'Окончание, МСК', 'time', true) }}
+                {{ field('location', 'Адрес или локация', required=true) }}
+                {{ field('price', 'Цена услуг по договору, ₽', required=true) }}
+            </div>
+            <p class="contract-hint">Аванс — 1 000 ₽, входит в цену. Аренду студии заказчик оплачивает отдельно. В студийных пакетах из прайса уже вычтены 2 500 ₽ за студию.</p>
+        </section>
+        <section class="contract-card"><h2><span>03</span> Готовый результат</h2><p class="contract-hint">Укажите согласованный результат за весь заказ. Часы съёмки не равны длительности готового ролика.</p>
+            <div data-contract-photo><h3>Фотографии</h3><div class="contract-grid">
+                {{ field('photo_count', 'Минимум готовых фото за заказ', placeholder='60') }}{{ field('retouch_count', 'Из них в детальной ретуши', placeholder='5') }}
+                {{ field('photo_format', 'Формат файлов фото', placeholder='JPEG') }}{{ field('photo_size', 'Разрешение или минимальный размер', placeholder='Например: от 3000 px по длинной стороне') }}
+                {{ field('retouch_selector', 'Кто выбирает кадры для ретуши') }}
+                {{ area('photo_edits', 'Один раунд корректировок фото', 'Количество кадров и допустимые изменения') }}
+            </div></div>
+            <div data-contract-video><h3>Видео</h3><div class="contract-grid">
+                {{ field('video_count', 'Количество готовых роликов', placeholder='1') }}
+                {{ field('video_duration', 'Длительность каждого ролика', placeholder='Например: 3–5 минут') }}
+                {{ field('video_format', 'Формат, разрешение, ориентация', placeholder='Например: MP4, 1920×1080, горизонтальная') }}
+                {{ area('video_extras', 'Дополнительные версии и отдельная запись речи') }}
+                {{ area('video_edits', 'Один раунд корректировок видео', 'Количество и виды локальных изменений') }}
+            </div></div>
+        </section>
+        <section class="contract-card"><h2><span>04</span> Условия заказа</h2><div class="contract-grid">
+            <div class="form-group"><label for="contract-studio">Аренда студии</label><select class="form-input" id="contract-studio" name="studio"><option value="none"{% if values.studio == 'none' %} selected{% endif %}>Не предусмотрена</option><option value="separate"{% if values.studio == 'separate' %} selected{% endif %}>Заказчик оплачивает отдельно</option></select></div>
+            {{ field('studio_details', 'Студия и время брони') }}
+            <div class="form-group"><label for="contract-license">Лицензия</label><select class="form-input" id="contract-license" name="license"><option value="personal"{% if values.license == 'personal' %} selected{% endif %}>Личное использование</option><option value="commercial"{% if values.license == 'commercial' %} selected{% endif %}>Коммерческое использование</option></select></div>
+            <div class="form-group"><label for="contract-purpose">Цель заказа</label><select class="form-input" id="contract-purpose" name="purpose">{% for purpose in ['личная','семейная','бытовая','предпринимательская'] %}<option{% if values.purpose == purpose %} selected{% endif %}>{{ purpose }}</option>{% endfor %}</select></div>
+            {{ area('commercial_use', 'Коммерческая цель, способы использования и каналы') }}
+            {{ area('wishes', 'Особые пожелания и включённые услуги') }}
+        </div></section>
+        <div class="contract-submit"><button type="submit" class="btn btn-primary">Сформировать и скачать DOCX <span aria-hidden="true">↓</span></button><p>Перед подписанием проверьте заполненные условия. Файл формируется без сохранения данных формы на сервере.</p></div>
+    </form>
+    </div>
+    <aside class="contract-sidebar"><section class="contract-card"><p class="contract-eyebrow">Ваш шаблон</p><h2>Готовый договор за несколько шагов</h2><ol><li>Введите данные клиента.</li><li>Выберите пакет и уточните результат.</li><li>Скачайте договор для подписания.</li></ol><div class="contract-facts"><div><span>Аванс</span><strong>1 000 ₽</strong></div><div><span>Готовность</span><strong>до 30 дней</strong></div><div><span>Печать</span><strong>убрана</strong></div></div><p class="contract-hint">Подпись исполнителя и остальные условия сохранены из вашего образца.</p><a href="{{ price_source }}#services" target="_blank" rel="noopener">Прайсы на сайте ↗</a><p class="contract-hint">Проверены {{ price_checked }}. Индивидуальная стоимость уточняется перед подписанием.</p></section></aside>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}{{ super() }}<script type="application/json" id="contract-packages">{{ packages|tojson }}</script><script src="{{ url_for('static', filename='js/shooting-contract.js', v=static_asset_version) }}" defer></script>{% endblock %}

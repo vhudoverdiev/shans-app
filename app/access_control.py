@@ -69,6 +69,7 @@ SECTION_ENDPOINTS = {
         "planner.export_schedule",
     },
     "shootings": {
+        "contracts.generate",
         "shootings_hub",
         "shootings",
         "shootings_upcoming",

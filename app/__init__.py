@@ -23,6 +23,7 @@ from app.planner import planner_bp, init_planner_db
 from app.learning import learning_bp, init_learning_db
 from app.workouts import workouts_bp, init_workouts_db
 from app.nutrition import nutrition_bp, init_nutrition_db
+from app.shooting_contracts import contracts_bp
 from app.logging_setup import setup_logging, register_request_hooks
 from app.web_push import (
     init_web_push_db,
@@ -147,6 +148,7 @@ def create_app():
     app.register_blueprint(learning_bp)
     app.register_blueprint(workouts_bp)
     app.register_blueprint(nutrition_bp)
+    app.register_blueprint(contracts_bp)
     _register_management_commands(app)
     werkzeug_run_main = (os.getenv("WERKZEUG_RUN_MAIN") or "").strip().lower()
     if werkzeug_run_main in {"", "true", "1"} and not _is_test_process():

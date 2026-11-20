@@ -5,6 +5,14 @@
 {% block content %}
 <section class="dashboard-page hub-page section-styled-page">
     <div class="dashboard-grid hub-grid">
+        {% if has_section_access('shootings') %}
+        <a href="{{ url_for('contracts.generate') }}" class="dashboard-card">
+            <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">▤</div>
+            <div class="dashboard-card-title">Генерация договора на съёмку</div>
+            <div class="dashboard-card-text">Данные клиента, пакет и условия — готовый договор в вашем формате.</div>
+            <span class="dashboard-card-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endif %}
         <a href="{{ url_for('planner.photo_projects') }}" class="dashboard-card">
             <div class="dashboard-card-icon dashboard-card-icon-blue" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
