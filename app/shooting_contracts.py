@@ -215,6 +215,9 @@ def build_contract(values):
 @contracts_bp.route('/shootings/contracts', methods=['GET', 'POST'])
 @login_required
 def generate():
+    from app.routes import _is_mobile_request
+    if _is_mobile_request():
+        abort(403, description="Генерация договора доступна только на ПК.")
     candidate = request.form.get('return_to') if request.method == 'POST' else request.args.get('return_to')
     allowed_paths = {'/shootings', '/shootings/upcoming', '/shootings/archive', '/shootings/add', '/shootings-hub'}
     back_url = '/shootings'

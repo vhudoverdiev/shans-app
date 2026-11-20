@@ -30,3 +30,9 @@
 @media(max-width:900px) and (pointer: coarse) {
 .contract-page { --contract-accent:#6d28d9; --contract-soft:#f5f3ff; max-width:560px; padding-bottom:24px; }.contract-heading { gap:12px; align-items:flex-start; }.contract-heading h1 { font-size:26px; }.contract-layout { display:block; }.contract-sidebar { position:static; }.contract-card { padding:20px; border-radius:20px; }.contract-grid,.contract-package-row { grid-template-columns:1fr; }.contract-card h2 { font-size:20px; }.contract-import>div { flex-direction:column; }.contract-submit .btn { width:100%; }.contract-page .btn-secondary { border-color:#ddd6fe; }
 }
+
+.contract-desktop-notice { display: none; }
+@media (pointer: coarse), (max-width: 768px) {
+    .contract-page { display: none; }
+    .contract-desktop-notice { display: block; padding: 24px; text-align: center; }
+}

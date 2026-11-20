@@ -11,6 +11,7 @@
 <div class="form-group"><label for="contract-{{ name }}">{{ label }}</label><textarea class="form-input" id="contract-{{ name }}" name="{{ name }}" rows="2" maxlength="{{ fields[name][1] }}" placeholder="{{ placeholder }}">{{ values[name] }}</textarea></div>
 {% endmacro %}
 {% block content %}
+<p class="contract-desktop-notice">Генерация договора доступна только на ПК.</p>
 <section class="contract-page section-styled-page">
     <header class="contract-heading"><div><a class="contract-back" href="{{ back_url }}">← Назад к съёмкам</a><h1>Генерация договора на съёмку</h1></div></header>
     {% if errors %}<div class="contract-errors" role="alert" tabindex="-1"><strong>Проверьте данные</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}

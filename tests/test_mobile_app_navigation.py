@@ -102,8 +102,6 @@ class MobileAppNavigationTests(unittest.TestCase):
     def test_subsection_pages_include_back_buttons_to_their_hubs(self):
         shooting_section_templates = (
             "photo_projects.html",
-            "shootings_upcoming.html",
-            "shootings_archive.html",
             "scenarios_upcoming.html",
             "scenarios_archive.html",
         )

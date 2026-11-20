@@ -1423,3 +1423,8 @@
         transform: rotate(0deg);
     }
 }
+
+/* Contract generation is a desktop tool, including on rotated phones. */
+@media (pointer: coarse), (max-width: 768px) {
+    .contract-desktop-entry { display: none !important; }
+}

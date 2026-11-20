@@ -133,6 +133,23 @@ change('hours','25'); assert.equal(control('price').value,'');
         with client.session_transaction() as session:
             self.assertNotIn('client_name', session)
 
+    def test_mobile_cannot_generate_contract_and_list_has_no_back_button(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+        for agent in ('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
+                      'Mozilla/5.0 (Linux; Android 15) Mobile'):
+            headers = {'User-Agent': agent}
+            self.assertEqual(client.get('/shootings/contracts', headers=headers).status_code, 403)
+            response = client.post('/shootings/contracts', headers=headers,
+                                   data={**valid_form(), '_csrf_token': 'test-token'})
+            self.assertEqual(response.status_code, 403)
+            self.assertNotIn('attachment', response.headers.get('Content-Disposition', ''))
+        for path in ('/shootings/upcoming', '/shootings/archive'):
+            html = client.get(path).get_data(as_text=True)
+            self.assertNotIn('>Назад</a>', html)
+            self.assertIn('contract-desktop-entry', html)
+        self.assertEqual(client.get('/shootings/contracts').status_code, 200)
+
     def test_booking_prefill_and_user_isolation(self):
         client = self.app.test_client()
         self._login_admin(client)

@@ -8,7 +8,7 @@
         </div>
 
         <div class="page-actions">
-            <a href="{{ url_for('contracts.generate', shooting_id=shooting.id, return_to=request.path) }}" class="btn btn-primary">Сформировать договор</a>
+            <a href="{{ url_for('contracts.generate', shooting_id=shooting.id, return_to=request.path) }}" class="contract-desktop-entry btn btn-primary">Сформировать договор</a>
             <a href="{{ url_for('shootings_archive' if shooting.is_archive else 'shootings_upcoming') }}" class="btn btn-secondary">Назад</a>
         </div>
     </div>
