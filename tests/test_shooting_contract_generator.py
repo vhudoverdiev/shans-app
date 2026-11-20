@@ -50,6 +50,10 @@ class ContractGeneratorTests(unittest.TestCase):
                     self.assertIn('Результат видео: не входит.', text) if kind == 'photo' else None
                     source = ET.fromstring(template.read('word/document.xml'))
                     final = ET.fromstring(xml)
+                    drawing_ns = {'wp':'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'}
+                    signature = final.find('.//wp:anchor', drawing_ns)
+                    self.assertEqual(signature.find('wp:positionH/wp:posOffset', drawing_ns).text, '379258')
+                    self.assertEqual(signature.find('wp:positionV/wp:posOffset', drawing_ns).text, '228600')
                     ns = {'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
                     self.assertEqual(ET.tostring(source.find('.//w:sectPr', ns)), ET.tostring(final.find('.//w:sectPr', ns)))
                     for index in (4, 6, 8, 15, 16, 30, 50, 68, 90, 98):
