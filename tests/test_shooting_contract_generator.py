@@ -85,6 +85,8 @@ change('hours','25'); assert.equal(control('price').value,'');
                     for value in ('Иванова Анна Сергеевна', '20.11.2026', '01.12.2026', '6 000', 'Худовердиев Владимир Сергеевич', '12.5.'):
                         self.assertIn(value, text)
                     self.assertNotIn('[', text)
+                    self.assertNotIn('Номер телефона:', text)
+                    self.assertEqual(text.count('+7 900 123-45-67'), 1)
                     self.assertIn('20.11.2026\u00a0г', text)
                     self.assertNotIn('rId11', xml.decode())
                     self.assertIn('Результат фото за весь заказ: не входит.', text) if kind == 'video' else None

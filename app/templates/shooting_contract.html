@@ -30,7 +30,6 @@
             {{ field('client_name', 'ФИО клиента или наименование организации', required=true) }}
             {{ field('phone', 'Телефон клиента', 'tel', true, '+7…') }}
             {{ field('vk', 'Аккаунт ВКонтакте клиента', required=true, placeholder='https://vk.com/…') }}
-            {{ field('extra_phone', 'Дополнительный телефон', 'tel') }}
             {{ field('city', 'Город заключения', required=true) }}
             {{ field('contract_date', 'Дата договора', 'date', true) }}
         </div><details class="contract-details"><summary>Организация, ИП или другой подписант</summary><div class="contract-grid">{{ field('representative', 'ФИО, должность и основание полномочий') }}{{ field('signature_name', 'ФИО подписанта') }}</div></details></section>

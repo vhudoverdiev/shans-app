@@ -38,7 +38,7 @@ KINDS = {'photo': 'фотосъёмка', 'video': 'видеосъёмка', 'bo
 FIELDS = {
     'city': ('Город заключения', 100), 'contract_date': ('Дата договора', 10),
     'client_name': ('ФИО или наименование заказчика', 240), 'representative': ('Представитель и основание полномочий', 300),
-    'phone': ('Телефон клиента', 80), 'vk': ('Аккаунт ВКонтакте клиента', 200), 'extra_phone': ('Дополнительный телефон', 80),
+    'phone': ('Телефон клиента', 80), 'vk': ('Аккаунт ВКонтакте клиента', 200),
     'package': ('Пакет', 40), 'kind': ('Вид съёмки', 10), 'subject': ('Пакет или сюжет', 240),
     'shooting_date': ('Дата съёмки', 10), 'start_time': ('Начало съёмки', 5), 'end_time': ('Окончание съёмки', 5),
     'hours': ('Продолжительность', 12), 'location': ('Адрес или локация', 400), 'price': ('Цена услуг', 20),
@@ -162,7 +162,7 @@ def build_contract(values):
         1: [('[город]', v['city']), ('[дата заключения]', ru_date('contract_date'))],
         2: [('[ФИО гражданина либо наименование организации / ИП]', v['client_name'])],
         96: [('[личная / семейная / бытовая либо предпринимательская]', v['purpose'])],
-        115: [('[ФИО]', v['signature_name'])],
+        113: [('[ФИО]', v['signature_name'])],
     }
     representative = 'в лице [для организации: ФИО, должность и основание полномочий], '
     replacements[2].append((representative, f'в лице {v["representative"]}, ' if v['representative'] else ''))
@@ -184,7 +184,7 @@ def build_contract(values):
         root = ET.fromstring(source.read('word/document.xml'))
         condition_texts = [t.text or '' for t in root.findall('.//' + W + 'p')[5].findall('.//' + W + 't')]
         replacements[5] = [(condition_texts[index], value) for index, value in lines]
-        blanks = {101: v['client_name'], 103: v['phone'], 105: v['vk'], 107: v['extra_phone'] or '—'}
+        blanks = {101: v['client_name'], 103: v['phone'], 105: v['vk']}
         for index in reversed(range(len(paragraphs))):
             match = paragraphs[index]
             block = match[0]
