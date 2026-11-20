@@ -121,5 +121,23 @@ class ContractGeneratorTests(unittest.TestCase):
         with ZipFile(build_contract(values)) as output:
             self.assertIn('Анна & <Клиент>', ''.join(ET.fromstring(output.read('word/document.xml')).itertext()))
 
+    def test_return_navigation_and_clean_form_labels(self):
+        client = self.app.test_client()
+        self._login_admin(client)
+        for path in ('/shootings/upcoming', '/shootings/archive', '/shootings/add', '/shootings/12'):
+            html = client.get('/shootings/contracts', query_string={'return_to':path}).get_data(as_text=True)
+            self.assertIn(f'class="contract-back" href="{path}"', html)
+            self.assertIn(f'name="return_to" value="{path}"', html)
+        for path in ('https://example.com', '//example.com', '/account/settings', '/\\example.com', 'http://[bad'):
+            html = client.get('/shootings/contracts', query_string={'return_to':path}).get_data(as_text=True)
+            self.assertIn('class="contract-back" href="/shootings"', html)
+        response = client.post('/shootings/contracts', data={'_csrf_token':'test-token', 'return_to':'/shootings/archive'})
+        self.assertIn('class="contract-back" href="/shootings/archive"', response.get_data(as_text=True))
+        html = client.get('/shootings/contracts').get_data(as_text=True)
+        for text in ('Заполните заказ — скачайте', 'Подпись исполнителя и остальные условия', 'Введите данные клиента.', 'Перед подписанием проверьте', 'DOCX', '<span>Печать</span>'):
+            self.assertNotIn(text, html)
+        for text in ('Фотосъёмка', 'Видеосъёмка', 'Фото и видео', 'Личная', 'Предпринимательская'):
+            self.assertIn(text, html)
+
 
 if __name__ == '__main__': unittest.main()

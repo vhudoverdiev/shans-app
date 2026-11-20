@@ -8,6 +8,7 @@ import re
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
 from zipfile import ZipFile
+from urllib.parse import urlsplit
 
 from flask import Blueprint, abort, make_response, render_template, request, send_file
 from flask_login import login_required
@@ -200,6 +201,17 @@ def build_contract(values):
 @contracts_bp.route('/shootings/contracts', methods=['GET', 'POST'])
 @login_required
 def generate():
+    candidate = request.form.get('return_to') if request.method == 'POST' else request.args.get('return_to')
+    allowed_paths = {'/shootings', '/shootings/upcoming', '/shootings/archive', '/shootings/add', '/shootings-hub'}
+    back_url = '/shootings'
+    if candidate:
+        try:
+            parsed = urlsplit(candidate)
+        except ValueError:
+            parsed = urlsplit('/shootings')
+        if not parsed.scheme and not parsed.netloc and not parsed.query and not parsed.fragment and '\\' not in candidate:
+            if parsed.path in allowed_paths or re.fullmatch(r'/shootings/\d+', parsed.path):
+                back_url = parsed.path
     values = default_values()
     errors = []
     if request.method == 'POST':
@@ -230,6 +242,7 @@ def generate():
     response = make_response(render_template('shooting_contract.html', values=values, errors=errors,
                                              packages=PACKAGES, kinds=KINDS, bookings=bookings,
                                              fields=FIELDS,
+                                             back_url=back_url,
                                              price_source=PRICE_SOURCE, price_checked=PRICE_CHECKED))
     response.headers['Cache-Control'] = 'no-store, private'
     return response

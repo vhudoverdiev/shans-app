@@ -12,17 +12,19 @@
 {% endmacro %}
 {% block content %}
 <section class="contract-page section-styled-page">
-    <header class="contract-heading"><div><a class="contract-back" href="{{ url_for('shootings_hub') }}">← Съёмки</a><h1>Генерация договора на съёмку</h1><p>Заполните заказ — скачайте договор в исходном оформлении, без печати.</p></div><span class="contract-format">DOCX</span></header>
+    <header class="contract-heading"><div><a class="contract-back" href="{{ back_url }}">← Назад к съёмкам</a><h1>Генерация договора на съёмку</h1></div></header>
     {% if errors %}<div class="contract-errors" role="alert" tabindex="-1"><strong>Проверьте данные</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
     <div class="contract-layout">
     <div>
     {% if bookings %}
     <form method="get" class="contract-card contract-import">
+        <input type="hidden" name="return_to" value="{{ back_url }}">
         <label for="contract-booking">Заполнить из существующей съёмки</label>
         <div><select id="contract-booking" name="shooting_id" class="form-input"><option value="">Выберите съёмку</option>{% for booking in bookings %}<option value="{{ booking.id }}">{{ booking.shooting_date }} · {{ booking.client_name }} · {{ booking.project_name }}</option>{% endfor %}</select><button class="btn btn-secondary" type="submit">Подставить</button></div>
     </form>
     {% endif %}
     <form method="post" id="contract-form">
+        <input type="hidden" name="return_to" value="{{ back_url }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <section class="contract-card"><h2><span>01</span> Клиент и договор</h2><div class="contract-grid">
             {{ field('client_name', 'ФИО клиента или наименование организации', required=true) }}
@@ -36,7 +38,7 @@
             <div class="contract-package-row"><div class="form-group"><label for="contract-package">Пакет с сайта</label><select id="contract-package" name="package" class="form-input">{% for package in packages %}<option value="{{ package.id }}"{% if values.package == package.id %} selected{% endif %}>{{ package.title }}</option>{% endfor %}</select></div><button type="button" class="btn btn-secondary" id="contract-apply-package">Применить пакет</button></div>
             <p class="contract-hint" id="contract-package-note" role="status">Пакет подставляет вид, ориентир цены и известный объём фото. Все значения можно изменить.</p>
             <div class="contract-grid">
-                <div class="form-group"><label for="contract-kind">Вид услуги</label><select id="contract-kind" name="kind" class="form-input">{% for key, label in kinds.items() %}<option value="{{ key }}"{% if values.kind == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label for="contract-kind">Вид услуги</label><select id="contract-kind" name="kind" class="form-input">{% for key, label in kinds.items() %}<option value="{{ key }}"{% if values.kind == key %} selected{% endif %}>{{ label|capitalize }}</option>{% endfor %}</select></div>
                 {{ field('subject', 'Пакет или сюжет', required=true) }}
                 {{ field('shooting_date', 'Дата съёмки', 'date', true) }}
                 {{ field('hours', 'Продолжительность, часов', required=true) }}
@@ -66,14 +68,14 @@
             <div class="form-group"><label for="contract-studio">Аренда студии</label><select class="form-input" id="contract-studio" name="studio"><option value="none"{% if values.studio == 'none' %} selected{% endif %}>Не предусмотрена</option><option value="separate"{% if values.studio == 'separate' %} selected{% endif %}>Заказчик оплачивает отдельно</option></select></div>
             {{ field('studio_details', 'Студия и время брони') }}
             <div class="form-group"><label for="contract-license">Лицензия</label><select class="form-input" id="contract-license" name="license"><option value="personal"{% if values.license == 'personal' %} selected{% endif %}>Личное использование</option><option value="commercial"{% if values.license == 'commercial' %} selected{% endif %}>Коммерческое использование</option></select></div>
-            <div class="form-group"><label for="contract-purpose">Цель заказа</label><select class="form-input" id="contract-purpose" name="purpose">{% for purpose in ['личная','семейная','бытовая','предпринимательская'] %}<option{% if values.purpose == purpose %} selected{% endif %}>{{ purpose }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label for="contract-purpose">Цель заказа</label><select class="form-input" id="contract-purpose" name="purpose">{% for purpose in ['личная','семейная','бытовая','предпринимательская'] %}<option value="{{ purpose }}"{% if values.purpose == purpose %} selected{% endif %}>{{ purpose|capitalize }}</option>{% endfor %}</select></div>
             {{ area('commercial_use', 'Коммерческая цель, способы использования и каналы') }}
             {{ area('wishes', 'Особые пожелания и включённые услуги') }}
         </div></section>
-        <div class="contract-submit"><button type="submit" class="btn btn-primary">Сформировать и скачать DOCX <span aria-hidden="true">↓</span></button><p>Перед подписанием проверьте заполненные условия. Файл формируется без сохранения данных формы на сервере.</p></div>
+        <div class="contract-submit"><button type="submit" class="btn btn-primary">Сформировать и скачать договор <span aria-hidden="true">↓</span></button></div>
     </form>
     </div>
-    <aside class="contract-sidebar"><section class="contract-card"><p class="contract-eyebrow">Ваш шаблон</p><h2>Готовый договор за несколько шагов</h2><ol><li>Введите данные клиента.</li><li>Выберите пакет и уточните результат.</li><li>Скачайте договор для подписания.</li></ol><div class="contract-facts"><div><span>Аванс</span><strong>1 000 ₽</strong></div><div><span>Готовность</span><strong>до 30 дней</strong></div><div><span>Печать</span><strong>убрана</strong></div></div><p class="contract-hint">Подпись исполнителя и остальные условия сохранены из вашего образца.</p><a href="{{ price_source }}#services" target="_blank" rel="noopener">Прайсы на сайте ↗</a><p class="contract-hint">Проверены {{ price_checked }}. Индивидуальная стоимость уточняется перед подписанием.</p></section></aside>
+    <aside class="contract-sidebar"><section class="contract-card"><div class="contract-facts"><div><span>Аванс</span><strong>1 000 ₽</strong></div><div><span>Готовность</span><strong>до 30 дней</strong></div></div><a href="{{ price_source }}#services" target="_blank" rel="noopener">Прайсы на сайте ↗</a><p class="contract-hint">Проверены {{ price_checked }}. Индивидуальная стоимость уточняется перед подписанием.</p></section></aside>
     </div>
 </section>
 {% endblock %}
