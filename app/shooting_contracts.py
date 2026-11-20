@@ -42,6 +42,7 @@ FIELDS = {
     'package': ('Пакет', 40), 'kind': ('Вид съёмки', 10), 'subject': ('Пакет или сюжет', 240),
     'shooting_date': ('Дата съёмки', 10), 'start_time': ('Начало съёмки', 5), 'end_time': ('Окончание съёмки', 5),
     'hours': ('Продолжительность', 12), 'location': ('Адрес или локация', 400), 'price': ('Цена услуг', 20),
+    'delivery_days': ('Срок готовности, календарных дней', 3),
     'photo_count': ('Минимум фотографий за заказ', 6), 'retouch_count': ('Детальная ретушь', 6),
     'photo_format': ('Формат фото', 160), 'retouch_selector': ('Кто выбирает ретушь', 200),
     'video_count': ('Количество роликов', 6), 'video_duration': ('Длительность готового видео', 160), 'video_format': ('Параметры видео', 240),
@@ -57,7 +58,7 @@ def default_values():
     values.update(contract_date=date.today().isoformat(), kind='photo', package='walk', subject='Прогулочная',
                   hours='1', price='6000', photo_count='60', retouch_count='3', photo_format='JPEG',
                   retouch_selector='Исполнитель', video_extras='не входят', studio='none',
-                  video_format='MOV или MP4',
+                  video_format='MOV или MP4', delivery_days='30',
                   studio_details='не применимо', license='personal', commercial_use='не применимо',
                   wishes='нет', purpose='личная')
     return values
@@ -66,6 +67,8 @@ def default_values():
 def validate_values(form):
     values = {key: str(form.get(key, '')).strip() for key in FIELDS}
     errors = []
+    if not re.fullmatch(r'[0-9]{1,3}', values['delivery_days']) or not 1 <= int(values['delivery_days']) <= 365:
+        errors.append('Укажите срок готовности от 1 до 365 календарных дней.')
     for key, (label, limit) in FIELDS.items():
         if len(values[key]) > limit or re.search(r'[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]', values[key]):
             errors.append(f'Поле «{label}»: максимум {limit} символов, без служебных знаков.')
@@ -150,6 +153,11 @@ def _fill_blank(xml, value):
     return xml.replace('</w:p>', '<w:r><w:t xml:space="preserve">' + escape(value) + '</w:t></w:r></w:p>')
 
 
+def _signature_initials(name):
+    parts = name.split()
+    return ' '.join([parts[0], ' '.join(part[0].upper() + '.' for part in parts[1:])]) if len(parts) > 1 else name
+
+
 def build_contract(values):
     """Return a DOCX in memory. No client data is written to disk or session."""
     v = values
@@ -157,12 +165,15 @@ def build_contract(values):
     kind = v['kind']
     photo = kind in {'photo', 'both'}
     video = kind in {'video', 'both'}
+    days = int(v['delivery_days'])
+    deadline = f'{days} календарного дня' if days % 10 == 1 and days % 100 != 11 else f'{days} календарных дней'
     money = format(Decimal(v['price']), ',.2f').replace(',', ' ').replace('.', ',').removesuffix(',00')
     replacements = {
         1: [('[город]', v['city']), ('[дата заключения]', ru_date('contract_date'))],
         2: [('[ФИО гражданина либо наименование организации / ИП]', v['client_name'])],
         96: [('[личная / семейная / бытовая либо предпринимательская]', v['purpose'])],
-        113: [('[ФИО]', v['signature_name'])],
+        39: [('30 календарных дней', deadline)],
+        113: [('[ФИО]', _signature_initials(v['signature_name']))],
     }
     representative = 'в лице [для организации: ФИО, должность и основание полномочий], '
     replacements[2].append((representative, f'в лице {v["representative"]}, ' if v['representative'] else ''))
@@ -184,6 +195,8 @@ def build_contract(values):
         root = ET.fromstring(source.read('word/document.xml'))
         condition_texts = [t.text or '' for t in root.findall('.//' + W + 'p')[5].findall('.//' + W + 't')]
         replacements[5] = [(condition_texts[index], value) for index, value in lines]
+        replacements[5].append(('Окончательный результат — не позднее 30 календарных дней после съёмки.',
+                                f'Окончательный результат — не позднее {deadline} после съёмки.'))
         blanks = {101: v['client_name'], 103: v['phone'], 105: v['vk']}
         for index in reversed(range(len(paragraphs))):
             match = paragraphs[index]

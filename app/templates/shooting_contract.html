@@ -4,7 +4,7 @@
 {% macro field(name, label, type='text', required=false, placeholder='') %}
 <div class="form-group">
     <label for="contract-{{ name }}">{{ label }}{% if required %} <span aria-hidden="true">*</span>{% endif %}</label>
-    <input class="form-input" id="contract-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ values[name] }}"{% if required %} required{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %} maxlength="{{ fields[name][1] }}"{% if name in ['price','hours'] %} inputmode="decimal"{% endif %}>
+    <input class="form-input" id="contract-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ values[name] }}"{% if required %} required{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %} maxlength="{{ fields[name][1] }}"{% if name in ['price','hours'] %} inputmode="decimal"{% elif name == 'delivery_days' %} inputmode="numeric" pattern="[0-9]{1,3}"{% endif %}>
 </div>
 {% endmacro %}
 {% macro area(name, label, placeholder='') %}
@@ -45,6 +45,7 @@
                 {{ field('end_time', 'Окончание, МСК', 'time', true) }}
                 {{ field('location', 'Адрес или локация', required=true) }}
                 {{ field('price', 'Цена услуг по договору, ₽', required=true) }}
+                {{ field('delivery_days', 'Срок готовности, календарных дней', required=true, placeholder='30') }}
             </div>
         </section>
         <section class="contract-card"><h2><span>03</span> Готовый результат</h2><p class="contract-hint">Укажите согласованный результат за весь заказ. Часы съёмки не равны длительности готового ролика.</p>
@@ -73,7 +74,7 @@
         <div class="contract-submit"><button type="submit" class="btn btn-primary">Сформировать и скачать договор <span aria-hidden="true">↓</span></button></div>
     </form>
     </div>
-    <aside class="contract-sidebar"><section class="contract-card"><div class="contract-facts"><div><span>Аванс</span><strong>1 000 ₽</strong></div><div><span>Готовность</span><strong>до 30 дней</strong></div></div><a href="{{ price_source }}#services" target="_blank" rel="noopener">Прайсы на сайте ↗</a><p class="contract-hint">Проверены {{ price_checked }}. Индивидуальная стоимость уточняется перед подписанием.</p></section></aside>
+    <aside class="contract-sidebar"><section class="contract-card"><div class="contract-facts"><div><span>Аванс</span><strong>1 000 ₽</strong></div><div><span>Готовность</span><strong id="contract-delivery-summary">до {{ values.delivery_days }} дн.</strong></div></div><a href="{{ price_source }}#services" target="_blank" rel="noopener">Прайсы на сайте ↗</a><p class="contract-hint">Проверены {{ price_checked }}. Индивидуальная стоимость уточняется перед подписанием.</p></section></aside>
     </div>
 </section>
 {% endblock %}

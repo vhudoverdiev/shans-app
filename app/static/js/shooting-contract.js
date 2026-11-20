@@ -52,6 +52,10 @@
     });
     field('hours').addEventListener('input', () => { syncPrice(); syncTime(); });
     field('package').addEventListener('change', syncPrice);
+    field('delivery_days').addEventListener('input', () => {
+        const summary = document.getElementById('contract-delivery-summary');
+        if (summary) summary.textContent = field('delivery_days').value ? `до ${field('delivery_days').value} дн.` : '—';
+    });
     field('kind').addEventListener('change', syncKind);
     ['start_time','hours'].forEach(name => field(name).addEventListener('change', syncTime));
     syncKind();

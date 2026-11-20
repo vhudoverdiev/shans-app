@@ -169,6 +169,30 @@ change('hours','25'); assert.equal(control('price').value,'');
             self.assertIn('Формат файлов: JPEG', text)
             self.assertNotIn('разрешение или минимальный размер:', text)
 
+    def test_customer_signature_uses_surname_and_initials(self):
+        for name, expected in [('Иванова Анна Сергеевна', 'Иванова А. С.'),
+                               ('Петров-Сидоров Иван', 'Петров-Сидоров И.'),
+                               ('Иванова А. С.', 'Иванова А. С.'), ('Иванова', 'Иванова')]:
+            values, errors = validate_values({**valid_form(), 'signature_name': name})
+            self.assertFalse(errors)
+            with ZipFile(build_contract(values)) as doc:
+                paragraphs = ET.fromstring(doc.read('word/document.xml')).findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p')
+                self.assertIn(expected, ''.join(paragraphs[113].itertext()))
+                self.assertIn('Иванова Анна Сергеевна', ''.join(paragraphs[2].itertext()))
+
+    def test_delivery_deadline_updates_both_clauses_but_not_storage(self):
+        for days in ('1', '7', '21', '30', '365'):
+            values, errors = validate_values({**valid_form(), 'delivery_days':days})
+            self.assertFalse(errors)
+            with ZipFile(build_contract(values)) as output:
+                root = ET.fromstring(output.read('word/document.xml'))
+                paragraphs = root.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p')
+                for index in (5, 39):
+                    self.assertIn(f'не позднее {days} календарн', ''.join(paragraphs[index].itertext()))
+                self.assertIn('Галерея Wfolio доступна 30 календарных дней', ''.join(root.itertext()))
+        for days in ('', '0', '-1', '366', '2.5', 'abc'):
+            self.assertTrue(validate_values({**valid_form(), 'delivery_days':days})[1])
+
     def test_template_escapes_client_xml(self):
         values, errors = validate_values({**valid_form(), 'client_name':'Анна & <Клиент>'})
         self.assertFalse(errors)
