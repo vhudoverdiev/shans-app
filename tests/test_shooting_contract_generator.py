@@ -1,4 +1,8 @@
 import unittest
+import json
+import shutil
+import subprocess
+from pathlib import Path
 from io import BytesIO
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
@@ -27,6 +31,42 @@ class ContractGeneratorTests(unittest.TestCase):
     tearDown = fixtures.EnglishLiveQuizRouteTests.tearDown
     _login_admin = fixtures.EnglishLiveQuizRouteTests._login_admin
 
+    @unittest.skipUnless(shutil.which('node'), 'Node.js is needed for form interaction tests')
+    def test_price_recalculates_from_hours_and_remains_editable(self):
+        script = Path(__file__).resolve().parents[1] / 'app/static/js/shooting-contract.js'
+        harness = r'''
+const fs = require('fs'), vm = require('vm'), assert = require('assert');
+const fields = {};
+function control(name) {
+  return fields[name] ||= {value:'', listeners:{}, addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); },
+    dispatchEvent(event) { for (const fn of this.listeners[event.type] || []) fn(); }};
+}
+control('kind').value='photo'; control('package').value='walk'; control('hours').value='1';
+control('price').value='7777';
+const button=control('apply');
+const form={elements:{namedItem:control},querySelector:()=>({querySelectorAll:()=>[]})};
+global.document={getElementById:id=>id==='contract-form'?form:id==='contract-packages'?{textContent:fs.readFileSync(0,'utf8')}:id==='contract-apply-package'?button:{}};
+vm.runInThisContext(fs.readFileSync(process.argv[1],'utf8'));
+assert.equal(control('price').value,'7777'); // Preserve imported/manual price at page load.
+function change(name,value,type='input') { control(name).value=value; control(name).dispatchEvent(new Event(type)); }
+change('hours','1'); assert.equal(control('price').value,'6000');
+change('hours','1,5'); assert.equal(control('price').value,'9000');
+change('hours','2'); assert.equal(control('price').value,'10000');
+change('hours','3'); assert.equal(control('price').value,'15000');
+change('price','12345'); assert.equal(control('price').value,'12345');
+change('start_time','12:00','change'); assert.equal(control('price').value,'12345');
+change('hours','2,5'); assert.equal(control('price').value,'12500');
+change('package','full-look','change'); assert.equal(control('price').value,'12500');
+change('hours','1'); assert.equal(control('price').value,'12500');
+change('hours','2'); button.dispatchEvent(new Event('click'));
+assert.equal(control('hours').value,'2'); assert.equal(control('price').value,'10000');
+change('hours',''); assert.equal(control('price').value,'');
+change('hours','NaN'); assert.equal(control('price').value,'');
+change('hours','25'); assert.equal(control('price').value,'');
+'''
+        result = subprocess.run(['node', '-e', harness, str(script)], input=json.dumps(PACKAGES), capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_docx_preserves_package_and_removes_stamp(self):
         for kind in ('photo', 'video', 'both'):
             with self.subTest(kind=kind):
@@ -45,6 +85,7 @@ class ContractGeneratorTests(unittest.TestCase):
                     for value in ('Иванова Анна Сергеевна', '20.11.2026', '01.12.2026', '6 000', 'Худовердиев Владимир Сергеевич', '12.5.'):
                         self.assertIn(value, text)
                     self.assertNotIn('[', text)
+                    self.assertIn('20.11.2026\u00a0г', text)
                     self.assertNotIn('rId11', xml.decode())
                     self.assertIn('Результат фото за весь заказ: не входит.', text) if kind == 'video' else None
                     self.assertIn('Результат видео: не входит.', text) if kind == 'photo' else None
@@ -64,7 +105,7 @@ class ContractGeneratorTests(unittest.TestCase):
         self.assertEqual({k:v['price'] for k,v in studio.items()}, {'studio':6000,'full-look':12500,'gift':5000})
         for package in studio.values(): self.assertEqual(package['public_price'] - package['price'], 2500)
         for changes in ({'price':'NaN'}, {'price':'999'}, {'hours':'Infinity'}, {'end_time':'15:00'},
-                        {'photo_size':''}, {'kind':'video','video_duration':''}, {'retouch_count':'100'},
+                        {'kind':'video','video_duration':''}, {'retouch_count':'100'},
                         {'license':'commercial','commercial_use':'не применимо'}, {'client_name':'a'*241},
                         {'studio':'included'}, {'shooting_date':'2026-01-01'}, {'phone':'\x01'}):
             with self.subTest(changes=changes):
@@ -114,6 +155,17 @@ class ContractGeneratorTests(unittest.TestCase):
                 self.assertEqual(other.post('/shootings/contracts', data={**valid_form(),'_csrf_token':'test-token'}).status_code, 403)
             else:
                 self.assertNotIn('Секретный клиент', other.get('/shootings/contracts').get_data(as_text=True))
+
+    def test_default_media_formats_and_optional_photo_size(self):
+        defaults = default_values()
+        self.assertEqual(defaults['photo_format'], 'JPEG')
+        self.assertEqual(defaults['video_format'], 'MOV или MP4')
+        values, errors = validate_values({**valid_form(), 'photo_size':''})
+        self.assertFalse(errors)
+        with ZipFile(build_contract(values)) as output:
+            text = ''.join(ET.fromstring(output.read('word/document.xml')).itertext())
+            self.assertIn('Формат файлов: JPEG', text)
+            self.assertNotIn('разрешение или минимальный размер:', text)
 
     def test_template_escapes_client_xml(self):
         values, errors = validate_values({**valid_form(), 'client_name':'Анна & <Клиент>'})

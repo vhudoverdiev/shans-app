@@ -43,7 +43,7 @@ FIELDS = {
     'shooting_date': ('Дата съёмки', 10), 'start_time': ('Начало съёмки', 5), 'end_time': ('Окончание съёмки', 5),
     'hours': ('Продолжительность', 12), 'location': ('Адрес или локация', 400), 'price': ('Цена услуг', 20),
     'photo_count': ('Минимум фотографий за заказ', 6), 'retouch_count': ('Детальная ретушь', 6),
-    'photo_format': ('Формат фото', 160), 'photo_size': ('Разрешение фото', 160), 'retouch_selector': ('Кто выбирает ретушь', 200),
+    'photo_format': ('Формат фото', 160), 'retouch_selector': ('Кто выбирает ретушь', 200),
     'video_count': ('Количество роликов', 6), 'video_duration': ('Длительность готового видео', 160), 'video_format': ('Параметры видео', 240),
     'video_extras': ('Дополнительные версии и запись речи', 300), 'photo_edits': ('Корректировки фото', 300), 'video_edits': ('Корректировки видео', 300),
     'studio': ('Аренда студии', 20), 'studio_details': ('Студия и время брони', 300),
@@ -57,6 +57,7 @@ def default_values():
     values.update(contract_date=date.today().isoformat(), kind='photo', package='walk', subject='Прогулочная',
                   hours='1', price='6000', photo_count='60', retouch_count='3', photo_format='JPEG',
                   retouch_selector='Исполнитель', video_extras='не входят', studio='none',
+                  video_format='MOV или MP4',
                   studio_details='не применимо', license='personal', commercial_use='не применимо',
                   wishes='нет', purpose='личная')
     return values
@@ -100,7 +101,7 @@ def validate_values(form):
                 errors.append(f'Укажите корректное количество: {FIELDS[key][0]}.')
         if re.fullmatch(r'[0-9]{1,6}', values['photo_count']) and re.fullmatch(r'[0-9]{1,6}', values['retouch_count']) and int(values['retouch_count']) > int(values['photo_count']):
             errors.append('Кадров в детальной ретуши не может быть больше общего количества фото.')
-        for key in ('photo_format', 'photo_size', 'retouch_selector', 'photo_edits'):
+        for key in ('photo_format', 'retouch_selector', 'photo_edits'):
             if not values[key]: errors.append(f'Заполните поле «{FIELDS[key][0]}».')
     if values['kind'] in {'video', 'both'}:
         if not re.fullmatch(r'[0-9]{1,4}', values['video_count']) or not 1 <= int(values['video_count']) <= 1000: errors.append('Укажите количество готовых роликов от 1 до 1000.')
@@ -170,7 +171,7 @@ def build_contract(values):
         (1, f'Вид: {KINDS[kind]}. Пакет или сюжет: {v["subject"]}.'),
         (2, f'Дата съёмки: {ru_date("shooting_date")}. Время: с {v["start_time"]} до {v["end_time"]}, московское. Продолжительность: {v["hours"].replace(".", ",")} часов. Съёмочное время учитывается непрерывно по пункту 4.8.'),
         (3, f'Место: {v["location"]}. Общая цена услуг Исполнителя: {money} рублей.'),
-        (4, f'Результат фото за весь заказ: не менее {v["photo_count"]} готовых фотографий; из них детальная ретушь {v["retouch_count"]} кадров. Формат файлов: {v["photo_format"]}; разрешение или минимальный размер: {v["photo_size"]}. Кадры для детальной ретуши выбирает {v["retouch_selector"]}.' if photo else 'Результат фото за весь заказ: не входит.'),
+        (4, f'Результат фото за весь заказ: не менее {v["photo_count"]} готовых фотографий; из них детальная ретушь {v["retouch_count"]} кадров. Формат файлов: {v["photo_format"]}. Кадры для детальной ретуши выбирает {v["retouch_selector"]}.' if photo else 'Результат фото за весь заказ: не входит.'),
         (5, f'Результат видео: {v["video_count"]} смонтированных роликов продолжительностью {v["video_duration"]} каждый. Формат файлов, разрешение и ориентация: {v["video_format"]}. Дополнительные версии и отдельная запись речи: {v["video_extras"] or "не входят"}. Один час съёмки означает время работы, а не длительность готового видео.' if video else 'Результат видео: не входит. Один час съёмки означает время работы, а не длительность готового видео.'),
         (6, f'Объём одного раунда творческих корректировок: фото — {v["photo_edits"] if photo else "не входит"}; видео — {v["video_edits"] if video else "не входит"}.'),
         (7, f'Аренда студии: {"Заказчик самостоятельно бронирует и оплачивает студию" if v["studio"] == "separate" else "не предусмотрена"}. Студия и время бронирования: {v["studio_details"] if v["studio"] == "separate" else "не применимо"}. Аренда не входит в общую цену услуг Исполнителя и не оплачивается ему.'),

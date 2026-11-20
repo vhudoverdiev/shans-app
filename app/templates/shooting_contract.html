@@ -51,14 +51,14 @@
         <section class="contract-card"><h2><span>03</span> Готовый результат</h2><p class="contract-hint">Укажите согласованный результат за весь заказ. Часы съёмки не равны длительности готового ролика.</p>
             <div data-contract-photo><h3>Фотографии</h3><div class="contract-grid">
                 {{ field('photo_count', 'Минимум готовых фото за заказ', placeholder='60') }}{{ field('retouch_count', 'Из них в детальной ретуши', placeholder='5') }}
-                {{ field('photo_format', 'Формат файлов фото', placeholder='JPEG') }}{{ field('photo_size', 'Разрешение или минимальный размер', placeholder='Например: от 3000 px по длинной стороне') }}
+                {{ field('photo_format', 'Формат файлов фото', placeholder='JPEG') }}
                 {{ field('retouch_selector', 'Кто выбирает кадры для ретуши') }}
                 {{ area('photo_edits', 'Один раунд корректировок фото', 'Количество кадров и допустимые изменения') }}
             </div></div>
             <div data-contract-video><h3>Видео</h3><div class="contract-grid">
                 {{ field('video_count', 'Количество готовых роликов', placeholder='1') }}
                 {{ field('video_duration', 'Длительность каждого ролика', placeholder='Например: 3–5 минут') }}
-                {{ field('video_format', 'Формат, разрешение, ориентация', placeholder='Например: MP4, 1920×1080, горизонтальная') }}
+                {{ field('video_format', 'Формат, разрешение, ориентация', placeholder='MOV или MP4') }}
                 {{ area('video_extras', 'Дополнительные версии и отдельная запись речи') }}
                 {{ area('video_edits', 'Один раунд корректировок видео', 'Количество и виды локальных изменений') }}
             </div></div>
